@@ -3,6 +3,7 @@ import type {
   AppState,
   Baseline,
   CheckIn,
+  Experiment,
   MirrorSession,
   PracticeKind,
   RelapsePlan,
@@ -32,6 +33,11 @@ interface StoreApi extends AppState {
   addUrgeLog: (u: Omit<UrgeLog, 'id' | 'date'>) => void;
   addThoughtRecord: (t: Omit<ThoughtRecord, 'id' | 'date'>) => void;
   addMirrorSession: (m: Omit<MirrorSession, 'id' | 'date'>) => void;
+  addExperiment: (e: Pick<Experiment, 'avoiding' | 'prediction' | 'likelihoodBefore' | 'safetyBehavioursDropped'>) => void;
+  completeExperiment: (
+    id: string,
+    outcome: Pick<Experiment, 'outcome' | 'comparison' | 'likelihoodAfter' | 'conclusion'>
+  ) => void;
   markModuleRead: (slug: string) => void;
   setAvoidedConditions: (list: string[]) => void;
   setRelapsePlan: (p: Omit<RelapsePlan, 'updatedAt'>) => void;
@@ -126,6 +132,24 @@ export const useStore = create<StoreApi>((set, get) => ({
       mirrorSessions: [{ ...m, id: id(), date: dayKey(new Date()) }, ...s.mirrorSessions],
     }));
     get().logPractice('mirror');
+  },
+
+  addExperiment: (e) => {
+    set((s) => ({
+      experiments: [{ ...e, id: id(), date: dayKey(new Date()) }, ...s.experiments],
+    }));
+    get().logPractice('experiment');
+  },
+
+  /* The prediction fields are never touched here. Once an outcome is known, memory
+     rewrites what you "always expected" — so the prediction stays frozen as written. */
+  completeExperiment: (expId, outcome) => {
+    set((s) => ({
+      experiments: s.experiments.map((e) =>
+        e.id === expId ? { ...e, ...outcome, completedAt: new Date().toISOString() } : e
+      ),
+    }));
+    get().logPractice('experiment');
   },
 
   markModuleRead: (slug) => {

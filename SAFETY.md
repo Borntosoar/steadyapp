@@ -1,0 +1,230 @@
+# SAFETY.md
+
+This file exists so that a future contributor — or a future version of the people who
+built this — cannot quietly undo the constraints without first reading why they are here.
+
+Every rule below has a reason. Several of them will look like features you are leaving on
+the table. They are. That is the trade, and it was made deliberately.
+
+If you are about to remove one of these, the bar is not "someone asked for it." The bar is
+"I have read the reasoning and I have a better answer to the same problem."
+
+---
+
+## The one-paragraph version
+
+Appearance self-monitoring is the behaviour that maintains body dysmorphic disorder.
+Checking, measuring, photographing, comparing, and rating are not symptoms sitting
+alongside the distress — they are the mechanism that keeps it running. Any feature that
+asks a user to look at, score, or track their appearance is therefore not a body-image
+feature with a risk attached. It **is** the disorder, wearing product design.
+
+That single fact generates almost every rule in this document.
+
+---
+
+## 1. No photo capture. Ever.
+
+**The rule.** There is no camera roll, no photo storage, no gallery, no filter, no
+before/after, and no capture API. `takePicture`, `takePictureAsync`, `capture`,
+`savePhoto`, and canvas snapshotting appear nowhere in this codebase.
+
+Note that the identifiers are listed **only in this file**, so the grep below is a clean
+signal rather than one that matches the comment warning against it.
+
+**Why.** A stored photo is a permanent, re-inspectable object. The entire point of
+perceptual retraining is to reduce close-range repeated inspection; a saved image is a
+machine for producing exactly that, on demand, forever. Before/after pairs are worse
+again: they make appearance change the unit of progress, which is the belief the whole
+programme is built to dismantle.
+
+**Where it lives.** `components/MirrorSurface.tsx`. The camera is rendered as a live
+mirror and the stream is discarded frame by frame. On web the stream tracks are stopped
+on unmount. There is no path from that component to persistent storage, and adding one
+would require writing new code rather than flipping a flag.
+
+**How to check you have not broken it.**
+
+```bash
+grep -rEi 'takePicture|savePhoto|captureRef|toDataURL|MediaLibrary|getScreenshot' \
+  app components lib store content types
+```
+
+That must return **nothing at all** — not "nothing but comments". If you need to warn
+about one of these in a code comment, describe it instead of naming it, the way
+`components/MirrorSurface.tsx` does.
+
+---
+
+## 2. No appearance metric of any kind
+
+**The rule.** No attractiveness score, no rating, no percentile, no ranking, no
+leaderboard, no "improvement" measured in looks. No weight, calories, measurements, BMI,
+sizes, or food logging.
+
+**Why.** Beyond the maintaining-behaviour argument above: a number attached to appearance
+is re-checkable, comparable across days, and impossible to disconfirm. It converts a
+diffuse worry into a precise one, which is a downgrade. And a cross-user ranking would
+additionally be non-consensual biometric processing — a legal problem in several
+jurisdictions on top of the clinical one.
+
+**Where it lives.** `types/index.ts` has no field for any of these, and says so in a
+comment. `lib/reclaimed.ts` measures time, not appearance.
+
+**The governing test:** *which direction is this number supposed to move?* Distress,
+urges, checking minutes, and avoidance are meant to go **down**. Hours reclaimed and
+urges resisted are meant to go **up** — and neither is a statement about a body. If you
+are adding a metric that goes up and is about the user's appearance, stop.
+
+**How to check.**
+
+```bash
+grep -rEi '\b(weight|calorie|bmi|attractiveness|hotness|rating|percentile)\b' \
+  app components lib store content types
+```
+
+Hits should only ever be in comments explaining the prohibition.
+
+---
+
+## 3. No streak shaming
+
+**The rule.** Missed days are neutral. No red UI, no broken-flame iconography, no "you
+lost your streak," no make-up task, no guilt copy anywhere.
+
+**Why.** Shame drives concealment; concealment drives dropout. The user most likely to
+miss a week is the user having the worst week, which is precisely the person this app
+most needs to keep. A streak that punishes absence optimises for the people who need it
+least.
+
+**Where it lives.** `lib/streak.ts`. Freezes apply silently. A gap too large to cover
+restarts the count at 1 but preserves `longest`, so nothing achieved is erased. The
+"hard day" path increments the streak like any other practice.
+
+**Enforced by.** `__tests__/streak.test.mjs` and `__tests__/copy.test.mjs` assert that no
+string reachable from the streak or copy modules matches shaming language. Two of the
+original drafts failed these tests — `"data, not failure"` (negation still puts the word
+in front of the reader) and `"most weeks look like this one"` (`look` is worth banning
+outright here). Both were rewritten. The tests are why.
+
+---
+
+## 4. Safety is never paywalled
+
+**The rule.** Grounding, breathing, the hard-day path, the daily check-in, and all crisis
+support are free forever, and reachable in **two taps or fewer** from any screen.
+
+**Why.** This app is used by a population with markedly elevated suicide risk. A billing
+state must never sit between a person and a crisis line.
+
+**Where it lives.** `lib/entitlement.ts` hard-codes `ALWAYS_FREE_ROUTES` rather than
+deriving it, so gating one of them by accident requires deliberately editing a list with
+a comment telling you not to. `app/_layout.tsx` mounts the Support button persistently,
+which makes it exactly one tap from everywhere.
+
+**Also:** a visible hardship link on the paywall grants access immediately, with no form,
+no proof, and no questions. A test asserts the copy contains no eligibility or
+application language.
+
+---
+
+## 5. No dark patterns in the paywall
+
+**The rule.** No countdowns, no fake scarcity, no "limited spots," no disguised dismiss.
+Two working exits, both plainly labelled.
+
+**Why.** Manufacturing urgency at someone with an anxiety-spectrum condition is a bad
+trade at any conversion rate.
+
+**Enforced by.** `__tests__/copy.test.mjs` asserts no urgency language anywhere in
+`PAYWALL_COPY`.
+
+---
+
+## 6. Local only
+
+**The rule.** No cloud, no account, no analytics SDK, no third-party tracker in v1. This
+is stated on the second onboarding screen, before any data is collected.
+
+**Why.** The content is among the most private material a person holds — many users have
+never said it aloud to anyone. The only way to make a privacy promise that cannot be
+broken by a future policy change is to have no server to change the policy about.
+
+**Where it lives.** `lib/storage.ts` contains no network call and must not gain one.
+
+---
+
+## 7. No AI chat companion in v1
+
+**Why.** A conversational agent in this domain will be asked "do I look okay?" within
+minutes, and an unreliable refusal is worse than no feature. Reassurance is a compulsion:
+answering it produces minutes of relief followed by a stronger urge, and it transfers
+authority over the user's body to an outside judge. If this is ever built, the refusal
+behaviour needs to be the specification, not a guardrail bolted on afterwards.
+
+---
+
+## 8. No diagnostic or treatment claims
+
+**The rule.** "Many people find," never "treats" or "cures." The phrase *body dysmorphic
+disorder* may appear in educational content — it does, in Module 12 — but never as a
+claim about what this app does.
+
+**Why.** It is false, and it is a regulatory problem.
+
+**Enforced by.** `__tests__/modules.test.mjs` and `__tests__/copy.test.mjs` both assert
+the absence of treatment claims across all shipped prose.
+
+---
+
+## 9. Exposure is graded and cannot be skipped
+
+**The rule.** Mirror practice is locked until week 4. Durations increase by phase and the
+hierarchy is enforced by the app, not by the user's judgement.
+
+**Why.** Exposure before someone has seen their own baseline is exposure without a
+rationale, and that is the version people abandon. Starting at the hardest step produces
+a bad first experience and a dropout.
+
+**Where it lives.** `lib/protocol.ts` — `mirrorSpecForWeek()` returns `null` before week
+4, and `__tests__/protocol.test.mjs` asserts durations never decrease with phase.
+
+---
+
+## 10. Weeks unlock by completion, never by date
+
+**The rule.** A week opens when the previous week's four practice days are done —
+whether that took seven days or forty.
+
+**Why.** A date-gated programme punishes exactly the weeks when someone is struggling
+most. `isWeekUnlocked()` takes no date parameter at all, so this is structural rather
+than a policy that could drift. A test asserts four practice days spread across two
+months completes a week identically to four consecutive days.
+
+---
+
+## 11. Predictions are frozen before outcomes
+
+**The rule.** In a behavioural experiment, the prediction and its likelihood are captured
+before the event and are never editable afterwards.
+
+**Why.** Memory quietly rewrites predictions to match outcomes once the outcome is known.
+An editable prediction destroys the only thing the exercise produces — a written record
+of a belief that failed to come true.
+
+**Where it lives.** `store/useStore.ts` — `completeExperiment()` writes only the
+after-event fields. `__tests__/copy.test.mjs` asserts the prediction fields are not
+marked `afterEvent`.
+
+---
+
+## Running the checks
+
+```bash
+npm test          # 94 assertions across engine, protocol, streak, content and copy
+npm run typecheck # tsc --noEmit
+```
+
+The tone and content rules are tests rather than review notes on purpose. Review catches
+what a reviewer happens to notice; a test catches it every time, including at 2am on a
+Friday when someone is shipping a copy tweak.

@@ -21,6 +21,7 @@ export const emptyState = (): AppState => ({
   urgeLogs: [],
   thoughtRecords: [],
   mirrorSessions: [],
+  experiments: [],
   practice: [],
   streak: initialStreak(),
   protocol: {

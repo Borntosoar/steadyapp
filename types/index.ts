@@ -88,12 +88,29 @@ export interface MirrorSession {
   condition?: string;
 }
 
+export interface Experiment {
+  id: string;
+  date: string;
+  avoiding: string;
+  /** Captured BEFORE the event and never editable afterwards — memory rewrites
+   *  predictions to match outcomes once the outcome is known. */
+  prediction: string;
+  likelihoodBefore: number;
+  safetyBehavioursDropped: string;
+  outcome?: string;
+  comparison?: string;
+  likelihoodAfter?: number;
+  conclusion?: string;
+  completedAt?: string;
+}
+
 export type PracticeKind =
   | 'checkin'
   | 'thought-record'
   | 'grounding'
   | 'mirror'
   | 'urge'
+  | 'experiment'
   | 'hard-day';
 
 export interface PracticeEvent {
@@ -145,6 +162,7 @@ export interface AppState {
   urgeLogs: UrgeLog[];
   thoughtRecords: ThoughtRecord[];
   mirrorSessions: MirrorSession[];
+  experiments: Experiment[];
   practice: PracticeEvent[];
   streak: StreakState;
   protocol: ProtocolState;
