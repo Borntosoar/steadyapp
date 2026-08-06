@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "Steady",
+    "slug": "steady",
+    "version": "2.0.0",
+    "orientation": "portrait",
+    "scheme": "steady",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Steady uses the camera only as a live mirror for guided practice. Nothing is ever recorded, captured, or saved."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FAF8F4"
+      },
+      "permissions": ["android.permission.CAMERA"],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Steady uses the camera only as a live mirror for guided practice. Nothing is ever recorded, captured, or saved.",
+          "recordAudioAndroid": false
+        }
+      ]
+    ]
+  }
+}
