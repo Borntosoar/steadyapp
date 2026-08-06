@@ -158,7 +158,44 @@ describe('reclaimedCopy — tone safety', () => {
     const { headline, sub } = reclaimedCopy(r);
     assert.doesNotMatch(headline, shaming);
     assert.doesNotMatch(sub, shaming);
-    assert.match(headline, /steady/i);
+    assert.match(headline, /level/i);
+    assert.match(sub, /part of the shape/i);
+  });
+
+  test('"last week" phrasing is only used when a prior week was actually measured', () => {
+    // Without a previous window, saying "level with last week" would be an assertion
+    // about data that was never computed.
+    const flat = [ci('2026-01-02', 240), ci('2026-01-03', 240), ci('2026-01-04', 240)];
+    const noPrior = reclaimedCopy(computeReclaimed(baseline, flat, 7));
+    assert.doesNotMatch(noPrior.sub, /last week/i);
+
+    const withPrior = reclaimedCopy(
+      computeReclaimed(baseline, flat, 7, [ci('2025-12-26', 250)])
+    );
+    assert.match(withPrior.sub, /last week/i);
+  });
+
+  test('a heavier week only claims "higher than last week" when there is a last week', () => {
+    const heavy = [ci('2026-01-02', 360), ci('2026-01-03', 360), ci('2026-01-04', 360)];
+    const noPrior = reclaimedCopy(computeReclaimed(baseline, heavy, 7));
+    assert.doesNotMatch(noPrior.sub, /last week/i);
+    assert.match(noPrior.sub, /starting point/i);
+
+    const withPrior = reclaimedCopy(
+      computeReclaimed(baseline, heavy, 7, [ci('2025-12-26', 200)])
+    );
+    assert.match(withPrior.sub, /Higher than last week/i);
+  });
+
+  test('week-over-week delta is computed, not guessed', () => {
+    const r = computeReclaimed(
+      baseline,
+      [ci('2026-01-02', 120)],
+      7,
+      [ci('2025-12-26', 200), ci('2025-12-27', 200)]
+    );
+    assert.equal(r.previousAvgDailyMinutes, 200);
+    assert.equal(r.weekOverWeekDelta, 80);
   });
 
   test('no copy branch ever references appearance', () => {

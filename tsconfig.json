@@ -1,6 +1,12 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
+    "strict": true,
+    // Node's ESM resolver (used by `npm test` via --experimental-strip-types) requires
+    // explicit extensions; Metro resolves either way. Allowing the .ts extension in
+    // imports lets one import style satisfy both. Safe because nothing is ever emitted —
+    // Metro bundles the sources directly.
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   }
 }

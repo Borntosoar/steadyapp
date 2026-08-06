@@ -14,6 +14,7 @@
  * is unit-testable without mounting React. */
 
 import type { CheckIn, Baseline } from '../types';
+import { RECLAIMED_COPY } from '../content/copy.ts';
 
 export interface ReclaimedResult {
   /** Hours reclaimed across the window, vs baseline. Negative means more time lost. */
@@ -29,6 +30,17 @@ export interface ReclaimedResult {
   hasData: boolean;
   /** 'up' | 'flat' | 'down' — drives copy tone, never a value judgment. */
   direction: 'up' | 'flat' | 'down';
+  /**
+   * Mean daily minutes in the seven days BEFORE this window, when that exists.
+   *
+   * The hero number compares to baseline, but the flat and negative copy speak about
+   * "last week" — so a real week-over-week figure has to exist behind those strings.
+   * Null when there is no prior week to compare against, in which case the copy falls
+   * back to baseline phrasing rather than asserting something unmeasured.
+   */
+  previousAvgDailyMinutes: number | null;
+  /** Positive = this week used fewer minutes than last week. Null when unknown. */
+  weekOverWeekDelta: number | null;
 }
 
 const EMPTY: ReclaimedResult = {
@@ -39,6 +51,8 @@ const EMPTY: ReclaimedResult = {
   sampleSize: 0,
   hasData: false,
   direction: 'flat',
+  previousAvgDailyMinutes: null,
+  weekOverWeekDelta: null,
 };
 
 /** Anything inside ±0.25h/week is noise, not signal. Reporting a 6-minute "gain" as
@@ -63,7 +77,8 @@ export function meanDailyMinutes(checkIns: CheckIn[]): number {
 export function computeReclaimed(
   baseline: Baseline | null,
   windowCheckIns: CheckIn[],
-  days = 7
+  days = 7,
+  previousWindowCheckIns: CheckIn[] = []
 ): ReclaimedResult {
   if (!baseline || windowCheckIns.length === 0) return EMPTY;
 
@@ -76,6 +91,10 @@ export function computeReclaimed(
   if (hours > FLAT_BAND_HOURS) direction = 'up';
   else if (hours < -FLAT_BAND_HOURS) direction = 'down';
 
+  const previousAvgDailyMinutes = previousWindowCheckIns.length
+    ? Math.round(meanDailyMinutes(previousWindowCheckIns))
+    : null;
+
   return {
     hours: round1(hours),
     minutesPerDayDelta: Math.round(minutesPerDayDelta),
@@ -84,7 +103,25 @@ export function computeReclaimed(
     sampleSize: windowCheckIns.length,
     hasData: true,
     direction,
+    previousAvgDailyMinutes,
+    weekOverWeekDelta:
+      previousAvgDailyMinutes === null
+        ? null
+        : Math.round(previousAvgDailyMinutes - currentAvgDailyMinutes),
   };
+}
+
+/** Check-ins for the seven days immediately BEFORE the current window. */
+export function previousWeekCheckIns(checkIns: CheckIn[], now = new Date()): CheckIn[] {
+  const end = new Date(now);
+  end.setHours(0, 0, 0, 0);
+  end.setDate(end.getDate() - 7);
+  const start = new Date(end);
+  start.setDate(start.getDate() - 6);
+  return checkIns.filter((c) => {
+    const d = new Date(c.date + 'T00:00:00');
+    return d >= start && d <= end;
+  });
 }
 
 /** Filter check-ins to the N days ending today (inclusive). */
@@ -135,47 +172,35 @@ export function reclaimedByWeek(
  * told they underperformed. There is no "you slipped" string anywhere in this function,
  * and there must never be one.
  */
-export function reclaimedCopy(r: ReclaimedResult, firstName?: string): {
+export function reclaimedCopy(r: ReclaimedResult, _firstName?: string): {
   headline: string;
   sub: string;
 } {
-  const who = firstName ? `${firstName}, ` : '';
+  if (!r.hasData) return RECLAIMED_COPY.empty;
+  if (r.sampleSize < 3) return RECLAIMED_COPY.gathering(r.sampleSize);
 
-  if (!r.hasData) {
-    return {
-      headline: 'Your number starts here',
-      sub: 'Check in for a few days and this becomes real. Nothing to calculate yet.',
-    };
-  }
+  if (r.direction === 'up') return RECLAIMED_COPY.positive(Math.abs(r.hours));
 
-  if (r.sampleSize < 3) {
-    return {
-      headline: 'Still gathering',
-      sub: `${r.sampleSize} check-in${r.sampleSize === 1 ? '' : 's'} so far. A few more and this number means something.`,
-    };
-  }
-
-  if (r.direction === 'up') {
-    const h = Math.abs(r.hours);
-    return {
-      headline: `${h} ${h === 1 ? 'hour' : 'hours'} back this week`,
-      sub: `About ${Math.abs(r.minutesPerDayDelta)} fewer minutes a day than when you started. That time went somewhere — what did you do with it?`,
-    };
-  }
+  // The flat and negative strings speak about "last week". Only use them when a real
+  // week-over-week figure exists; otherwise say the baseline-true thing instead of
+  // asserting a comparison that was never computed.
+  const hasPriorWeek = r.previousAvgDailyMinutes !== null;
 
   if (r.direction === 'flat') {
-    return {
-      headline: 'This week held steady',
-      sub: `${who}holding is its own result, and most weeks are like this one. The line moves over months, not days.`,
-    };
+    return hasPriorWeek
+      ? RECLAIMED_COPY.flat
+      : {
+          headline: 'Roughly level',
+          sub: 'About where you started. Flat weeks are part of the shape.',
+        };
   }
 
-  // Negation is avoided here on purpose: telling someone "this isn't a failure" puts the
-  // word in front of them anyway. The copy simply never introduces the idea.
-  return {
-    headline: 'A heavier week',
-    sub: 'More time went to it than at baseline. Weeks like this are ordinary, and they carry information — worth noticing what was different about this one.',
-  };
+  return hasPriorWeek
+    ? RECLAIMED_COPY.negative
+    : {
+        headline: 'A heavier week',
+        sub: "More time went to it than at your starting point. Worth checking what changed — sleep, stress, an event. That's information.",
+      };
 }
 
 function round1(n: number): number {

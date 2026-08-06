@@ -1,256 +1,283 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Animated, Easing, Pressable, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
-import Svg, { Circle } from 'react-native-svg';
+import React, { useEffect, useState } from 'react';
+import { View, Pressable, StyleSheet, Text } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
   Screen, Card, Button, H1, H2, H3, Body, BodySm, Caption, useTheme,
 } from '../components/ui';
+import { BreathCircle, QuietCircle } from '../components/BreathCircle';
 import { space, radius, type as t } from '../constants/theme';
 import { useStore } from '../store/useStore';
-import { Text } from 'react-native';
+import { SENSES_STEPS, BREATH, WIDENING, VALUES_ANCHOR, HARD_DAY } from '../content/exercises.ts';
 
-/* Grounding is free forever and reachable in <= 2 taps from anywhere. Nothing on this
- * screen is ever gated, and nothing on it references appearance. */
+/* Free forever, two taps from anywhere, and never gated. See lib/entitlement.ts. */
 
-type Tool = 'menu' | 'senses' | 'breath' | 'widen' | 'values';
-
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-
-/* 4-7-8 paced breathing. Animated via Animated API so it runs on web without a native
- * driver — react-native-web ignores useNativeDriver, so we leave it false deliberately. */
-function Breathing({ onDone }: { onDone: () => void }) {
-  const c = useTheme();
-  const scale = useRef(new Animated.Value(0.55)).current;
-  const [phase, setPhase] = useState('Ready');
-  const [round, setRound] = useState(0);
-  const TOTAL = 4;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const run = async (n: number) => {
-      if (cancelled || n >= TOTAL) {
-        if (!cancelled) {
-          setPhase('Done');
-          onDone();
-        }
-        return;
-      }
-      setRound(n + 1);
-
-      const step = (to: number, ms: number, label: string) =>
-        new Promise<void>((resolve) => {
-          if (cancelled) return resolve();
-          setPhase(label);
-          Animated.timing(scale, {
-            toValue: to,
-            duration: ms,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: false,
-          }).start(() => resolve());
-        });
-
-      await step(1, 4000, 'Breathe in');
-      await step(1, 7000, 'Hold');
-      await step(0.55, 8000, 'Breathe out');
-      if (!cancelled) void run(n + 1);
-    };
-
-    void run(0);
-    return () => {
-      cancelled = true;
-    };
-  }, [onDone, scale]);
-
-  const size = 200;
-  const r = size / 2 - 8;
-
-  return (
-    <View style={{ alignItems: 'center' }}>
-      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-        <Animated.View style={{ transform: [{ scale }] }}>
-          <Svg width={size} height={size}>
-            <Circle cx={size / 2} cy={size / 2} r={r} fill={c.accentPale} stroke={c.accent} strokeWidth={2} />
-          </Svg>
-        </Animated.View>
-        <Text style={[t.h2, { position: 'absolute', color: c.accentDeep }]}>{phase}</Text>
-      </View>
-      <Caption style={{ marginTop: space.md }}>
-        {phase === 'Done' ? 'Notice how your body feels now.' : `Round ${round} of ${TOTAL} · in 4, hold 7, out 8`}
-      </Caption>
-    </View>
-  );
-}
-
-const SENSES = [
-  { n: 5, label: 'things you can see' },
-  { n: 4, label: 'things you can feel' },
-  { n: 3, label: 'things you can hear' },
-  { n: 2, label: 'things you can smell' },
-  { n: 1, label: 'thing you can taste' },
-];
-
-const WIDEN_STEPS = [
-  'Notice that your attention is pointed inward — at yourself, or at how you are coming across.',
-  'Pick one object near you. Describe it in detail: colour, texture, edges, wear.',
-  'Widen out. Name three sounds you can hear right now, near and far.',
-  'Widen again. What is actually happening in this space? What is the temperature, the light, the air?',
-  'Return to what you were doing, with attention pointed outward.',
-  'It will snap back to you. That is expected. Widening again is the repetition — that is the whole exercise.',
-];
-
-const VALUES_PROMPTS = [
-  'If appearance worry took up none of your day tomorrow, what would you actually do with the time?',
-  'Who is someone you want more contact with than you currently have?',
-  'What did you used to do that you have quietly stopped doing?',
-  'What would you want to be true of you in five years that has nothing to do with how you look?',
-];
+type Tool = 'menu' | 'senses' | 'breath' | 'widen' | 'values' | 'hardday' | 'sit';
 
 export default function Grounding() {
   const c = useTheme();
   const router = useRouter();
+  const params = useLocalSearchParams<{ mode?: string }>();
   const logPractice = useStore((s) => s.logPractice);
-  const [tool, setTool] = useState<Tool>('menu');
-  const [sensesStep, setSensesStep] = useState(0);
-  const [widenStep, setWidenStep] = useState(0);
+
+  const [tool, setTool] = useState<Tool>(params.mode === 'hard' ? 'hardday' : 'menu');
   const [logged, setLogged] = useState(false);
 
-  const complete = () => {
+  const complete = (kind: 'grounding' | 'hard-day' = 'grounding') => {
     if (!logged) {
-      logPractice('grounding');
+      logPractice(kind);
       setLogged(true);
     }
   };
 
-  if (tool === 'menu') {
-    return (
-      <Screen>
-        <View style={{ marginTop: space.xxl }}>
-          <H1>Grounding</H1>
-          <BodySm style={{ marginTop: space.sm, marginBottom: space.lg }}>
-            Free, always. Use these any time — especially when you are too activated to do
-            anything structured. Any of them counts as showing up.
-          </BodySm>
-
-          {[
-            { k: 'breath' as Tool, title: '4-7-8 breathing', sub: 'Four rounds, about two minutes. Settles the physical end of it.' },
-            { k: 'senses' as Tool, title: '5-4-3-2-1', sub: 'Pulls attention out of your head and into the room.' },
-            { k: 'widen' as Tool, title: 'Attention widening', sub: 'Sixty seconds of practising outward focus instead of self-focus.' },
-            { k: 'values' as Tool, title: 'Values anchor', sub: 'Four questions to reconnect with what the hours are for.' },
-          ].map((x) => (
-            <Pressable
-              key={x.k}
-              accessibilityRole="button"
-              onPress={() => setTool(x.k)}
-              style={({ pressed }) => ({
-                backgroundColor: c.surface,
-                borderRadius: radius.lg,
-                borderWidth: StyleSheet.hairlineWidth,
-                borderColor: c.line,
-                padding: space.lg,
-                marginBottom: space.md,
-                opacity: pressed ? 0.9 : 1,
-              })}
-            >
-              <H3>{x.title}</H3>
-              <BodySm style={{ marginTop: space.xs }}>{x.sub}</BodySm>
-            </Pressable>
-          ))}
-
-          <Card tone="accent">
-            <H3>If this is more than a hard moment</H3>
-            <BodySm style={{ marginTop: space.xs }}>
-              Reaching a person beats any exercise here. Support is one tap away, at the top of the screen.
-            </BodySm>
-            <Button label="Open support" variant="secondary" onPress={() => router.push('/support')} style={{ marginTop: space.md }} />
-          </Card>
-
-          <Button label="Back" variant="ghost" onPress={() => router.back()} />
-        </View>
-      </Screen>
-    );
-  }
+  if (tool === 'menu') return <Menu onPick={setTool} onBack={() => router.back()} />;
+  if (tool === 'hardday') return <HardDay onPick={setTool} complete={complete} />;
+  if (tool === 'sit') return <Sit onDone={() => { complete('hard-day'); setTool('hardday'); }} />;
 
   return (
     <Screen>
       <View style={{ marginTop: space.xxl }}>
-        {tool === 'breath' && (
-          <Card>
-            <H2 style={{ marginBottom: space.lg }}>4-7-8 breathing</H2>
-            <Breathing onDone={complete} />
-          </Card>
-        )}
-
-        {tool === 'senses' && (
-          <Card>
-            <Caption>
-              {sensesStep + 1} of {SENSES.length}
-            </Caption>
-            <H1 style={{ marginTop: space.xs }}>
-              {SENSES[Math.min(sensesStep, SENSES.length - 1)].n}
-            </H1>
-            <H2>{SENSES[Math.min(sensesStep, SENSES.length - 1)].label}</H2>
-            <BodySm style={{ marginTop: space.md }}>
-              Name them out loud if you can. Out loud works better than in your head.
-            </BodySm>
-            <Button
-              label={sensesStep >= SENSES.length - 1 ? 'Finish' : 'Next'}
-              onPress={() => {
-                if (sensesStep >= SENSES.length - 1) {
-                  complete();
-                  setTool('menu');
-                  setSensesStep(0);
-                } else setSensesStep(sensesStep + 1);
-              }}
-              style={{ marginTop: space.lg }}
-            />
-          </Card>
-        )}
-
-        {tool === 'widen' && (
-          <Card>
-            <Caption>
-              {widenStep + 1} of {WIDEN_STEPS.length}
-            </Caption>
-            <Body style={{ marginTop: space.md, fontSize: 18, lineHeight: 27 }}>{WIDEN_STEPS[widenStep]}</Body>
-            <Button
-              label={widenStep >= WIDEN_STEPS.length - 1 ? 'Finish' : 'Next'}
-              onPress={() => {
-                if (widenStep >= WIDEN_STEPS.length - 1) {
-                  complete();
-                  setTool('menu');
-                  setWidenStep(0);
-                } else setWidenStep(widenStep + 1);
-              }}
-              style={{ marginTop: space.xl }}
-            />
-          </Card>
-        )}
-
-        {tool === 'values' && (
-          <Card>
-            <H2>Values anchor</H2>
-            <BodySm style={{ marginTop: space.xs, marginBottom: space.lg }}>
-              Nothing to fill in. Just sit with each one for a moment.
-            </BodySm>
-            {VALUES_PROMPTS.map((p, i) => (
-              <View key={i} style={{ marginBottom: space.lg }}>
-                <Caption>{i + 1}</Caption>
-                <Body style={{ marginTop: space.xs }}>{p}</Body>
-              </View>
-            ))}
-            <Button
-              label="Finish"
-              onPress={() => {
-                complete();
-                setTool('menu');
-              }}
-            />
-          </Card>
-        )}
-
-        <Button label="Back to grounding" variant="ghost" onPress={() => setTool('menu')} style={{ marginTop: space.sm }} />
+        {tool === 'senses' && <Senses onDone={() => { complete(); setTool('menu'); }} />}
+        {tool === 'breath' && <Breath onDone={() => complete()} />}
+        {tool === 'widen' && <Widening onDone={() => { complete(); setTool('menu'); }} />}
+        {tool === 'values' && <Values onDone={() => { complete(); setTool('menu'); }} />}
+        <Button label="Back" variant="ghost" onPress={() => setTool('menu')} style={{ marginTop: space.md }} />
       </View>
     </Screen>
+  );
+}
+
+/* ---------- menu ---------- */
+
+function Menu({ onPick, onBack }: { onPick: (t: Tool) => void; onBack: () => void }) {
+  const c = useTheme();
+  const items: { k: Tool; title: string; sub: string }[] = [
+    { k: 'breath', title: '4-7-8 breathing', sub: 'Four cycles, about eighty seconds.' },
+    { k: 'senses', title: '5-4-3-2-1', sub: 'Three minutes. No timer, no rush.' },
+    { k: 'widen', title: 'Attention widening', sub: 'Sixty seconds of practising the wide view.' },
+    { k: 'values', title: 'Values anchor', sub: 'Ninety seconds. Three questions.' },
+  ];
+  return (
+    <Screen>
+      <View style={{ marginTop: space.xxl }}>
+        <H1>Grounding</H1>
+        <BodySm style={{ marginTop: space.sm, marginBottom: space.lg }}>
+          Free, always. Any of these counts as showing up.
+        </BodySm>
+
+        {items.map((x) => (
+          <Pressable
+            key={x.k}
+            accessibilityRole="button"
+            onPress={() => onPick(x.k)}
+            style={({ pressed }) => ({
+              backgroundColor: c.surface,
+              borderRadius: radius.lg,
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: c.line,
+              padding: space.lg,
+              marginBottom: space.sm,
+              opacity: pressed ? 0.9 : 1,
+            })}
+          >
+            <H3>{x.title}</H3>
+            <BodySm style={{ marginTop: 2 }}>{x.sub}</BodySm>
+          </Pressable>
+        ))}
+
+        <Button label="Back" variant="ghost" onPress={onBack} style={{ marginTop: space.md }} />
+      </View>
+    </Screen>
+  );
+}
+
+/* ---------- hard day ---------- */
+
+function HardDay({ onPick, complete }: { onPick: (t: Tool) => void; complete: (k?: 'hard-day') => void }) {
+  const c = useTheme();
+  const router = useRouter();
+
+  // Showing up on a hard day is logged the moment the screen opens. It is the single
+  // most clinically valuable thing someone can do on a bad day, so it must not depend on
+  // them completing anything afterwards.
+  useEffect(() => {
+    complete('hard-day');
+  }, [complete]);
+
+  return (
+    <Screen>
+      <View style={{ marginTop: space.xxxl }}>
+        <H1>{HARD_DAY.opening}</H1>
+
+        <View style={{ marginTop: space.xl }}>
+          {HARD_DAY.options.map((o) => (
+            <Button
+              key={o.key}
+              label={o.label}
+              variant={o.key === 'talk' ? 'secondary' : 'primary'}
+              onPress={() => {
+                if (o.key === 'breathe') onPick('breath');
+                else if (o.key === 'ground') onPick('senses');
+                else if (o.key === 'sit') onPick('sit');
+                else router.push('/support');
+              }}
+              style={{ marginBottom: space.sm }}
+            />
+          ))}
+        </View>
+
+        <Card tone="accent" style={{ marginTop: space.xl }}>
+          <Body>{HARD_DAY.close}</Body>
+        </Card>
+
+        <Button label="Home" variant="ghost" onPress={() => router.replace('/')} />
+      </View>
+    </Screen>
+  );
+}
+
+/** Two minutes of nothing being asked. The only text is at the midpoint. */
+function Sit({ onDone }: { onDone: () => void }) {
+  const c = useTheme();
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setElapsed((e) => e + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (elapsed >= HARD_DAY.sit.totalSeconds) onDone();
+  }, [elapsed, onDone]);
+
+  const showMid = elapsed >= HARD_DAY.sit.midpoint.at! && elapsed < HARD_DAY.sit.midpoint.at! + 12;
+
+  return (
+    <Screen scroll={false}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: space.xxxl }}>
+        <QuietCircle />
+        <View style={{ height: 40, marginTop: space.xl, justifyContent: 'center' }}>
+          {showMid ? <Body style={{ color: c.inkSoft }}>{HARD_DAY.sit.midpoint.text}</Body> : null}
+        </View>
+        <Pressable onPress={onDone} style={{ marginTop: space.xxl, padding: space.md }}>
+          <Caption>Finish</Caption>
+        </Pressable>
+      </View>
+    </Screen>
+  );
+}
+
+/* ---------- 5-4-3-2-1 ---------- */
+
+function Senses({ onDone }: { onDone: () => void }) {
+  const c = useTheme();
+  const [i, setI] = useState(0);
+  const step = SENSES_STEPS[i];
+  const last = i === SENSES_STEPS.length - 1;
+
+  return (
+    <Card>
+      {step.count !== null ? (
+        <>
+          <Text style={[t.display, { color: c.accentDeep }]}>{step.count}</Text>
+          <H2>{step.title}</H2>
+        </>
+      ) : (
+        <H2>{step.title}</H2>
+      )}
+      <Body style={{ marginTop: space.md, color: c.inkSoft }}>{step.text}</Body>
+      <Button
+        label={last ? 'Finish' : 'Next'}
+        onPress={() => (last ? onDone() : setI(i + 1))}
+        style={{ marginTop: space.xl }}
+      />
+    </Card>
+  );
+}
+
+/* ---------- breathing ---------- */
+
+function Breath({ onDone }: { onDone: () => void }) {
+  const [started, setStarted] = useState(false);
+  const [finished, setFinished] = useState(false);
+
+  if (!started) {
+    return (
+      <Card>
+        <H2>4-7-8 breathing</H2>
+        <Body style={{ marginTop: space.md }}>{BREATH.intro}</Body>
+        <Button label="Start" onPress={() => setStarted(true)} style={{ marginTop: space.xl }} />
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <BreathCircle
+        onDone={() => {
+          setFinished(true);
+          onDone();
+        }}
+      />
+      {finished && <Body style={{ marginTop: space.lg }}>{BREATH.outro}</Body>}
+    </Card>
+  );
+}
+
+/* ---------- attention widening ---------- */
+
+function Widening({ onDone }: { onDone: () => void }) {
+  const c = useTheme();
+  const [elapsed, setElapsed] = useState(0);
+  const done = elapsed >= WIDENING.totalSeconds;
+
+  useEffect(() => {
+    if (done) return;
+    const id = setInterval(() => setElapsed((e) => e + 1), 1000);
+    return () => clearInterval(id);
+  }, [done]);
+
+  const current = [...WIDENING.steps].reverse().find((s) => elapsed >= (s.at ?? 0));
+
+  return (
+    <Card>
+      <H2>Attention widening</H2>
+      {done ? (
+        <>
+          <Body style={{ marginTop: space.lg }}>{WIDENING.outro}</Body>
+          <Button label="Finish" onPress={onDone} style={{ marginTop: space.xl }} />
+        </>
+      ) : (
+        <>
+          <Text style={[t.h1, { color: c.accentDeep, marginTop: space.md }]}>
+            {WIDENING.totalSeconds - elapsed}s
+          </Text>
+          <Body style={{ marginTop: space.md, fontSize: 18, lineHeight: 27 }}>{current?.text}</Body>
+        </>
+      )}
+    </Card>
+  );
+}
+
+/* ---------- values anchor ---------- */
+
+function Values({ onDone }: { onDone: () => void }) {
+  const c = useTheme();
+  const [i, setI] = useState(0);
+  const last = i === VALUES_ANCHOR.steps.length - 1;
+  return (
+    <Card>
+      <H2>Values anchor</H2>
+      <Caption style={{ marginTop: space.xs }}>
+        {i + 1} of {VALUES_ANCHOR.steps.length}
+      </Caption>
+      <Body style={{ marginTop: space.lg, fontSize: 18, lineHeight: 27 }}>
+        {VALUES_ANCHOR.steps[i]}
+      </Body>
+      <Button
+        label={last ? 'Finish' : 'Next'}
+        onPress={() => (last ? onDone() : setI(i + 1))}
+        style={{ marginTop: space.xl }}
+      />
+    </Card>
   );
 }

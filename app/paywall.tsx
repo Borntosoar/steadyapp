@@ -6,6 +6,7 @@ import {
 } from '../components/ui';
 import { space, radius } from '../constants/theme';
 import { useEntitlement, PRICING, FREE_LIMITS } from '../lib/entitlement';
+import { PAYWALL_COPY } from '../content/copy.ts';
 
 /* No countdown. No fake scarcity. No "limited spots". No disguised dismiss.
  *
@@ -20,6 +21,7 @@ export default function Paywall() {
   const router = useRouter();
   const { entitled, purchase, restore } = useEntitlement();
   const [plan, setPlan] = useState<Plan>('yearly');
+  const [hardship, setHardship] = useState(false);
 
   const dismiss = () => {
     if (router.canGoBack()) router.back();
@@ -62,11 +64,9 @@ export default function Paywall() {
           </Pressable>
         </Row>
 
-        <H1 style={{ marginTop: space.sm }}>You've seen your number.</H1>
-        <Body style={{ marginTop: space.sm, color: c.inkSoft }}>
-          Weeks 2 through 12 are how you change it — the exposure work, the thought records, the
-          attention training, and the plan you leave with.
-        </Body>
+        <H1 style={{ marginTop: space.sm }}>{PAYWALL_COPY.headline}</H1>
+        <Body style={{ marginTop: space.sm, color: c.inkSoft }}>{PAYWALL_COPY.sub}</Body>
+        <Body style={{ marginTop: space.sm, color: c.accentDeep }}>{PAYWALL_COPY.freeLine}</Body>
 
         <Card style={{ marginTop: space.lg }}>
           <H3>Free, forever</H3>
@@ -125,6 +125,33 @@ export default function Paywall() {
           {PRICING.trialDays} days free, then {plans.find((p) => p.key === plan)?.price}. Cancel any
           time in your app store settings.
         </Caption>
+
+        {/* Visible, not buried. No form, no proof, no questions — someone who cannot pay
+            is not a lower-value user, and making them ask twice is a bad trade. */}
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setHardship(true)}
+          style={{ marginTop: space.lg, paddingVertical: space.md, alignItems: 'center', minHeight: 44 }}
+        >
+          <Body style={{ color: c.accentDeep, textDecorationLine: 'underline' }}>
+            {PAYWALL_COPY.hardship.link}
+          </Body>
+        </Pressable>
+
+        {hardship && (
+          <Card tone="accent">
+            <H3>{PAYWALL_COPY.hardship.title}</H3>
+            <Body style={{ marginTop: space.sm }}>{PAYWALL_COPY.hardship.body}</Body>
+            <Button
+              label={PAYWALL_COPY.hardship.confirm}
+              onPress={async () => {
+                await purchase('lifetime');
+                router.replace('/');
+              }}
+              style={{ marginTop: space.md }}
+            />
+          </Card>
+        )}
 
         <Button
           label="Restore purchase"

@@ -142,10 +142,7 @@ export default function Home() {
       {/* Hard day — preserves the streak, logs nothing judgmental, two taps to grounding. */}
       <Pressable
         accessibilityRole="button"
-        onPress={() => {
-          logPractice('hard-day');
-          router.push('/grounding');
-        }}
+        onPress={() => router.push('/grounding?mode=hard')}
         style={({ pressed }) => ({
           borderWidth: StyleSheet.hairlineWidth,
           borderColor: c.warn,
