@@ -91,7 +91,11 @@ export const TIER_COMPARISON: { label: string; free: string | true; plus: string
   { label: 'Mirror practice, timed and graded', free: '—', plus: true },
   { label: 'Behavioural experiments', free: '—', plus: true },
   { label: 'Full progress history and charts', free: '—', plus: true },
-  { label: 'Export for a clinician', free: '—', plus: true },
+  /* Free on both sides, because onboarding promises it before any data is collected:
+     "there is no backup … you can export a plain-text copy whenever you like." Selling
+     somebody the only route their own writing has off the device would make that sentence
+     false, and it is the one thing between them and total loss when a phone dies. */
+  { label: 'Export and full backup file', free: 'Forever', plus: 'Forever' },
 ];
 
 export function useEntitlement() {
@@ -104,12 +108,16 @@ export function useEntitlement() {
      *  Replace this local setter with Purchases.purchasePackage() and drive `entitled`
      *  from customerInfo.entitlements.active. Nothing else in the app needs to change —
      *  every gate reads through this hook. */
-    async purchase(_plan: keyof typeof PRICING) {
-      setEntitled(true);
+    async purchase(plan: keyof typeof PRICING) {
+      // Only a subscription has a trial to end. A one-off lifetime payment has nothing to
+      // renew, so stamping a trial clock on it would schedule a warning about a charge
+      // that is never going to happen.
+      setEntitled(true, plan !== 'lifetime');
     },
     async restore() {
       // REVENUECAT INTEGRATION POINT — Purchases.restorePurchases()
-      setEntitled(true);
+      // A restore re-grants an existing entitlement; it never begins a trial.
+      setEntitled(true, false);
     },
   };
 }

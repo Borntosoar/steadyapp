@@ -140,16 +140,22 @@ export function recordPracticeDay(state: ProtocolState, dayKey: string): Protoco
   const weekPracticeDates = [...state.weekPracticeDates, dayKey];
   const done = new Set(weekPracticeDates).size;
 
-  if (done < PRACTICE_DAYS_PER_WEEK || state.currentWeek >= WEEKS_TOTAL) {
-    return { ...state, weekPracticeDates };
-  }
+  if (done < PRACTICE_DAYS_PER_WEEK) return { ...state, weekPracticeDates };
+
+  /* Week 12 is recorded as completed like any other week, and only then does the counter
+     stop. Testing the ceiling first — which is what this used to do — meant week 12 could
+     never enter `completedWeeks`, so `isProtocolComplete` was unreachable and somebody who
+     finished the entire programme was never told they had. It also left
+     `weekPracticeDates` accumulating forever, so the home screen read "156/4 this week"
+     and "Week complete" permanently. */
+  const completedWeeks = state.completedWeeks.includes(state.currentWeek)
+    ? state.completedWeeks
+    : [...state.completedWeeks, state.currentWeek];
 
   return {
     ...state,
-    completedWeeks: state.completedWeeks.includes(state.currentWeek)
-      ? state.completedWeeks
-      : [...state.completedWeeks, state.currentWeek],
-    currentWeek: state.currentWeek + 1,
+    completedWeeks,
+    currentWeek: Math.min(state.currentWeek + 1, WEEKS_TOTAL),
     weekPracticeDates: [],
   };
 }

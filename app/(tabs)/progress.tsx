@@ -15,7 +15,7 @@ import { useEntitlement } from '../../lib/entitlement';
 import {
   reclaimedByWeek, computeReclaimed, checkInsInLastDays, previousWeekCheckIns,
 } from '../../lib/reclaimed';
-import { exportText } from '../../lib/storage';
+import { exportText, exportJson } from '../../lib/storage';
 import { insightsSummary } from '../../content/copy.ts';
 
 /* Every chart on this screen plots something that should go DOWN, or a count of times the
@@ -84,6 +84,55 @@ export default function Progress() {
     </Atmosphere>
   );
 
+  /* Export is FREE, deliberately, and it sits above the entitlement gate for that reason.
+     Onboarding tells the user before they have written a word: "there is no backup. If you
+     delete the app it is gone. You can export a plain-text copy whenever you like." Putting
+     that copy behind $79.99/yr made the sentence false, and it is the only thing standing
+     between somebody and total loss on a phone that dies. Nothing in the export is a paid
+     analysis — it is their own writing handed back. */
+  const download = async (body: string, name: string, mime: string) => {
+    if (Platform.OS === 'web') {
+      const blob = new Blob([body], { type: mime });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      return;
+    }
+    await Share.share({ message: body });
+  };
+
+  const stamp = new Date().toISOString().slice(0, 10);
+  const doExport = () => download(exportText(state), `steady-summary-${stamp}.txt`, 'text/plain');
+  const doBackup = () => download(exportJson(state), `steady-backup-${stamp}.json`, 'application/json');
+
+  const exportSection = (
+    <Section title="Take this with you">
+      <BodySm style={{ marginTop: space.sm }}>
+        A plain-text summary for a clinician, and a full backup file for you. Handing someone
+        a written record is far easier than saying it out loud, and it saves the first
+        appointment from being spent on reconstruction.
+      </BodySm>
+      <BodySm style={{ marginTop: space.md, color: c.cool }}>
+        Both are free and always will be. Steady keeps nothing on a server, so this file is
+        the only copy that survives losing the phone.
+      </BodySm>
+      <Button
+        label="Export summary"
+        variant="secondary"
+        onPress={doExport}
+        style={{ marginTop: space.lg, alignSelf: 'flex-start' }}
+      />
+      <Button
+        label="Save a full backup"
+        variant="ghost"
+        onPress={doBackup}
+        style={{ marginTop: space.xs, alignSelf: 'flex-start' }}
+      />
+    </Section>
+  );
+
   if (!entitled) {
     return (
       <ScrollView
@@ -112,6 +161,7 @@ export default function Progress() {
                 style={{ marginTop: space.lg, alignSelf: 'flex-start' }}
               />
             </Section>
+            {exportSection}
           </View>
         </View>
       </ScrollView>
@@ -122,6 +172,11 @@ export default function Progress() {
   const short = (d: string) => d.slice(5);
 
   const weekly = reclaimedByWeek(baseline, checkIns);
+  /* A bucket built from one or two days is projected over a full seven, so a single good
+     Monday in a fresh week drew a spike several times the height of the completed week
+     beside it. `reclaimedCopy` already refuses to state a number below three check-ins;
+     the chart has to hold the same line or it contradicts the text above it. */
+  const plottable = weekly.filter((w) => w.sampleSize >= 3);
 
   const sudsPoints = sorted.slice(-21).map((x) => ({ x: short(x.date), y: x.suds }));
   const avoidanceScore = { none: 0, small: 1, significant: 2 } as const;
@@ -162,25 +217,6 @@ export default function Progress() {
     mirrorAfter,
   });
 
-  const doExport = async () => {
-    const txt = exportText(state);
-    if (Platform.OS === 'web') {
-      try {
-        await navigator.clipboard.writeText(txt);
-      } catch {
-        /* clipboard blocked — the file download below still works */
-      }
-      const blob = new Blob([txt], { type: 'text/plain' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `steady-summary-${new Date().toISOString().slice(0, 10)}.txt`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-      return;
-    }
-    await Share.share({ message: txt });
-  };
-
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: c.bg }}
@@ -200,11 +236,11 @@ export default function Progress() {
           </View>
 
           <Section title="Week by week" note="Each point is one week, against your starting point.">
-            {weekly.length >= 2 ? (
+            {plottable.length >= 2 ? (
               <LineChart
-                points={weekly.map((w) => ({ x: `w${w.week}`, y: w.hours }))}
-                max={Math.max(2, ...weekly.map((w) => w.hours))}
-                min={Math.min(0, ...weekly.map((w) => w.hours))}
+                points={plottable.map((w) => ({ x: `w${w.week}`, y: w.hours }))}
+                max={Math.max(2, ...plottable.map((w) => w.hours))}
+                min={Math.min(0, ...plottable.map((w) => w.hours))}
                 label="Hours reclaimed per week"
               />
             ) : (
@@ -252,19 +288,7 @@ export default function Progress() {
             )}
           </Section>
 
-          <Section title="Take this to a clinician">
-            <BodySm style={{ marginTop: space.sm }}>
-              A plain-text summary of your own numbers. Handing someone a written record is far
-              easier than saying it out loud, and it saves the first appointment from being spent
-              on reconstruction.
-            </BodySm>
-            <Button
-              label="Export summary"
-              variant="secondary"
-              onPress={doExport}
-              style={{ marginTop: space.lg, alignSelf: 'flex-start' }}
-            />
-          </Section>
+          {exportSection}
         </View>
       </View>
     </ScrollView>

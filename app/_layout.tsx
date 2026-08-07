@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
-import { View, Pressable, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Pressable, Text, ActivityIndicator, StyleSheet, Platform, AppState as RNAppState } from 'react-native';
 import { Stack, useRouter, usePathname } from 'expo-router';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from '../components/ui';
-import { useStore } from '../store/useStore';
+import { useStore, flushState } from '../store/useStore';
 import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../constants/theme';
 
 /* Support is reachable in <= 2 taps from every screen: this bar is always mounted, so
@@ -68,6 +68,23 @@ function Gate() {
   useEffect(() => {
     void hydrate();
   }, [hydrate]);
+
+  /* Writes are debounced 150ms, which is right while the app is in front of somebody and
+     wrong the instant it is not: a mutation followed by a home-swipe-and-kill inside that
+     window is simply lost, and there is no server to re-fetch it from. Flush on the way
+     out on both platforms — `pagehide` rather than `beforeunload`, because Safari does not
+     fire the latter reliably on mobile. */
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const onHide = () => void flushState();
+      window.addEventListener('pagehide', onHide);
+      return () => window.removeEventListener('pagehide', onHide);
+    }
+    const sub = RNAppState.addEventListener('change', (next) => {
+      if (next === 'background' || next === 'inactive') void flushState();
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;

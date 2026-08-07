@@ -32,7 +32,21 @@
  * See .claude/skills/value-first-growth/references/moments.md for the reasoning and the
  * published frequency figures behind the caps. */
 
-import type { AppState, CheckIn } from '../types';
+import type { AppState, CheckIn, MomentRecord } from '../types';
+/* Day arithmetic comes from lib/streak.ts and nowhere else.
+ *
+ * This file used to define its own `dayKey` on `toISOString()`, which is UTC, while every
+ * date actually written to storage comes from streak's, which is local. Two definitions of
+ * "today" in one persisted object produced four separate bugs, including the worst one in
+ * the codebase: for a user in Sydney, their own 10-out-of-10 check-in filed this morning
+ * looked like a FUTURE date, got skipped by the `gap < 0` guard, and the upgrade prompt
+ * fired at them anyway — the exact thing rule 2 below exists to prevent.
+ *
+ * Every test passed throughout, because the fixtures built their dates in UTC too. */
+import { dayKey, daysBetween } from './streak.ts';
+
+export { dayKey };
+export type { MomentRecord };
 
 export type MomentId =
   | 'trial-ending'
@@ -92,15 +106,8 @@ export const MOMENTS: Record<MomentId, MomentConfig> = {
   'rate-app': { id: 'rate-app', kind: 'advocacy', priority: 20, maxShows: 1, cooldownDays: 90, maxDismissals: 1 },
 };
 
-export interface MomentRecord {
-  shows: number;
-  lastShownDate: string | null;
-  dismissals: number;
-  lastDismissedDate: string | null;
-  /** Tapped through. Retires the moment. */
-  acted: boolean;
-}
-
+/* MomentRecord is declared once, in types/index.ts, because it is persisted — two
+   independent definitions of one stored shape compile happily while they drift apart. */
 export type MomentState = Record<string, MomentRecord>;
 
 export const emptyMomentRecord = (): MomentRecord => ({
@@ -110,17 +117,6 @@ export const emptyMomentRecord = (): MomentRecord => ({
   lastDismissedDate: null,
   acted: false,
 });
-
-/* ---------- dates ---------- */
-
-export function dayKey(d: Date = new Date()): string {
-  return d.toISOString().slice(0, 10);
-}
-
-function daysBetween(a: string, b: string): number {
-  const ms = new Date(b + 'T00:00:00Z').getTime() - new Date(a + 'T00:00:00Z').getTime();
-  return Math.round(ms / 86400000);
-}
 
 /* ---------- distress suppression ---------- */
 
@@ -137,8 +133,13 @@ export function distressRecently(
 ): boolean {
   const today = dayKey(now);
 
+  /* Both bounds matter. Without the lower one, a single hard-day tap recorded while the
+     device clock was wrong leaves a future date in `practice` and suppresses every
+     commercial moment for the life of the install — silent, unbounded, and impossible to
+     diagnose from the outside. */
   for (const d of hardDayDates) {
-    if (daysBetween(d, today) <= 1) return true;
+    const gap = daysBetween(d, today);
+    if (gap >= 0 && gap <= 1) return true;
   }
 
   for (const ci of checkIns) {
@@ -176,16 +177,24 @@ export function eligibleMoments(input: MomentInput, now: Date = new Date()): Mom
   const out: MomentId[] = [];
   const today = dayKey(now);
 
+  /* Practice DAYS, not practice events. `practice` holds one row per action, so a person
+     who did ten things in their first sitting has `length === 10` on day one — which made
+     `rate-app` fire at somebody with a single day of use, under a comment promising it
+     would not. lib/storage.ts already counted it this way; this file did not. */
+  const practiceDays = new Set(state.practice.map((p) => p.date)).size;
+
   // Trial ending: two days out or closer, and not yet over.
   if (input.trialStartedAt && input.trialDays) {
-    const elapsed = daysBetween(input.trialStartedAt.slice(0, 10), today);
-    const left = input.trialDays - elapsed;
+    // trialStartedAt is a full ISO timestamp in UTC. Slicing its first ten characters
+    // would compare a UTC date against a local one, which is the bug this file just had.
+    const started = dayKey(new Date(input.trialStartedAt));
+    const left = input.trialDays - daysBetween(started, today);
     if (left <= 2 && left >= 0) out.push('trial-ending');
   }
 
   // Winback: has a history worth returning to, and has been gone ten days.
   const lastPractice = state.streak.lastPracticeDate;
-  if (lastPractice && state.practice.length >= 3) {
+  if (lastPractice && practiceDays >= 3) {
     if (daysBetween(lastPractice, today) >= 10) out.push('winback');
   }
 
@@ -204,7 +213,7 @@ export function eligibleMoments(input: MomentInput, now: Date = new Date()): Mom
 
   // Review: after real, sustained, self-evidently good use. Never on a thin account.
   const resisted = state.urgeLogs.filter((u) => u.resisted).length;
-  if (state.practice.length >= 10 && (resisted >= 3 || state.mirrorSessions.length >= 3)) {
+  if (practiceDays >= 10 && (resisted >= 3 || state.mirrorSessions.length >= 3)) {
     out.push('rate-app');
   }
 
@@ -222,7 +231,16 @@ function retired(rec: MomentRecord, cfg: MomentConfig): boolean {
 /** Is the cooldown still running? Each dismissal doubles it — a "no" that is ignored is
  *  not a conversation, it is nagging. */
 function cooling(rec: MomentRecord, cfg: MomentConfig, today: string): boolean {
-  const anchor = rec.lastDismissedDate ?? rec.lastShownDate;
+  /* The anchor is the LATER of the two dates, not the dismissal by preference.
+     `lastDismissedDate ?? lastShownDate` looks reasonable and is wrong: once any
+     dismissal exists, the stale dismissal date wins forever and the cooldown stops
+     measuring from the most recent impression. Observed effect — the ask waited its
+     doubled eight days, appeared, and then appeared again the very next morning, which
+     is the nagging this function exists to prevent. */
+  const anchor = [rec.lastDismissedDate, rec.lastShownDate]
+    .filter((d): d is string => !!d)
+    .sort()
+    .pop();
   if (!anchor) return false;
   const wait = cfg.cooldownDays * Math.pow(2, rec.dismissals);
   return daysBetween(anchor, today) < wait;

@@ -14,6 +14,7 @@
  * is unit-testable without mounting React. */
 
 import type { CheckIn, Baseline } from '../types';
+import { daysBetween } from './streak.ts';
 import { RECLAIMED_COPY } from '../content/copy.ts';
 
 export interface ReclaimedResult {
@@ -140,16 +141,18 @@ export function checkInsInLastDays(checkIns: CheckIn[], days: number, now = new 
 export function reclaimedByWeek(
   baseline: Baseline | null,
   checkIns: CheckIn[]
-): { week: number; hours: number }[] {
+): { week: number; hours: number; sampleSize: number }[] {
   if (!baseline || checkIns.length === 0) return [];
 
   const sorted = [...checkIns].sort((a, b) => a.date.localeCompare(b.date));
-  const start = new Date(sorted[0].date + 'T00:00:00');
   const buckets = new Map<number, CheckIn[]>();
 
   for (const c of sorted) {
-    const d = new Date(c.date + 'T00:00:00');
-    const weekIndex = Math.floor((d.getTime() - start.getTime()) / (7 * 86400000));
+    /* Calendar days, not raw milliseconds. Dividing timestamps put eight days in one
+       bucket and six in the next across the spring-forward, because a "7 day" span that
+       crosses a DST boundary measures 6.958 days and floors into the week before.
+       `daysBetween` rounds, so it stays exact through both transitions. */
+    const weekIndex = Math.floor(daysBetween(sorted[0].date, c.date) / 7);
     const arr = buckets.get(weekIndex) ?? [];
     arr.push(c);
     buckets.set(weekIndex, arr);
@@ -160,6 +163,10 @@ export function reclaimedByWeek(
     .map(([weekIndex, group]) => ({
       week: weekIndex + 1,
       hours: computeReclaimed(baseline, group, 7).hours,
+      /* Carried out so the caller can refuse to plot a bucket built from one or two days.
+         `reclaimedCopy` already declines to state a number below three check-ins, and a
+         chart that draws the same thin data as a full-height bar contradicts it. */
+      sampleSize: group.length,
     }));
 }
 

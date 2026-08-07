@@ -218,6 +218,27 @@ marked `afterEvent`.
 
 ---
 
+## 11b. Export is free, lossless, and never sold
+
+Onboarding tells the user, on screen two and before they have written anything: *"there is
+no backup. If you delete the app it is gone. You can export a plain-text copy whenever you
+like."* Both halves of that have to stay true.
+
+Export therefore sits **above** the entitlement gate on Progress, and the tier comparison
+lists it as free on both sides. It also has to contain what they actually wrote — an export
+that reduced a year of thought records to `Thought records completed: 41` was a progress
+summary wearing a backup's job title. Predictions and outcomes are included too; §11 freezes
+them precisely so they can be looked back on, and dropping them from the export defeats
+that.
+
+`exportJson` / `importJson` are the real backup path. A user-initiated file the user keeps
+is not a server, an account, or a tracker, so this stays inside §6.
+
+**Where it lives.** `lib/storage.ts`, `app/(tabs)/progress.tsx` (export rendered before the
+`!entitled` return), `lib/entitlement.ts` `TIER_COMPARISON`, `__tests__/storage.test.mjs`.
+
+---
+
 ## 12. The money never touches the safety surfaces
 
 Grounding, crisis support and the urge timer carry no upsell in any state — not a badge, not
@@ -263,7 +284,7 @@ discounted cohort churns worse than the full-price cohort.
 ## Running the checks
 
 ```bash
-npm test          # 130 assertions across engine, protocol, streak, content, copy and money
+npm test          # 208 assertions across engine, protocol, streak, storage, timezones, content, copy and money
 npm run typecheck # tsc --noEmit
 ```
 

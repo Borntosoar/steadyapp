@@ -29,7 +29,10 @@ export const initialStreak = (): StreakState => ({
 
 const DAY = 86400000;
 
-export function dayKey(d: Date | string): string {
+/** Local calendar day, `YYYY-MM-DD`. Local, not UTC, and that is the whole point: this is
+ *  the definition of "today" every stored date uses, so anything comparing against a
+ *  stored date must come through here. */
+export function dayKey(d: Date | string = new Date()): string {
   const date = typeof d === 'string' ? new Date(d + 'T00:00:00') : d;
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');

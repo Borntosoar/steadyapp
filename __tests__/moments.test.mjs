@@ -144,21 +144,44 @@ describe('dismissal is an answer', () => {
   test('each dismissal doubles the wait', () => {
     const cfg = MOMENTS['week-one-ask'];
     const s = baseAppState();
-    // One dismissal, cooldown days ago: still cooling, because the wait has doubled.
-    s.moments = {
+    const rec = (shownDaysAgo, dismissedDaysAgo) => ({
       'week-one-ask': {
         shows: 1,
-        lastShownDate: day(cfg.cooldownDays),
+        lastShownDate: day(shownDaysAgo),
         dismissals: 1,
-        lastDismissedDate: day(cfg.cooldownDays),
+        lastDismissedDate: day(dismissedDaysAgo),
         acted: false,
       },
-    };
+    });
+
+    // One dismissal, one cooldown ago: still cooling, because the wait has doubled.
+    s.moments = rec(cfg.cooldownDays, cfg.cooldownDays);
     assert.equal(nextMoment(qualifiedForAsk(s)), null, 'the wait did not double after a refusal');
 
     // Twice the cooldown later, it may ask again.
-    s.moments['week-one-ask'].lastDismissedDate = day(cfg.cooldownDays * 2 + 1);
+    s.moments = rec(cfg.cooldownDays * 2 + 1, cfg.cooldownDays * 2 + 1);
     assert.equal(nextMoment(qualifiedForAsk(s))?.id, 'week-one-ask');
+  });
+
+  /* The cooldown anchors on the LATER of the two dates. Anchoring on the dismissal by
+     preference — `lastDismissedDate ?? lastShownDate` — meant that once any dismissal
+     existed, a stale dismissal date won forever and the cooldown stopped measuring from
+     the most recent impression. Observed: the ask correctly waited its doubled eight days,
+     appeared, and then appeared again the next morning. */
+  test('a recent impression still counts once a dismissal exists', () => {
+    const cfg = MOMENTS['week-one-ask'];
+    const s = baseAppState();
+    s.moments = {
+      'week-one-ask': {
+        shows: 2,
+        lastShownDate: day(1), // shown yesterday
+        dismissals: 1,
+        lastDismissedDate: day(cfg.cooldownDays * 3), // dismissed long ago
+        acted: false,
+      },
+    };
+    assert.equal(nextMoment(qualifiedForAsk(s)), null,
+      'the ask reappeared a day after its last impression');
   });
 
   test('three refusals retire the ask permanently', () => {
