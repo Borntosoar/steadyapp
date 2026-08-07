@@ -27,6 +27,7 @@ export default function Paywall() {
   const { entitled, purchase, restore } = useEntitlement();
   const [plan, setPlan] = useState<Plan>('yearly');
   const [hardship, setHardship] = useState(false);
+  const [showLifetime, setShowLifetime] = useState(false);
 
   const dismiss = () => {
     if (router.canGoBack()) router.back();
@@ -55,13 +56,30 @@ export default function Paywall() {
   /* Annual is pre-selected and badged: Health & Fitness takes ~68% of revenue from annual
      and annual retains far better. Monthly stays on the list anyway — in a category where
      trust is the binding constraint, offering the flexible option is itself a trust signal.
-     The badge says what the plan IS, not what you would lose by not taking it. */
+     The badge says what the plan IS, not what you would lose by not taking it.
+
+     Lifetime is off the default view and behind a plainly-labelled disclosure. Two reasons:
+     a twelve-week protocol invites "I'll be done by then", so lifetime cannibalises exactly
+     the annual renewals that compound past the ~24-month mark where churn stabilises and
+     LTV is actually made; and a third option on first read is a third decision for somebody
+     who is already spending their day making anxious decisions about themselves.
+
+     Disclosed, not buried. Some people genuinely will not take a subscription, and hiding
+     the option they want in order to sell them one they do not is the sort of thing this
+     paywall exists not to do. The link says exactly what is behind it. */
   const plans: { key: Plan; label: string; price: string; note?: string; badge?: string }[] = [
     /* "Best value" is arithmetic — it is the lowest per-month figure on the list. A badge
        reading "Most popular" would be a claim about users Steady does not have. */
     { key: 'yearly', label: 'Yearly', price: PRICING.yearly, note: `Works out at ${PRICING.yearlyPerMonth}`, badge: 'Best value' },
     { key: 'monthly', label: 'Monthly', price: PRICING.monthly, note: 'Leave whenever, no discount to lose' },
-    { key: 'lifetime', label: 'Lifetime', price: PRICING.lifetime, note: 'One payment. Under two years of the annual plan.' },
+    ...(showLifetime
+      ? [{
+          key: 'lifetime' as Plan,
+          label: 'Lifetime',
+          price: PRICING.lifetime,
+          note: 'One payment, no subscription. Under two years of the annual plan.',
+        }]
+      : []),
   ];
 
   return (
@@ -205,6 +223,24 @@ export default function Paywall() {
                 </Pressable>
               );
             })}
+
+            {/* Disclosed rather than hidden. The link names what is behind it, so nobody
+                has to guess that a one-off option exists. */}
+            {!showLifetime && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Show the one-off payment option"
+                onPress={() => setShowLifetime(true)}
+                style={({ pressed }) => ({
+                  paddingVertical: space.md,
+                  alignItems: 'center',
+                  minHeight: 44,
+                  opacity: pressed ? 0.6 : 1,
+                })}
+              >
+                <BodySm style={{ color: c.inkSoft }}>Rather pay once than subscribe?</BodySm>
+              </Pressable>
+            )}
 
             <Button
               label="Start my twelve weeks"

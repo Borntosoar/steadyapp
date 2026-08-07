@@ -101,8 +101,19 @@ Requirements that ship with it:
 
 ## Pricing
 
-Annual pre-selected, monthly equivalent alongside it, lifetime available. Health & Fitness
-takes 68% of revenue from annual and annual retains best.
+Annual pre-selected with the monthly equivalent alongside it, monthly second. Health &
+Fitness takes 68% of revenue from annual and annual retains best.
+
+**Lifetime is off the default view**, behind a link reading *"Rather pay once than
+subscribe?"*. A twelve-week protocol invites the thought *I'll be done by then*, so a
+lifetime option on first read cannibalises exactly the annual renewals that compound past
+the ~24-month mark where churn stabilises and LTV is actually made. A third plan is also a
+third decision, presented to somebody who is already spending their day making anxious
+decisions about themselves.
+
+Disclosed, not removed. Some people genuinely will not take a subscription, and hiding the
+option they want in order to sell them one they do not is precisely the behaviour the rest
+of this file exists to prevent. The link names what is behind it.
 
 **No discounts, no launch pricing, no countdown.** Beyond the manipulation objection there
 is a plain commercial one: in annual Health & Fitness the discounted cohort churns worse
