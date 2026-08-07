@@ -145,8 +145,9 @@ export default function CheckIn() {
   return (
     <Screen>
       <View style={{ marginTop: space.xxl }}>
-        {/* Four segments, not a percentage. A bar that creeps is a bar you watch. */}
-        <View style={{ flexDirection: 'row', gap: 5, marginBottom: space.xl }}>
+        {/* Four segments, not a percentage. A bar that creeps is a bar you watch.
+            Sits below the always-mounted Support pill rather than running under it. */}
+        <View style={{ flexDirection: 'row', gap: 5, marginTop: space.lg, marginBottom: space.xl }}>
           {steps.map((_, i) => (
             <View
               key={i}

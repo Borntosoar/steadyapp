@@ -25,10 +25,29 @@ npx expo start --web
 
 Then open **http://localhost:8081**.
 
-For a device, run `npx expo start` and scan the QR code with Expo Go.
+### On your phone, through Expo Go
+
+Install **Expo Go** from the App Store or Play Store, then on a computer on the
+same Wi-Fi as the phone:
 
 ```bash
-npm test          # 94 assertions, no test runner to install — node --test
+git clone https://github.com/Borntosoar/steadyapp.git
+cd steadyapp
+npm install
+npx expo start
+```
+
+Scan the QR code that appears in the terminal — with the Camera app on iOS, or
+from inside Expo Go on Android. The phone and the computer have to be on the
+same network; if they are not, `npx expo start --tunnel` routes it over ngrok
+instead, which is slower but works from anywhere.
+
+The camera permission prompt only appears on the mirror screen, and declining it
+is a supported path — the session runs text-guided instead. Nothing is captured
+either way.
+
+```bash
+npm test          # 107 assertions, no test runner to install — node --test
 npm run typecheck # tsc --noEmit
 ```
 
