@@ -47,7 +47,7 @@ is a supported path — the session runs text-guided instead. Nothing is capture
 either way.
 
 ```bash
-npm test          # 107 assertions, no test runner to install — node --test
+npm test          # 209 assertions, no test runner to install — node --test
 npm run typecheck # tsc --noEmit
 ```
 
@@ -102,9 +102,11 @@ what actually happened, re-rate. The archive of past experiments is the evidence
 **Grounding** — free forever. 5-4-3-2-1, 4-7-8 breathing, attention widening, values
 anchor.
 
-**Insights** — hand-rolled SVG charts: reclaimed hours by week, distress, checking
+**Progress** — hand-rolled SVG charts: reclaimed hours by week, distress, checking
 frequency, avoidance, mirror-session deltas. Plus a locally generated plain-English
-summary and a plain-text export to hand a clinician.
+summary, a plain-text export to hand a clinician, and a full backup file. Both exports
+are free on every tier — onboarding promises them as the only backup, so selling them
+would make that sentence false.
 
 **Support** — region-selectable crisis lines (CA/US/UK/AU/other) and guidance on finding
 a clinician who treats this specifically. Free, always, one tap from every screen.
@@ -114,37 +116,51 @@ a clinician who treats this specifically. Free, always, one tap from every scree
 ## Layout
 
 ```
-app/                 expo-router routes
-  _layout.tsx        theme, onboarding gate, persistent Support button
-  index.tsx          home
+app/                     expo-router routes
+  _layout.tsx            theme, onboarding gate, persistent Support button,
+                         flush-on-background
+  (tabs)/                the four-tab shell
+    _layout.tsx          hand-drawn tab bar
+    index.tsx            Today
+    practice.tsx  progress.tsx  learn.tsx
   checkin.tsx  mirror.tsx  journal.tsx  urges.tsx
-  grounding.tsx  support.tsx  insights.tsx  paywall.tsx
-  learn/index.tsx  learn/[slug].tsx
-  onboarding/index.tsx
+  grounding.tsx  support.tsx  paywall.tsx
+  module/[slug].tsx      one learn module
+  onboarding/index.tsx   seven steps, cost mirror at step four
 
 components/
-  ui.tsx             Screen, Card, Button, Options, Scale, type scale, theme
-  MirrorSurface.tsx  platform-guarded live mirror — no capture path
-  BreathCircle.tsx   4-7-8 and the quiet loop
-  charts.tsx         hand-rolled SVG line and bar
-  RichText.tsx       renders **bold** / *italic* in module prose
+  ui.tsx                 Screen, Card, Button, Field, Options, Scale, theme
+  Atmosphere.tsx         procedural SVG scenes — no photography, see SAFETY.md
+  MomentCard.tsx         the only renderer of an unprompted message
+  StorageNotice.tsx      surfaces a failed read or a failed write
+  MirrorSurface.tsx      platform-guarded live mirror — no capture path
+  BreathCircle.tsx       4-7-8 and the quiet loop, reduce-motion aware
+  charts.tsx             hand-rolled SVG line and bar
+  RichText.tsx           renders **bold** / *italic* in module prose
 
-lib/                 pure, unit-tested, no React imports
-  reclaimed.ts       the headline metric
-  protocol.ts        12 weeks, 4 phases, unlock rules, mirror hierarchy
-  streak.ts          freezes, milestones, no shaming
-  entitlement.ts     useEntitlement + ALWAYS_FREE_ROUTES
-  storage.ts         AsyncStorage + plain-text export
-  inline.ts          two-mark emphasis parser
+lib/                     pure. no React, no store — enforced by test
+  reclaimed.ts           the headline metric
+  cost.ts                the cost mirror, ~90 seconds into onboarding
+  protocol.ts            12 weeks, 4 phases, unlock rules, mirror hierarchy
+  streak.ts              freezes, milestones, and dayKey — local, not UTC
+  moments.ts             the one scheduler for everything unprompted
+  entitlement.ts         ALWAYS_FREE_ROUTES, pricing, pure predicates
+  storage.ts             versioned envelope, migrations, export/import
+  inline.ts              two-mark emphasis parser
 
-content/             all shipped prose and scripts
-  modules.ts         12 learn modules
-  exercises.ts       grounding, urge surfing, hard day, experiment, thought record
-  copy.ts            microcopy — the whole tone surface in one file
+hooks/useEntitlement.ts  the React half of entitlement, out of lib/ on purpose
 
-constants/           theme, support lines, mirror prompts
-store/useStore.ts    zustand + AsyncStorage
-__tests__/           reclaimed · protocol · streak · modules · copy
+content/                 all shipped prose and scripts
+  modules.ts             12 learn modules
+  exercises.ts           grounding, urge surfing, hard day, experiment, record
+  copy.ts                microcopy — the whole tone surface in one file
+  proof.ts               evidence cited in place of social proof we don't have
+
+constants/               theme, support lines, mirror prompts
+store/useStore.ts        zustand + AsyncStorage, the only mutator
+docs/API.md              the module contract and the integration seams
+__tests__/               reclaimed · protocol · streak · moments · storage ·
+                         timezone · modules · copy · safety
 ```
 
 ---
