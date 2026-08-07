@@ -65,6 +65,21 @@ describe('the source tree is what SAFETY.md says it is', () => {
     assert.doesNotMatch(declarations, /weight|calorie|bmi|measurement|photo|image|uri/i);
   });
 
+  /* The layering rule the whole test strategy rests on. Every suite here imports
+     `../lib/*.ts` straight into a .mjs file under bare Node — no jest, no transform — and
+     that only works while lib/ has no React and no store in its import graph.
+     `lib/entitlement.ts` used to export a React hook and import zustand, which is exactly
+     why it was the only engine module with no test file. */
+  test('lib/ imports neither React nor the store', () => {
+    for (const f of FILES) {
+      if (!f.path.startsWith('lib/')) continue;
+      assert.doesNotMatch(f.src, /from ['"]react['"]|from ['"]react-native['"]/,
+        `${f.path} imports React — lib/ must stay runnable in bare Node`);
+      assert.doesNotMatch(f.src, /from ['"]\.\.\/store\//,
+        `${f.path} imports the store — lib/ is the layer the store is built on, not the reverse`);
+    }
+  });
+
   // SAFETY.md §6
   test('storage makes no network call', () => {
     const storage = FILES.find((f) => f.path === 'lib/storage.ts');

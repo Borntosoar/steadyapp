@@ -10,7 +10,8 @@ import {
   space, radius, type as t, LAYOUT_MAX_WIDTH, type AtmosphereKey,
 } from '../constants/theme';
 import { useStore } from '../store/useStore';
-import { useEntitlement, FREE_LIMITS } from '../lib/entitlement';
+import { FREE_LIMITS } from '../lib/entitlement';
+import { useEntitlement } from '../hooks/useEntitlement';
 import {
   THOUGHT_RECORD_STEPS, THOUGHT_RECORD_CLOSING, DISTORTIONS, EXPERIMENT_FIELDS, EXPERIMENT_COPY,
 } from '../content/exercises.ts';

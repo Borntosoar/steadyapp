@@ -8,7 +8,8 @@ import {
 } from '../components/ui';
 import { Atmosphere } from '../components/Atmosphere';
 import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../constants/theme';
-import { useEntitlement, PRICING, TIER_COMPARISON, trialEndDate } from '../lib/entitlement';
+import { PRICING, TIER_COMPARISON, trialEndDate, type Plan } from '../lib/entitlement';
+import { useEntitlement } from '../hooks/useEntitlement';
 import { PAYWALL_COPY } from '../content/copy.ts';
 import { PROOF_POINTS, PROOF_QUALIFIER } from '../content/proof';
 
@@ -18,7 +19,6 @@ import { PROOF_POINTS, PROOF_QUALIFIER } from '../content/proof';
  * they change it. If that isn't persuasive on its own, manufacturing urgency at someone
  * with appearance anxiety is not a trade worth making. See SAFETY.md. */
 
-type Plan = 'monthly' | 'yearly' | 'lifetime';
 
 export default function Paywall() {
   const c = useTheme();

@@ -51,6 +51,9 @@ npm test          # 107 assertions, no test runner to install — node --test
 npm run typecheck # tsc --noEmit
 ```
 
+See `docs/API.md` for the module contract between `lib/`, `store/` and the screens,
+and the two integration seams (RevenueCat, store review).
+
 Requires Node 22+ (the test suite uses Node's built-in TypeScript stripping).
 
 ---

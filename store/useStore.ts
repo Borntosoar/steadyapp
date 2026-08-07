@@ -67,8 +67,11 @@ let saveTimer: ReturnType<typeof setTimeout> | null = null;
    later one and silently roll state back. */
 let writeChain: Promise<unknown> = Promise.resolve();
 
+/* Session-only fields are stripped here and nowhere else. Anything left in `rest` is
+   written to disk, so a field that is not part of AppState must appear in this
+   destructure — `quarantinedAt` did not, and was being serialised into the payload. */
 function snapshot(get: () => StoreApi): AppState {
-  const { hydrated, pendingMilestone, loadOk, saveOk, ...rest } =
+  const { hydrated, pendingMilestone, loadOk, saveOk, quarantinedAt, ...rest } =
     get() as StoreApi & Record<string, unknown>;
   return rest as AppState;
 }

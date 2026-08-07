@@ -1,14 +1,19 @@
-/* Entitlement.
+/* Entitlement — the pure half.
  *
  * v1 reads a local flag. There is no account, no network call, no receipt validation.
+ *
+ * NOTHING IN lib/ MAY IMPORT FROM store/ OR REACT. This file used to export a React hook
+ * and import the store, which pointed the wrong way down the dependency graph and was the
+ * reason it was the only engine module with no test file — a suite that runs under bare
+ * `node --test` cannot import a module that reaches for zustand. The hook now lives in
+ * hooks/useEntitlement.ts; everything left here is data and pure predicates, and is
+ * testable directly.
  *
  * THE RULE THAT OUTRANKS BILLING: safety is never gated. Grounding, breathing, crisis
  * support, the hard-day path, the daily check-in, and the support directory are free
  * forever. `isGated()` below is the single place that decides, and it hard-codes the
  * free set rather than deriving it — so gating one of them by accident requires
  * deliberately editing a list with a comment telling you not to. */
-
-import { useStore } from '../store/useStore';
 
 /** Routes that must never require payment, under any business decision. */
 export const ALWAYS_FREE_ROUTES = [
@@ -54,6 +59,14 @@ export const FREE_LIMITS = {
  * Annual works out roughly half the monthly rate, which is the usual spread and enough to
  * make annual the obviously rational pick without needing a "SAVE 47%" badge shouting it.
  * Lifetime is a shade under two years of annual. */
+/** The things somebody can actually buy.
+ *
+ *  Declared separately from `PRICING` because `keyof typeof PRICING` also admits
+ *  `yearlyPerMonth` and `trialDays`, which are display strings and a number. Typed that
+ *  way, `purchase('trialDays')` compiled cleanly and would have granted entitlement and
+ *  started a trial. */
+export type Plan = 'monthly' | 'yearly' | 'lifetime';
+
 export const PRICING = {
   monthly: '$12.99/mo',
   yearly: '$79.99/yr',
@@ -98,29 +111,6 @@ export const TIER_COMPARISON: { label: string; free: string | true; plus: string
   { label: 'Export and full backup file', free: 'Forever', plus: 'Forever' },
 ];
 
-export function useEntitlement() {
-  const entitled = useStore((s) => s.entitled);
-  const setEntitled = useStore((s) => s.setEntitled);
-
-  return {
-    entitled,
-    /** REVENUECAT INTEGRATION POINT
-     *  Replace this local setter with Purchases.purchasePackage() and drive `entitled`
-     *  from customerInfo.entitlements.active. Nothing else in the app needs to change —
-     *  every gate reads through this hook. */
-    async purchase(plan: keyof typeof PRICING) {
-      // Only a subscription has a trial to end. A one-off lifetime payment has nothing to
-      // renew, so stamping a trial clock on it would schedule a warning about a charge
-      // that is never going to happen.
-      setEntitled(true, plan !== 'lifetime');
-    },
-    async restore() {
-      // REVENUECAT INTEGRATION POINT — Purchases.restorePurchases()
-      // A restore re-grants an existing entitlement; it never begins a trial.
-      setEntitled(true, false);
-    },
-  };
-}
 
 /** Is this route gated for a non-entitled user? */
 export function isGated(route: string, entitled: boolean): boolean {

@@ -6,12 +6,13 @@ import {
   Screen, Button, H1, H2, H3, Body, BodySm, Caption, Row, Rule, useTheme,
 } from '../../components/ui';
 import { Atmosphere } from '../../components/Atmosphere';
+import { StorageNotice } from '../../components/StorageNotice';
 import { LineChart, BarChart } from '../../components/charts';
 import {
   space, type as t, TAB_BAR_HEIGHT, LAYOUT_MAX_WIDTH,
 } from '../../constants/theme';
 import { useStore } from '../../store/useStore';
-import { useEntitlement } from '../../lib/entitlement';
+import { useEntitlement } from '../../hooks/useEntitlement';
 import {
   reclaimedByWeek, computeReclaimed, checkInsInLastDays, previousWeekCheckIns,
 } from '../../lib/reclaimed';
@@ -145,6 +146,9 @@ export default function Progress() {
       >
         <View style={{ width: '100%', maxWidth: LAYOUT_MAX_WIDTH }}>
           {hero}
+          <View style={{ paddingHorizontal: space.lg, marginTop: space.lg }}>
+            <StorageNotice onBackup={doBackup} />
+          </View>
           <View style={{ paddingHorizontal: space.lg }}>
             <Section title="The rest of the picture">
               <Body style={{ marginTop: space.md }}>
@@ -228,6 +232,10 @@ export default function Progress() {
     >
       <View style={{ width: '100%', maxWidth: LAYOUT_MAX_WIDTH }}>
         {hero}
+
+        <View style={{ paddingHorizontal: space.lg, marginTop: space.lg }}>
+          <StorageNotice onBackup={doBackup} />
+        </View>
 
         <View style={{ paddingHorizontal: space.lg }}>
           {/* Plain-English summary, generated locally. Never mentions appearance quality. */}

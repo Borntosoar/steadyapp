@@ -10,7 +10,7 @@ import { space, type as t, type AtmosphereKey } from '../../constants/theme';
 import { MODULES, CONTENT_DISCLAIMER } from '../../content/modules';
 import { PHASES } from '../../lib/protocol';
 import { useStore } from '../../store/useStore';
-import { useEntitlement } from '../../lib/entitlement';
+import { useEntitlement } from '../../hooks/useEntitlement';
 
 /* One atmosphere per phase, so the reading list has a sense of moving through a day as
  * it moves through the protocol. Not keyed to anything the user scores. */

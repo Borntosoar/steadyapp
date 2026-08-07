@@ -10,7 +10,7 @@ import { RichText } from '../../components/RichText';
 import { space, type as t, LAYOUT_MAX_WIDTH, type AtmosphereKey } from '../../constants/theme';
 import { moduleBySlug, MODULES, CONTENT_DISCLAIMER } from '../../content/modules';
 import { useStore } from '../../store/useStore';
-import { useEntitlement } from '../../lib/entitlement';
+import { useEntitlement } from '../../hooks/useEntitlement';
 
 const PHASE_ART: Record<number, AtmosphereKey> = { 1: 'night', 2: 'dawn', 3: 'day', 4: 'dusk' };
 

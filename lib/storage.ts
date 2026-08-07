@@ -26,6 +26,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AppState, MomentRecord } from '../types';
 import { initialStreak } from './streak.ts';
+/* Imported rather than redefined. Two identical constructors for one persisted shape is
+   the same hazard the MomentRecord comment in moments.ts warns about for the type: they
+   compile happily while drifting apart. */
+import { emptyMomentRecord } from './moments.ts';
 
 /* The key never changes again. Versioning happens inside the envelope; the `.v2` suffix is
    a historical artefact of the first release and renaming it now would strand real data. */
@@ -62,14 +66,6 @@ export const emptyState = (): AppState => ({
   entitled: false,
   moments: {},
   trialStartedAt: null,
-});
-
-const emptyMomentRecord = (): MomentRecord => ({
-  shows: 0,
-  lastShownDate: null,
-  dismissals: 0,
-  lastDismissedDate: null,
-  acted: false,
 });
 
 /* ---------- migrations ----------

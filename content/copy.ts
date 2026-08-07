@@ -157,6 +157,34 @@ export const MOMENT_COPY = {
   },
 };
 
+/* ---------- storage health ----------
+ *
+ * The app holds the only copy of everything the user has written and there is no server to
+ * re-fetch from, so when persistence stops working the user is the only one who can do
+ * anything about it. Saying nothing was the old behaviour and it is indefensible: somebody
+ * journals for weeks, every entry looks saved because it is in memory, and it is all gone
+ * on the next cold start with no explanation.
+ *
+ * Tone rules that apply here as much as anywhere: state the fact, name the one useful
+ * action, blame nobody. The user did not cause this and is not being asked to fix a
+ * mistake. Never rendered on a safety surface. */
+
+export const STORAGE_COPY = {
+  unreadable: {
+    title: 'Something is already saved here',
+    body: 'Steady found data on this device it could not read, so it has left it exactly where it is and paused saving. Nothing has been written over. Close the app completely and open it again — if it reads next time, everything will be there.',
+  },
+  locked: {
+    title: 'Saving is paused',
+    body: 'Steady could not read this device’s storage, so it has stopped writing rather than risk covering something up. Close the app completely and open it again.',
+  },
+  cannotSave: {
+    title: 'This device is not accepting new writes',
+    body: 'Storage is full or unavailable. Everything from this session is still here on screen, and it will still be here until you close the app. Saving a backup now is the one thing that keeps it.',
+    action: 'Save a backup now',
+  },
+};
+
 /* ---------- disclaimer ---------- */
 
 export const DISCLAIMER =

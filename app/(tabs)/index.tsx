@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { Bleed, Button, Caption, H2, H3, Body, BodySm, Row, Rule, useTheme } from '../../components/ui';
 import { MomentCard } from '../../components/MomentCard';
+import { StorageNotice } from '../../components/StorageNotice';
 import { PRICING } from '../../lib/entitlement';
 import { nextMoment } from '../../lib/moments';
 import { Atmosphere } from '../../components/Atmosphere';
@@ -128,8 +129,14 @@ export default function Today() {
           </View>
         </Atmosphere>
 
-        {/* ---- today's one action ---- */}
+        {/* Renders nothing unless persistence has actually stopped working. Above the
+            day's action because losing the writing outranks doing more of it. */}
         <View style={{ paddingHorizontal: space.lg, marginTop: -space.xl }}>
+          <StorageNotice />
+        </View>
+
+        {/* ---- today's one action ---- */}
+        <View style={{ paddingHorizontal: space.lg }}>
           <Pressable
             accessibilityRole="button"
             onPress={() => router.push(action.route)}
