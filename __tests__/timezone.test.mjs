@@ -79,7 +79,7 @@ describe('the daily budget follows the local day, not UTC', () => {
           practice: [0,1,2,3].map((n) => ({ id: 'p'+n, date: day(n), kind: 'checkin' })),
           streak: { current: 4, longest: 4, lastPracticeDate: day(0), freezes: 2 },
           protocol: { currentWeek: 4, weekPracticeDates: [], completedWeeks: [], avoidedConditions: [] },
-          readModules: [], entitled: false, trialStartedAt: null,
+          readModules: [], entitlement: { source: 'none', plan: null, expiresAt: null, verifiedAt: null },
           moments: { plateau: { shows: 1, lastShownDate: day(0), dismissals: 0, lastDismissedDate: null, acted: false } },
         };
         const input = { state: base, reclaimedSampleSize: 5, weekComplete: true };

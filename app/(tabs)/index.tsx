@@ -6,7 +6,6 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { Bleed, Button, Caption, H2, H3, Body, BodySm, Row, Rule, useTheme } from '../../components/ui';
 import { MomentCard } from '../../components/MomentCard';
 import { StorageNotice } from '../../components/StorageNotice';
-import { PRICING } from '../../lib/entitlement';
 import { nextMoment } from '../../lib/moments';
 import { Atmosphere } from '../../components/Atmosphere';
 import {
@@ -76,8 +75,6 @@ export default function Today() {
   const state = useStore();
   const moment = nextMoment({
     state,
-    trialStartedAt: state.trialStartedAt,
-    trialDays: PRICING.trialDays,
     reclaimedSampleSize: reclaimed.sampleSize,
     weekComplete: wp.complete,
   });

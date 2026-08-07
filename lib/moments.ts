@@ -44,6 +44,7 @@ import type { AppState, CheckIn, MomentRecord } from '../types';
  *
  * Every test passed throughout, because the fixtures built their dates in UTC too. */
 import { dayKey, daysBetween } from './streak.ts';
+import { isEntitled, daysUntilExpiry } from './entitlement.ts';
 
 export { dayKey };
 export type { MomentRecord };
@@ -156,9 +157,6 @@ export function distressRecently(
 
 export interface MomentInput {
   state: AppState;
-  /** Trial start, if one is running. Drives `trial-ending`. */
-  trialStartedAt?: string | null;
-  trialDays?: number;
   /** Whether the reclaimed figure is real yet (>= 3 check-ins in the window). */
   reclaimedSampleSize: number;
   /** Practice days done this week against the required number. */
@@ -183,13 +181,15 @@ export function eligibleMoments(input: MomentInput, now: Date = new Date()): Mom
      would not. lib/storage.ts already counted it this way; this file did not. */
   const practiceDays = new Set(state.practice.map((p) => p.date)).size;
 
-  // Trial ending: two days out or closer, and not yet over.
-  if (input.trialStartedAt && input.trialDays) {
-    // trialStartedAt is a full ISO timestamp in UTC. Slicing its first ten characters
-    // would compare a UTC date against a local one, which is the bug this file just had.
-    const started = dayKey(new Date(input.trialStartedAt));
-    const left = input.trialDays - daysBetween(started, today);
-    if (left <= 2 && left >= 0) out.push('trial-ending');
+  /* Trial ending: two days out or closer, and not yet over.
+     Read off the entitlement's own expiry rather than reconstructed from a start date and
+     a constant. That is what a provider actually hands back, so this keeps working when
+     the trial length changes, when the store grants an extension, and when somebody's
+     trial started on a different device. */
+  const ent = state.entitlement;
+  if (ent.source === 'trial') {
+    const left = daysUntilExpiry(ent, now);
+    if (left !== null && left <= 2 && left >= 0) out.push('trial-ending');
   }
 
   // Winback: has a history worth returning to, and has been gone ten days.
@@ -202,12 +202,13 @@ export function eligibleMoments(input: MomentInput, now: Date = new Date()): Mom
   if (state.protocol.currentWeek >= 4 && state.protocol.currentWeek <= 5) out.push('plateau');
 
   // Month two: the evidence that keeps a subscription alive past the first renewal.
-  if (state.entitled && state.protocol.currentWeek >= 8 && input.reclaimedSampleSize >= 3) {
+  const entitled = isEntitled(state.entitlement, now);
+  if (entitled && state.protocol.currentWeek >= 8 && input.reclaimedSampleSize >= 3) {
     out.push('month-two-proof');
   }
 
   // The ask.
-  if (!state.entitled && input.weekComplete && input.reclaimedSampleSize >= 3) {
+  if (!entitled && input.weekComplete && input.reclaimedSampleSize >= 3) {
     out.push('week-one-ask');
   }
 

@@ -5,6 +5,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from '../components/ui';
 import { useStore, flushState } from '../store/useStore';
+import { useEntitlement } from '../hooks/useEntitlement';
 import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../constants/theme';
 
 /* Support is reachable in <= 2 taps from every screen: this bar is always mounted, so
@@ -65,9 +66,21 @@ function Gate() {
   const hydrate = useStore((s) => s.hydrate);
   const disclaimerAcceptedAt = useStore((s) => s.profile.disclaimerAcceptedAt);
 
+  const { refresh } = useEntitlement();
+
   useEffect(() => {
     void hydrate();
   }, [hydrate]);
+
+  /* Re-ask the store who this person is, at launch and every time the app comes forward.
+     This is what makes entitlement a projection rather than a boolean nobody ever clears:
+     a refund, an expiry, a cancellation or a lapsed card all arrive through here.
+     It writes nothing when the provider cannot be reached, so being offline never revokes
+     anything — see hooks/useEntitlement.ts. */
+  useEffect(() => {
+    if (!hydrated) return;
+    void refresh();
+  }, [hydrated, refresh]);
 
   /* Writes are debounced 150ms, which is right while the app is in front of somebody and
      wrong the instant it is not: a mutation followed by a home-swipe-and-kill inside that
@@ -82,9 +95,10 @@ function Gate() {
     }
     const sub = RNAppState.addEventListener('change', (next) => {
       if (next === 'background' || next === 'inactive') void flushState();
+      if (next === 'active') void refresh();
     });
     return () => sub.remove();
-  }, []);
+  }, [refresh]);
 
   useEffect(() => {
     if (!hydrated) return;

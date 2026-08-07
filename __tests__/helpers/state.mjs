@@ -44,21 +44,26 @@ export function baseAppState() {
       avoidedConditions: [],
     },
     readModules: [],
-    entitled: false,
     moments: {},
-    trialStartedAt: null,
+    entitlement: { source: 'none', plan: null, expiresAt: null, verifiedAt: null },
   };
 }
 
+/** An active trial ending `daysLeft` from now. */
+export function trialing(daysLeft) {
+  const ends = new Date();
+  ends.setDate(ends.getDate() + daysLeft);
+  return { source: 'trial', plan: 'yearly', expiresAt: ends.toISOString(), verifiedAt: null };
+}
+
+/** A lifetime purchase: entitled, nothing to renew, no expiry. */
+export const lifetime = () => ({
+  source: 'purchase', plan: 'lifetime', expiresAt: null, verifiedAt: null,
+});
+
 /** Wraps a state in the MomentInput shape, with the ask's preconditions satisfied. */
 export function qualifiedForAsk(state) {
-  return {
-    state,
-    trialStartedAt: state.trialStartedAt,
-    trialDays: 14,
-    reclaimedSampleSize: 5,
-    weekComplete: true,
-  };
+  return { state, reclaimedSampleSize: 5, weekComplete: true };
 }
 
 export { day, iso };

@@ -39,8 +39,7 @@ describe('normalise is the type boundary', () => {
     const s = normalise({});
     assert.deepEqual(s.checkIns, []);
     assert.deepEqual(s.moments, {});
-    assert.equal(s.entitled, false);
-    assert.equal(s.trialStartedAt, null);
+    assert.equal(s.entitlement.source, 'none');
   });
 
   test('garbage in place of a collection is coerced, not propagated', () => {
@@ -65,10 +64,21 @@ describe('normalise is the type boundary', () => {
     assert.ok(Number.isFinite(rec.shows + 1));
   });
 
-  test('a truthy non-boolean cannot grant entitlement', () => {
-    assert.equal(normalise({ entitled: 'yes' }).entitled, false);
-    assert.equal(normalise({ entitled: 1 }).entitled, false);
-    assert.equal(normalise({ entitled: true }).entitled, true);
+  /* The one field where failing toward access would be wrong. Everywhere else a corrupted
+     byte should err generously; here it would mean garbage granting a free subscription,
+     and a real purchase is two taps away via Restore. */
+  test('a malformed entitlement becomes none rather than being trusted', () => {
+    assert.equal(normalise({ entitlement: 'yes' }).entitlement.source, 'none');
+    assert.equal(normalise({ entitlement: { source: 'admin' } }).entitlement.source, 'none');
+    assert.equal(normalise({ entitlement: {} }).entitlement.source, 'none');
+  });
+
+  test('a real entitlement survives, with unknown plans dropped', () => {
+    const e = normalise({
+      entitlement: { source: 'purchase', plan: 'nonsense', expiresAt: null, verifiedAt: null },
+    }).entitlement;
+    assert.equal(e.source, 'purchase');
+    assert.equal(e.plan, null);
   });
 
   test('real data passes through unchanged', () => {
@@ -88,12 +98,42 @@ describe('schema versioning', () => {
     // Written before `moments` and `trialStartedAt` existed.
     const legacy = { ...full() };
     delete legacy.moments;
-    delete legacy.trialStartedAt;
+    delete legacy.entitlement;
     const s = importJson(JSON.stringify(legacy));
     assert.ok(s, 'a legacy payload failed to import');
     assert.equal(s.checkIns.length, 1);
     assert.deepEqual(s.moments, {});
-    assert.equal(s.trialStartedAt, null);
+    assert.equal(s.entitlement.source, 'none');
+  });
+
+  /* The 3 -> 4 migration is the first that derives a value rather than filling a default,
+     which is what the MIGRATIONS slot was built for. */
+  test('a mid-trial user keeps the remainder of the trial', () => {
+    const started = new Date();
+    started.setDate(started.getDate() - 10);
+    const legacy = { ...full(), entitled: true, trialStartedAt: started.toISOString() };
+    delete legacy.entitlement;
+    const e = importJson(JSON.stringify(legacy)).entitlement;
+    assert.equal(e.source, 'trial');
+    assert.ok(new Date(e.expiresAt) > new Date(), 'the remaining trial days were lost');
+  });
+
+  test('a paying user with no trial stamp keeps access rather than being revoked', () => {
+    // The old model recorded neither plan nor expiry, so the only safe reading is an
+    // entitlement that does not expire. Their next provider refresh replaces it with truth.
+    const legacy = { ...full(), entitled: true };
+    delete legacy.entitlement;
+    delete legacy.trialStartedAt;
+    const e = importJson(JSON.stringify(legacy)).entitlement;
+    assert.equal(e.source, 'purchase');
+    assert.equal(e.expiresAt, null);
+  });
+
+  test('a non-paying user stays non-paying', () => {
+    const legacy = { ...full(), entitled: false };
+    delete legacy.entitlement;
+    const e = importJson(JSON.stringify(legacy)).entitlement;
+    assert.equal(e.source, 'none');
   });
 
   test('a versioned envelope round-trips', () => {

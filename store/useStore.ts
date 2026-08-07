@@ -14,6 +14,7 @@ import { emptyState, loadState, saveState, wipeState } from '../lib/storage';
 import { dayKey, registerPractice, milestoneReached } from '../lib/streak';
 import { recordPracticeDay } from '../lib/protocol';
 import { markShown, markDismissed, markActed, type MomentId } from '../lib/moments';
+import type { Entitlement } from '../lib/entitlement';
 
 const id = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -28,7 +29,8 @@ interface StoreApi extends AppState {
   completeOnboarding: (baseline: Baseline, firstName?: string) => void;
   acceptDisclaimer: () => void;
   setSupportRegion: (region: string) => void;
-  setEntitled: (v: boolean, startsTrial?: boolean) => void;
+  /** The ONLY writer of the entitlement cache. Everything else projects it. */
+  setEntitlement: (e: Entitlement) => void;
   momentShown: (id: MomentId) => void;
   momentDismissed: (id: MomentId) => void;
   momentActed: (id: MomentId) => void;
@@ -164,18 +166,11 @@ export const useStore = create<StoreApi>((set, get) => ({
     persist(get, set);
   },
 
-  setEntitled: (entitled, startsTrial = false) => {
-    /* The trial clock is stamped ONLY when a trial actually starts, never as a side
-       effect of becoming entitled.
-       Stamping it on any grant meant a lifetime purchaser — somebody who paid $149 once,
-       with no renewal to warn about — got the trial-ending notice on day twelve. That
-       notice is a `service` moment: priority 100, ignores the daily budget, ignores
-       distress suppression. So the one customer who had already paid the most was told
-       through their worst day that they were about to be charged again. */
-    set((s) => ({
-      entitled,
-      trialStartedAt: startsTrial && !s.trialStartedAt ? new Date().toISOString() : s.trialStartedAt,
-    }));
+  setEntitlement: (entitlement) => {
+    /* Writes the cache, nothing more. Whether the user is entitled RIGHT NOW is a
+       question for `isEntitled(entitlement)`, asked fresh each time — a stored boolean is
+       what let a refund, an expiry and a cancellation all have no path back. */
+    set({ entitlement });
     persist(get, set);
   },
 

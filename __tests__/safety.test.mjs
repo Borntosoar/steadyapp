@@ -189,14 +189,12 @@ describe('the money never touches the safety surfaces', () => {
     const { nextMoment } = await import('../lib/moments.ts');
     const { baseAppState, qualifiedForAsk } = await import('./helpers/state.mjs');
 
+    const { trialing } = await import('./helpers/state.mjs');
     const s = baseAppState();
-    s.entitled = true;
     s.practice.push({ id: 'hd', date: new Date().toISOString().slice(0, 10), kind: 'hard-day' });
-    const started = new Date();
-    started.setDate(started.getDate() - 13);
-    s.trialStartedAt = started.toISOString();
+    s.entitlement = trialing(1);
 
-    const m = nextMoment({ ...qualifiedForAsk(s), trialStartedAt: s.trialStartedAt, trialDays: 14 });
+    const m = nextMoment(qualifiedForAsk(s));
     assert.equal(m?.id, 'trial-ending',
       'money is about to leave this person\'s account and the app promised to warn them');
   });

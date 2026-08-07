@@ -1,3 +1,5 @@
+import type { Entitlement } from '../lib/entitlement';
+
 /* Steady — domain types.
  *
  * Note what is absent and must stay absent: there is no field anywhere in this file
@@ -167,15 +169,15 @@ export interface AppState {
   streak: StreakState;
   protocol: ProtocolState;
   readModules: string[];
-  /** Local entitlement flag. Replaced by RevenueCat in production. */
-  entitled: boolean;
+  /** A CACHE of the last thing a provider told us about this person's access, not a
+   *  fact the app owns. Project it with `isEntitled()`; never store the result. See the
+   *  long comment in lib/entitlement.ts for why this stopped being a boolean. */
+  entitlement: Entitlement;
   /** Impression and dismissal history for every unprompted message the app can show,
    *  keyed by MomentId. See lib/moments.ts. Persisted so a "no" survives a restart — a
    *  dismissal the app forgets overnight is not a dismissal, it is a delay. */
   moments: Record<string, MomentRecord>;
-  /** When the free trial started, if one is running. Drives the trial-ending notice the
-   *  paywall promises to send. */
-  trialStartedAt: string | null;
+
 }
 
 export interface MomentRecord {

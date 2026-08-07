@@ -30,6 +30,7 @@ import { initialStreak } from './streak.ts';
    the same hazard the MomentRecord comment in moments.ts warns about for the type: they
    compile happily while drifting apart. */
 import { emptyMomentRecord } from './moments.ts';
+import { emptyEntitlement, type Entitlement } from './entitlement.ts';
 
 /* The key never changes again. Versioning happens inside the envelope; the `.v2` suffix is
    a historical artefact of the first release and renaming it now would strand real data. */
@@ -39,7 +40,7 @@ export const STORAGE_KEY = 'steady.state.v2';
 export const QUARANTINE_PREFIX = 'steady.unreadable.';
 
 /** Bumped whenever a migration is added below. */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export const emptyState = (): AppState => ({
   profile: {
@@ -63,9 +64,8 @@ export const emptyState = (): AppState => ({
     avoidedConditions: [],
   },
   readModules: [],
-  entitled: false,
   moments: {},
-  trialStartedAt: null,
+  entitlement: emptyEntitlement(),
 });
 
 /* ---------- migrations ----------
@@ -86,6 +86,31 @@ export const MIGRATIONS: ((s: Payload) => Payload)[] = [
   (s) => s,
   // 2 → 3: `moments` and `trialStartedAt` added. Static defaults, handled by normalise().
   (s) => s,
+  /* 3 → 4: `entitled: boolean` + `trialStartedAt` become a single `entitlement` cache.
+     The first migration that derives rather than defaults, which is what this slot was
+     built for.
+     Somebody mid-trial keeps the remainder of it. Somebody entitled with no trial stamp
+     paid for something, and since the old model recorded neither plan nor expiry, the
+     only safe reading is an entitlement that does not expire — revoking access from a
+     paying customer to tidy up a data model would be indefensible. Their next provider
+     refresh replaces this with the truth. */
+  (s) => {
+    const { entitled, trialStartedAt, ...rest } = s as Record<string, unknown>;
+    if (!entitled) return { ...rest, entitlement: emptyEntitlement() };
+
+    if (typeof trialStartedAt === 'string') {
+      const ends = new Date(trialStartedAt);
+      ends.setDate(ends.getDate() + 14);
+      return {
+        ...rest,
+        entitlement: { source: 'trial', plan: null, expiresAt: ends.toISOString(), verifiedAt: null },
+      };
+    }
+    return {
+      ...rest,
+      entitlement: { source: 'purchase', plan: null, expiresAt: null, verifiedAt: null },
+    };
+  },
 ];
 
 function migrate(data: Payload, from: number): Payload {
@@ -104,6 +129,27 @@ function migrate(data: Payload, from: number): Payload {
 
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 const obj = (v: unknown): Payload => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Payload) : {});
+
+/** An entitlement record that survived a round trip. A missing or malformed one becomes
+ *  'none' rather than being trusted — this is the one field where failing toward access
+ *  would mean a corrupted byte granting a free subscription, and the user can always
+ *  restore a real purchase in two taps. */
+function normaliseEntitlement(v: unknown): Entitlement {
+  const e = obj(v);
+  const source = e.source;
+  if (source !== 'trial' && source !== 'purchase' && source !== 'hardship') {
+    return emptyEntitlement();
+  }
+  const out: Entitlement = {
+    source,
+    plan:
+      e.plan === 'monthly' || e.plan === 'yearly' || e.plan === 'lifetime' ? e.plan : null,
+    expiresAt: typeof e.expiresAt === 'string' ? e.expiresAt : null,
+    verifiedAt: typeof e.verifiedAt === 'string' ? e.verifiedAt : null,
+  };
+  if (typeof e.willRenew === 'boolean') out.willRenew = e.willRenew;
+  return out;
+}
 
 export function normalise(parsed: unknown): AppState {
   const p = obj(parsed);
@@ -133,8 +179,7 @@ export function normalise(parsed: unknown): AppState {
     practice: arr(p.practice),
     readModules: arr(p.readModules),
     moments,
-    entitled: p.entitled === true,
-    trialStartedAt: typeof p.trialStartedAt === 'string' ? p.trialStartedAt : null,
+    entitlement: normaliseEntitlement(p.entitlement),
   } as AppState;
 }
 

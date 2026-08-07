@@ -4,7 +4,7 @@ import {
   nextMoment, eligibleMoments, markShown, markDismissed, markActed,
   distressRecently, MOMENTS, dayKey,
 } from '../lib/moments.ts';
-import { baseAppState, qualifiedForAsk, day } from './helpers/state.mjs';
+import { baseAppState, qualifiedForAsk, day, trialing, lifetime } from './helpers/state.mjs';
 
 /* The scheduler decides everything the app says without being asked. Its failure modes are
  * not crashes — they are nagging, and prompts landing on somebody at their worst. Both are
@@ -115,7 +115,7 @@ describe('distress suppresses the sell', () => {
     const s = baseAppState();
     s.practice = Array.from({ length: 12 }, (_, i) => ({ id: 'p' + i, date: day(i), kind: 'checkin' }));
     s.urgeLogs = Array.from({ length: 4 }, (_, i) => ({ id: 'u' + i, date: day(i), resisted: true }));
-    s.entitled = true;
+    s.entitlement = lifetime();
     s.protocol.currentWeek = 2;
 
     const clean = qualifiedForAsk(s);
@@ -220,32 +220,35 @@ describe('dismissal is an answer', () => {
 });
 
 describe('service moments override the budget', () => {
-  const trialing = (daysIn) => {
+  const onTrial = (daysLeft) => {
     const s = baseAppState();
-    s.entitled = true;
-    const t = new Date();
-    t.setDate(t.getDate() - daysIn);
-    s.trialStartedAt = t.toISOString();
-    const input = qualifiedForAsk(s);
-    input.trialStartedAt = s.trialStartedAt;
-    input.trialDays = 14;
-    return { s, input };
+    s.entitlement = trialing(daysLeft);
+    return { s, input: qualifiedForAsk(s) };
   };
 
   test('fires two days out', () => {
-    assert.equal(nextMoment(trialing(12).input)?.id, 'trial-ending');
+    assert.equal(nextMoment(onTrial(2).input)?.id, 'trial-ending');
   });
 
   test('does not fire in the middle of the trial', () => {
-    assert.ok(!eligibleMoments(trialing(4).input).includes('trial-ending'));
+    assert.ok(!eligibleMoments(onTrial(10).input).includes('trial-ending'));
   });
 
-  test('does not fire after the trial has already ended', () => {
-    assert.ok(!eligibleMoments(trialing(20).input).includes('trial-ending'));
+  test('does not fire once the trial has already lapsed', () => {
+    assert.ok(!eligibleMoments(onTrial(-3).input).includes('trial-ending'));
+  });
+
+  /* A lifetime purchase has no renewal to warn about. Deriving the notice from a start
+     date plus a constant meant somebody who paid once outright got told, through their
+     worst day, that they were about to be charged again. */
+  test('never fires for a purchase with no expiry', () => {
+    const s = baseAppState();
+    s.entitlement = lifetime();
+    assert.ok(!eligibleMoments(qualifiedForAsk(s)).includes('trial-ending'));
   });
 
   test('fires even when something else already appeared today', () => {
-    const { s, input } = trialing(13);
+    const { s, input } = onTrial(1);
     s.moments = markShown(s.moments, 'plateau');
     assert.equal(nextMoment(input)?.id, 'trial-ending',
       'the daily budget silenced a warning about an imminent charge');

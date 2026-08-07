@@ -149,7 +149,8 @@ The contract, in full:
 - Never edit an existing migration. A user three versions behind will run it.
 - A payload with no `v` field predates the envelope and is treated as version 2.
 - The current 2→3 step is a deliberate no-op, because `normalise` already backfills
-  `moments` and `trialStartedAt` with static defaults. The slot exists so the next change,
+  `moments` and `trialStartedAt` with static defaults. 3 → 4 is the first that DERIVES a
+  value: it folds `entitled: boolean` and `trialStartedAt` into a single `entitlement`,
   which may need a value derived from existing data, has somewhere to live other than a
   comment.
 
@@ -528,7 +529,6 @@ from the budgeting so each half can be tested alone.
 ```ts
 export interface MomentInput {
   state: AppState;
-  trialStartedAt?: string | null;
   trialDays?: number;
   reclaimedSampleSize: number;  // from ReclaimedResult.sampleSize
   weekComplete: boolean;        // from weekProgress().complete
@@ -541,7 +541,12 @@ well above their day count. Reading `practice.length` had the review prompt firi
 somebody on their first afternoon, under a comment promising it would not. Use
 `new Set(state.practice.map((p) => p.date)).size`.
 
-**Invariant: `trialStartedAt` is a full ISO timestamp and must go through `dayKey`.**
+**The trial notice reads the entitlement's own `expiresAt`**, not a start date plus a
+constant. That is what a provider actually hands back, so it keeps working when the trial
+length changes, when the store grants an extension, and when the trial began on another
+device. A lifetime purchase has no `expiresAt` and therefore never produces the notice —
+under the old arithmetic it did, warning somebody who had paid once outright that they were
+about to be charged again.
 Slicing its first ten characters compares a UTC date against a local one.
 
 #### `nextMoment(input: MomentInput, now = new Date()): Moment | null`
@@ -553,7 +558,6 @@ interrupt somebody and it is not going through here, that is the bug.
 const state = useStore();
 const moment = nextMoment({
   state,
-  trialStartedAt: state.trialStartedAt,
   trialDays: PRICING.trialDays,
   reclaimedSampleSize: reclaimed.sampleSize,
   weekComplete: wp.complete,
@@ -658,35 +662,76 @@ A React hook, and the only consumer-facing gate in the app. Every screen that ga
 through it, which is what makes the RevenueCat swap in §3.1 a one-file change. It sits
 outside `lib/` because it imports the store; see §1.
 
-#### `setEntitled(v: boolean, startsTrial?: boolean)` — the store action behind it
+#### `Entitlement` — a cache, not a fact
 
 ```ts
-setEntitled: (entitled: boolean, startsTrial = false) => void
+interface Entitlement {
+  source: 'none' | 'trial' | 'purchase' | 'hardship';
+  plan: Plan | null;
+  expiresAt: string | null;   // ISO. null = does not expire (lifetime)
+  verifiedAt: string | null;  // ISO. last time a provider actually told us
+  willRenew?: boolean;        // undefined = we do not know
+}
 ```
 
-**The second argument is new and it is not cosmetic.** The trial clock is stamped only when
-a trial actually starts, never as a side effect of becoming entitled, and never twice
-(`startsTrial && !s.trialStartedAt`).
+`entitled` used to be a persisted boolean, and nothing in the app ever set it to false. A
+refund, an expiry, a cancellation, a failed renewal — none had a code path back. Once true,
+true forever.
 
-Stamping it on any grant meant a lifetime purchaser — somebody who paid once, with no
-renewal to warn about — got the trial-ending notice on day twelve. That notice is a
-`service` moment: priority 100, ignores the daily budget, ignores distress suppression. So
-the one customer who had paid the most was told, through their worst day, that they were
-about to be charged again.
+Entitlement is not a fact this app owns. It belongs to the store, and what is kept locally
+is a timestamped cache of the last answer received. **Never store the projection.**
 
-The two call sites encode the rule:
+#### `isEntitled(e, now = new Date()): boolean`
+
+The single definition of "is this person entitled right now". Pure, and the only thing
+allowed to answer the question.
 
 ```ts
-// a subscription has a trial to end; a one-off payment does not
-async purchase(plan: Plan) {
-  setEntitled(true, plan !== 'lifetime');
-},
-
-// a restore re-grants an existing entitlement; it never begins a trial
-async restore() {
-  setEntitled(true, false);
-},
+const { entitled } = useEntitlement();   // computed on every read
 ```
+
+**Which way it fails.** When the provider cannot be reached, the honest answer is "unknown",
+and there are two ways to resolve that. Revoking on doubt means somebody mid-protocol,
+offline on a bad day, finds their twelve weeks locked. Granting on doubt means a small
+number of people get free access by staying offline. The second is correct here and it is
+not close: one costs a few dollars, the other costs the person this was built for at the
+moment they needed it.
+
+| State | Entitled |
+|---|---|
+| `source: 'none'` | no |
+| `expiresAt: null` | yes, always |
+| now < `expiresAt` | yes |
+| past expiry, `willRenew === false` | **no** — a known cancellation is a real answer, not doubt |
+| past expiry, `verifiedAt` set | yes for `BILLING_GRACE_DAYS` (16) — Apple retries a declined card for about that long |
+| past expiry, `verifiedAt` null | yes for `OFFLINE_GRACE_DAYS` (30) — never asked, so give more room |
+| unparseable `expiresAt` | yes — a corrupted date must not lock out a paying customer |
+
+None of this governs the safety surfaces. `ALWAYS_FREE_ROUTES` does not consult it, so a
+fully lapsed user keeps grounding, crisis support, the hard-day path and the check-in
+forever (SAFETY.md §4).
+
+#### `projectFromProvider(p, planFor, now?): Entitlement`
+
+Maps a `ProviderEntitlement` onto the cache. Pure, so the RevenueCat mapping is testable
+without a network, a store account, or a sandbox receipt — which leaves the SDK call itself
+as the only untested surface in the integration.
+
+An inactive response still stamps `verifiedAt`. Without that, a confirmed "they do not have
+it" would be indistinguishable from "never asked" and would collect the longer grace.
+
+#### `localGrant(source, plan, expiresAt): Entitlement`
+
+For grants this app makes itself: the v1 purchase stub and the hardship path. `verifiedAt`
+stays null, which is what earns them the longer offline grace.
+
+#### `setEntitlement(e)` — the store action
+
+```ts
+setEntitlement: (e: Entitlement) => void
+```
+
+The only writer. Everything else projects.
 
 ---
 
@@ -795,7 +840,7 @@ reset: () => Promise<void>;     // cancels the pending write, wipes, returns to 
 | `completeOnboarding` | `(baseline: Baseline, firstName?: string) => void` |
 | `acceptDisclaimer` | `() => void` |
 | `setSupportRegion` | `(region: string) => void` |
-| `setEntitled` | `(v: boolean, startsTrial?: boolean) => void` |
+| `setEntitlement` | `(e: Entitlement) => void` — the only writer of the cache |
 | `momentShown` | `(id: MomentId) => void` |
 | `momentDismissed` | `(id: MomentId) => void` |
 | `momentActed` | `(id: MomentId) => void` |
@@ -879,46 +924,39 @@ receipt, the other is an OS-level prompt. Both stay inside SAFETY.md §6.
 
 Documented here as contracts a future implementer fulfils, not as work items.
 
-### 3.1 RevenueCat — `lib/entitlement.ts`
+### 3.1 RevenueCat — `hooks/useEntitlement.ts`
 
-**Where.** Two marked comments inside `useEntitlement()`, at `purchase()` and `restore()`.
+Four stubs, all marked in the file. Replacing them is the entire integration; nothing
+outside that file changes, because every consumer reads `entitled` or `isGated` rather than
+touching the cache.
 
-**What replaces what.**
-
-| Stub today | Fulfilled by |
+| Stub | Real call |
 |---|---|
-| `setEntitled(true, plan !== 'lifetime')` | `Purchases.purchasePackage(pkg)` |
-| `setEntitled(true, false)` | `Purchases.restorePurchases()` |
-| `useStore((s) => s.entitled)` | a projection of `customerInfo.entitlements.active` |
+| `fetchProviderEntitlement()` | `Purchases.getCustomerInfo()` |
+| `purchase(plan)` | `Purchases.purchasePackage(pkg)` |
+| `restore()` | `Purchases.restorePurchases()` |
+| (add at launch) | `Purchases.configure({ apiKey })` |
 
-**The contract the implementer must hold:**
+Each returns a `CustomerInfo`. Map `customerInfo.entitlements.active[ENTITLEMENT_ID]` onto
+`ProviderEntitlement` and hand it to `projectFromProvider`.
 
-1. **`entitled` becomes a projection of `customerInfo`, not persisted truth.** Today it is a
-   local boolean in `AppState` and the source of truth. After the swap, the receipt is the
-   source of truth and `entitled` is a cached read of it, refreshed on the customer-info
-   listener. A persisted `entitled: true` that outlives an expired subscription is a bug in
-   one direction; a stale `false` that locks a paying customer out of a programme they are
-   halfway through is a worse bug in the other. Fail toward granting access.
-2. **Nothing else in the app changes.** Every gate in the app reads `entitled` through
-   `useEntitlement()` or `isGated()`. If the swap requires touching a screen, the gate that
-   screen uses was written wrong and should be routed through the hook instead.
-3. **The trial-start rule survives the swap.** `setEntitled(v, startsTrial)` must still be
-   called with `startsTrial: false` for a non-renewing product and for every restore. A
-   lifetime purchaser has no renewal, and `trial-ending` is a `service` moment that fires
-   through distress suppression. Getting this wrong tells somebody who has already paid, on
-   their worst day, that they are about to be charged again.
-4. **Nothing about the purchase flow may leave the device beyond the receipt.** No user
-   attributes, no journal content, no check-in data, no `$email`, no custom subscriber
-   attribute derived from anything in `AppState`. SAFETY.md §6 says no analytics SDK and no
-   third-party tracker; a payments SDK carrying behavioural fields is a tracker with an
-   invoice attached.
-5. **The hardship path stays.** It grants access immediately, with no form, no proof and no
-   questions, and it must not become a promo code that requires a network round trip to
-   redeem. Whatever RevenueCat is doing, the hardship tap has to work offline and on a
-   failed request.
-6. **Failures are quiet and non-blocking.** A failed restore shows a plain message and
-   leaves the user where they were. Safety surfaces are never behind it (SAFETY.md §4), so
-   a billing outage can never sit between somebody and a crisis line.
+**`fetchProviderEntitlement` returning `null` means "could not ask" and must not revoke
+anything.** Returning `{ active: false }` means "asked, and they do not have it" and must.
+Collapsing those two is how an offline user loses access.
+
+`refresh()` runs at launch and on every foreground (`app/_layout.tsx`), which is what makes
+entitlement a projection rather than a boolean nobody clears.
+
+**What must not change when the SDK goes in:**
+
+1. **No `AppState`-derived value may be sent as a subscriber attribute.** Not the reclaimed
+   figure, not a distress rating, not a streak. SAFETY.md §6 says nothing leaves the device,
+   and "it's only analytics" is how that promise gets broken.
+2. **A failed refresh must write nothing.** The cached entitlement stands and `isEntitled`
+   covers the gap.
+3. **The hardship grant stays local.** It must work with no network, no account and no
+   receipt — somebody who cannot pay should not have to be online to say so. `refresh()`
+   explicitly declines to let an inactive provider response clear a hardship grant.
 
 ### 3.2 Store review — `components/MomentCard.tsx`
 

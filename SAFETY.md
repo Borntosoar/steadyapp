@@ -258,6 +258,31 @@ and `app/urges.tsx` for any paywall reference, and reads the `askReady` gate in
 
 ---
 
+## 12b. Entitlement fails toward the user
+
+Access is a projection over a timestamped cache (`isEntitled` in `lib/entitlement.ts`), not
+a stored boolean. It used to be a boolean, and nothing in the app ever set it to false — a
+refund, an expiry, a cancellation and a failed renewal all left a permanent grant behind.
+
+When the store cannot be reached, the honest answer is "unknown", and this app resolves that
+by **granting**. Revoking on doubt means somebody mid-protocol, offline on a bad day, opens
+the app and finds their twelve weeks locked. Granting on doubt means a small number of people
+get some free access by staying offline. One costs a few dollars; the other costs the person
+this was built for, at the moment they needed it. The grace windows are generous on purpose:
+16 days after a verified period ends (roughly how long Apple retries a declined card), 30
+when we have never been able to ask at all.
+
+A known cancellation is not doubt, and is honoured at the end of the paid period.
+
+None of this reaches the safety surfaces. `ALWAYS_FREE_ROUTES` never consults entitlement, so
+a fully lapsed user keeps grounding, crisis support, the hard-day path and the daily check-in
+forever — see §4.
+
+**Where it lives.** `lib/entitlement.ts`, `hooks/useEntitlement.ts` (the only writer),
+`__tests__/entitlement.test.mjs`.
+
+---
+
 ## 13. Every number shown to a customer is one we could defend to their face
 
 No fabricated ratings, no invented review or user counts, no "most popular" badge on an app
@@ -284,7 +309,7 @@ discounted cohort churns worse than the full-price cohort.
 ## Running the checks
 
 ```bash
-npm test          # 208 assertions across engine, protocol, streak, storage, timezones, content, copy and money
+npm test          # 237 assertions across engine, protocol, streak, storage, timezones, content, copy and money
 npm run typecheck # tsc --noEmit
 ```
 

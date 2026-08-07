@@ -24,7 +24,7 @@ export default function Paywall() {
   const c = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { entitled, purchase, restore } = useEntitlement();
+  const { entitled, purchase, restore, grantHardship } = useEntitlement();
   const [plan, setPlan] = useState<Plan>('yearly');
   const [hardship, setHardship] = useState(false);
   const [showLifetime, setShowLifetime] = useState(false);
@@ -292,7 +292,7 @@ export default function Paywall() {
               <Button
                 label={PAYWALL_COPY.hardship.confirm}
                 onPress={async () => {
-                  await purchase('lifetime');
+                  await grantHardship();
                   router.replace('/');
                 }}
                 style={{ marginTop: space.lg }}

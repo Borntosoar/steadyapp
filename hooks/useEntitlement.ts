@@ -4,31 +4,136 @@
  * lib/ is required to stay pure — the whole test suite works by importing lib modules
  * straight into .mjs files under bare Node, which a module that reaches for zustand breaks.
  * The policy it enforces (ALWAYS_FREE_ROUTES, isGated, the tier tables) stays in
- * lib/entitlement.ts, where it can be tested without mounting anything. */
+ * lib/entitlement.ts, where it can be tested without mounting anything.
+ *
+ * `entitled` is COMPUTED on every read and never stored. That is the whole point of the
+ * rewrite: the old model persisted a boolean that nothing in the app ever set back to
+ * false, so a refund, an expiry, a cancellation or a failed renewal all left a permanent
+ * grant behind. Access is now a question asked fresh against a timestamped cache.
+ *
+ * REVENUECAT INTEGRATION
+ *
+ * Three functions below are stubs and all three are marked. Replacing them is the entire
+ * integration; nothing outside this file needs to change, because every consumer reads
+ * `entitled` and `isGated` rather than touching the cache.
+ *
+ *   configure  → Purchases.configure({ apiKey })                    (once, at launch)
+ *   refresh    → Purchases.getCustomerInfo()                        (launch + foreground)
+ *   purchase   → Purchases.purchasePackage(pkg)
+ *   restore    → Purchases.restorePurchases()
+ *
+ * Each returns a CustomerInfo; map `customerInfo.entitlements.active[ENTITLEMENT_ID]` onto
+ * `ProviderEntitlement` and hand it to `projectFromProvider`. The mapping is pure and
+ * already tested, so the only untested surface left is the SDK call itself.
+ *
+ * WHAT MUST NOT CHANGE WHEN THAT HAPPENS
+ *
+ *   - No AppState-derived value may be sent as a subscriber attribute. Not the reclaimed
+ *     figure, not a distress rating, not a streak. SAFETY.md §6 says nothing leaves the
+ *     device, and "it's only analytics" is how that promise gets broken.
+ *   - A failed refresh must never revoke. `refresh()` below writes nothing on error, so
+ *     the cached entitlement stands and `isEntitled` extends its offline grace.
+ *   - The hardship grant must keep working with no network at all. It is a local grant by
+ *     design and must not be routed through the provider.
+ */
 
+import { useCallback } from 'react';
 import { useStore } from '../store/useStore';
-import type { Plan } from '../lib/entitlement';
+import {
+  isEntitled,
+  localGrant,
+  projectFromProvider,
+  trialExpiry,
+  type Entitlement,
+  type Plan,
+  type ProviderEntitlement,
+} from '../lib/entitlement';
+
+/** The entitlement identifier configured in the RevenueCat dashboard. */
+export const ENTITLEMENT_ID = 'steady_plus';
+
+/** Maps a store product identifier back onto a Plan. Kept beside the seam because it is
+ *  the one piece of the mapping that depends on how products were named in App Store
+ *  Connect, and it is the piece most likely to be wrong on the first attempt. */
+export function planForProduct(productId: string | null | undefined): Plan | null {
+  if (!productId) return null;
+  if (productId.includes('month')) return 'monthly';
+  if (productId.includes('year') || productId.includes('annual')) return 'yearly';
+  if (productId.includes('life')) return 'lifetime';
+  return null;
+}
+
+/** REVENUECAT INTEGRATION POINT — replace with a real `getCustomerInfo()` call.
+ *  Returning null means "could not ask", which is deliberately distinct from returning
+ *  `{ active: false }`, which means "asked, and they do not have it". The first must not
+ *  revoke anything; the second must. */
+async function fetchProviderEntitlement(): Promise<ProviderEntitlement | null> {
+  // const info = await Purchases.getCustomerInfo();
+  // const e = info.entitlements.active[ENTITLEMENT_ID];
+  // return e
+  //   ? { active: true, productIdentifier: e.productIdentifier,
+  //       expirationDate: e.expirationDate, willRenew: e.willRenew, periodType: e.periodType }
+  //   : { active: false };
+  return null;
+}
 
 export function useEntitlement() {
-  const entitled = useStore((s) => s.entitled);
-  const setEntitled = useStore((s) => s.setEntitled);
+  const entitlement = useStore((s) => s.entitlement);
+  const setEntitlement = useStore((s) => s.setEntitlement);
+
+  /** Ask the provider and re-project. Safe to call on every launch and foreground.
+   *
+   *  Writes nothing when the provider cannot be reached — a plane, a dead cell, a store
+   *  outage — so the cached entitlement stands and `isEntitled` covers the gap with its
+   *  offline grace. Silently locking somebody out of a twelve-week protocol because a
+   *  receipt check timed out is not a bug we are going to ship twice. */
+  const refresh = useCallback(async () => {
+    const provider = await fetchProviderEntitlement().catch(() => null);
+    if (!provider) return;
+    // A local hardship grant is ours, not the store's, and a provider that has never heard
+    // of it must not be allowed to take it away.
+    if (entitlement.source === 'hardship' && !provider.active) return;
+    setEntitlement(projectFromProvider(provider, planForProduct));
+  }, [entitlement.source, setEntitlement]);
 
   return {
-    entitled,
-    /** REVENUECAT INTEGRATION POINT
-     *  Replace this local setter with Purchases.purchasePackage() and drive `entitled`
-     *  from customerInfo.entitlements.active. Nothing else in the app needs to change —
-     *  every gate reads through this hook. */
+    /** Computed, every read. Never persisted. */
+    entitled: isEntitled(entitlement),
+    entitlement,
+    refresh,
+
+    /** REVENUECAT INTEGRATION POINT — Purchases.purchasePackage(), then project the
+     *  returned customerInfo exactly as `refresh` does. */
     async purchase(plan: Plan) {
       // Only a subscription has a trial to end. A one-off lifetime payment has nothing to
-      // renew, so stamping a trial clock on it would schedule a warning about a charge
-      // that is never going to happen.
-      setEntitled(true, plan !== 'lifetime');
+      // renew, so it gets no expiry and never produces a trial-ending notice.
+      const next: Entitlement =
+        plan === 'lifetime'
+          ? localGrant('purchase', 'lifetime', null)
+          : localGrant('trial', plan, trialExpiry());
+      setEntitlement(next);
     },
+
+    /** REVENUECAT INTEGRATION POINT — Purchases.restorePurchases().
+     *  A restore re-grants an existing entitlement; it never begins a trial. */
     async restore() {
-      // REVENUECAT INTEGRATION POINT — Purchases.restorePurchases()
-      // A restore re-grants an existing entitlement; it never begins a trial.
-      setEntitled(true, false);
+      const provider = await fetchProviderEntitlement().catch(() => null);
+      if (provider) {
+        setEntitlement(projectFromProvider(provider, planForProduct));
+        return;
+      }
+      // v1 stub with no provider wired: grant without an expiry rather than fail. This is
+      // the branch to delete first when the SDK goes in.
+      setEntitlement(localGrant('purchase', null, null));
+    },
+
+    /** The hardship path. Local by design: it must work with no network, no account and
+     *  no receipt, because somebody who cannot pay is not a lower-value user and should
+     *  not have to be online to say so. */
+    async grantHardship(months = 3) {
+      const ends = new Date();
+      ends.setMonth(ends.getMonth() + months);
+      setEntitlement(localGrant('hardship', null, ends.toISOString()));
     },
   };
 }
