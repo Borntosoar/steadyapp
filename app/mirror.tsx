@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Pressable, StyleSheet, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
-  Screen, Card, Button, H1, H2, H3, Body, BodySm, Caption, Chip, Row, Scale, useTheme,
+  Screen, Card, Button, H1, H2, H3, Body, BodySm, Caption, Chip, Row, Rule, Scale, useTheme,
 } from '../components/ui';
 import { MirrorSurface, type MirrorMode } from '../components/MirrorSurface';
 import { space, radius, type as t } from '../constants/theme';
@@ -92,47 +92,52 @@ export default function Mirror() {
             <Chip label={`Phase ${spec.phase}`} tone="accent" />
           </Row>
 
-          <Card style={{ marginTop: space.md }}>
-            <Row>
+          <View style={{ marginTop: space.xl }}>
+            <Rule />
+            <Row style={{ paddingVertical: space.lg, alignItems: 'flex-start' }}>
               <View style={{ flex: 1 }}>
                 <Caption>Length</Caption>
-                <H3>
-                  {duration >= 60 ? `${Math.round(duration / 60)} min` : `${duration}s`}
-                </H3>
+                <Text style={[t.h1, { color: c.ink, marginTop: 2 }]}>
+                  {duration >= 60 ? `${Math.round(duration / 60)}` : `${duration}`}
+                  <Text style={[t.h3, { color: c.inkSoft }]}>{duration >= 60 ? ' min' : 's'}</Text>
+                </Text>
               </View>
-              <View style={{ flex: 1 }}>
+              <View style={{ flex: 1.4 }}>
                 <Caption>Distance</Caption>
-                <BodySm style={{ color: c.ink }}>{spec.distance}</BodySm>
+                <BodySm style={{ color: c.ink, marginTop: 4 }}>{spec.distance}</BodySm>
               </View>
             </Row>
+            <Rule />
             <Caption style={{ marginTop: space.md }}>{spec.conditions}</Caption>
-          </Card>
+          </View>
 
-          <Card>
-            <H3>The rules</H3>
+          <View style={{ marginTop: space.xxl }}>
+            <H2>The rules</H2>
             {MIRROR_RULES.map((r, i) => (
-              <Row key={i} style={{ alignItems: 'flex-start', marginTop: space.sm }}>
-                <Text style={[t.bodySm, { color: c.accentDeep, width: 18 }]}>{i + 1}</Text>
+              <Row key={i} style={{ alignItems: 'flex-start', marginTop: space.md }}>
+                <Text style={[t.label, { color: c.accentDeep, width: 20 }]}>{i + 1}</Text>
                 <BodySm style={{ flex: 1, color: c.ink }}>{r}</BodySm>
               </Row>
             ))}
-          </Card>
+          </View>
 
-          <Card tone="accent">
-            <H3>Why distance</H3>
-            <BodySm style={{ marginTop: space.xs, color: c.ink }}>{DISTANCE_RATIONALE}</BodySm>
-          </Card>
+          <View style={{ marginTop: space.xxl }}>
+            <Rule />
+            <H2 style={{ marginTop: space.lg }}>Why distance</H2>
+            <BodySm style={{ marginTop: space.sm, color: c.ink }}>{DISTANCE_RATIONALE}</BodySm>
+          </View>
 
-          <Card>
-            <H3>Swap the word, keep going</H3>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.sm }}>
+          <View style={{ marginTop: space.xxl }}>
+            <Rule />
+            <H2 style={{ marginTop: space.lg }}>Swap the word, keep going</H2>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: space.md }}>
               {NEUTRAL_SWAPS.map(([a, b]) => (
                 <View
                   key={a}
                   style={{
-                    backgroundColor: c.surfaceAlt,
+                    backgroundColor: c.surfaceStrong,
                     borderRadius: radius.pill,
-                    paddingVertical: 4,
+                    paddingVertical: 5,
                     paddingHorizontal: space.md,
                   }}
                 >
@@ -142,21 +147,26 @@ export default function Mirror() {
                 </View>
               ))}
             </View>
-          </Card>
+          </View>
 
           {deltas.length > 0 && (
-            <Card>
-              <H3>Your last sessions</H3>
-              <Caption>How far distress fell from start to end. Higher bars are better.</Caption>
+            <View style={{ marginTop: space.xxl }}>
+              <Rule />
+              <H2 style={{ marginTop: space.lg }}>Your last sessions</H2>
+              <Caption style={{ marginTop: space.xs }}>
+                How far distress fell from start to end. Higher bars are better.
+              </Caption>
               <DeltaBars deltas={deltas} />
-            </Card>
+            </View>
           )}
 
-          <Button
-            label="Begin"
-            onPress={() => setStage(spec.requiresCondition ? 'condition' : 'before')}
-          />
-          <Button label="Back" variant="ghost" onPress={() => router.back()} style={{ marginTop: space.sm }} />
+          <View style={{ marginTop: space.xxl }}>
+            <Button
+              label="Begin"
+              onPress={() => setStage(spec.requiresCondition ? 'condition' : 'before')}
+            />
+            <Button label="Back" variant="ghost" onPress={() => router.back()} style={{ marginTop: space.xs }} />
+          </View>
         </View>
       </Screen>
     );
@@ -190,7 +200,7 @@ export default function Mirror() {
                   style={{
                     borderWidth: on ? 1.5 : StyleSheet.hairlineWidth,
                     borderColor: on ? c.accent : c.line,
-                    backgroundColor: on ? c.accentPale : c.surface,
+                    backgroundColor: on ? c.accentDim : c.surface,
                     borderRadius: radius.md,
                     padding: space.lg,
                     marginBottom: space.sm,
@@ -221,9 +231,9 @@ export default function Mirror() {
           <Body style={{ marginTop: space.sm, color: c.inkSoft }}>
             How much distress are you carrying right now? This is the number the session moves.
           </Body>
-          <Card style={{ marginTop: space.lg }}>
+          <View style={{ marginTop: space.xl }}>
             <Scale value={before} onChange={setBefore} lowLabel="None" highLabel="The worst it gets" />
-          </Card>
+          </View>
           <Button
             label="Start"
             disabled={before === null}

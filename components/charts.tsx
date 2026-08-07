@@ -16,13 +16,17 @@ export function LineChart({
   max,
   min = 0,
   label,
+  tone = 'accent',
 }: {
   points: { x: string; y: number }[];
   max: number;
   min?: number;
   label?: string;
+  /** Ochre for time and effort, jade for the series that are meant to fall. */
+  tone?: 'accent' | 'cool';
 }) {
   const c = useTheme();
+  const stroke = tone === 'cool' ? c.cool : c.accent;
   if (points.length < 2) {
     return <Caption style={{ paddingVertical: space.lg }}>Not enough data yet.</Caption>;
   }
@@ -48,10 +52,12 @@ export function LineChart({
         {zeroY !== null && (
           <Line x1={P} y1={zeroY} x2={W - P} y2={zeroY} stroke={c.line} strokeWidth={1} strokeDasharray="4 4" />
         )}
-        <Path d={area} fill={c.accent} opacity={0.1} />
-        <Path d={d} fill="none" stroke={c.accent} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+        <Path d={area} fill={stroke} opacity={0.1} />
+        <Path d={d} fill="none" stroke={stroke} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+        {/* Filled with the ground, not with `surface` — surface is translucent, so a dot
+            painted with it would show the line running straight through the middle. */}
         {points.map((p, i) => (
-          <Circle key={i} cx={px(i)} cy={py(p.y)} r={4} fill={c.surface} stroke={c.accent} strokeWidth={2.5} />
+          <Circle key={i} cx={px(i)} cy={py(p.y)} r={4} fill={c.bg} stroke={stroke} strokeWidth={2.5} />
         ))}
       </Svg>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -65,11 +71,14 @@ export function LineChart({
 export function BarChart({
   bars,
   label,
+  tone = 'accent',
 }: {
   bars: { x: string; y: number }[];
   label?: string;
+  tone?: 'accent' | 'cool';
 }) {
   const c = useTheme();
+  const fill = tone === 'cool' ? c.cool : c.accent;
   if (!bars.length) {
     return <Caption style={{ paddingVertical: space.lg }}>Not enough data yet.</Caption>;
   }
@@ -93,7 +102,7 @@ export function BarChart({
               width={bw}
               height={Math.max(2, h)}
               rx={4}
-              fill={b.y >= 0 ? c.accent : c.line}
+              fill={b.y >= 0 ? fill : c.lineStrong}
             />
           );
         })}

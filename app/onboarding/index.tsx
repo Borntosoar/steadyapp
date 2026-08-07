@@ -47,7 +47,7 @@ export default function Onboarding() {
 
   const steps = [
     // 1 — what this is and isn't
-    <Card key="s0" tone="flat">
+    <Card key="s0" tone="plain">
       <H1>Steady</H1>
       <Body style={{ marginTop: space.md }}>
         Steady is a self-help tool for appearance worry. It is built around one idea: this
@@ -68,7 +68,7 @@ export default function Onboarding() {
     </Card>,
 
     // 2 — privacy
-    <Card key="s1" tone="flat">
+    <Card key="s1" tone="plain">
       <H1>This stays on your device</H1>
       <Body style={{ marginTop: space.md }}>
         Everything you write is stored locally, in this app, on this device. There is no
@@ -81,7 +81,7 @@ export default function Onboarding() {
     </Card>,
 
     // 3 — the pitch
-    <Card key="s2" tone="flat">
+    <Card key="s2" tone="plain">
       <H1>The hours question</H1>
       <Body style={{ marginTop: space.md }}>
         Appearance worry costs most people somewhere between one and five hours a day —
@@ -158,7 +158,7 @@ export default function Onboarding() {
     </View>,
 
     // 5 — disclaimer gate
-    <Card key="s4" tone="flat">
+    <Card key="s4" tone="plain">
       <H1>Before you start</H1>
       <Card tone="accent" style={{ marginTop: space.lg }}>
         <Body>

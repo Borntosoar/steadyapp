@@ -145,9 +145,9 @@ export function MirrorSurface({ onModeResolved, height = 340 }: Props) {
 
   const frame = {
     height,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     overflow: 'hidden' as const,
-    backgroundColor: c.surfaceAlt,
+    backgroundColor: c.surfaceStrong,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.line,
     alignItems: 'center' as const,

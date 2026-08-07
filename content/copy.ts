@@ -37,9 +37,12 @@ export const RECLAIMED_COPY = {
     headline: 'Still gathering',
     sub: `${n} check-in${n === 1 ? '' : 's'} so far. A few more and this number means something.`,
   }),
+  /* `sub` deliberately carries no digits. Every screen that shows this also shows the
+     figure itself in type four times the size, so repeating it in the sentence beneath
+     put the same number in front of the reader three times in one glance. */
   positive: (hours: number) => ({
     headline: `${hours} ${hours === 1 ? 'hour' : 'hours'} back this week`,
-    sub: `About ${hours} hours back this week compared to where you started. What did they go to?`,
+    sub: 'Back this week, measured against the day you described when you started. What did they go to?',
   }),
   flat: {
     headline: 'Roughly level',

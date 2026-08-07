@@ -288,7 +288,7 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
                     style={{
                       borderWidth: on ? 1.5 : StyleSheet.hairlineWidth,
                       borderColor: on ? c.accent : c.line,
-                      backgroundColor: on ? c.accentPale : c.bg,
+                      backgroundColor: on ? c.accentDim : c.bg,
                       borderRadius: radius.md,
                       padding: space.md,
                     }}

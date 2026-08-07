@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Screen, Card, Button, H1, H2, Body, BodySm, Caption, Options, Scale, useTheme,
+  Screen, Button, H1, BodySm, Caption, Options, Scale, useTheme,
 } from '../components/ui';
-import { space, type as t } from '../constants/theme';
+import { Atmosphere } from '../components/Atmosphere';
+import { space, radius, type as t, LAYOUT_MAX_WIDTH, atmosphereForHour } from '../constants/theme';
 import { useStore } from '../store/useStore';
 import {
   PREOCCUPATION_BUCKETS, PREOCCUPATION_MINUTES, type PreoccupationBucket, type AvoidanceLevel,
 } from '../types';
-import { computeReclaimed, checkInsInLastDays, reclaimedCopy } from '../lib/reclaimed';
-import { Text } from 'react-native';
+import { computeReclaimed, checkInsInLastDays, reclaimedCopy, previousWeekCheckIns } from '../lib/reclaimed';
 
 const AVOIDANCE_OPTIONS: AvoidanceLevel[] = ['none', 'small', 'significant'];
 
 export default function CheckIn() {
   const c = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const addCheckIn = useStore((s) => s.addCheckIn);
   const baseline = useStore((s) => s.baseline);
   const profile = useStore((s) => s.profile);
@@ -30,37 +32,65 @@ export default function CheckIn() {
   const [result, setResult] = useState<ReturnType<typeof computeReclaimed> | null>(null);
 
   const save = () => {
-    const entry = {
+    addCheckIn({
       preoccupationMinutes: PREOCCUPATION_MINUTES[bucket ?? '1-3h'],
       urge: urge ?? 0,
       avoidance: avoidance ?? 'none',
       suds: suds ?? 0,
-    };
-    addCheckIn(entry);
+    });
     const next = useStore.getState().checkIns;
-    setResult(computeReclaimed(baseline, checkInsInLastDays(next, 7), 7));
+    setResult(
+      computeReclaimed(baseline, checkInsInLastDays(next, 7), 7, previousWeekCheckIns(next))
+    );
     setDone(true);
   };
 
+  /* The finish state is the one moment in the day this app gets to say something back.
+     It gets the full frame — a flat card here would make four honest answers feel like
+     submitting a form. */
   if (done) {
     const r = result ?? computeReclaimed(baseline, [], 7);
     const copy = reclaimedCopy(r, profile.firstName);
+    const showNumber = r.hasData && r.sampleSize >= 3;
+
     return (
-      <Screen>
-        <View style={{ marginTop: space.xxxl }}>
-          <Card>
-            {r.hasData && r.sampleSize >= 3 ? (
-              <Text style={[t.hero, { color: r.direction === 'up' ? c.accentDeep : c.ink }]}>
-                {Math.abs(r.hours)}
-                <Text style={[t.h2, { color: c.inkSoft }]}>  hrs</Text>
-              </Text>
-            ) : null}
-            <H2 style={{ marginTop: space.sm }}>{copy.headline}</H2>
-            <Body style={{ marginTop: space.sm, color: c.inkSoft }}>{copy.sub}</Body>
-          </Card>
-          <Button label="Done" onPress={() => router.replace('/')} />
-        </View>
-      </Screen>
+      <View style={{ flex: 1, backgroundColor: c.bg }}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={{ width: '100%', maxWidth: LAYOUT_MAX_WIDTH, flex: 1 }}>
+            <Atmosphere variant={atmosphereForHour()} rounded="none" style={{ flex: 1, minHeight: 460 }}>
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: 'flex-end',
+                  paddingTop: insets.top + space.xxl,
+                  paddingHorizontal: space.lg,
+                  paddingBottom: space.xl,
+                }}
+              >
+                <Text style={[t.caption, { color: 'rgba(255,255,255,0.72)' }]}>Logged for today</Text>
+                {showNumber ? (
+                  <Text style={[t.hero, { color: '#fff', marginTop: space.sm }]}>
+                    {Math.abs(r.hours)}
+                    <Text style={[t.h2, { color: 'rgba(255,255,255,0.66)' }]}>  hours</Text>
+                  </Text>
+                ) : (
+                  <Text style={[t.display, { color: '#fff', marginTop: space.sm }]}>{copy.headline}</Text>
+                )}
+                <Text style={[t.body, { color: 'rgba(255,255,255,0.82)', marginTop: space.md, maxWidth: 340 }]}>
+                  {copy.sub}
+                </Text>
+              </View>
+            </Atmosphere>
+
+            <View style={{ paddingHorizontal: space.lg, paddingTop: space.xl, paddingBottom: insets.bottom + space.xl }}>
+              <Button label="Done" onPress={() => router.replace('/')} />
+            </View>
+          </View>
+        </ScrollView>
+      </View>
     );
   }
 
@@ -115,22 +145,49 @@ export default function CheckIn() {
   return (
     <Screen>
       <View style={{ marginTop: space.xxl }}>
+        {/* Four segments, not a percentage. A bar that creeps is a bar you watch. */}
+        <View style={{ flexDirection: 'row', gap: 5, marginBottom: space.xl }}>
+          {steps.map((_, i) => (
+            <View
+              key={i}
+              style={{
+                flex: 1,
+                height: 3,
+                borderRadius: radius.pill,
+                backgroundColor: i <= step ? c.accent : c.surfaceStrong,
+              }}
+            />
+          ))}
+        </View>
+
         <Caption>
           {step + 1} of {steps.length}
         </Caption>
         <H1 style={{ marginTop: space.xs }}>{s.title}</H1>
-        <BodySm style={{ marginTop: space.sm, marginBottom: space.lg }}>{s.hint}</BodySm>
+        <BodySm style={{ marginTop: space.sm, marginBottom: space.xl }}>{s.hint}</BodySm>
 
-        <Card>{s.node}</Card>
+        {s.node}
 
-        <Button
-          label={isLast ? 'Save' : 'Next'}
-          disabled={!s.valid}
-          onPress={() => (isLast ? save() : setStep(step + 1))}
-        />
-        {step > 0 && (
-          <Button label="Back" variant="ghost" onPress={() => setStep(step - 1)} style={{ marginTop: space.sm }} />
-        )}
+        <View
+          style={{
+            marginTop: space.xxl,
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderTopColor: c.line,
+            paddingTop: space.lg,
+          }}
+        >
+          <Button
+            label={isLast ? 'Save today' : 'Next'}
+            disabled={!s.valid}
+            onPress={() => (isLast ? save() : setStep(step + 1))}
+          />
+          <Button
+            label={step > 0 ? 'Back' : 'Not now'}
+            variant="ghost"
+            onPress={() => (step > 0 ? setStep(step - 1) : router.back())}
+            style={{ marginTop: space.xs }}
+          />
+        </View>
       </View>
     </Screen>
   );

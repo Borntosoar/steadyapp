@@ -72,14 +72,23 @@ export const NEUTRAL_SWAPS: [string, string][] = [
 ];
 
 /** Suggested conditions for the phase 3 hierarchy. The user picks from their own list —
- *  these exist so a blank screen isn't the first thing they meet. */
+ *  these exist so a blank screen isn't the first thing they meet.
+ *
+ *  Deliberately spread across the range of things people actually avoid rather than
+ *  clustering on one. A list that ran hair, makeup, outfit would tell a large share of
+ *  the people opening it that the hierarchy wasn't built with them in mind, and the
+ *  hierarchy only does its job if you are honest with it. */
 export const CONDITION_SUGGESTIONS = [
   'Unstyled hair',
-  'No makeup',
+  'Hair off my forehead',
+  'Without a hat',
+  'Without makeup or product',
   'Bright overhead light',
   'Daylight by a window',
   'Straight after waking up',
   'Without the clothing I use to cover up',
+  'Fitted or short-sleeved clothing',
   'Glasses off',
-  'After exercise',
+  'After exercise, before cleaning up',
+  'Side-on, not straight to the mirror',
 ];

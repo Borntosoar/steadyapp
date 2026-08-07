@@ -34,16 +34,23 @@ function SupportBar() {
           accessibilityLabel="Support and crisis lines"
           onPress={() => router.push('/support')}
           style={({ pressed }) => ({
-            backgroundColor: c.surface,
-            borderColor: c.warn,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 7,
+            /* Solid-ish backing rather than a transparent surface tint: this bar floats
+               over the home screen's artwork, and a tint alone disappears into it. */
+            backgroundColor: c.scrim,
+            borderColor: c.lineStrong,
             borderWidth: StyleSheet.hairlineWidth,
             borderRadius: radius.pill,
-            paddingVertical: 6,
-            paddingHorizontal: space.md,
+            paddingVertical: 7,
+            paddingLeft: space.md,
+            paddingRight: 14,
             opacity: pressed ? 0.8 : 1,
           })}
         >
-          <Text style={[t.caption, { color: c.warn, fontWeight: '600' }]}>Support</Text>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: c.warn }} />
+          <Text style={[t.caption, { color: c.ink, fontWeight: '600' }]}>Support</Text>
         </Pressable>
       </View>
     </View>
