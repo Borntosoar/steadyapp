@@ -114,11 +114,133 @@ describe('the source tree is what SAFETY.md says it is', () => {
   });
 });
 
+/* ---------- monetisation ----------
+ *
+ * The commercial rules from .claude/skills/value-first-growth, made executable. Growth
+ * pressure is real and it arrives later, quietly, in a pull request that looks reasonable.
+ * These are the lines that should cost somebody a failing build to cross. */
+
+describe('the money never touches the safety surfaces', () => {
+  /* Screens somebody reaches while distressed. No upsell, no upgrade link, no Steady+
+     mention, in any state, including after a completed exercise. */
+  const SACRED = ['app/grounding.tsx', 'app/support.tsx', 'app/urges.tsx'];
+
+  for (const path of SACRED) {
+    test(`${path} contains no upgrade surface`, () => {
+      const f = FILES.find((x) => x.path === path);
+      assert.ok(f, `${path} is missing`);
+      assert.doesNotMatch(f.src, /\/paywall|Steady\+|useEntitlement|PRICING/,
+        `${path} is a screen people reach at their worst — it must never sell anything`);
+    });
+  }
+
+  test('the always-free routes are still free in code, not only in prose', () => {
+    const ent = FILES.find((f) => f.path === 'lib/entitlement.ts');
+    for (const route of ['/grounding', '/support', '/checkin']) {
+      assert.ok(ent.src.includes(`'${route}'`), `${route} dropped out of ALWAYS_FREE_ROUTES`);
+    }
+  });
+
+  test('no upsell is triggered by a distress signal', () => {
+    // The gate on the home-screen ask may read progress. It may never read suffering.
+    const home = FILES.find((f) => f.path === 'app/(tabs)/index.tsx');
+    const at = home.src.indexOf('const askReady');
+    assert.ok(at > -1, 'the ask gate is gone');
+    const line = home.src.slice(at, home.src.indexOf('\n', at));
+    assert.doesNotMatch(line, /suds|avoidance|distress|hardDay|urge/i,
+      `the upgrade prompt is gated on a distress signal: ${line}`);
+  });
+
+  test('no countdown, expiry or scarcity language anywhere', () => {
+    for (const f of FILES) {
+      assert.doesNotMatch(
+        f.src,
+        /(offer|deal|discount)\s+(ends|expires)|limited time|spots? left|act now|last chance/i,
+        `${f.path} contains manufactured urgency`
+      );
+    }
+  });
+
+  test('no fabricated social proof', () => {
+    for (const f of FILES) {
+      // Ratings, review counts, and "join N people" claims about users Steady lacks.
+      assert.doesNotMatch(f.src, /rated \d|\d[\d,.]*\+? (users|reviews|ratings|members)|join \d/i,
+        `${f.path} claims social proof this app cannot substantiate`);
+    }
+  });
+
+  test('the evidence qualifier travels with every screen that renders proof points', () => {
+    for (const f of FILES) {
+      if (f.path.startsWith('content/')) continue;
+      if (!/PROOF_POINTS/.test(f.src)) continue;
+      assert.match(f.src, /PROOF_QUALIFIER/,
+        `${f.path} renders evidence without the "not therapy, not trialled" qualifier`);
+    }
+  });
+
+  test('the trial states a date and promises a reminder', () => {
+    const pay = FILES.find((f) => f.path === 'app/paywall.tsx');
+    assert.match(pay.src, /trialEndDate\(/, 'the paywall shows no trial end date');
+    assert.match(pay.src, /remind you/i, 'the paywall does not promise a trial reminder');
+  });
+
+  test('the paywall dismiss says what it does, and does not shame', () => {
+    const pay = FILES.find((f) => f.path === 'app/paywall.tsx');
+    assert.match(pay.src, /accessibilityLabel="Close"/, 'no plainly labelled dismiss');
+    assert.doesNotMatch(pay.src, /no thanks,? i|i don'?t want|stay stuck/i, 'the paywall confirmshames');
+  });
+
+  /* Run the real function over every bucket rather than regexing the file: what matters is
+     what a customer can actually be shown, and a source grep also trips over the apostrophes
+     in the comments explaining why these rules exist. */
+  test('the cost mirror promises nothing and compares nobody, at every input', async () => {
+    const { costMirror, COST_MIRROR_FOOTER } = await import('../lib/cost.ts');
+    const { PREOCCUPATION_MINUTES, PREOCCUPATION_BUCKETS } = await import('../types/index.ts');
+
+    const shown = [COST_MIRROR_FOOTER];
+    for (const bucket of PREOCCUPATION_BUCKETS) {
+      const m = costMirror({
+        capturedAt: new Date().toISOString(),
+        preoccupationMinutes: PREOCCUPATION_MINUTES[bucket],
+        urge: 5,
+        avoidance: 'small',
+        suds: 5,
+      });
+      shown.push(m.headline, m.sub);
+    }
+    const empty = costMirror(null);
+    shown.push(empty.headline, empty.sub);
+
+    for (const s of shown) {
+      assert.doesNotMatch(s, /you (will|could|can|might) (get|win|save|reclaim|feel|be)|guarantee|proven to/i,
+        `cost mirror makes a promise: "${s}"`);
+      assert.doesNotMatch(s, /percentile|than (most|other|average)|better than|compared to (other|most)|average person/i,
+        `cost mirror compares the user to other people: "${s}"`);
+      assert.doesNotMatch(s, /!/, `cost mirror editorialises: "${s}"`);
+      assert.doesNotMatch(s, /shocking|huge|terrible|awful|wasted|waste/i,
+        `cost mirror editorialises: "${s}"`);
+    }
+  });
+
+  test('the cost mirror stays quiet when there is nothing worth stating', async () => {
+    const { costMirror } = await import('../lib/cost.ts');
+    const low = costMirror({
+      capturedAt: new Date().toISOString(),
+      preoccupationMinutes: 8,
+      urge: 2,
+      avoidance: 'none',
+      suds: 2,
+    });
+    assert.equal(low.worthShowing, false,
+      'below ~15 min/day, presenting a cost figure would be manufacturing a problem to sell against');
+  });
+});
+
 describe('SAFETY.md itself stays in place', () => {
   const safety = readFileSync(join(ROOT, 'SAFETY.md'), 'utf8');
 
   test('documents every numbered constraint', () => {
-    for (let i = 1; i <= 11; i++) {
+    for (let i = 1; i <= 13; i++) {
       assert.match(safety, new RegExp(`^## ${i}\\.`, 'm'), `missing constraint ${i}`);
     }
   });

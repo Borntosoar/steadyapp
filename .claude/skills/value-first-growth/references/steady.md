@@ -1,0 +1,149 @@
+# Applied to Steady
+
+The general model, resolved into this codebase. Read `SAFETY.md` in the repo root first —
+where the two conflict, SAFETY.md wins, and it is not a close call.
+
+---
+
+## The asset
+
+Steady has something almost no app in this category has: **a true number about the
+customer's own life, computed from their own data, that moves when the product works.**
+
+Hours reclaimed is not a proxy, not a mood score, not a badge. It is minutes per day of
+appearance preoccupation, self-reported at baseline and again at each check-in, multiplied
+out over a week. It is falsifiable, it is theirs, and it is the entire commercial strategy.
+
+Everything below is arranged around getting the customer to that number sooner and keeping
+it in front of them.
+
+## The two proof points
+
+| | When | What the customer sees | What it earns |
+|---|---|---|---|
+| **First proof** | ~90 seconds into onboarding | The cost mirror: what appearance worry currently costs them per week and per year, computed live from the four baseline answers | The habit. Session two. |
+| **Second proof** | Third check-in, typically day 3–5 | The real reclaimed-hours figure, against their own baseline | The subscription. |
+
+The paywall belongs at the **second** point. Not onboarding, not install.
+
+This deliberately gives up the highest-converting placement in the published data
+(onboarding paywall with trial, ~1.78%). The trade is made knowingly: week one is free by
+product design, and an ask placed before any evidence would be selling a promise, which is
+the one thing this app refuses to do. What is recovered instead is a much higher-quality
+ask — the customer arrives at the paywall having watched their own number move.
+
+## The cost mirror
+
+`lib/cost.ts`. Pure function, no React, unit-tested.
+
+Takes the baseline answers and returns hours per week, days per year, and a sentence. All
+arithmetic, no modelling, no projection of improvement.
+
+**What it must never do:**
+
+- Promise a gain. *"You could get 45 days back"* is a treatment claim and it is banned.
+  The honest form is *"That is 45 days a year, as things stand."*
+- Compare the customer to anybody. No percentiles, no "more than average". That is the
+  ranking behaviour this app exists to interrupt.
+- Editorialise. No *"that's a lot"*, no *"shocking"*. The multiplication is the argument;
+  a person who has just typed "four hours a day" does not need it underlined.
+
+The customer supplied every input. That is what makes it land, and it is also what makes it
+defensible to a clinician reading over their shoulder.
+
+## Free tier boundary, stated on day one
+
+Onboarding screen one says exactly what is free forever and what is not. This is the
+structural insight from hard-paywall performance — make the commercial shape unmissable
+early — implemented without walling anyone out.
+
+The free tier is deliberately generous and must stay that way:
+
+- All of week one, including three learn modules
+- The daily check-in and the hours number, forever
+- Every grounding exercise, forever
+- The hard-day path and all crisis support, forever, never with an upsell attached
+- Five thought records a month
+
+`lib/entitlement.ts` hard-codes `ALWAYS_FREE_ROUTES`. Adding a gate to any of them requires
+editing a list with a comment telling you not to. Leave that in place.
+
+## Upgrade surfaces, and where they are forbidden
+
+Three places may mention Steady+:
+
+1. **Progress**, under the locked charts — the customer is looking at their own data
+2. **Learn**, at the week 2 boundary — the customer is trying to read the next thing
+3. **The week-one completion moment** — the second proof point, the primary ask
+
+Forbidden, permanently:
+
+- Grounding, in any state, including after a completed exercise
+- The hard-day path
+- Support
+- The urge-surf timer, before or after
+- Any screen reachable from the Support pill
+- Anywhere triggered by a distress rating, a missed week, or a hard-day tap
+
+`__tests__/safety.test.mjs` greps for this. Keep it passing.
+
+## Trial
+
+Fourteen days, spanning two full protocol weeks — the minimum that lets the customer see
+the number move twice before deciding. Published medians put 17–32 day trials at 42.5%
+conversion against 25.5% under four days, and the mechanism is habit formation, not patience.
+
+Requirements that ship with it:
+
+- The end **date** is on screen, not a duration
+- The charge amount and the cancellation route are in the same sentence as the date
+- A reminder before it ends, promised on the paywall and actually sent
+
+## Pricing
+
+Annual pre-selected, monthly equivalent alongside it, lifetime available. Health & Fitness
+takes 68% of revenue from annual and annual retains best.
+
+**No discounts, no launch pricing, no countdown.** Beyond the manipulation objection there
+is a plain commercial one: in annual Health & Fitness the discounted cohort churns worse
+than the full-price cohort. The discount buys a customer who was leaving anyway.
+
+Hardship access stays visible on the paywall — no form, no proof, no explanation.
+
+## Evidence instead of social proof
+
+Steady has no users, no ratings, and no analytics, so it has no social proof and will not
+invent any. What it has is a real evidence base for the *method*, and that converts better
+in a low-trust category anyway.
+
+`content/proof.ts` holds the citations. Every claim there is about the literature, never
+about Steady, and every one carries this qualifier somewhere adjacent:
+
+> Steady is not therapy and has not itself been trialled. These are the findings behind the
+> exercises it is built from.
+
+Source figures live in the `bdd-expert` skill's `references/evidence-base.md`. Do not add a
+claim to `proof.ts` that is not graded there.
+
+## The plateau
+
+Weeks 5–8 are where behaviour-change products lose people: the early gain has landed, the
+next one has not arrived, and the customer concludes it stopped working. In this protocol
+that stretch is real — response rates keep climbing well past week 12.
+
+Name it before they reach it, in the product, in week four. An expected plateau is a stage
+the customer rides out. An unexpected one is a cancellation.
+
+## What to measure, if analytics are ever added
+
+There are none in v1 and that is a feature. If any are ever added, they belong behind
+explicit opt-in, and this is the shortlist:
+
+- **Activation:** reached the cost mirror (aha), completed three check-ins (second proof)
+- **Time-to-first-value:** open → cost mirror, in seconds
+- **The ask:** week-one completion → paywall view → trial start
+- **Trial:** start → day 14 → renewal
+- **Health, not just revenue:** median reclaimed hours at week 4 and week 12
+
+Never instrument distress ratings for commercial purposes. Not as a segment, not as a
+trigger, not as a cohort. That data exists to help the customer and for no other reason.

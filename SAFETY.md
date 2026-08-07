@@ -218,10 +218,52 @@ marked `afterEvent`.
 
 ---
 
+## 12. The money never touches the safety surfaces
+
+Grounding, crisis support and the urge timer carry no upsell in any state — not a badge, not
+a "you're missing out", not a prompt after a completed exercise. These are the screens
+somebody opens at their worst. A commercial message arriving at that moment is the fastest
+way there is to destroy a health brand, and it is also simply a rotten thing to do.
+
+The upgrade prompt on Today is gated on **progress signals only**: week completed, three
+check-ins recorded. It never reads a distress rating, an avoidance answer, a missed week or a
+hard-day tap. Using somebody's suffering to time an offer is the line between personalisation
+and exploitation, and people feel it even when they cannot name it.
+
+**Where it lives.** `__tests__/safety.test.mjs` greps `app/grounding.tsx`, `app/support.tsx`
+and `app/urges.tsx` for any paywall reference, and reads the `askReady` gate in
+`app/(tabs)/index.tsx` for distress terms. `lib/entitlement.ts` hard-codes
+`ALWAYS_FREE_ROUTES`.
+
+---
+
+## 13. Every number shown to a customer is one we could defend to their face
+
+No fabricated ratings, no invented review or user counts, no "most popular" badge on an app
+with no users. Steady has no analytics and therefore no social proof, and it will not invent
+any. What it shows instead is **evidence about the method**, and `PROOF_QUALIFIER` — *"Steady
+is not therapy and has not itself been trialled"* — travels with it wherever it renders.
+
+The same rule governs the cost mirror in onboarding. It states arithmetic on figures the
+customer typed thirty seconds earlier, in the present tense: no promised gain, no comparison
+to other people, no editorialising. Below about fifteen minutes a day it declines to show a
+cost figure at all, because telling somebody *"this is what it is costing you"* when they
+barely have the problem is manufacturing one to sell against.
+
+No countdown, no expiring discount, no scarcity language, anywhere. Beyond the objection to
+running urgency at an anxious person there is a plain commercial one: in this category the
+discounted cohort churns worse than the full-price cohort.
+
+**Where it lives.** `content/proof.ts`, `lib/cost.ts`, and the monetisation block in
+`__tests__/safety.test.mjs`. The strategy behind all of it, with its sources, is in
+`.claude/skills/value-first-growth/`.
+
+---
+
 ## Running the checks
 
 ```bash
-npm test          # 94 assertions across engine, protocol, streak, content and copy
+npm test          # 130 assertions across engine, protocol, streak, content, copy and money
 npm run typecheck # tsc --noEmit
 ```
 

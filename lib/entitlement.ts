@@ -27,12 +27,56 @@ export const FREE_LIMITS = {
   maxWeek: 1,
 };
 
+/* Pricing.
+ *
+ * Annual is the default selection: Health & Fitness takes ~68% of its revenue from annual
+ * plans and they retain far better than monthly. Monthly stays on the list anyway — in a
+ * category where trust is the binding constraint, offering the flexible option is itself a
+ * trust signal, and it says the product expects to earn the next month.
+ *
+ * No discounts, no launch pricing, no countdown. Beyond the obvious objection to running
+ * urgency at an anxious person there is a plain commercial one: in annual Health & Fitness
+ * the discounted cohort churns WORSE than the full-price cohort, so a discount buys a
+ * customer who was leaving anyway. See .claude/skills/value-first-growth. */
 export const PRICING = {
   monthly: '$6.99/mo',
   yearly: '$44.99/yr',
+  /** Shown beside the annual figure. Anchor low, bill high — the pair reads as honest
+   *  where either number on its own reads as a trick. */
+  yearlyPerMonth: '$3.75 a month',
   lifetime: '$89 once',
-  trialDays: 7,
+  /** Fourteen days spans two full protocol weeks, so the customer watches their number
+   *  move twice before deciding. Published medians: 17–32 day trials convert at 42.5%,
+   *  under four days at 25.5%, and the mechanism is habit formation, not patience. */
+  trialDays: 14,
 };
+
+/** The trial end date, as a date. A long trial showing only a duration is a trap; a long
+ *  trial showing a date, an amount, and a promised reminder is a fair deal. */
+export function trialEndDate(from: Date = new Date()): string {
+  const d = new Date(from);
+  d.setDate(d.getDate() + PRICING.trialDays);
+  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'long' });
+}
+
+/** What each tier actually gets. Rendered as a comparison on the paywall — one of the most
+ *  consistent additions across high-performing paywalls, because a large share of people
+ *  standing at one still cannot say what they would be buying.
+ *
+ *  The free column is written generously on purpose. A visibly crippled free column reads
+ *  as hostage-taking, and it converts worse than an honest one. */
+export const TIER_COMPARISON: { label: string; free: string | true; plus: string | true }[] = [
+  { label: 'Daily check-in and your hours number', free: true, plus: true },
+  { label: 'Grounding, breathing, the hard-day path', free: 'Forever', plus: 'Forever' },
+  { label: 'Crisis support and the therapist guide', free: 'Forever', plus: 'Forever' },
+  { label: 'Learn modules', free: '3 of 12', plus: 'All 12' },
+  { label: 'The twelve-week protocol', free: 'Week 1', plus: 'Weeks 1–12' },
+  { label: 'Thought records', free: '5 a month', plus: 'Unlimited' },
+  { label: 'Mirror practice, timed and graded', free: '—', plus: true },
+  { label: 'Behavioural experiments', free: '—', plus: true },
+  { label: 'Full progress history and charts', free: '—', plus: true },
+  { label: 'Export for a clinician', free: '—', plus: true },
+];
 
 export function useEntitlement() {
   const entitled = useStore((s) => s.entitled);

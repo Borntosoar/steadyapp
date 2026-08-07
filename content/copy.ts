@@ -81,6 +81,11 @@ export const PAYWALL_COPY = {
   headline: "You've seen your number.",
   sub: 'Weeks 2 through 12 are how you change it.',
   freeLine: 'Grounding, check-ins, and support stay free, always.',
+  /* Said out loud rather than left to be discovered. Removing time pressure converts a
+     little worse on the day and a lot better over a year, and in this category it is the
+     difference between a brand people recommend and one they warn each other about. */
+  noUrgency: 'This price is the price. It is not going up if you wait, and there is no discount coming that you would be missing.',
+  comparisonTitle: 'What you get either way',
   /* Visible, not buried. Someone who cannot pay is not a lower-value user, and making
      them ask twice is a bad trade for everyone. No form, no proof, no questions. */
   hardship: {
