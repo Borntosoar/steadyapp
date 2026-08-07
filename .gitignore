@@ -4,3 +4,6 @@ dist/
 web-build/
 *.log
 .DS_Store
+
+# Web export output. Rebuilt with `npx expo export --platform web`.
+dist/
