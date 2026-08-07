@@ -13,6 +13,7 @@ import type {
 import { emptyState, loadState, saveState, wipeState } from '../lib/storage';
 import { dayKey, registerPractice, milestoneReached } from '../lib/streak';
 import { recordPracticeDay } from '../lib/protocol';
+import { markShown, markDismissed, markActed, type MomentId } from '../lib/moments';
 
 const id = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -28,6 +29,9 @@ interface StoreApi extends AppState {
   acceptDisclaimer: () => void;
   setSupportRegion: (region: string) => void;
   setEntitled: (v: boolean) => void;
+  momentShown: (id: MomentId) => void;
+  momentDismissed: (id: MomentId) => void;
+  momentActed: (id: MomentId) => void;
 
   addCheckIn: (c: Omit<CheckIn, 'id' | 'date'> & { date?: string }) => void;
   addUrgeLog: (u: Omit<UrgeLog, 'id' | 'date'>) => void;
@@ -101,7 +105,26 @@ export const useStore = create<StoreApi>((set, get) => ({
   },
 
   setEntitled: (entitled) => {
-    set({ entitled });
+    // Starting a trial stamps the clock the trial-ending notice reads. Without this the
+    // app cannot keep the promise its own paywall makes.
+    set((s) => ({ entitled, trialStartedAt: entitled && !s.trialStartedAt ? new Date().toISOString() : s.trialStartedAt }));
+    persist(get);
+  },
+
+  /* Moment bookkeeping. Every unprompted message in the app routes through these three,
+     so the record of what was shown and what was refused lives in exactly one place. */
+  momentShown: (id) => {
+    set((s) => ({ moments: markShown(s.moments, id) }));
+    persist(get);
+  },
+
+  momentDismissed: (id) => {
+    set((s) => ({ moments: markDismissed(s.moments, id) }));
+    persist(get);
+  },
+
+  momentActed: (id) => {
+    set((s) => ({ moments: markActed(s.moments, id) }));
     persist(get);
   },
 

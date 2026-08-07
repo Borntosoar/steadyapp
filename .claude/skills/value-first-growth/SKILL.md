@@ -120,5 +120,18 @@ Refuse these and rewrite. Each one appears in shipped apps and each one is a lia
 |---|---|
 | `references/benchmarks.md` | You need a real figure, with its source and date |
 | `references/funnel.md` | Designing or reviewing any stage: install → renewal → winback |
+| `references/moments.md` | Deciding **when** a prompt fires, how often, and what silences it |
 | `references/copy-patterns.md` | Writing the words on a paywall, prompt, or notification |
 | `references/steady.md` | Working on Steady specifically — the applied version |
+
+## The two-line version of timing
+
+`funnel.md` covers what to say at each stage. `moments.md` covers when, and it is the
+harder half — most products with good copy still feel pushy, and the cause is almost never
+the wording. It is that four screens each decided independently to say something.
+
+The distinction that resolves it: a **boundary** is reached because the user walked into it
+(a locked screen they tapped), so it always renders and needs no budget. An **interruption**
+is started by the app, spends trust whether or not it converts, and must go through a single
+scheduler that returns at most one thing per day for the whole app. Read `moments.md` before
+adding any prompt.

@@ -4,8 +4,9 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { Bleed, Button, Caption, H2, H3, Body, BodySm, Row, Rule, useTheme } from '../../components/ui';
-import { useEntitlement, PRICING } from '../../lib/entitlement';
-import { PLATEAU_NOTICE } from '../../content/proof';
+import { MomentCard } from '../../components/MomentCard';
+import { PRICING } from '../../lib/entitlement';
+import { nextMoment } from '../../lib/moments';
 import { Atmosphere } from '../../components/Atmosphere';
 import {
   space, radius, type as t, atmosphereForHour, TAB_BAR_HEIGHT, LAYOUT_MAX_WIDTH,
@@ -68,12 +69,18 @@ export default function Today() {
 
   const resisted = urgeLogs.filter((u) => u.resisted).length;
 
-  /* The ask gate. Progress signals only — week completion and check-in count. Nothing in
-     here reads distress, avoidance, or a hard-day tap, and nothing ever should: timing an
-     offer off somebody's suffering is the line between personalisation and exploitation,
-     and customers feel it even when they cannot name it. */
-  const { entitled } = useEntitlement();
-  const askReady = !entitled && wp.complete && reclaimed.sampleSize >= 3;
+  /* Everything the app says unprompted goes through one scheduler: at most one a day,
+     prioritised, capped, and silenced for 24 hours by any sign of a hard day. The screen
+     does not decide what to show — it asks. See lib/moments.ts. */
+  const state = useStore();
+  const moment = nextMoment({
+    state,
+    trialStartedAt: state.trialStartedAt,
+    trialDays: PRICING.trialDays,
+    reclaimedSampleSize: reclaimed.sampleSize,
+    weekComplete: wp.complete,
+  });
+
   const hour = new Date().getHours();
   const greeting = hour < 5 ? 'Late night' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
@@ -205,57 +212,12 @@ export default function Today() {
           <Rule />
         </View>
 
-        {/* ---- the ask ----
-             The only unprompted upgrade surface in the app, and it appears at the second
-             proof point: week one done, three check-ins in, a real number on the board that
-             the customer has watched move. Not at install, not at the end of onboarding.
-
-             Three things are true at once here and that is the whole design — they have
-             spent effort, they have evidence it works FOR THEM, and they are in a good
-             mood about it, which means the ask is not landing on distress.
-
-             It never renders off a distress signal. `askReady` reads week completion and
-             check-in count only; nothing in it touches suds, avoidance or a hard-day tap.
-             See .claude/skills/value-first-growth/references/steady.md. */}
-        {askReady && (
+        {/* ---- the one unprompted message ----
+             Placed after the week's numbers rather than above them, so whatever the app
+             has to say arrives behind what the person actually opened it for. */}
+        {moment && (
           <View style={{ paddingHorizontal: space.lg, marginTop: space.xxl }}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="About Steady Plus"
-              onPress={() => router.push('/paywall')}
-              style={({ pressed }) => ({
-                borderRadius: radius.card,
-                borderWidth: 1,
-                borderColor: c.accent,
-                backgroundColor: c.accentDim,
-                padding: space.lg,
-                opacity: pressed ? 0.92 : 1,
-              })}
-            >
-              <Caption style={{ color: c.accentDeep }}>Week one, done</Caption>
-              <H2 style={{ marginTop: space.xs }}>
-                {showNumber ? `${Math.abs(reclaimed.hours)} hours, and that is week one` : 'That is week one'}
-              </H2>
-              <BodySm style={{ marginTop: space.sm, color: c.ink }}>
-                Weeks two to twelve are where the mirror work, the experiments and the rest of the
-                protocol live. {PRICING.trialDays} days free first, and the check-in, grounding and
-                support you have been using stay free either way.
-              </BodySm>
-              <Caption style={{ marginTop: space.md, color: c.accentDeep }}>See what is in it ›</Caption>
-            </Pressable>
-          </View>
-        )}
-
-        {/* ---- the plateau ----
-             Named in week four, before they reach it. Weeks five to eight are where
-             behaviour-change products lose people: the early gain has landed, the next has
-             not arrived, and the customer concludes it stopped working. An expected plateau
-             is a stage somebody rides out; an unexpected one is a cancellation. */}
-        {week >= 4 && week <= 5 && (
-          <View style={{ paddingHorizontal: space.lg, marginTop: space.xl }}>
-            <Rule />
-            <H3 style={{ marginTop: space.lg }}>{PLATEAU_NOTICE.title}</H3>
-            <BodySm style={{ marginTop: space.xs }}>{PLATEAU_NOTICE.body}</BodySm>
+            <MomentCard moment={moment} />
           </View>
         )}
 

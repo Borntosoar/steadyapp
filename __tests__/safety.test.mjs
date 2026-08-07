@@ -141,14 +141,60 @@ describe('the money never touches the safety surfaces', () => {
     }
   });
 
-  test('no upsell is triggered by a distress signal', () => {
-    // The gate on the home-screen ask may read progress. It may never read suffering.
-    const home = FILES.find((f) => f.path === 'app/(tabs)/index.tsx');
-    const at = home.src.indexOf('const askReady');
-    assert.ok(at > -1, 'the ask gate is gone');
-    const line = home.src.slice(at, home.src.indexOf('\n', at));
-    assert.doesNotMatch(line, /suds|avoidance|distress|hardDay|urge/i,
-      `the upgrade prompt is gated on a distress signal: ${line}`);
+  /* Behavioural rather than a grep. The scheduler is the only thing in the app allowed to
+     start a conversation the user did not, so it is worth testing what it actually does
+     with a person who is having a bad week rather than what its source looks like. */
+  test('a hard day silences every commercial and advocacy moment', async () => {
+    const { nextMoment } = await import('../lib/moments.ts');
+    const { baseAppState, qualifiedForAsk } = await import('./helpers/state.mjs');
+
+    const ok = nextMoment(qualifiedForAsk(baseAppState()));
+    assert.equal(ok?.id, 'week-one-ask', 'the ask should be eligible in the control case');
+
+    // Same state, plus a hard-day tap today.
+    const hard = baseAppState();
+    hard.practice.push({ id: 'hd', date: new Date().toISOString().slice(0, 10), kind: 'hard-day' });
+    assert.equal(nextMoment(qualifiedForAsk(hard)), null,
+      'an upgrade prompt fired on the day somebody tapped "today is a hard day"');
+
+    // Same state, plus a high distress rating today.
+    const distressed = baseAppState();
+    distressed.checkIns[0].suds = 9;
+    assert.equal(nextMoment(qualifiedForAsk(distressed)), null,
+      'an upgrade prompt fired on a day rated 9 out of 10 for distress');
+
+    // Same state, plus a significant-avoidance day.
+    const avoiding = baseAppState();
+    avoiding.checkIns[0].avoidance = 'significant';
+    assert.equal(nextMoment(qualifiedForAsk(avoiding)), null,
+      'an upgrade prompt fired on a day appearance worry cancelled something');
+  });
+
+  test('a trial-ending notice still fires on a hard day', async () => {
+    const { nextMoment } = await import('../lib/moments.ts');
+    const { baseAppState, qualifiedForAsk } = await import('./helpers/state.mjs');
+
+    const s = baseAppState();
+    s.entitled = true;
+    s.practice.push({ id: 'hd', date: new Date().toISOString().slice(0, 10), kind: 'hard-day' });
+    const started = new Date();
+    started.setDate(started.getDate() - 13);
+    s.trialStartedAt = started.toISOString();
+
+    const m = nextMoment({ ...qualifiedForAsk(s), trialStartedAt: s.trialStartedAt, trialDays: 14 });
+    assert.equal(m?.id, 'trial-ending',
+      'money is about to leave this person\'s account and the app promised to warn them');
+  });
+
+  test('the scheduler is the only thing that starts an unprompted conversation', () => {
+    // If a screen grew its own prompt, it would bypass the daily budget and the distress
+    // suppression without anybody noticing. MomentCard is the only renderer.
+    for (const f of FILES) {
+      if (f.path === 'components/MomentCard.tsx') continue; // the one renderer
+      if (f.path.startsWith('content/')) continue; // where the words are defined
+      assert.doesNotMatch(f.src, /MOMENT_COPY/,
+        `${f.path} renders moment copy directly instead of going through the scheduler`);
+    }
   });
 
   test('no countdown, expiry or scarcity language anywhere', () => {

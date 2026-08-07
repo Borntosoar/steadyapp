@@ -97,6 +97,66 @@ export const PAYWALL_COPY = {
   },
 };
 
+/* ---------- moments ----------
+ *
+ * Everything the app says unprompted. Scheduled by lib/moments.ts, worded here so the
+ * copy-safety tests in this repo cover every line of it — these are the sentences most
+ * likely to be rewritten later by somebody chasing a number, and the ones where a wrong
+ * word does the most damage.
+ *
+ * Each has a `dismiss` label that says what it does. None of them shames, none implies
+ * loss, and the two that ask for something say plainly what they are asking for. */
+
+export const MOMENT_COPY = {
+  'week-one-ask': {
+    eyebrow: 'Week one, done',
+    title: 'That is week one',
+    body: 'Weeks two to twelve are where the mirror work, the experiments and the rest of the protocol live. Two weeks free first, and the check-in, grounding and support you have been using stay free either way.',
+    action: 'See what is in it',
+    dismiss: 'Not now',
+  },
+
+  'trial-ending': {
+    eyebrow: 'Your trial',
+    title: 'Two days left on the free period',
+    body: 'Telling you before it renews is the deal we made on the way in. Nothing changes if you stay, and cancelling takes fewer taps than starting did.',
+    action: 'Manage my plan',
+    dismiss: 'Got it',
+  },
+
+  winback: {
+    eyebrow: 'Welcome back',
+    title: 'Everything is where you left it',
+    body: 'Your history, your records, your longest run — all still here, exactly as they were. Gaps are part of how this goes for almost everybody. There is nothing to make up and nowhere to start from except today.',
+    action: 'Open today',
+    dismiss: 'Close',
+  },
+
+  plateau: {
+    eyebrow: 'Worth knowing now',
+    title: 'The next few weeks are the flat bit',
+    body: 'Around week five the quick early change usually stops and the numbers sit still for a while. It is the most common point to decide this is not working, and it is the point where the evidence says to keep going. Flat is the middle, not the end.',
+    action: 'Read the module',
+    dismiss: 'Close',
+  },
+
+  'month-two-proof': {
+    eyebrow: 'Two months in',
+    title: 'It held',
+    body: 'The early change in this kind of work is easy to explain away as a good fortnight. Holding it for two months is a different thing, and it is the part of the record worth keeping.',
+    action: 'See the whole run',
+    dismiss: 'Close',
+  },
+
+  'rate-app': {
+    eyebrow: 'One small thing',
+    title: 'Would you say so publicly?',
+    body: 'Steady has no ad budget, so people find it by being told about it. If it has been useful, a review is the whole of our marketing. If it has not been, the honest thing is to say that instead.',
+    action: 'Write a review',
+    dismiss: 'No thanks',
+  },
+};
+
 /* ---------- disclaimer ---------- */
 
 export const DISCLAIMER =

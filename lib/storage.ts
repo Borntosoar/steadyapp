@@ -32,6 +32,8 @@ export const emptyState = (): AppState => ({
   },
   readModules: [],
   entitled: false,
+  moments: {},
+  trialStartedAt: null,
 });
 
 export async function loadState(): Promise<AppState> {
@@ -47,6 +49,7 @@ export async function loadState(): Promise<AppState> {
       profile: { ...emptyState().profile, ...(parsed.profile ?? {}) },
       streak: { ...initialStreak(), ...(parsed.streak ?? {}) },
       protocol: { ...emptyState().protocol, ...(parsed.protocol ?? {}) },
+      moments: { ...(parsed.moments ?? {}) },
     };
   } catch {
     return emptyState();
