@@ -61,7 +61,7 @@ export default function Paywall() {
        reading "Most popular" would be a claim about users Steady does not have. */
     { key: 'yearly', label: 'Yearly', price: PRICING.yearly, note: `Works out at ${PRICING.yearlyPerMonth}`, badge: 'Best value' },
     { key: 'monthly', label: 'Monthly', price: PRICING.monthly, note: 'Leave whenever, no discount to lose' },
-    { key: 'lifetime', label: 'Lifetime', price: PRICING.lifetime, note: 'One payment, no subscription' },
+    { key: 'lifetime', label: 'Lifetime', price: PRICING.lifetime, note: 'One payment. Under two years of the annual plan.' },
   ];
 
   return (

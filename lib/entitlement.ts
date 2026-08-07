@@ -38,13 +38,29 @@ export const FREE_LIMITS = {
  * urgency at an anxious person there is a plain commercial one: in annual Health & Fitness
  * the discounted cohort churns WORSE than the full-price cohort, so a discount buys a
  * customer who was leaving anyway. See .claude/skills/value-first-growth. */
+/* Priced at the category, not under it.
+ *
+ * The previous figures ($6.99 / $44.99 / $89) sat well below every comparable subscription
+ * in mental health, and underpricing does more damage here than it looks:
+ *
+ *   - The discounted cohort in annual Health & Fitness churns WORSE than the full-price
+ *     cohort. A low price does not buy loyalty, it buys people who were leaving anyway.
+ *   - Price is read as a quality signal in a category where the customer cannot evaluate
+ *     the product before buying it. Sitting far under the category reads as thin.
+ *   - The hardship tier is what makes this defensible. Nobody is priced out of Steady —
+ *     they are one visible, form-free tap from three months free. Given that, pricing the
+ *     paid tier at its worth costs nobody anything and funds the free tier.
+ *
+ * Annual works out roughly half the monthly rate, which is the usual spread and enough to
+ * make annual the obviously rational pick without needing a "SAVE 47%" badge shouting it.
+ * Lifetime is a shade under two years of annual. */
 export const PRICING = {
-  monthly: '$6.99/mo',
-  yearly: '$44.99/yr',
+  monthly: '$12.99/mo',
+  yearly: '$79.99/yr',
   /** Shown beside the annual figure. Anchor low, bill high — the pair reads as honest
    *  where either number on its own reads as a trick. */
-  yearlyPerMonth: '$3.75 a month',
-  lifetime: '$89 once',
+  yearlyPerMonth: '$6.67 a month',
+  lifetime: '$149 once',
   /** Fourteen days spans two full protocol weeks, so the customer watches their number
    *  move twice before deciding. Published medians: 17–32 day trials convert at 42.5%,
    *  under four days at 25.5%, and the mechanism is habit formation, not patience. */

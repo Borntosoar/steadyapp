@@ -90,7 +90,7 @@ At that moment, three things are simultaneously true, and this is the whole desi
 - **Annual pre-selected**, badged, visually distinct. Health & Fitness takes 68% of revenue
   from annual and annual retains best.
 - **Daily or monthly equivalent shown next to the annual figure.** Anchor low, bill high;
-  "$44.99/yr · about $3.75 a month" beats either number alone.
+  "$79.99/yr · about $6.67 a month" beats either number alone.
 - **A free-vs-paid comparison.** One of the most consistent additions across top apps,
   because a large share of people standing at a paywall still cannot say what they'd be
   buying. Write the free column honestly and generously; a visibly crippled free column

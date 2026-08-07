@@ -106,7 +106,7 @@ running a harsh commentary about themselves:
 `don't lose` · `at risk` · `expiring` · `last chance` · `we miss you`
 `unlock your best self` · `finally` · `transform`
 
-`only` earns its own line. *"Only $3.75 a month"* tells the customer what the money should
+`only` earns its own line. *"Only $6.67 a month"* tells the customer what the money should
 mean to them. State the number and let them decide whether it is only.
 
 ---
