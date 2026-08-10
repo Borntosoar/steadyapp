@@ -17,6 +17,8 @@
  * somebody reads in a chair, and wrong on a phone held by somebody who has just had a bad
  * evening. Nothing here is dumbed down; it is just said in the order a person says it. */
 
+import { NAMES } from './names.ts';
+
 /* ---------- streak ---------- */
 
 export const STREAK_COPY = {
@@ -202,6 +204,10 @@ export const CONTENT_FOOTER =
 /* ---------- urge counter ----------
    The running resisted count is the single most motivating object in the app: it is a
    tally of times the user did the hard thing, and unlike a symptom score it only ever
-   goes up. */
+   goes up.
 
-export const urgesResistedLabel = (n: number) => `Urges you sat through: ${n}`;
+   The noun comes from content/names.ts so this cannot drift away from what the buttons
+   leading to it are called. That drift is exactly what made the app hard to follow. */
+
+export const urgesResistedLabel = (n: number) =>
+  `${n} ${n === 1 ? NAMES.urge.unit : NAMES.urge.unitPlural}`;

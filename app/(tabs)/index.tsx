@@ -3,7 +3,7 @@ import { View, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Caption, H2, H3, BodySm, useTheme } from '../../components/ui';
-import { Frost, IconBadge, WeekStrip } from '../../components/frost';
+import { Frost, IconBadge, WeekStrip, Explain } from '../../components/frost';
 import { Finish } from '../../components/Finish';
 import { MomentCard } from '../../components/MomentCard';
 import { Atmosphere } from '../../components/Atmosphere';
@@ -16,6 +16,7 @@ import { weekProgress, recommendedAction, WEEKS_TOTAL } from '../../lib/protocol
 import { milestoneCopy } from '../../lib/streak';
 import { lastSevenDays } from '../../lib/week';
 import { nextMoment } from '../../lib/moments';
+import { NAMES, EXPLAIN } from '../../content/names';
 
 /* Today.
  *
@@ -114,10 +115,10 @@ export default function Today() {
   }
 
   const grid = [
-    { title: 'Check in', sub: '30 seconds', route: '/checkin', icon: 'plus' as const, done: checkedInToday },
-    { title: 'Calm down', sub: 'Free, always', route: '/grounding', icon: 'play' as const },
-    { title: 'Ride out an urge', sub: '3 minutes', route: '/urges', icon: 'play' as const },
-    { title: 'Write it out', sub: 'About 5 minutes', route: '/journal', icon: 'plus' as const },
+    { title: NAMES.checkin.title, sub: '30 seconds', route: '/checkin', icon: 'plus' as const, done: checkedInToday },
+    { title: NAMES.calm.title, sub: 'Free, always', route: '/grounding', icon: 'play' as const },
+    { title: NAMES.urge.title, sub: '3 minutes', route: '/urges', icon: 'play' as const },
+    { title: NAMES.thought.title, sub: 'About 5 minutes', route: '/journal', icon: 'plus' as const },
   ];
 
   return (
@@ -146,6 +147,9 @@ export default function Today() {
           <BodySm style={{ marginTop: space.sm, maxWidth: 320 }}>
             {showNumber ? copy.sub : 'Check in and Steady starts working out how much time this is taking.'}
           </BodySm>
+          {/* The headline figure is the whole product and it was unexplained. "Back from
+              what?" is the first question anybody has, and there was nowhere to ask it. */}
+          {showNumber && <Explain q={EXPLAIN.hours.q} a={EXPLAIN.hours.a} />}
 
           {/* Your week, at a glance. The single biggest thing the old home screen lacked:
               nothing showed you your own run without opening another tab. */}
@@ -157,6 +161,7 @@ export default function Today() {
               </Caption>
             </View>
             <WeekStrip days={days} />
+            <Explain q={EXPLAIN.week.q} a={EXPLAIN.week.a} />
           </Frost>
 
           {/* The one thing to do now. */}
@@ -197,7 +202,7 @@ export default function Today() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.lg }}>
                 <Text style={[t.hero, { color: c.cool, fontSize: 40, lineHeight: 44 }]}>{resisted}</Text>
                 <View style={{ flex: 1 }}>
-                  <H3>urges you sat through</H3>
+                  <H3>{resisted === 1 ? NAMES.urge.unit : NAMES.urge.unitPlural}</H3>
                   <Caption style={{ marginTop: 2 }}>This number only ever goes up.</Caption>
                 </View>
               </View>

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Button, Field, H1, H2, H3, Body, BodySm, Caption, Chip, Label, Row, Rule, useTheme,
 } from '../components/ui';
-import { Frost, Ground, ListRow, LevelBar, Steps, TopBar } from '../components/frost';
+import { Frost, Ground, ListRow, LevelBar, Steps, TopBar, Explain, STRENGTH_WORDS, CHANCE_WORDS } from '../components/frost';
 import { Finish } from '../components/Finish';
 import { Atmosphere } from '../components/Atmosphere';
 import {
@@ -19,6 +19,7 @@ import {
 } from '../content/exercises.ts';
 import { phaseForWeek } from '../lib/protocol';
 import { formatLogDate } from '../lib/dates';
+import { NAMES, EXPLAIN } from '../content/names';
 
 type View_ = 'home' | 'record' | 'experiment';
 
@@ -45,10 +46,11 @@ export default function Journal() {
     <Ground>
       <TopBar onBack={() => router.back()} />
 
-      <H1 style={{ marginTop: space.lg }}>Write it out</H1>
+      <H1 style={{ marginTop: space.lg }}>Writing</H1>
       <BodySm style={{ marginTop: space.sm }}>
-        A thought record takes one thought apart. An experiment tests one against real life.
-        Both are writing, and the writing is the part that works.
+        One of these takes a single thought apart. The other tests what you think will
+        happen against what actually does. Both are writing, and the writing is the part
+        that works.
       </BodySm>
 
       {records.length > 0 && (
@@ -93,15 +95,15 @@ export default function Journal() {
       <Frost style={{ marginTop: space.md }}>
         <ListRow
           glyph="page"
-          title="Take a thought apart"
-          sub="Seven questions, about five minutes"
+          title={NAMES.thought.title}
+          sub={NAMES.thought.sub}
           first
           onPress={() => setView('record')}
         />
         <ListRow
           glyph="flask"
-          title="Test a prediction"
-          sub="Guess what will happen, do it, write down what did"
+          title={NAMES.experiment.title}
+          sub={NAMES.experiment.sub}
           lock={experimentsUnlocked ? undefined : 'Week 7'}
           onPress={() => experimentsUnlocked && setView('experiment')}
         />
@@ -109,7 +111,7 @@ export default function Journal() {
 
       {experiments.length > 0 && (
         <View style={{ marginTop: space.xl }}>
-          <H2>Past experiments</H2>
+          <H2>Predictions you have tested</H2>
           <BodySm style={{ marginTop: space.xs, marginBottom: space.sm }}>
             {EXPERIMENT_COPY.archiveIntro}
           </BodySm>
@@ -151,7 +153,7 @@ export default function Journal() {
 
       {records.length > 0 && (
         <View style={{ marginTop: space.xl }}>
-          <H2>Recent records</H2>
+          <H2>Thoughts you have taken apart</H2>
           <Frost style={{ marginTop: space.sm }}>
             {records.slice(0, 8).map((r, i) => (
               <View
@@ -165,7 +167,7 @@ export default function Journal() {
                 <Row>
                   <Caption>{formatLogDate(r.date)}</Caption>
                   <Caption>
-                    {r.emotion} {r.emotionIntensity} → {r.reRatedIntensity}
+                    {r.emotion}, {r.emotionIntensity} to {r.reRatedIntensity}
                   </Caption>
                 </Row>
                 <BodySm style={{ color: c.ink, marginTop: 2 }}>{r.automaticThought}</BodySm>
@@ -214,18 +216,18 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
     return (
       <Ground>
         <View style={{ marginTop: space.xxxl }}>
-          <Caption>Free tier</Caption>
+          <Caption>The free part</Caption>
           <H1 style={{ marginTop: space.xs }}>
             That is {FREE_LIMITS.thoughtRecordsPerMonth} records this month
           </H1>
           <Body style={{ marginTop: space.md }}>
-            {FREE_LIMITS.thoughtRecordsPerMonth} a month is what the free tier includes, and you
-            have used them. They reset at the start of next month, and everything you have
-            written stays exactly where it is.
+            {FREE_LIMITS.thoughtRecordsPerMonth} a month is what the free part includes, and you
+            have used them. They start again at the beginning of next month. Everything you
+            have written stays exactly where it is.
           </Body>
           <BodySm style={{ marginTop: space.md, color: c.cool }}>
-            Check-ins, grounding, the hard-day path and crisis support are unaffected. Those are
-            free forever and are not part of this.
+            Checking in, calming down, the hard-day path and crisis support are not affected.
+            Those are free forever and are not part of this.
           </BodySm>
 
           <View style={{ marginTop: space.xxl }}>
@@ -241,7 +243,7 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
     const moved = (intensity ?? 0) - (reRated ?? 0);
     return (
       <Finish
-        eyebrow="Thought record saved"
+        eyebrow="Saved"
         figureText={moved > 0 ? `−${moved}` : undefined}
         headline={moved > 0 ? 'It moved' : 'Recorded'}
         body={THOUGHT_RECORD_CLOSING}
@@ -307,17 +309,19 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
               style={inputStyle(c)}
             />
             <View style={{ marginTop: space.xl }}>
-              <H3>Intensity</H3>
-              <Caption style={{ marginTop: 2, marginBottom: space.md }}>
-                Tap 0–10. This records as 0–100.
-              </Caption>
-              <LevelBar value={intensity} onChange={setIntensity} lowLabel="Barely" highLabel="As strong as it gets" />
+              {/* The old caption here read "Tap 0-10. This records as 0-100." That is a
+                  storage detail, and putting it on screen asks the reader to hold two
+                  scales in their head to answer one question. */}
+              <H3>How strong was it?</H3>
+              <View style={{ marginTop: space.md }}>
+                <LevelBar value={intensity} onChange={setIntensity} words={STRENGTH_WORDS} />
+              </View>
             </View>
           </>
         )}
 
         {step.kind === 'rating' && (
-          <LevelBar value={reRated} onChange={setReRated} lowLabel="Barely" highLabel="As strong as it gets" />
+          <LevelBar value={reRated} onChange={setReRated} words={STRENGTH_WORDS} />
         )}
 
         {step.kind === 'distortions' && (
@@ -400,7 +404,7 @@ function Experiment({ onDone }: { onDone: () => void }) {
     const drop = done.from - done.movedTo;
     return (
       <Finish
-        eyebrow="Experiment closed"
+        eyebrow="Prediction tested"
         figureText={drop > 0 ? `${done.from}% → ${done.movedTo}%` : undefined}
         headline={drop > 0 ? 'The prediction was high' : 'Recorded'}
         body={
@@ -476,12 +480,8 @@ function Experiment({ onDone }: { onDone: () => void }) {
               <LevelBar
                 value={typeof val === 'number' ? Math.round(val / 10) : null}
                 onChange={(n) => setVals({ ...vals, [field.key]: n * 10 })}
-                lowLabel="No chance"
-                highLabel="Certain"
+                words={CHANCE_WORDS}
               />
-              <Caption style={{ marginTop: space.sm }}>
-                {typeof val === 'number' ? `${val}% likely` : 'Tap the bar'}
-              </Caption>
             </>
           )}
         </View>

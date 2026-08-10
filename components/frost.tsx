@@ -244,18 +244,35 @@ export function FaceScale({
  * The reference's energy bar. Ten blocks with a minus and a plus, which is faster to set
  * than picking a number out of a grid and reads as a quantity rather than a grade. */
 
+/** Five words spanning 0–10. A number on its own is not a scale anybody can picture, and
+ *  the bar shows no digits, so "0 is none, 10 is the most" described something invisible. */
+export type LevelWords = [string, string, string, string, string];
+
+export const URGE_WORDS: LevelWords = ['None', 'A flicker', 'Pulling', 'Strong', 'Could not stop'];
+export const STRENGTH_WORDS: LevelWords = ['None', 'Mild', 'Middling', 'Strong', 'As bad as it gets'];
+export const CHANCE_WORDS: LevelWords = ['No chance', 'Unlikely', 'Even odds', 'Likely', 'Certain'];
+
+export function wordFor(n: number, words: LevelWords, max = 10): string {
+  if (n <= 0) return words[0];
+  if (n >= max) return words[4];
+  return words[Math.min(3, Math.ceil((n / max) * 4))];
+}
+
 export function LevelBar({
   value,
   onChange,
   max = 10,
   lowLabel,
   highLabel,
+  words,
 }: {
   value: number | null;
   onChange: (n: number) => void;
   max?: number;
   lowLabel?: string;
   highLabel?: string;
+  /** Turns the picked number into a word. Without this the bar is a quantity with no name. */
+  words?: LevelWords;
 }) {
   const c = useTheme();
   const v = value ?? 0;
@@ -263,6 +280,17 @@ export function LevelBar({
 
   return (
     <View>
+      {/* What you have picked, in a word, before the control that picks it. */}
+      {words && (
+        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: space.sm, marginBottom: space.md }}>
+          <Text style={[t.h1, { color: value === null ? c.inkFaint : c.ink }]}>
+            {value === null ? '–' : v}
+          </Text>
+          <Text style={[t.h3, { color: value === null ? c.inkFaint : c.accentDeep }]}>
+            {value === null ? 'nothing picked yet' : wordFor(v, words, max)}
+          </Text>
+        </View>
+      )}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
         <CircleButton icon="minus" label="Less" size={40} tone="ghost" onPress={() => step(-1)} />
         <View style={{ flex: 1, flexDirection: 'row', gap: 4 }}>
@@ -431,6 +459,62 @@ export function Steps({ total, current }: { total: number; current: number }) {
           }}
         />
       ))}
+    </View>
+  );
+}
+
+/* ---------- what does this mean? ----------
+ *
+ * A question in the app's own voice, tapped to open the answer in place.
+ *
+ * The alternative was a caption under every figure, and that fails in both directions: it
+ * is noise for somebody who already knows, and it is never quite enough for somebody who
+ * does not. A collapsed question costs one line, reads as an offer rather than an
+ * instruction, and can hold three full sentences when it opens.
+ *
+ * This is the only "hidden" content in the app. Everything else is on the surface, because
+ * a person who is anxious will not go hunting. The rule for what may live in here: the
+ * screen must still be usable and honest with every one of these closed. */
+
+export function Explain({ q, a }: { q: string; a: string }) {
+  const c = useTheme();
+  const [open, setOpen] = React.useState(false);
+  return (
+    <View style={{ marginTop: space.sm }}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        accessibilityLabel={q}
+        onPress={() => setOpen((v) => !v)}
+        hitSlop={8}
+        style={({ pressed }) => ({
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+          paddingVertical: 6,
+          opacity: pressed ? 0.7 : 1,
+        })}
+      >
+        <View
+          style={{
+            width: 17,
+            height: 17,
+            borderRadius: 9,
+            borderWidth: 1.2,
+            borderColor: c.accentDeep,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Text style={[t.caption, { color: c.accentDeep, fontSize: 11, lineHeight: 13, fontWeight: '700' }]}>
+            {open ? '−' : '?'}
+          </Text>
+        </View>
+        <Text style={[t.caption, { color: c.accentDeep, fontWeight: '600' }]}>{q}</Text>
+      </Pressable>
+      {open && (
+        <Text style={[t.bodySm, { color: c.inkSoft, marginTop: 2, marginBottom: space.xs }]}>{a}</Text>
+      )}
     </View>
   );
 }

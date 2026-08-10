@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Button, Field, H1, H2, H3, Body, BodySm, Caption, Label, Options, Rule, useTheme,
 } from '../../components/ui';
-import { FaceScale, LevelBar } from '../../components/frost';
+import { FaceScale, LevelBar, URGE_WORDS } from '../../components/frost';
 import { Atmosphere } from '../../components/Atmosphere';
 import {
   space, radius, type as t, LAYOUT_MAX_WIDTH,
@@ -191,13 +191,13 @@ export default function Onboarding() {
         <Rule />
         <Label style={{ marginTop: space.lg, color: c.cool }}>Free, forever</Label>
         <BodySm style={{ marginTop: space.xs, color: c.ink }}>
-          Week one, the daily check-in and your hours number, every grounding exercise, the
-          hard-day path, and all crisis support. No card, no account, no expiry.
+          Week one, the daily check-in and your hours number, every calming exercise, the
+          hard-day path, and all crisis support. No card, no account, no end date.
         </BodySm>
         <Label style={{ marginTop: space.lg, color: c.accentDeep }}>Steady+</Label>
         <BodySm style={{ marginTop: space.xs, color: c.ink }}>
-          Weeks two to twelve, mirror practice, unlimited thought records, and the full
-          history. You will not be asked about it until you have seen the thing work.
+          Weeks two to twelve, mirror practice, as much writing as you want, and the full
+          history. You will not be asked about it until you have seen this work.
         </BodySm>
       </View>
 
@@ -240,13 +240,15 @@ export default function Onboarding() {
     <View key="s2">
       <H1>Where you are today</H1>
       <BodySm style={{ marginTop: space.sm, marginBottom: space.xxl }}>
-        Four questions about a typical recent day. Rough is fine — precision is not the
-        point here, and trying to be exact about it tends to set people ruminating.
+        Four questions about a normal recent day. A rough answer is fine. Trying to be exact
+        about it tends to start people going round in circles, which is the thing we are
+        here to stop. These are the same four questions you will answer each day.
       </BodySm>
 
-      <H3>Time spent thinking about your appearance</H3>
+      <H3>How long did you think about how you look?</H3>
       <Caption style={{ marginTop: 2, marginBottom: space.md }}>
-        Everything counts: checking, getting ready, avoiding, recovering afterwards.
+        It all counts. Checking, getting ready, keeping away from things, and getting over it
+        afterwards.
       </Caption>
       <Options
         options={PREOCCUPATION_BUCKETS}
@@ -255,15 +257,15 @@ export default function Onboarding() {
         labels={['Under 15 minutes', '15–60 minutes', '1–3 hours', '3–5 hours', 'More than 5 hours']}
       />
 
-      <H3 style={{ marginTop: space.xxl }}>Urge to check</H3>
+      <H3 style={{ marginTop: space.xxl }}>How strong was the pull to check?</H3>
       <Caption style={{ marginTop: 2, marginBottom: space.md }}>
-        Mirrors, reflections, the front camera, asking someone. How strong, typically?
+        On a normal day lately.
       </Caption>
-      <LevelBar value={urge} onChange={setUrge} lowLabel="None" highLabel="Could not stop" />
+      <LevelBar value={urge} onChange={setUrge} words={URGE_WORDS} />
 
-      <H3 style={{ marginTop: space.xxl }}>Did it stop you doing something?</H3>
+      <H3 style={{ marginTop: space.xxl }}>Did worry about your looks stop you doing something?</H3>
       <Caption style={{ marginTop: 2, marginBottom: space.md }}>
-        Thinking about the last few days.
+        Think about the last few days.
       </Caption>
       <Options
         options={AVOIDANCE_OPTIONS}
@@ -272,9 +274,9 @@ export default function Onboarding() {
         labels={AVOIDANCE_LABELS}
       />
 
-      <H3 style={{ marginTop: space.xxl }}>Overall distress</H3>
+      <H3 style={{ marginTop: space.xxl }}>How hard have the days been?</H3>
       <Caption style={{ marginTop: 2, marginBottom: space.md }}>
-        How much it has been hurting, in general. Not how you looked.
+        Not how you looked. Just how much it hurt.
       </Caption>
       <FaceScale value={suds} onChange={setSuds} />
     </View>,
@@ -285,14 +287,14 @@ export default function Onboarding() {
     <View key="s4">
       <H1>What you want back</H1>
       <BodySm style={{ marginTop: space.sm, marginBottom: space.xxl }}>
-        Two answers. Both of them yours, and both of them get used — the first sets the
-        week, the second is what you will see on the days it is hard to start.
+        Two answers, both of them yours, and both get used. The first sets your week. The
+        second is what you will see on the days it is hard to start.
       </BodySm>
 
       <H3>How many days a week can you practise?</H3>
       <Caption style={{ marginTop: 2, marginBottom: space.md }}>
-        Pick the number you can actually hit on a bad week, not a good one. Two is a real
-        answer and nothing in here will treat it as a lesser one.
+        Pick the number you can hit on a bad week, not a good one. Two is a real answer, and
+        nothing in here will treat it as a lesser one.
       </Caption>
       <Options
         options={DAYS_OPTIONS as unknown as number[]}

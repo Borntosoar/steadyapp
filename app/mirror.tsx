@@ -5,7 +5,8 @@ import {
   Card, Button, H1, H2, H3, Body, BodySm, Caption, Chip, Row, Rule, useTheme,
 } from '../components/ui';
 import { MirrorSurface, type MirrorMode } from '../components/MirrorSurface';
-import { Frost, Ground, FaceScale, TopBar } from '../components/frost';
+import { Frost, Ground, FaceScale, TopBar, Explain } from '../components/frost';
+import { NAMES, EXPLAIN } from '../content/names';
 import { Finish } from '../components/Finish';
 import { space, radius, type as t } from '../constants/theme';
 import { useStore } from '../store/useStore';
@@ -156,7 +157,7 @@ export default function Mirror() {
               <Rule />
               <H2 style={{ marginTop: space.lg }}>Your last sessions</H2>
               <Caption style={{ marginTop: space.xs }}>
-                How far distress fell from start to end. Higher bars are better.
+                How far it fell from start to end. Higher bars are better.
               </Caption>
               <DeltaBars deltas={deltas} />
             </View>
@@ -231,7 +232,7 @@ export default function Mirror() {
         <View style={{ marginTop: space.xxl }}>
           <H1>Before you start</H1>
           <Body style={{ marginTop: space.sm, color: c.inkSoft }}>
-            How much distress are you carrying right now? This is the number the session moves.
+            How bad does it feel right now? This is the number the session moves.
           </Body>
           <View style={{ marginTop: space.xl }}>
             <FaceScale value={before} onChange={setBefore} />
@@ -356,7 +357,7 @@ export default function Mirror() {
 
         {!completed && (
           <Caption style={{ marginBottom: space.md }}>
-            You ended early. Logged as it happened — the record is only useful if it is accurate.
+            You ended early. It is logged as it happened. The record is only useful if it is true.
           </Caption>
         )}
 

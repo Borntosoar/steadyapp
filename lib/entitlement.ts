@@ -65,6 +65,8 @@ export const FREE_LIMITS = {
  *  `yearlyPerMonth` and `trialDays`, which are display strings and a number. Typed that
  *  way, `purchase('trialDays')` compiled cleanly and would have granted entitlement and
  *  started a trial. */
+import { NAMES } from '../content/names.ts';
+
 export type Plan = 'monthly' | 'yearly' | 'lifetime';
 
 /* ---------- the entitlement model ----------
@@ -250,22 +252,21 @@ export function trialEndDate(from: Date = new Date()): string {
  *  The free column is written generously on purpose. A visibly crippled free column reads
  *  as hostage-taking, and it converts worse than an honest one. */
 export const TIER_COMPARISON: { label: string; free: string | true; plus: string | true }[] = [
-  { label: 'Daily check-in and your hours number', free: true, plus: true },
-  { label: 'Grounding, breathing, the hard-day path', free: 'Forever', plus: 'Forever' },
-  { label: 'Crisis support and the therapist guide', free: 'Forever', plus: 'Forever' },
-  { label: 'Learn modules', free: '3 of 12', plus: 'All 12' },
-  { label: 'The twelve-week protocol', free: 'Week 1', plus: 'Weeks 1–12' },
-  { label: 'Thought records', free: '5 a month', plus: 'Unlimited' },
-  { label: 'Mirror practice, timed and graded', free: '—', plus: true },
-  { label: 'Behavioural experiments', free: '—', plus: true },
-  { label: 'Full progress history and charts', free: '—', plus: true },
+  { label: `${NAMES.checkin.title} and your hours number`, free: true, plus: true },
+  { label: `${NAMES.calm.title}, and the hard-day path`, free: 'Forever', plus: 'Forever' },
+  { label: 'Crisis support and help finding a therapist', free: 'Forever', plus: 'Forever' },
+  { label: 'Short reads', free: '3 of 12', plus: 'All 12' },
+  { label: 'The twelve weeks', free: 'Week 1', plus: 'Weeks 1 to 12' },
+  { label: NAMES.thought.title, free: '5 a month', plus: 'As many as you like' },
+  { label: NAMES.mirror.title, free: '—', plus: true },
+  { label: NAMES.experiment.title, free: '—', plus: true },
+  { label: 'The full picture on Progress', free: '—', plus: true },
   /* Free on both sides, because onboarding promises it before any data is collected:
      "there is no backup … you can export a plain-text copy whenever you like." Selling
      somebody the only route their own writing has off the device would make that sentence
      false, and it is the one thing between them and total loss when a phone dies. */
   { label: 'Export and full backup file', free: 'Forever', plus: 'Forever' },
 ];
-
 
 /** Is this route gated for a non-entitled user? */
 export function isGated(route: string, entitled: boolean): boolean {

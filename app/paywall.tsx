@@ -40,8 +40,8 @@ export default function Paywall() {
         <View style={{ marginTop: space.xxxl }}>
           <H1>You have Steady+</H1>
           <Body style={{ marginTop: space.md, color: c.inkSoft }}>
-            All twelve weeks, unlimited thought records, the full progress picture, and export are
-            unlocked.
+            All twelve weeks, as much writing as you want, the full picture on Progress, and
+            export. All open.
           </Body>
           <Button
             label="Back to the programme"
@@ -166,8 +166,8 @@ export default function Paywall() {
               </Row>
             ))}
             <BodySm style={{ marginTop: space.lg, color: c.cool }}>
-              Grounding, breathing, the hard-day path and crisis support are never paid. Not now
-              and not later, whatever happens to this business.
+              Calming down, breathing, the hard-day path and crisis support are never paid for.
+              Not now and not later, whatever happens to this business.
             </BodySm>
           </View>
 

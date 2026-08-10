@@ -4,8 +4,9 @@ import { H1, BodySm, Caption } from '../../components/ui';
 import { Frost, Ground, ListRow, type GlyphKind } from '../../components/frost';
 import { space } from '../../constants/theme';
 import { useStore } from '../../store/useStore';
-import { mirrorSpecForWeek, phaseForWeek, MIRROR_UNLOCK_WEEK } from '../../lib/protocol';
+import { mirrorSpecForWeek, phaseForWeek, MIRROR_UNLOCK_WEEK, WEEKS_TOTAL } from '../../lib/protocol';
 import { dayKey } from '../../lib/streak';
+import { NAMES } from '../../content/names';
 
 /* Practice.
  *
@@ -46,30 +47,30 @@ export default function Practice() {
 
   const work: Item[] = [
     {
-      title: 'Ride out an urge',
-      sub: 'Three minutes with it, without acting on it',
+      title: NAMES.urge.title,
+      sub: NAMES.urge.sub,
       route: '/urges',
       glyph: 'wave',
       kinds: ['urge'],
     },
     {
-      title: 'Mirror practice',
-      sub: mirrorOpen ? 'Step by step, timed' : 'Step by step',
+      title: NAMES.mirror.title,
+      sub: NAMES.mirror.sub,
       route: '/mirror',
       glyph: 'mirror',
       kinds: ['mirror'],
       locked: mirrorOpen ? undefined : `Week ${MIRROR_UNLOCK_WEEK}`,
     },
     {
-      title: 'Take a thought apart',
-      sub: 'Seven questions, about five minutes',
+      title: NAMES.thought.title,
+      sub: NAMES.thought.sub,
       route: '/journal',
       glyph: 'page',
       kinds: ['thought-record'],
     },
     {
-      title: 'Test a prediction',
-      sub: 'Guess what will happen, do it, write down what did',
+      title: NAMES.experiment.title,
+      sub: NAMES.experiment.sub,
       route: '/journal',
       glyph: 'flask',
       kinds: ['experiment'],
@@ -79,15 +80,15 @@ export default function Practice() {
 
   const free: Item[] = [
     {
-      title: 'Calm down',
-      sub: 'Breathing, senses, widening your attention',
+      title: NAMES.calm.title,
+      sub: NAMES.calm.sub,
       route: '/grounding',
       glyph: 'rings',
       kinds: ['grounding', 'hard-day'],
     },
     {
-      title: 'Daily check-in',
-      sub: 'Four questions, under thirty seconds',
+      title: NAMES.checkin.title,
+      sub: NAMES.checkin.sub,
       route: '/checkin',
       glyph: 'plus',
       kinds: ['checkin'],
@@ -115,10 +116,10 @@ export default function Practice() {
     <Ground tabBarSpace>
       <H1 style={{ marginTop: space.xl }}>Practice</H1>
       <BodySm style={{ marginTop: space.sm }}>
-        Week {week}. {phase.name}. {phase.focus}
+        Week {week} of {WEEKS_TOTAL}. {phase.focus}
       </BodySm>
 
-      <Caption style={{ marginTop: space.xl, marginBottom: space.sm }}>This week&apos;s work</Caption>
+      <Caption style={{ marginTop: space.xl, marginBottom: space.sm }}>What this week adds</Caption>
       <Frost>{work.map(row)}</Frost>
 
       <Caption style={{ marginTop: space.xl, marginBottom: space.sm }}>Always free</Caption>

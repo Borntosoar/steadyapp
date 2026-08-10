@@ -5,15 +5,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Button, Field, H1, H2, H3, Body, BodySm, Caption, Row, useTheme,
 } from '../components/ui';
-import { Frost, LevelBar, TopBar, Ground } from '../components/frost';
+import { Frost, LevelBar, TopBar, Ground, Explain, URGE_WORDS } from '../components/frost';
 import { Finish } from '../components/Finish';
 import { Atmosphere } from '../components/Atmosphere';
 import { QuietCircle } from '../components/BreathCircle';
 import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../constants/theme';
 import { useStore } from '../store/useStore';
 import { URGE_SURF } from '../content/exercises.ts';
-import { urgesResistedLabel } from '../content/copy.ts';
 import { formatLogDate } from '../lib/dates';
+import { NAMES, EXPLAIN } from '../content/names';
 
 type Stage = 'home' | 'before' | 'surfing' | 'after' | 'finished';
 
@@ -110,7 +110,7 @@ export default function Urges() {
       <Ground>
         <TopBar onBack={() => router.back()} />
 
-        <H1 style={{ marginTop: space.lg }}>Urges</H1>
+        <H1 style={{ marginTop: space.lg }}>{NAMES.urge.title}</H1>
         <BodySm style={{ marginTop: space.sm }}>
           Three minutes with an urge, without acting on it. That is the whole thing, and it is
           the part that changes the most.
@@ -123,16 +123,17 @@ export default function Urges() {
             <View style={{ flex: 1 }}>
               <Text style={[t.hero, { color: c.cool, fontSize: 52, lineHeight: 56 }]}>{resisted}</Text>
               <Caption style={{ marginTop: 2 }}>
-                {urgesResistedLabel(resisted).replace(`: ${resisted}`, '')}
+                {resisted === 1 ? NAMES.urge.unit : NAMES.urge.unitPlural}
               </Caption>
             </View>
             {meanDrop !== null && (
               <View style={{ flex: 1 }}>
-                <Text style={[t.h1, { color: c.ink }]}>−{meanDrop}</Text>
-                <Caption style={{ marginTop: 2 }}>average drop when you sit with one</Caption>
+                <Text style={[t.h1, { color: c.ink }]}>{meanDrop}</Text>
+                <Caption style={{ marginTop: 2 }}>points it usually drops while you sit with it</Caption>
               </View>
             )}
           </Row>
+          <Explain q={EXPLAIN.urgesResisted.q} a={EXPLAIN.urgesResisted.a} />
         </Frost>
 
         <Button
@@ -160,8 +161,9 @@ export default function Urges() {
                       <Caption>{formatLogDate(u.date)}</Caption>
                     </View>
                     <Caption>
-                      {u.intensityBefore}
-                      {typeof u.intensityAfter === 'number' ? ` → ${u.intensityAfter}` : ''}
+                      {typeof u.intensityAfter === 'number'
+                        ? `went ${u.intensityBefore} to ${u.intensityAfter}`
+                        : `was ${u.intensityBefore} out of 10`}
                     </Caption>
                     {u.resisted && (
                       <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: c.cool }} />
@@ -205,7 +207,7 @@ export default function Urges() {
 
           <H3>How strong is it right now?</H3>
           <View style={{ marginTop: space.md }}>
-            <LevelBar value={before} onChange={setBefore} lowLabel="Barely there" highLabel="Very strong" />
+            <LevelBar value={before} onChange={setBefore} words={URGE_WORDS} />
           </View>
         </Frost>
 
@@ -329,7 +331,7 @@ export default function Urges() {
       </BodySm>
 
       <Frost>
-        <LevelBar value={after} onChange={setAfter} lowLabel="Gone" highLabel="Very strong" />
+        <LevelBar value={after} onChange={setAfter} words={URGE_WORDS} />
       </Frost>
 
       <View style={{ marginTop: space.xl }}>

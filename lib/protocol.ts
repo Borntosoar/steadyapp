@@ -227,7 +227,7 @@ export function recommendedAction(opts: {
     return {
       route: '/urges',
       label: 'Ride out an urge',
-      why: 'This is the number that starts moving first.',
+      why: 'Sitting through one without checking is the skill the rest needs.',
     };
   }
 

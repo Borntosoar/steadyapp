@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import {
   Button, H1, H2, H3, Body, BodySm, Caption, Row, useTheme,
 } from '../../components/ui';
-import { Frost, Ground } from '../../components/frost';
+import { Frost, Ground, Explain } from '../../components/frost';
 import { StorageNotice } from '../../components/StorageNotice';
 import { LineChart, BarChart } from '../../components/charts';
 import { space, type as t } from '../../constants/theme';
@@ -16,6 +16,7 @@ import {
 import { exportText, exportJson } from '../../lib/storage';
 import { insightsSummary } from '../../content/copy.ts';
 import { weekProgress, WEEKS_TOTAL } from '../../lib/protocol';
+import { NAMES, EXPLAIN } from '../../content/names';
 
 /* Every chart on this screen plots something that should go DOWN, or a count of times the
  * user did the hard thing. Nothing here measures appearance, and nothing ever will —
@@ -107,6 +108,7 @@ export default function Progress() {
           ? 'Compared with the day you described when you started.'
           : 'Three check-ins and this turns into a number.'}
       </BodySm>
+      {showNumber && <Explain q={EXPLAIN.hours.q} a={EXPLAIN.hours.a} />}
 
       <Frost style={{ marginTop: space.lg }}>
         <Row>
@@ -120,6 +122,7 @@ export default function Progress() {
           current={state.protocol.currentWeek}
           progress={wp.done / Math.max(1, wp.required)}
         />
+        <Explain q={EXPLAIN.week.q} a={EXPLAIN.week.a} />
       </Frost>
     </>
   );
@@ -150,13 +153,13 @@ export default function Progress() {
   const exportSection = (
     <Section title="Take this with you">
       <BodySm style={{ marginTop: space.sm }}>
-        A plain-text summary for a clinician, and a full backup file for you. Handing someone
-        a written record is far easier than saying it out loud, and it saves the first
-        appointment from being spent on reconstruction.
+        A short summary you can hand to a doctor, and a full backup file for you. Handing
+        someone a written record is far easier than saying it out loud. It also means the
+        first appointment is not spent piecing it back together.
       </BodySm>
       <BodySm style={{ marginTop: space.md, color: c.cool }}>
         Both are free and always will be. Steady keeps nothing on a server, so this file is
-        the only copy that survives losing the phone.
+        the only copy that survives if you lose the phone.
       </BodySm>
       <Button
         label="Export summary"
@@ -182,9 +185,10 @@ export default function Progress() {
         </View>
         <Section title="The rest of the picture">
           <Body style={{ marginTop: space.md }}>
-            Distress over time, how often you check, what you avoid, and how far distress
-            falls inside each mirror session are part of Steady+.
+            How hard your days have been, how often you check, what you skip, and how far it
+            falls during mirror practice. All of that is part of Steady+.
           </Body>
+          <Explain q={EXPLAIN.plus.q} a={EXPLAIN.plus.a} />
           <BodySm style={{ marginTop: space.md }}>
             Your daily check-in keeps recording either way. The history is still being written
             while you decide.
@@ -277,38 +281,41 @@ export default function Progress() {
         )}
       </Section>
 
-      <Section title="How hard the days were" note="Daily, 0 to 10. This one is meant to fall.">
-        <LineChart points={sudsPoints} max={10} label="Distress" tone="cool" />
+      <Section title="How hard the days were" note="One point a day, 0 to 10. This one is meant to fall.">
+        <LineChart points={sudsPoints} max={10} label="How hard each day was" tone="cool" />
+        <Explain q={EXPLAIN.distress.q} a={EXPLAIN.distress.a} />
       </Section>
 
       <Section
         title="Urges to check"
-        note={`Per day. You sat through ${resisted} of ${urgeLogs.length}.`}
+        note={`One bar a day. You sat through ${resisted} of ${urgeLogs.length}.`}
       >
-        <BarChart bars={urgeBars} label="Checking urges per day" />
+        <BarChart bars={urgeBars} label="Urges to check, per day" />
+        <Explain q={EXPLAIN.urgesResisted.q} a={EXPLAIN.urgesResisted.a} />
       </Section>
 
       <Section
         title="Things you skipped"
-        note="0 none, 1 a little, 2 a lot. This is usually the last one to move, and the one worth waiting for."
+        note="Nothing skipped is 0. A bit changed is 1. Skipped it is 2."
       >
-        <LineChart points={avoidPoints} max={2} label="Avoidance" tone="cool" />
+        <LineChart points={avoidPoints} max={2} label="Things you skipped" tone="cool" />
+        <Explain q={EXPLAIN.avoidance.q} a={EXPLAIN.avoidance.a} />
       </Section>
 
-      <Section title="Mirror sessions" note="How far distress fell inside each one. Taller is better.">
+      <Section title={NAMES.mirror.title} note="How far it fell inside each session. Taller is better.">
         {mirrorDeltas.length ? (
-          <BarChart bars={mirrorDeltas} label="Distress drop per mirror session" tone="cool" />
+          <BarChart bars={mirrorDeltas} label="How far it fell in each session" tone="cool" />
         ) : (
           <Caption style={{ paddingVertical: space.lg }}>No sessions logged yet.</Caption>
         )}
         {mirrorBefore !== null && (
           <Row style={{ marginTop: space.lg }}>
             <View style={{ flex: 1 }}>
-              <Caption>Average before</Caption>
+              <Caption>Usually starts at</Caption>
               <Text style={[t.h1, { color: c.ink, marginTop: 2 }]}>{mirrorBefore}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Caption>Average after</Caption>
+              <Caption>Usually ends at</Caption>
               <Text style={[t.h1, { color: c.cool, marginTop: 2 }]}>{mirrorAfter}</Text>
             </View>
           </Row>

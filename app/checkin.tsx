@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, H1, BodySm, Caption, Options } from '../components/ui';
-import { Frost, FaceScale, LevelBar, WeekStrip, TopBar, Steps, Ground } from '../components/frost';
+import { Frost, FaceScale, LevelBar, WeekStrip, TopBar, Steps, Ground, URGE_WORDS } from '../components/frost';
 import { Finish } from '../components/Finish';
 import { space } from '../constants/theme';
 import { useStore } from '../store/useStore';
@@ -121,9 +121,9 @@ export default function CheckIn() {
     },
     {
       title: 'How strong was the pull to check?',
-      hint: 'Nought is none. Ten is you could not stop.',
+      hint: 'Tap the bar to set it, or use the buttons on either side.',
       valid: urge !== null,
-      node: <LevelBar value={urge} onChange={setUrge} lowLabel="None" highLabel="Could not stop" />,
+      node: <LevelBar value={urge} onChange={setUrge} words={URGE_WORDS} />,
     },
     {
       title: 'Did worry about your looks stop you doing something?',
