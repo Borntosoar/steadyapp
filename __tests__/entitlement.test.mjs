@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   isEntitled, daysUntilExpiry, emptyEntitlement, localGrant, projectFromProvider,
   trialExpiry, isGated, weekGated, ALWAYS_FREE_ROUTES, TIER_COMPARISON,
-  BILLING_GRACE_DAYS, OFFLINE_GRACE_DAYS,
+  BILLING_GRACE_DAYS, OFFLINE_GRACE_DAYS, PRICING, RENEWAL_TERMS,
 } from '../lib/entitlement.ts';
 
 /* Entitlement.
@@ -157,7 +157,23 @@ describe('mapping a provider response', () => {
 describe('trial arithmetic', () => {
   test('a fresh trial expires in the configured number of days', () => {
     const left = daysUntilExpiry({ ...emptyEntitlement(), source: 'trial', expiresAt: trialExpiry() });
-    assert.equal(left, 14);
+    // Read from PRICING rather than repeated as a literal. The literal said 14 under a name
+    // saying "the configured number", so changing the configured number failed a test that
+    // was not testing anything about the change.
+    assert.equal(left, PRICING.trialDays);
+  });
+
+  /* App Store Connect sells introductory free trials in fixed lengths only: 3 days, 1 week,
+     2 weeks, 1 month, 2 months, 3 months, 6 months, 1 year. A trial length outside that set
+     cannot be configured as a product, so the app would promise a duration the store has no
+     way to grant — and the mismatch shows up as a customer being charged early, which is the
+     worst place to find out. docs/SUBSCRIPTION-BENCHMARKS.md recommends 21 days; this is why
+     the answer is 30. */
+  test('the trial length is a duration the App Store can actually sell', () => {
+    assert.ok(
+      [3, 7, 14, 30, 60, 90, 180, 365].includes(PRICING.trialDays),
+      `${PRICING.trialDays} days is not an App Store introductory offer duration`
+    );
   });
 
   test('no expiry means no countdown', () => {
@@ -166,6 +182,46 @@ describe('trial arithmetic', () => {
 
   test('a lapsed period counts negative rather than clamping', () => {
     assert.ok(daysUntilExpiry(localGrant('trial', 'yearly', at(-3))) < 0);
+  });
+});
+
+describe('what the customer is told will happen to their money', () => {
+  /* Apple 3.1.2 requires the auto-renewing terms next to the purchase rather than behind a
+     link, and the paywall renders these strings verbatim. Every product needs one or the
+     branch that reads it renders `undefined` beside a purchase button. */
+  test('every purchasable plan has a renewal sentence', () => {
+    for (const plan of ['monthly', 'yearly', 'lifetime']) {
+      assert.equal(typeof RENEWAL_TERMS[plan], 'string', `no renewal terms for ${plan}`);
+      assert.ok(RENEWAL_TERMS[plan].includes('$'), `${plan} renewal terms name no amount`);
+    }
+  });
+
+  test('the subscriptions say they renew and say how to stop them', () => {
+    for (const plan of ['monthly', 'yearly']) {
+      assert.match(RENEWAL_TERMS[plan], /renew/i, `${plan} does not disclose that it renews`);
+      assert.match(RENEWAL_TERMS[plan], /cancel/i, `${plan} does not say it can be cancelled`);
+    }
+  });
+
+  test('the one-off product does not claim a renewal it does not have', () => {
+    /* It also has no trial — hooks/useEntitlement grants it outright. The paywall used to
+       print "Free until 9 September. Then $149 once." over it, which was two false claims
+       in one sentence. */
+    assert.match(RENEWAL_TERMS.lifetime, /nothing to renew/i);
+  });
+
+  /* App Review rejects "lifetime" on the grounds that no developer can guarantee content
+     for the length of a customer's life (docs/APP-STORE.md §5.4). The Plan KEY stays
+     `lifetime` — it is an internal identifier that keys stored state — but no string a
+     customer reads may contain the word. */
+  test('no price or renewal string a customer reads says "lifetime"', () => {
+    for (const [key, value] of Object.entries(PRICING)) {
+      if (typeof value !== 'string') continue;
+      assert.doesNotMatch(value, /lifetime/i, `PRICING.${key} says "lifetime" to a customer`);
+    }
+    for (const [key, value] of Object.entries(RENEWAL_TERMS)) {
+      assert.doesNotMatch(value, /lifetime/i, `RENEWAL_TERMS.${key} says "lifetime" to a customer`);
+    }
   });
 });
 

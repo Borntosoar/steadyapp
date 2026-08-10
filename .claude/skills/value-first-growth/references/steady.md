@@ -89,15 +89,28 @@ Forbidden, permanently:
 
 ## Trial
 
-Fourteen days, spanning two full protocol weeks — the minimum that lets the customer see
-the number move twice before deciding. Published medians put 17–32 day trials at 42.5%
-conversion against 25.5% under four days, and the mechanism is habit formation, not patience.
+One month, spanning four protocol weeks — long enough that the customer watches the number
+move several times and reaches the week-four plateau the protocol warns them about, which
+is better evidence for renewing than anything the paywall can say. Published medians put
+17–32 day trials at roughly 45% conversion against roughly 27% under a week, and the
+mechanism is habit formation, not patience. Discount that figure: teams confident in the
+product are also the teams that offer long trials, so some of the effect is the confidence.
+
+**Pick from the durations the store sells.** App Store Connect offers introductory free
+trials at 3 days, 1 week, 2 weeks, 1 month, 2 months, 3 months, 6 months and 1 year, and
+nothing in between. A trial length outside that set cannot be configured as a product, so
+the app promises a duration the store has no way to grant — and the customer finds out by
+being charged early. This is why the answer is 30 days and not the 21 the benchmarks
+suggest.
 
 Requirements that ship with it:
 
 - The end **date** is on screen, not a duration
-- The charge amount and the cancellation route are in the same sentence as the date
-- A reminder before it ends, promised on the paywall and actually sent
+- The charge amount, the **renewal cadence** and the cancellation route are in the same
+  sentence as the date (Apple 3.1.2 requires the auto-renew terms at the point of purchase,
+  not behind a link)
+- A reminder before it ends, promised on the paywall and actually sent, saying how many days
+  are actually left rather than a number baked into the copy
 
 ## Pricing
 

@@ -625,11 +625,23 @@ asserts every safety surface is still in it, in code and not only in prose.
 
 `FREE_LIMITS` is `{ thoughtRecordsPerMonth: 5, learnModules: 3, maxWeek: 1 }`.
 
-#### `PRICING` and `trialEndDate(from = new Date()): string`
+#### `PRICING`, `RENEWAL_TERMS` and `trialEndDate(from = new Date()): string`
 
-`PRICING` holds `monthly`, `yearly`, `yearlyPerMonth`, `lifetime` and `trialDays` (14).
+`PRICING` holds `monthly`, `yearly`, `yearlyPerMonth`, `lifetime` and `trialDays` (30).
 `trialEndDate` returns a localised date string, not a duration: a long trial showing only a
 duration is a trap, a long trial showing a date and an amount is a fair deal.
+
+`trialDays` must stay one of the durations App Store Connect actually sells as an
+introductory offer — 3, 7, 14, 30, 60, 90, 180 or 365 days. Anything else is a promise the
+store has no way to grant, and the mismatch surfaces as a customer being charged early.
+`__tests__/entitlement.test.mjs` asserts it.
+
+`RENEWAL_TERMS: Record<Plan, string>` is the Apple 3.1.2 disclosure, one sentence per
+product, rendered beside the purchase button rather than behind a link. The subscription
+entries name the amount, the cadence, and the fact that they repeat until cancelled; the
+one-off entry says it is not a subscription and has nothing to renew. The word "lifetime"
+appears in no user-facing string — App Review objects to it, see APP-STORE.md §5.4 — while
+the `Plan` key keeps the name, because it is an internal identifier that keys stored state.
 
 **Invariant (SAFETY.md §5, §13):** no discounts, no launch pricing, no countdown, no
 scarcity language. `__tests__/copy.test.mjs` and `__tests__/safety.test.mjs` both assert it.

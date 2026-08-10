@@ -232,9 +232,36 @@ ignorance of it.
    Steady now shows the user's real reclaimed-hours figure on the paywall — that
    is exactly this pattern, and it should be extended to the trial-ending and
    week-one cards.
+
+   > **Amended on implementation.** The week-one ask now carries the figure. The
+   > trial-ending card does not, and should not. That card renders the figure
+   > behind a `hours > 0` gate, which on an *ask* is harmless — an ask with
+   > nothing good to say falls back to a headline and asks anyway — but on a
+   > renewal notice it means showing the customer their number when it flatters
+   > and hiding it when it does not, in the one frame whose job is to say money
+   > is about to leave their account. Selective evidence at the renewal decision
+   > is a dark pattern and it is worse for being built out of true data. That
+   > card is personalised instead with days practised and urges sat through:
+   > counts of the person's own actions, which only go up, and which cannot come
+   > back negative after a bad fortnight. Same reshaping the week strip already
+   > applies to the streak. Weaker hook, honest one.
+
 3. **Keep annual as the default.** 44.1% vs 17.5% twelve-month retention.
 4. **Test a longer trial.** 14 → 21 days. One line, claimed large effect, no
    safety implication whatsoever.
+
+   > **Corrected on implementation: 30 days, not 21.** App Store Connect sells
+   > introductory free trials in fixed durations only — 3 days, 1 week, 2 weeks,
+   > 1 month, 2 months, 3 months, 6 months, 1 year — and 21 days is not among
+   > them, so the recommendation above is not purchasable as written. The two
+   > options either side are 2 weeks (where Steady was) and 1 month, and 1 month
+   > is the one inside the 17–32 day band the figure comes from. Shipped as
+   > `PRICING.trialDays: 30`, with a test asserting the value stays in the set
+   > the store can actually grant. Cost: weeks one to four go free, including the
+   > week-four plateau — which is the right four weeks to give away, since the
+   > plateau is where people quit and somebody who was warned about it and
+   > watched it arrive on schedule has better grounds for renewing than any copy
+   > on the paywall.
 5. **Treat notifications as a product surface with real engineering behind it**,
    which is Duolingo's actual lesson. Steady has no notifications at all yet.
 

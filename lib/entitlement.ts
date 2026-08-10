@@ -58,7 +58,16 @@ export const FREE_LIMITS = {
  *
  * Annual works out roughly half the monthly rate, which is the usual spread and enough to
  * make annual the obviously rational pick without needing a "SAVE 47%" badge shouting it.
- * Lifetime is a shade under two years of annual. */
+ * The one-off option is a shade under two years of annual.
+ *
+ * THE WORD "LIFETIME" APPEARS IN NO USER-FACING STRING, and should not be reintroduced to
+ * one. App Review has repeatedly rejected it on the grounds that no developer can promise
+ * content for the length of a customer's life, and they are right — this is a solo project
+ * with a twelve-week protocol, not an institution. "Pay once" says the same thing about
+ * what the customer is buying and claims nothing about how long we will be here. The Plan
+ * key below stays `lifetime` because it is an internal identifier that keys stored state
+ * and the product-id mapping in hooks/useEntitlement.ts; renaming it would migrate saved
+ * data to fix a word nobody reads. */
 /** The things somebody can actually buy.
  *
  *  Declared separately from `PRICING` because `keyof typeof PRICING` also admits
@@ -231,10 +240,49 @@ export const PRICING = {
    *  where either number on its own reads as a trick. */
   yearlyPerMonth: '$6.67 a month',
   lifetime: '$149 once',
-  /** Fourteen days spans two full protocol weeks, so the customer watches their number
-   *  move twice before deciding. Published medians: 17–32 day trials convert at 42.5%,
-   *  under four days at 25.5%, and the mechanism is habit formation, not patience. */
-  trialDays: 14,
+  /** One month, and the exact number matters less than the band it sits in.
+   *
+   *  Published medians put 17–32 day trials at roughly 45% trial-to-paid against roughly
+   *  27% for three-to-seven days, and the mechanism is habit formation rather than
+   *  patience — a fortnight is long enough to try the app and short enough to try it once.
+   *  (That figure is one of the weaker ones in docs/SUBSCRIPTION-BENCHMARKS.md: longer
+   *  trials also correlate with teams confident enough in the product to offer one, so
+   *  some of the effect is the confidence, not the length. It points the right way even
+   *  discounted.)
+   *
+   *  THIRTY, NOT TWENTY-ONE. The benchmarks doc recommends 21 days. App Store Connect does
+   *  not sell that: introductory free trials come in fixed durations — 3 days, 1 week,
+   *  2 weeks, 1 month, 2 months, 3 months, 6 months, 1 year — and 21 days is not among
+   *  them. The purchasable options either side are two weeks (where we were) and one
+   *  month, and one month is the one that lands inside the band above.
+   *
+   *  What it costs: weeks one to four go free, which includes the plateau the protocol
+   *  names in week four. That is the right four weeks to give away. The plateau is where
+   *  people quit, and somebody who has been told it was coming and watched it arrive on
+   *  schedule has better evidence for renewing than any copy on the paywall.
+   *
+   *  This number is local arithmetic for display and for the trial-ending notice. Once
+   *  RevenueCat is wired, the real expiry arrives from the provider and `trialExpiry` stops
+   *  being consulted — a store-granted "1 month" is calendar, so it will land a day either
+   *  side of this in some months, which nothing here depends on. */
+  trialDays: 30,
+};
+
+/** What actually happens to the customer's money, one sentence per product.
+ *
+ *  Apple 3.1.2 requires the auto-renewing terms next to the purchase, not in a linked
+ *  document, and the paywall used to render `Free until 9 September. Then $79.99/yr.` —
+ *  which discloses the price and says nothing about the renewal. Worse, it said the same
+ *  thing about the one-off product, which has no trial and never renews, so the one
+ *  sentence on the screen was wrong for one of the three things it described.
+ *
+ *  Written out per product rather than assembled from the price strings, because the
+ *  assembled version is where "a year, renewing every year" turns into "/yr, renewing
+ *  every /yr" the first time somebody edits a price. */
+export const RENEWAL_TERMS: Record<Plan, string> = {
+  yearly: '$79.99 a year, renewing every year until you cancel',
+  monthly: '$12.99 a month, renewing every month until you cancel',
+  lifetime: '$149 once. Not a subscription, so there is nothing to renew and nothing to cancel',
 };
 
 /** The trial end date, as a date. A long trial showing only a duration is a trap; a long

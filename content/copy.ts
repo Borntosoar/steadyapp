@@ -119,15 +119,20 @@ export const MOMENT_COPY = {
   'week-one-ask': {
     eyebrow: 'Week one, done',
     title: 'That is week one',
-    body: 'Weeks two to twelve hold the mirror work, the experiments and the rest of the plan. You get two weeks free first. Check-ins, calming down and support stay free either way.',
+    body: 'Weeks two to twelve hold the mirror work, the experiments and the rest of the plan. You get a free month first. Check-ins, calming down and support stay free either way.',
     action: 'See what is in it',
     dismiss: 'Not now',
   },
 
+  /* The title here is a fallback. components/MomentCard.tsx computes the real one from the
+     entitlement's own expiry, because this notice fires on each of the last three days and
+     a fixed "Two days left" is wrong on two of them. The body is prefixed there with the
+     actual amount and renewal cadence: "before it renews" without saying into what is not
+     the warning the paywall promised. */
   'trial-ending': {
-    eyebrow: 'Your trial',
-    title: 'Two days left on the free period',
-    body: 'We said we would tell you before it renews. Nothing changes if you stay. Cancelling takes fewer taps than signing up did.',
+    eyebrow: 'Your free month',
+    title: 'Your free month is nearly up',
+    body: 'We said we would tell you before this happened, so here it is. Nothing changes if you stay. Cancelling takes fewer taps than signing up did.',
     action: 'Manage my plan',
     dismiss: 'Got it',
   },

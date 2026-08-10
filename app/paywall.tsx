@@ -8,7 +8,7 @@ import {
 } from '../components/ui';
 import { Atmosphere } from '../components/Atmosphere';
 import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../constants/theme';
-import { PRICING, TIER_COMPARISON, trialEndDate, type Plan } from '../lib/entitlement';
+import { PRICING, RENEWAL_TERMS, TIER_COMPARISON, trialEndDate, type Plan } from '../lib/entitlement';
 import { useEntitlement } from '../hooks/useEntitlement';
 import { PAYWALL_COPY } from '../content/copy.ts';
 import { PROOF_POINTS, PROOF_QUALIFIER } from '../content/proof';
@@ -78,11 +78,16 @@ export default function Paywall() {
      trust is the binding constraint, offering the flexible option is itself a trust signal.
      The badge says what the plan IS, not what you would lose by not taking it.
 
-     Lifetime is off the default view and behind a plainly-labelled disclosure. Two reasons:
-     a twelve-week protocol invites "I'll be done by then", so lifetime cannibalises exactly
-     the annual renewals that compound past the ~24-month mark where churn stabilises and
-     LTV is actually made; and a third option on first read is a third decision for somebody
-     who is already spending their day making anxious decisions about themselves.
+     The one-off option is off the default view and behind a plainly-labelled disclosure.
+     Two reasons: a twelve-week protocol invites "I'll be done by then", so paying once
+     cannibalises exactly the annual renewals that compound past the ~24-month mark where
+     churn stabilises and LTV is actually made; and a third option on first read is a third
+     decision for somebody who is already spending their day making anxious decisions about
+     themselves.
+
+     It is labelled "Pay once", never "Lifetime". App Review rejects the second on the
+     grounds that nobody can guarantee content for a customer's life — see
+     docs/APP-STORE.md §5.4 — and the objection is fair on the merits, not just as a rule.
 
      Disclosed, not buried. Some people genuinely will not take a subscription, and hiding
      the option they want in order to sell them one they do not is the sort of thing this
@@ -95,7 +100,7 @@ export default function Paywall() {
     ...(showLifetime
       ? [{
           key: 'lifetime' as Plan,
-          label: 'Lifetime',
+          label: 'Pay once',
           price: PRICING.lifetime,
           note: 'One payment, no subscription. Under two years of the annual plan.',
         }]
@@ -231,9 +236,12 @@ export default function Paywall() {
           <View style={{ marginTop: space.xxl }}>
             <Rule />
             <H2 style={{ marginTop: space.lg }}>Steady+</H2>
+            {/* "on either subscription", not "then whichever of these you pick". Once the
+                one-off option is disclosed the list holds a product with no trial at all,
+                and the shorter sentence promised the free month across all three. */}
             <BodySm style={{ marginTop: space.xs, marginBottom: space.lg }}>
-              {PRICING.trialDays} days free, then whichever of these you pick. Annual works out
-              at {PRICING.yearlyPerMonth}.
+              {PRICING.trialDays} days free on either subscription, then the plan you picked.
+              Annual works out at {PRICING.yearlyPerMonth}.
             </BodySm>
 
             {plans.map((p) => {
@@ -307,16 +315,23 @@ export default function Paywall() {
               }}
               style={{ marginTop: space.md }}
             />
-            {/* The end DATE, the amount, and where to cancel — three facts, one sentence,
-                no asterisk. A long trial showing only a duration is a trap; a long trial
-                showing a date and a promised reminder is a fair deal. */}
+            {/* The end DATE, the amount, the renewal, and where to cancel — four facts, no
+                asterisk. A long trial showing only a duration is a trap; a long trial
+                showing a date and a promised reminder is a fair deal.
+
+                Branched on the plan because the one-off product has no trial and no
+                renewal, and the unbranched sentence asserted both about it. */}
             <BodySm style={{ marginTop: space.md, textAlign: 'center' }}>
-              Free until {trialEndDate()}. Then {plans.find((p) => p.key === plan)?.price}.
+              {plan === 'lifetime'
+                ? `${RENEWAL_TERMS.lifetime}.`
+                : `Free until ${trialEndDate()}. Then ${RENEWAL_TERMS[plan]}.`}
             </BodySm>
-            <BodySm style={{ marginTop: space.xs, textAlign: 'center', color: c.inkFaint }}>
-              We will remind you two days before it ends. Cancel any time in your app store
-              settings, in fewer taps than it took to start.
-            </BodySm>
+            {plan !== 'lifetime' && (
+              <BodySm style={{ marginTop: space.xs, textAlign: 'center', color: c.inkFaint }}>
+                We will remind you two days before it ends. Cancel any time in your app store
+                settings, in fewer taps than it took to start.
+              </BodySm>
+            )}
             <Caption style={{ marginTop: space.lg, textAlign: 'center' }}>
               {PAYWALL_COPY.noUrgency}
             </Caption>

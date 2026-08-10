@@ -587,7 +587,15 @@ Blockers first.
 - [ ] Privacy policy hosted at a real URL, linked in App Store Connect **and in-app** (5.2)
 - [ ] StoreKit / RevenueCat wired — `purchase()` and `restore()` are not stubs (5.3)
 - [ ] Paywall shows subscription length, auto-renewal statement, and both legal links (5.4)
-- [ ] "Lifetime" renamed to "One-Time" / "Pay once" (5.4)
+      — length and the auto-renewal statement are **done**, via `RENEWAL_TERMS` in
+      `lib/entitlement.ts`; the two legal links remain outstanding and are blocked on the
+      privacy policy URL on the line above
+- [x] "Lifetime" renamed to "One-Time" / "Pay once" (5.4) — the label is "Pay once". The
+      `Plan` key stays `lifetime` because it is an internal identifier that keys stored
+      state; `__tests__/safety.test.mjs` greps every source file to keep the word out of
+      anything a customer reads
+- [ ] Free trial configured at a duration App Store Connect sells. `PRICING.trialDays` is
+      30, i.e. the "1 month" introductory offer. Asserted in `__tests__/entitlement.test.mjs`
 - [ ] App Privacy label matches what the build actually does, including RevenueCat (5.7)
 - [ ] New age-rating questionnaire completed; result is 16+ (5.6)
 - [ ] App Review notes written, including the hardship path and the camera alternative (5.3)

@@ -247,6 +247,40 @@ describe('the money never touches the safety surfaces', () => {
     assert.match(pay.src, /remind you/i, 'the paywall does not promise a trial reminder');
   });
 
+  test('the paywall discloses the renewal beside the button, not behind a link', () => {
+    /* Apple 3.1.2. The screen used to say "Free until 9 September. Then $79.99/yr." — the
+       price, and nothing at all about the fact that it repeats every year until stopped. */
+    const pay = FILES.find((f) => f.path === 'app/paywall.tsx');
+    assert.match(pay.src, /RENEWAL_TERMS/, 'the paywall states no renewal terms');
+  });
+
+  test('nothing a customer reads calls the one-off plan a lifetime', () => {
+    /* App Review rejects the word: nobody can guarantee content for the length of a
+       customer's life. See docs/APP-STORE.md §5.4. The Plan key stays `lifetime` because it
+       is an internal identifier; the label a person reads is "Pay once". */
+    for (const f of FILES) {
+      assert.doesNotMatch(f.src, /label: ['"]Lifetime/i,
+        `${f.path} labels a purchasable plan "Lifetime"`);
+      assert.doesNotMatch(f.src, />\s*Lifetime\b/,
+        `${f.path} renders the word "Lifetime" to a customer`);
+    }
+  });
+
+  test('the trial-ending notice does not hardcode how long is left', () => {
+    /* It fires on each of the last three days (`left <= 2 && left >= 0`), so a fixed
+       "Two days left" is wrong on two of them. A warning that is wrong about when is not
+       much of a warning. The card computes it from the entitlement's own expiry. */
+    const copy = FILES.find((f) => f.path === 'content/copy.ts');
+    const block = copy.src.slice(copy.src.indexOf("'trial-ending'"));
+    const title = block.match(/title: '([^']*)'/)[1];
+    assert.doesNotMatch(title, /\b(one|two|three|1|2|3)\b/i,
+      `the trial-ending fallback title names a day count it cannot know: "${title}"`);
+
+    const card = FILES.find((f) => f.path === 'components/MomentCard.tsx');
+    assert.match(card.src, /daysUntilExpiry/,
+      'the trial-ending card does not read how long is actually left');
+  });
+
   test('the paywall shows the user their own number, not only a citation', () => {
     /* The headline has always been "You have seen your number." For a long time the screen
        then did not show it, and put a meta-analysis effect size in its place. That is the
