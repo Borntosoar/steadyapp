@@ -20,11 +20,45 @@ export interface LearnModule {
   body: string[];
   /** The closing action. Rendered as its own card so it doesn't get lost in prose. */
   takeaway: string;
+
+  /* ---- reading experience ----
+   * All additive. `body` stays a plain array of paragraphs so this file reads as prose and
+   * the existing content tests keep working; everything below points AT it by index. */
+
+  /** One line, the reason to open it. Shown on the Learn row, under the hero title, and on
+   *  the next-module card. Also the natural source for store-screenshot copy. */
+  kicker: string;
+
+  /** Landmarks in a nine-hundred-word screen. `at` is the body index a section begins at.
+   *  Never index 0 — the title already labels the opening.
+   *
+   *  `replaces` is for the several modules that already write their own section headings as
+   *  prose ("So what *is* real?", "Do this properly:"). A styled header above one of those
+   *  prints the same words twice, so there the header takes the paragraph's place. */
+  sections?: { at: number; label: string; replaces?: true }[];
+
+  /** At most one. `text` must be a verbatim fragment of a body paragraph, which a test
+   *  enforces, so a pull-quote can never quietly become new unreviewed copy. */
+  pullquote?: { after: number; text: string };
+
+  /** What the takeaway does. Omitted where no honest target exists yet. */
+  action?: { thing: ActionThing; route: string };
+  /** Shown in place of a button. A fact, never a tease. */
+  actionNote?: string;
 }
+
+/** Keys into content/names.ts. Every module button takes its label from there rather than
+ *  inventing one, which is the only thing keeping twelve buttons from becoming twelve new
+ *  names for six features. */
+export type ActionThing = 'urge' | 'mirror' | 'thought' | 'experiment' | 'calm' | 'checkin' | 'hours' | 'plan';
 
 export const MODULES: LearnModule[] = [
   {
     slug: 'why-your-brain-zooms-in',
+    kicker: 'You take in other people whole. You take yourself apart.',
+    sections: [{ at: 5, label: 'How much anyone actually notices' }, { at: 9, label: 'Why this can change' }],
+    pullquote: { after: 4, text: "You're not comparing your face to their face. You're comparing your face under a microscope to their face at a glance." },
+    action: { thing: 'checkin', route: '/checkin' },
     title: 'Why your brain zooms in',
     phase: 1,
     week: 1,
@@ -49,6 +83,10 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'why-checking-makes-it-worse',
+    kicker: 'It works for ninety seconds. That is the trap.',
+    sections: [{ at: 6, label: 'What it costs you' }, { at: 8, label: 'The way out' }],
+    pullquote: { after: 8, text: "the relief has to be given up before the anxiety goes down." },
+    action: { thing: 'urge', route: '/urges' },
     title: 'Why checking makes it worse',
     phase: 1,
     week: 1,
@@ -72,6 +110,10 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'mirrors-cameras-and-the-lie-of-the-reflection',
+    kicker: 'Same face, different glass, different verdict.',
+    sections: [{ at: 2, label: 'What a phone camera does' }, { at: 5, label: 'So what is real?', replaces: true }],
+    pullquote: { after: 8, text: "The tool you have been using to collect evidence about yourself is faulty" },
+    actionNote: 'Mirror practice opens in week 4.',
     title: 'Why mirrors and cameras lie',
     phase: 1,
     week: 1,
@@ -95,6 +137,10 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'the-feed-is-not-a-sample-of-reality',
+    kicker: 'All of you, against a stranger’s best two seconds.',
+    sections: [{ at: 2, label: 'What you are comparing against' }, { at: 5, label: 'Practical, not preachy', replaces: true }],
+    pullquote: { after: 4, text: "everything you know about yourself, every doubt and every bad morning, against another person’s most controlled two seconds" },
+    action: { thing: 'urge', route: '/urges' },
     /* Was "Your feed is not real life" — the single most over-used sentence in this
        category, and generic the moment somebody screenshots it. The module's actual insight
        is sharper and is already in its own body text. */
@@ -121,6 +167,10 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'distress-and-appearance-are-two-different-variables',
+    kicker: 'The most important idea here, and the least obvious one.',
+    sections: [{ at: 2, label: 'Two lines of evidence', replaces: true }, { at: 7, label: 'Why this is good news', replaces: true }],
+    pullquote: { after: 5, text: "If distress were caused by appearance, changing appearance would reliably reduce distress." },
+    action: { thing: 'thought', route: '/journal' },
     title: 'How you feel is not how you look',
     phase: 2,
     week: 5,
@@ -145,6 +195,10 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'what-exposure-actually-does',
+    kicker: 'Anxiety has a shape. Few people stay to see the end of it.',
+    sections: [{ at: 3, label: 'The two things that change', replaces: true }, { at: 6, label: 'Why the details matter', replaces: true }],
+    pullquote: { after: 7, text: "Leaving while anxiety is still climbing teaches escape. Staying until it falls teaches tolerance." },
+    action: { thing: 'urge', route: '/urges' },
     /* "Facing it" is a pronoun standing on its own; outside the list it does not say what
        "it" is. This is the module's own closing line, and it is the sentence somebody
        halfway through a hard exposure actually needs. */
@@ -173,6 +227,10 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'self-compassion-without-lying-to-yourself',
+    kicker: 'You do not have to like how you look to stop being cruel about it.',
+    sections: [{ at: 2, label: 'Three parts', replaces: true }],
+    pullquote: { after: 6, text: "You stop grading yourself." },
+    action: { thing: 'thought', route: '/journal' },
     title: 'Being kind without lying to yourself',
     phase: 3,
     week: 7,
@@ -194,6 +252,10 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'the-hours-question',
+    kicker: 'You get the hours back. Something moves into them. Decide what.',
+    sections: [{ at: 4, label: 'Where the hours go' }, { at: 6, label: 'Do this properly', replaces: true }],
+    pullquote: { after: 1, text: "Twenty hours a week is a part-time job." },
+    action: { thing: 'hours', route: '/progress' },
     /* Did not say what the question was. The real point — reclaimed time refills with the
        old worry unless something is deliberately put in it — is more useful stated flat. */
     title: 'Free time does not stay free',
@@ -220,6 +282,10 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'reassurance-is-checking-with-extra-steps',
+    kicker: 'Same loop as a mirror, and it costs you the person too.',
+    sections: [{ at: 5, label: 'What to do instead', replaces: true }],
+    pullquote: { after: 2, text: "There’s no response available to them that resolves anything" },
+    action: { thing: 'experiment', route: '/journal' },
     title: 'Asking other people is checking too',
     phase: 3,
     week: 9,
@@ -242,6 +308,10 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'setbacks-are-data',
+    kicker: 'One bad week is not the thing coming back. Reading it that way is.',
+    sections: [{ at: 4, label: 'Setbacks are triggered, not random' }, { at: 7, label: 'What to do when it happens', replaces: true }],
+    pullquote: { after: 2, text: "Almost every relapse starts as a lapse that got read as a disaster." },
+    action: { thing: 'plan', route: '/module/your-own-plan' },
     /* "X is information" is a wellness cliché, and it still leads with the negative word.
        The real content is a distinction most readers do not know exists, and it is the exact
        sentence that intercepts "I have ruined everything". */
@@ -271,6 +341,10 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'your-own-plan',
+    kicker: 'Written now, for a day you hope never comes.',
+    sections: [{ at: 2, label: 'The six sections' }],
+    pullquote: { after: 0, text: "In the middle of a bad stretch, your judgement is the thing that stops working." },
+    action: { thing: 'plan', route: '/journal' },
     /* Could have been a module in any app about anything. The module ends on its own
        metaphor, which is specific to what this is: a plan for a day you hope never comes. */
     title: 'Your fire exit',
@@ -294,6 +368,10 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'when-self-help-isnt-enough',
+    kicker: 'There is a line past which this is not the right tool.',
+    sections: [{ at: 4, label: 'What real help looks like', replaces: true }, { at: 9, label: 'What you take with you' }],
+    pullquote: { after: 0, text: "Reaching that line says nothing about your effort or your character." },
+    action: { thing: 'checkin', route: '/checkin' },
     title: "When self-help isn't enough",
     phase: 4,
     week: 12,

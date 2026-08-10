@@ -57,6 +57,22 @@ export const NAMES = {
     unitPlural: 'check-ins',
     sub: 'Four questions, under thirty seconds',
   },
+  /* Two destinations that are not practices but are things a module sends you to. They
+     live here for one reason: every call to action in the app takes its label from this
+     file, so twelve hand-written module buttons cannot drift away from what the rest of
+     the app calls the same places. */
+  hours: {
+    title: 'Your hours',
+    unit: 'hour back',
+    unitPlural: 'hours back',
+    sub: 'Where the time went, and where it is going',
+  },
+  plan: {
+    title: 'Write your plan',
+    unit: 'plan',
+    unitPlural: 'plans',
+    sub: 'Six sections, written now for later',
+  },
 } as const;
 
 export type ThingKey = keyof typeof NAMES;

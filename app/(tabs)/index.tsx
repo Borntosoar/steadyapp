@@ -16,6 +16,7 @@ import { weekProgress, recommendedAction, WEEKS_TOTAL } from '../../lib/protocol
 import { milestoneCopy } from '../../lib/streak';
 import { lastSevenDays } from '../../lib/week';
 import { nextMoment } from '../../lib/moments';
+import { MODULES } from '../../content/modules';
 import { NAMES, EXPLAIN } from '../../content/names';
 
 /* Today.
@@ -67,12 +68,17 @@ export default function Today() {
     return arr.filter((x) => new Date(x.date + 'T00:00:00') >= cut).length;
   };
 
+  /* The specific piece, not the list. */
+  const nextUnreadModule =
+    MODULES.find((m) => m.free && !readModules.includes(m.slug))?.slug ?? null;
+
   const action = recommendedAction({
     week,
     checkedInToday,
     modulesReadThisWeek: readModules.length,
     mirrorThisWeek: since(mirrorSessions),
     recordsThisWeek: since(thoughtRecords),
+    nextUnreadModule,
   });
 
   const moment = nextMoment({

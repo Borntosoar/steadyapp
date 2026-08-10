@@ -172,7 +172,7 @@ export type RecommendedAction =
   | { route: '/mirror'; label: string; why: string }
   | { route: '/journal'; label: string; why: string }
   | { route: '/urges'; label: string; why: string }
-  | { route: '/learn'; label: string; why: string }
+  | { route: '/learn' | `/module/${string}`; label: string; why: string }
   | { route: '/grounding'; label: string; why: string };
 
 export function recommendedAction(opts: {
@@ -181,6 +181,12 @@ export function recommendedAction(opts: {
   modulesReadThisWeek: number;
   mirrorThisWeek: number;
   recordsThisWeek: number;
+  /** Slug of the next unread module, when there is one. Passed in rather than looked up so
+   *  this file stays free of content imports and keeps running under bare Node in tests.
+   *
+   *  Without it the card said "Read this week" and opened a list of twelve, which is one
+   *  more decision at the exact moment the app has already decided for them. */
+  nextUnreadModule?: string | null;
 }): RecommendedAction {
   const { week, checkedInToday, modulesReadThisWeek, mirrorThisWeek, recordsThisWeek } = opts;
 
@@ -197,7 +203,7 @@ export function recommendedAction(opts: {
   if (phase.id === 1) {
     if (modulesReadThisWeek < 1) {
       return {
-        route: '/learn',
+        route: opts.nextUnreadModule ? `/module/${opts.nextUnreadModule}` : '/learn',
         label: 'Read this week',
         why: 'The first weeks are about seeing the pattern before you change it.',
       };

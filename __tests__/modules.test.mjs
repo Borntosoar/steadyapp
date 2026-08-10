@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 const { MODULES, moduleBySlug, freeModules } = await import('../content/modules.ts');
 const { parseInline } = await import('../lib/inline.ts');
+const { MIRROR_UNLOCK_WEEK, phaseForWeek } = await import('../lib/protocol.ts');
 
 const words = (m) => [...m.body, m.takeaway].join(' ').split(/\s+/).filter(Boolean).length;
 
@@ -151,6 +152,93 @@ describe('inline emphasis parser', () => {
         const stripped = p.replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*]+)\*/g, '$1');
         assert.equal(rebuilt, stripped, `lost text in ${m.slug}`);
       }
+    }
+  });
+});
+
+/* ---------- reading experience ----------
+ *
+ * The fields below drive how a module renders. They are pointers into `body`, which means
+ * every one of them can silently go stale when a paragraph is added or removed — a
+ * pull-quote drifts onto the wrong paragraph, a section header lands mid-argument. None of
+ * that throws at runtime; it just quietly renders wrong. So it is tested. */
+
+describe('the reading experience data stays in step with the prose', () => {
+  test('every module has a kicker that fits a list row', () => {
+    for (const m of MODULES) {
+      assert.ok(m.kicker, `${m.title} has no kicker`);
+      /* 68 is what fits on two lines in a Learn row at iPhone width. Longer than that and
+         the row truncates mid-sentence, which is worse than a shorter line. */
+      assert.ok(m.kicker.length <= 68, `${m.title} kicker is ${m.kicker.length} chars and will truncate: "${m.kicker}"`);
+      assert.ok(!m.kicker.includes('!'), `${m.title} kicker shouts`);
+    }
+  });
+
+  test('every pull-quote is verbatim from its own module', () => {
+    /* The point of pinning it to a substring: a pull-quote is emphasis, not authorship.
+       If somebody can type new copy into this field it becomes a second, unreviewed voice
+       in the middle of a reviewed piece. */
+    for (const m of MODULES) {
+      if (!m.pullquote) continue;
+      const plain = m.body.join(' ').replace(/\*/g, '');
+      assert.ok(
+        plain.includes(m.pullquote.text),
+        `${m.title}: pull-quote is not a sentence from the module — "${m.pullquote.text}"`
+      );
+      assert.ok(
+        m.pullquote.text.length <= 130,
+        `${m.title}: pull-quote is ${m.pullquote.text.length} chars. A five-line pull-quote is a paragraph in a bigger font.`
+      );
+      assert.ok(
+        m.pullquote.after >= 0 && m.pullquote.after < m.body.length,
+        `${m.title}: pull-quote points at paragraph ${m.pullquote.after}, which does not exist`
+      );
+    }
+  });
+
+  test('section landmarks point at real paragraphs, and never at the first', () => {
+    for (const m of MODULES) {
+      for (const sec of m.sections ?? []) {
+        assert.ok(sec.at > 0, `${m.title}: a section at index 0 duplicates the title`);
+        assert.ok(sec.at < m.body.length, `${m.title}: section "${sec.label}" points past the end`);
+      }
+    }
+  });
+
+  test('no takeaway sends anybody to the paywall', () => {
+    /* A module is teaching material. Ending one on a sales route would make the whole
+       twelve-week read feel like a funnel, which is the thing this product is not. */
+    for (const m of MODULES) {
+      if (!m.action) continue;
+      assert.doesNotMatch(m.action.route, /paywall/, `${m.title} sells at the end of a read`);
+    }
+  });
+
+  test('no takeaway opens an exercise that is still locked that week', () => {
+    /* A button that routes somewhere the reader cannot go yet is worse than no button. */
+    for (const m of MODULES) {
+      if (!m.action) continue;
+      if (m.action.route.startsWith('/mirror')) {
+        assert.ok(
+          m.week >= MIRROR_UNLOCK_WEEK,
+          `${m.title} (week ${m.week}) opens mirror practice, which unlocks in week ${MIRROR_UNLOCK_WEEK}`
+        );
+      }
+      if (m.action.thing === 'experiment') {
+        assert.ok(
+          phaseForWeek(m.week).id >= 3,
+          `${m.title} (week ${m.week}) opens prediction testing, which is not open until part 3`
+        );
+      }
+    }
+  });
+
+  test('every takeaway either acts or explains itself', () => {
+    for (const m of MODULES) {
+      assert.ok(
+        m.action || m.actionNote,
+        `${m.title} ends by telling somebody to do something with no way to do it and no reason why not`
+      );
     }
   });
 });

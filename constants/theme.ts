@@ -112,6 +112,11 @@ export const type = {
   h2: { fontFamily: display, fontSize: 21, fontWeight: '600' as const, letterSpacing: -0.4, lineHeight: 27 },
   h3: { fontFamily: sans, fontSize: 16, fontWeight: '600' as const, letterSpacing: -0.1, lineHeight: 22 },
   body: { fontFamily: sans, fontSize: 16, fontWeight: '400' as const, lineHeight: 25 },
+  /* Long-form reading gets its own step. The modules are eight hundred to a thousand words
+     and were set in the same 16/25 as a card caption, across a 428px measure — around 80
+     characters a line, well past the 45-to-75 range where reading speed holds up. Bigger
+     type on a narrower column is the whole fix. */
+  read: { fontFamily: sans, fontSize: 17, fontWeight: '400' as const, lineHeight: 28 },
   bodySm: { fontFamily: sans, fontSize: 14, fontWeight: '400' as const, lineHeight: 21 },
   label: { fontFamily: sans, fontSize: 13, fontWeight: '600' as const, letterSpacing: 0.1, lineHeight: 18 },
   caption: { fontFamily: sans, fontSize: 12.5, fontWeight: '500' as const, lineHeight: 17 },
@@ -128,6 +133,8 @@ export const radius = { sm: 10, md: 16, card: 24, scene: 28, sheet: 32, pill: 99
 export const motion = { fast: 180, base: 260, slow: 420 };
 
 export const LAYOUT_MAX_WIDTH = 460;
+/** Reading measure for module prose. Narrower than the app's column on purpose. */
+export const READ_MAX_WIDTH = 380;
 export const TAB_BAR_HEIGHT = 64;
 
 /* Atmosphere presets — the light the frosted cards sit on.
