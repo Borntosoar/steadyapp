@@ -5,7 +5,7 @@
     "version": "2.0.0",
     "orientation": "portrait",
     "scheme": "steady",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
@@ -13,18 +13,18 @@
         "NSCameraUsageDescription": "Steady uses the camera only as a live mirror for guided practice. Nothing is ever recorded, captured, or saved."
       },
       "bundleIdentifier": "com.borntosoar.steady",
-      "userInterfaceStyle": "dark"
+      "userInterfaceStyle": "automatic"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0A0E11"
+        "backgroundColor": "#EDF0E8"
       },
       "permissions": [
         "android.permission.CAMERA"
       ],
       "predictiveBackGestureEnabled": false,
       "package": "com.borntosoar.steady",
-      "userInterfaceStyle": "dark"
+      "userInterfaceStyle": "automatic"
     },
     "web": {
       "bundler": "metro",
@@ -45,9 +45,9 @@
         "projectId": "0e49282d-6d13-4ff5-9496-306b296be907"
       }
     },
-    "backgroundColor": "#0A0E11",
+    "backgroundColor": "#EDF0E8",
     "splash": {
-      "backgroundColor": "#0A0E11",
+      "backgroundColor": "#EDF0E8",
       "resizeMode": "contain"
     }
   }

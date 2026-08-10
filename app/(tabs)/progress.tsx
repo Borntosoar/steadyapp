@@ -1,16 +1,13 @@
 import React from 'react';
-import { View, Platform, Share, ScrollView, Text } from 'react-native';
+import { View, Platform, Share, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Screen, Button, H1, H2, H3, Body, BodySm, Caption, Row, Rule, useTheme,
+  Button, H1, H2, H3, Body, BodySm, Caption, Row, useTheme,
 } from '../../components/ui';
-import { Atmosphere } from '../../components/Atmosphere';
+import { Frost, Ground } from '../../components/frost';
 import { StorageNotice } from '../../components/StorageNotice';
 import { LineChart, BarChart } from '../../components/charts';
-import {
-  space, type as t, TAB_BAR_HEIGHT, LAYOUT_MAX_WIDTH,
-} from '../../constants/theme';
+import { space, type as t } from '../../constants/theme';
 import { useStore } from '../../store/useStore';
 import { useEntitlement } from '../../hooks/useEntitlement';
 import {
@@ -18,14 +15,14 @@ import {
 } from '../../lib/reclaimed';
 import { exportText, exportJson } from '../../lib/storage';
 import { insightsSummary } from '../../content/copy.ts';
+import { weekProgress, WEEKS_TOTAL } from '../../lib/protocol';
 
 /* Every chart on this screen plots something that should go DOWN, or a count of times the
  * user did the hard thing. Nothing here measures appearance, and nothing ever will —
  * see SAFETY.md. */
 
-/** A titled band with a hairline above it. Replaces what used to be seven stacked cards;
- *  a screen of boxes reads as a dashboard, and a dashboard invites scrutiny of every
- *  individual number, which is the habit this whole app is trying to interrupt. */
+/** A titled frosted panel. Replaces what used to be seven bands separated by hairlines on
+ *  a flat black ground — legible, and completely inert. */
 function Section({
   title,
   note,
@@ -36,11 +33,46 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <View style={{ marginTop: space.xxl }}>
-      <Rule />
-      <H2 style={{ marginTop: space.lg }}>{title}</H2>
+    <Frost style={{ marginTop: space.md }}>
+      <H2>{title}</H2>
       {note ? <Caption style={{ marginTop: space.xs }}>{note}</Caption> : null}
       {children}
+    </Frost>
+  );
+}
+
+/** The twelve weeks, at a glance.
+ *
+ * Nothing in the app has ever shown the shape of the whole programme, so somebody in week
+ * five had no way to see that week five is a third of the way in rather than most of it.
+ * Filled for finished weeks, half for the one in progress, hollow after. */
+function WeekPips({ done, current, progress }: { done: number[]; current: number; progress: number }) {
+  const c = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', gap: 5, marginTop: space.md }}>
+      {Array.from({ length: WEEKS_TOTAL }, (_, i) => {
+        const w = i + 1;
+        const complete = done.includes(w);
+        const now = w === current;
+        return (
+          <View
+            key={w}
+            style={{
+              flex: 1,
+              height: 8,
+              borderRadius: 4,
+              overflow: 'hidden',
+              backgroundColor: complete ? c.accent : c.surfaceStrong,
+              borderWidth: complete ? 0 : StyleSheet.hairlineWidth,
+              borderColor: c.lineStrong,
+            }}
+          >
+            {now && !complete && (
+              <View style={{ width: `${Math.round(progress * 100)}%`, height: 8, backgroundColor: c.accent }} />
+            )}
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -48,7 +80,6 @@ function Section({
 export default function Progress() {
   const c = useTheme();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { entitled } = useEntitlement();
   const state = useStore();
 
@@ -62,27 +93,35 @@ export default function Progress() {
   );
   const showNumber = reclaimed.hasData && reclaimed.sampleSize >= 3;
 
+  const wp = weekProgress(state.protocol);
+
   const hero = (
-    <Atmosphere variant="day" lightX={0.68} rounded="none" style={{ minHeight: 260 }}>
-      <View
-        style={{
-          paddingTop: insets.top + space.xxl,
-          paddingHorizontal: space.lg,
-          paddingBottom: space.xl,
-        }}
-      >
-        <Text style={[t.caption, { color: 'rgba(255,255,255,0.72)' }]}>Hours reclaimed, last 7 days</Text>
-        <Text style={[t.hero, { color: '#fff', marginTop: space.sm }]}>
-          {showNumber ? Math.abs(reclaimed.hours) : '—'}
-          <Text style={[t.h2, { color: 'rgba(255,255,255,0.66)' }]}>  hours</Text>
-        </Text>
-        <Text style={[t.body, { color: 'rgba(255,255,255,0.82)', marginTop: space.sm, maxWidth: 320 }]}>
-          {showNumber
-            ? 'Against the day you described when you started.'
-            : 'Three check-ins and this becomes a number.'}
-        </Text>
+    <>
+      <Caption style={{ marginTop: space.xl }}>Hours back, last 7 days</Caption>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: space.sm }}>
+        <Text style={[t.hero, { color: c.ink }]}>{showNumber ? Math.abs(reclaimed.hours) : '—'}</Text>
+        <Text style={[t.h2, { color: c.inkSoft }]}>hours</Text>
       </View>
-    </Atmosphere>
+      <BodySm style={{ marginTop: space.xs, maxWidth: 320 }}>
+        {showNumber
+          ? 'Compared with the day you described when you started.'
+          : 'Three check-ins and this turns into a number.'}
+      </BodySm>
+
+      <Frost style={{ marginTop: space.lg }}>
+        <Row>
+          <H3>The twelve weeks</H3>
+          <Caption>
+            Week {state.protocol.currentWeek} of {WEEKS_TOTAL}
+          </Caption>
+        </Row>
+        <WeekPips
+          done={state.protocol.completedWeeks}
+          current={state.protocol.currentWeek}
+          progress={wp.done / Math.max(1, wp.required)}
+        />
+      </Frost>
+    </>
   );
 
   /* Export is FREE, deliberately, and it sits above the entitlement gate for that reason.
@@ -136,39 +175,28 @@ export default function Progress() {
 
   if (!entitled) {
     return (
-      <ScrollView
-        style={{ flex: 1, backgroundColor: c.bg }}
-        contentContainerStyle={{
-          paddingBottom: insets.bottom + TAB_BAR_HEIGHT + space.xl,
-          alignItems: 'center',
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={{ width: '100%', maxWidth: LAYOUT_MAX_WIDTH }}>
-          {hero}
-          <View style={{ paddingHorizontal: space.lg, marginTop: space.lg }}>
-            <StorageNotice onBackup={doBackup} />
-          </View>
-          <View style={{ paddingHorizontal: space.lg }}>
-            <Section title="The rest of the picture">
-              <Body style={{ marginTop: space.md }}>
-                Distress over time, checking frequency, avoidance, and how far distress falls
-                inside each mirror session are part of Steady+.
-              </Body>
-              <BodySm style={{ marginTop: space.md }}>
-                Your daily check-in keeps recording either way, so the history is still being
-                written while you decide.
-              </BodySm>
-              <Button
-                label="See Steady+"
-                onPress={() => router.push('/paywall')}
-                style={{ marginTop: space.lg, alignSelf: 'flex-start' }}
-              />
-            </Section>
-            {exportSection}
-          </View>
+      <Ground tabBarSpace>
+        {hero}
+        <View style={{ marginTop: space.lg }}>
+          <StorageNotice onBackup={doBackup} />
         </View>
-      </ScrollView>
+        <Section title="The rest of the picture">
+          <Body style={{ marginTop: space.md }}>
+            Distress over time, how often you check, what you avoid, and how far distress
+            falls inside each mirror session are part of Steady+.
+          </Body>
+          <BodySm style={{ marginTop: space.md }}>
+            Your daily check-in keeps recording either way. The history is still being written
+            while you decide.
+          </BodySm>
+          <Button
+            label="See Steady+"
+            onPress={() => router.push('/paywall')}
+            style={{ marginTop: space.lg, alignSelf: 'flex-start' }}
+          />
+        </Section>
+        {exportSection}
+      </Ground>
     );
   }
 
@@ -222,83 +250,72 @@ export default function Progress() {
   });
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: c.bg }}
-      contentContainerStyle={{
-        paddingBottom: insets.bottom + TAB_BAR_HEIGHT + space.xl,
-        alignItems: 'center',
-      }}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={{ width: '100%', maxWidth: LAYOUT_MAX_WIDTH }}>
-        {hero}
+    <Ground tabBarSpace>
+      {hero}
 
-        <View style={{ paddingHorizontal: space.lg, marginTop: space.lg }}>
-          <StorageNotice onBackup={doBackup} />
-        </View>
-
-        <View style={{ paddingHorizontal: space.lg }}>
-          {/* Plain-English summary, generated locally. Never mentions appearance quality. */}
-          <View style={{ marginTop: space.xl }}>
-            <Body>{summary}</Body>
-          </View>
-
-          <Section title="Week by week" note="Each point is one week, against your starting point.">
-            {plottable.length >= 2 ? (
-              <LineChart
-                points={plottable.map((w) => ({ x: `w${w.week}`, y: w.hours }))}
-                max={Math.max(2, ...plottable.map((w) => w.hours))}
-                min={Math.min(0, ...plottable.map((w) => w.hours))}
-                label="Hours reclaimed per week"
-              />
-            ) : (
-              <Caption style={{ paddingVertical: space.lg }}>
-                Two weeks of check-ins and this becomes a line.
-              </Caption>
-            )}
-          </Section>
-
-          <Section title="Distress" note="Daily, 0 to 10. This one is meant to fall.">
-            <LineChart points={sudsPoints} max={10} label="Distress" tone="cool" />
-          </Section>
-
-          <Section
-            title="Checking urges"
-            note={`Logged per day. ${resisted} of ${urgeLogs.length} ridden out without checking.`}
-          >
-            <BarChart bars={urgeBars} label="Checking urges per day" />
-          </Section>
-
-          <Section
-            title="Avoidance"
-            note="0 none · 1 small · 2 significant. Usually the last one to move, and the one worth waiting for."
-          >
-            <LineChart points={avoidPoints} max={2} label="Avoidance" tone="cool" />
-          </Section>
-
-          <Section title="Mirror sessions" note="How far distress fell inside each session. Taller is better.">
-            {mirrorDeltas.length ? (
-              <BarChart bars={mirrorDeltas} label="Distress drop per mirror session" tone="cool" />
-            ) : (
-              <Caption style={{ paddingVertical: space.lg }}>No sessions logged yet.</Caption>
-            )}
-            {mirrorBefore !== null && (
-              <Row style={{ marginTop: space.lg }}>
-                <View style={{ flex: 1 }}>
-                  <Caption>Average before</Caption>
-                  <Text style={[t.h1, { color: c.ink, marginTop: 2 }]}>{mirrorBefore}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Caption>Average after</Caption>
-                  <Text style={[t.h1, { color: c.cool, marginTop: 2 }]}>{mirrorAfter}</Text>
-                </View>
-              </Row>
-            )}
-          </Section>
-
-          {exportSection}
-        </View>
+      <View style={{ marginTop: space.lg }}>
+        <StorageNotice onBackup={doBackup} />
       </View>
-    </ScrollView>
+
+      {/* Plain-English summary, generated on the device. Never mentions how anybody looks. */}
+      <Frost style={{ marginTop: space.md }}>
+        <Body>{summary}</Body>
+      </Frost>
+
+      <Section title="Week by week" note="Each point is one week, against your starting point.">
+        {plottable.length >= 2 ? (
+          <LineChart
+            points={plottable.map((w) => ({ x: `w${w.week}`, y: w.hours }))}
+            max={Math.max(2, ...plottable.map((w) => w.hours))}
+            min={Math.min(0, ...plottable.map((w) => w.hours))}
+            label="Hours reclaimed per week"
+          />
+        ) : (
+          <Caption style={{ paddingVertical: space.lg }}>
+            Two weeks of check-ins and this turns into a line.
+          </Caption>
+        )}
+      </Section>
+
+      <Section title="How hard the days were" note="Daily, 0 to 10. This one is meant to fall.">
+        <LineChart points={sudsPoints} max={10} label="Distress" tone="cool" />
+      </Section>
+
+      <Section
+        title="Urges to check"
+        note={`Per day. You sat through ${resisted} of ${urgeLogs.length}.`}
+      >
+        <BarChart bars={urgeBars} label="Checking urges per day" />
+      </Section>
+
+      <Section
+        title="Things you skipped"
+        note="0 none, 1 a little, 2 a lot. This is usually the last one to move, and the one worth waiting for."
+      >
+        <LineChart points={avoidPoints} max={2} label="Avoidance" tone="cool" />
+      </Section>
+
+      <Section title="Mirror sessions" note="How far distress fell inside each one. Taller is better.">
+        {mirrorDeltas.length ? (
+          <BarChart bars={mirrorDeltas} label="Distress drop per mirror session" tone="cool" />
+        ) : (
+          <Caption style={{ paddingVertical: space.lg }}>No sessions logged yet.</Caption>
+        )}
+        {mirrorBefore !== null && (
+          <Row style={{ marginTop: space.lg }}>
+            <View style={{ flex: 1 }}>
+              <Caption>Average before</Caption>
+              <Text style={[t.h1, { color: c.ink, marginTop: 2 }]}>{mirrorBefore}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Caption>Average after</Caption>
+              <Text style={[t.h1, { color: c.cool, marginTop: 2 }]}>{mirrorAfter}</Text>
+            </View>
+          </Row>
+        )}
+      </Section>
+
+      {exportSection}
+    </Ground>
   );
 }

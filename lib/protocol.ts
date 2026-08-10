@@ -28,28 +28,28 @@ export const PHASES: Phase[] = [
     name: 'See the pattern',
     weeks: [1, 2, 3],
     goal: 'You see your own numbers for the first time.',
-    focus: 'Daily check-in only. No exposure work yet — first we find out where you actually are.',
+    focus: 'Check in each day. Nothing hard yet. First we find out where you are.',
   },
   {
     id: 2,
     name: 'Interrupt the loop',
     weeks: [4, 5, 6],
     goal: 'The first measurable drop in checking.',
-    focus: 'Checking log, urge surfing, thought records, and the first short mirror sessions.',
+    focus: 'Log the urges, sit through them, take thoughts apart, and start short mirror work.',
   },
   {
     id: 3,
     name: 'Widen the lens',
     weeks: [7, 8, 9],
     goal: 'Avoidance drops.',
-    focus: 'Attention training, longer mirror sessions, and behavioural experiments — do the avoided thing, predict what happens, record what actually happened.',
+    focus: 'Train your attention, do longer mirror work, and test what you think will happen.',
   },
   {
     id: 4,
     name: 'Live in the hours',
     weeks: [10, 11, 12],
     goal: 'You leave with a written plan and a number.',
-    focus: 'Values work, spending the reclaimed time deliberately, and building your own relapse plan.',
+    focus: 'Work out what matters, spend the time you got back on it, and make a plan to keep it.',
   },
 ];
 
@@ -188,7 +188,7 @@ export function recommendedAction(opts: {
     return {
       route: '/checkin',
       label: 'Daily check-in',
-      why: 'Under thirty seconds. This is what the whole number is built from.',
+      why: 'Under thirty seconds. Your whole number is built from this.',
     };
   }
 
@@ -198,14 +198,14 @@ export function recommendedAction(opts: {
     if (modulesReadThisWeek < 1) {
       return {
         route: '/learn',
-        label: 'Read this week’s module',
-        why: 'Phase one is about understanding the pattern before changing it.',
+        label: 'Read this week',
+        why: 'The first weeks are about seeing the pattern before you change it.',
       };
     }
     return {
       route: '/urges',
-      label: 'Log a checking urge',
-      why: 'Noticing the urge without acting on it is the skill everything else rests on.',
+      label: 'Ride out an urge',
+      why: 'Noticing an urge without acting on it is the skill the rest is built on.',
     };
   }
 
@@ -214,20 +214,20 @@ export function recommendedAction(opts: {
       return {
         route: '/mirror',
         label: 'Mirror practice',
-        why: 'Short and structured. Staying to the end is what makes it work.',
+        why: 'Short and guided. Staying to the end is what makes it work.',
       };
     }
     if (recordsThisWeek < 1) {
       return {
         route: '/journal',
-        label: 'Write a thought record',
-        why: 'Catch one thought and take it apart.',
+        label: 'Take a thought apart',
+        why: 'Catch one thought and pull it apart.',
       };
     }
     return {
       route: '/urges',
-      label: 'Log a checking urge',
-      why: 'The checking count is the number that moves first.',
+      label: 'Ride out an urge',
+      why: 'This is the number that starts moving first.',
     };
   }
 
@@ -236,19 +236,19 @@ export function recommendedAction(opts: {
       return {
         route: '/mirror',
         label: 'Mirror practice',
-        why: 'Longer session this phase, with a condition you normally avoid.',
+        why: 'A longer session now, in a setting you normally avoid.',
       };
     }
     return {
       route: '/journal',
-      label: 'Run a behavioural experiment',
-      why: 'Predict what will happen, do the avoided thing, then write what actually happened.',
+      label: 'Test a prediction',
+      why: 'Guess what will happen, do it, then write down what did.',
     };
   }
 
   return {
     route: '/journal',
-    label: 'Values and the hours',
-    why: 'You have time back now. This phase is about deciding where it goes.',
+    label: 'Decide where the time goes',
+    why: 'You have time back now. This part is about deciding where it goes.',
   };
 }

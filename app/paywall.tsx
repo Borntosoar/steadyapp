@@ -89,7 +89,7 @@ export default function Paywall() {
       showsVerticalScrollIndicator={false}
     >
       <View style={{ width: '100%', maxWidth: LAYOUT_MAX_WIDTH }}>
-        <Atmosphere variant="dawn" lightX={0.7} rounded="none">
+        <Atmosphere variant="grove" lightX={0.7} rounded="none">
           <View style={{ paddingTop: insets.top + space.md, paddingHorizontal: space.lg, paddingBottom: space.xxl }}>
             {/* One dismiss, plainly labelled, present in the first frame. Top LEFT, because
                 the always-mounted Support pill owns the top right on every screen and two

@@ -217,6 +217,10 @@ describe('reclaimedCopy — tone safety', () => {
   test('sparse data is labelled as sparse rather than shown as a number', () => {
     const r = computeReclaimed(baseline, [ci('2026-01-02', 120)]);
     const { headline } = reclaimedCopy(r);
-    assert.match(headline, /gathering/i);
+    /* The assertion is about the behaviour, not the wording: one check-in must not be
+       rendered as an hours figure. Pinning the exact word made a copy edit look like a
+       safety regression. */
+    assert.doesNotMatch(headline, /\d/, `a single check-in produced a number: "${headline}"`);
+    assert.match(headline, /still|gathering|adding|starts/i, `headline does not say it is incomplete: "${headline}"`);
   });
 });

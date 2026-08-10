@@ -3,21 +3,29 @@
  * Every string the user can be shown at an emotionally loaded moment lives here rather
  * than inline, so the whole tone surface can be asserted in one place. See
  * __tests__/copy.test.mjs — it checks the entire export for shaming language, appearance
- * references, and exclamation marks.
+ * references, and exclamation marks — and __tests__/readability.test.mjs, which holds every
+ * group below to an eighth-grade reading level.
  *
  * The rule behind the missed-day and negative-week strings: this app never tells someone
  * they failed. Shame drives concealment, concealment drives dropout, and the people most
- * likely to have a bad week are the people this most needs to keep. */
+ * likely to have a bad week are the people this most needs to keep.
+ *
+ * READING LEVEL. This file was rewritten down to eighth grade, and the edit that did most
+ * of the work was cutting sentences in half rather than swapping long words for short ones.
+ * A lot of it read like a well-written pamphlet: subordinate clauses, dashes carrying the
+ * turn in an argument, sentences of thirty-odd words. That register is fine on a page
+ * somebody reads in a chair, and wrong on a phone held by somebody who has just had a bad
+ * evening. Nothing here is dumbed down; it is just said in the order a person says it. */
 
 /* ---------- streak ---------- */
 
 export const STREAK_COPY = {
-  missedWithFreeze: 'No practice logged yesterday. Freeze used — streak intact.',
-  missedNoFreeze: 'No practice yesterday. Starting again today, same as anyone would.',
+  missedWithFreeze: 'Nothing logged yesterday. A freeze covered it, so your run is intact.',
+  missedNoFreeze: 'Nothing logged yesterday. Starting again today, same as anyone would.',
   milestones: {
     7: 'One week of showing up.',
-    30: "Thirty days. This is the point where most people stop; you didn't.",
-    100: "A hundred days of practice. Look at your first week's numbers.",
+    30: 'Thirty days. Most people stop before this point. You did not.',
+    100: 'A hundred days of practice. Go and look at your first week.',
   } as Record<number, string>,
   freezesBanked: (n: number) =>
     n <= 0 ? 'No streak freezes banked' : `${n} streak freeze${n === 1 ? '' : 's'} banked`,
@@ -31,26 +39,26 @@ export const STREAK_COPY = {
 export const RECLAIMED_COPY = {
   empty: {
     headline: 'Your number starts here',
-    sub: 'Check in for a few days and this becomes real. Nothing to calculate yet.',
+    sub: 'Check in for a few days and this turns into a real number.',
   },
   gathering: (n: number) => ({
-    headline: 'Still gathering',
-    sub: `${n} check-in${n === 1 ? '' : 's'} so far. A few more and this number means something.`,
+    headline: 'Still adding this up',
+    sub: `${n} check-in${n === 1 ? '' : 's'} so far. A few more and this number will mean something.`,
   }),
-  /* `sub` deliberately carries no digits. Every screen that shows this also shows the
-     figure itself in type four times the size, so repeating it in the sentence beneath
-     put the same number in front of the reader three times in one glance. */
+  /* `sub` deliberately carries no digits, and no longer opens by repeating the headline.
+     Every screen that shows this also shows the figure itself in type four times the size,
+     so the old wording put the same words in front of the reader twice in one glance. */
   positive: (hours: number) => ({
     headline: `${hours} ${hours === 1 ? 'hour' : 'hours'} back this week`,
-    sub: 'Back this week, measured against the day you described when you started. What did they go to?',
+    sub: 'Measured against the day you described when you started. What did you do instead?',
   }),
   flat: {
-    headline: 'Roughly level',
-    sub: 'Roughly level with last week. Flat weeks are part of the shape.',
+    headline: 'About level',
+    sub: 'About the same as last week. Flat weeks are part of the shape.',
   },
   negative: {
     headline: 'A heavier week',
-    sub: "Higher than last week. Worth checking what changed — sleep, stress, an event. That's information, not a setback.",
+    sub: 'Higher than last week. It is worth asking what changed. Sleep, stress, one bad day. That is information, not a setback.',
   },
 };
 
@@ -64,13 +72,11 @@ export const insightsSummary = (v: {
   mirrorAfter: number | null;
 }): string => {
   const parts = [
-    `You're spending about ${v.minutesPerDay} fewer minutes a day on appearance worry than in week one.`,
-    `Checking urges logged: ${v.urgesLogged}, resisted: ${v.urgesResisted}.`,
+    `You spend about ${v.minutesPerDay} fewer minutes a day on this than in week one.`,
+    `Urges written down: ${v.urgesLogged}. Urges you sat through: ${v.urgesResisted}.`,
   ];
   if (v.mirrorBefore !== null && v.mirrorAfter !== null) {
-    parts.push(
-      `Average distress before mirror sessions: ${v.mirrorBefore}. After: ${v.mirrorAfter}.`
-    );
+    parts.push(`Distress before mirror work: ${v.mirrorBefore}. After: ${v.mirrorAfter}.`);
   }
   return parts.join(' ');
 };
@@ -78,20 +84,20 @@ export const insightsSummary = (v: {
 /* ---------- paywall ---------- */
 
 export const PAYWALL_COPY = {
-  headline: "You've seen your number.",
-  sub: 'Weeks 2 through 12 are how you change it.',
-  freeLine: 'Grounding, check-ins, and support stay free, always.',
+  headline: 'You have seen your number.',
+  sub: 'Weeks 2 to 12 are how you change it.',
+  freeLine: 'Grounding, check-ins and support stay free, always.',
   /* Said out loud rather than left to be discovered. Removing time pressure converts a
      little worse on the day and a lot better over a year, and in this category it is the
      difference between a brand people recommend and one they warn each other about. */
-  noUrgency: 'This price is the price. It is not going up if you wait, and there is no discount coming that you would be missing.',
+  noUrgency: 'This price is the price. It will not go up if you wait. There is no discount coming that you would miss.',
   comparisonTitle: 'What you get either way',
   /* Visible, not buried. Someone who cannot pay is not a lower-value user, and making
      them ask twice is a bad trade for everyone. No form, no proof, no questions. */
   hardship: {
-    link: "Can't afford this right now?",
+    link: 'Cannot afford this right now?',
     title: 'That is not a problem',
-    body: 'Take three months on us. No form, no questions, and you do not have to explain anything. If it helps and you can pay later, you can. If not, that is fine too.',
+    body: 'Take three months on us. No form, no questions, nothing to explain. If it helps and you can pay later, you can. If not, that is fine too.',
     confirm: 'Give me three months',
     granted: 'Done. Three months of Steady+, starting now.',
   },
@@ -111,7 +117,7 @@ export const MOMENT_COPY = {
   'week-one-ask': {
     eyebrow: 'Week one, done',
     title: 'That is week one',
-    body: 'Weeks two to twelve are where the mirror work, the experiments and the rest of the protocol live. Two weeks free first, and the check-in, grounding and support you have been using stay free either way.',
+    body: 'Weeks two to twelve hold the mirror work, the experiments and the rest of the plan. You get two weeks free first. Check-ins, calming down and support stay free either way.',
     action: 'See what is in it',
     dismiss: 'Not now',
   },
@@ -119,7 +125,7 @@ export const MOMENT_COPY = {
   'trial-ending': {
     eyebrow: 'Your trial',
     title: 'Two days left on the free period',
-    body: 'Telling you before it renews is the deal we made on the way in. Nothing changes if you stay, and cancelling takes fewer taps than starting did.',
+    body: 'We said we would tell you before it renews. Nothing changes if you stay. Cancelling takes fewer taps than signing up did.',
     action: 'Manage my plan',
     dismiss: 'Got it',
   },
@@ -127,7 +133,7 @@ export const MOMENT_COPY = {
   winback: {
     eyebrow: 'Welcome back',
     title: 'Everything is where you left it',
-    body: 'Your history, your records, your longest run — all still here, exactly as they were. Gaps are part of how this goes for almost everybody. There is nothing to make up and nowhere to start from except today.',
+    body: 'Your history, your notes and your longest run are all still here. Gaps happen to almost everyone. There is nothing to make up and nowhere to start but today.',
     action: 'Open today',
     dismiss: 'Close',
   },
@@ -135,7 +141,7 @@ export const MOMENT_COPY = {
   plateau: {
     eyebrow: 'Worth knowing now',
     title: 'The next few weeks are the flat bit',
-    body: 'Around week five the quick early change usually stops and the numbers sit still for a while. It is the most common point to decide this is not working, and it is the point where the evidence says to keep going. Flat is the middle, not the end.',
+    body: 'Around week five the quick early change usually stops. The numbers sit still for a while. This is the most common point to decide it is not working. It is also the point where the evidence says keep going. Flat is the middle, not the end.',
     action: 'Read the module',
     dismiss: 'Close',
   },
@@ -143,7 +149,7 @@ export const MOMENT_COPY = {
   'month-two-proof': {
     eyebrow: 'Two months in',
     title: 'It held',
-    body: 'The early change in this kind of work is easy to explain away as a good fortnight. Holding it for two months is a different thing, and it is the part of the record worth keeping.',
+    body: 'Two good weeks are easy to write off as a good fortnight. Holding it for two months is a different thing. That is the part of the record worth keeping.',
     action: 'See the whole run',
     dismiss: 'Close',
   },
@@ -151,7 +157,7 @@ export const MOMENT_COPY = {
   'rate-app': {
     eyebrow: 'One small thing',
     title: 'Would you say so publicly?',
-    body: 'Steady has no ad budget, so people find it by being told about it. If it has been useful, a review is the whole of our marketing. If it has not been, the honest thing is to say that instead.',
+    body: 'Steady has no ad budget. People find it by being told about it. If it has helped, a review is all of our marketing. If it has not, saying that is the honest thing.',
     action: 'Write a review',
     dismiss: 'No thanks',
   },
@@ -172,15 +178,15 @@ export const MOMENT_COPY = {
 export const STORAGE_COPY = {
   unreadable: {
     title: 'Something is already saved here',
-    body: 'Steady found data on this device it could not read, so it has left it exactly where it is and paused saving. Nothing has been written over. Close the app completely and open it again — if it reads next time, everything will be there.',
+    body: 'Steady found data on this phone it could not read. It has left that data alone and paused saving, so nothing has been written over. Close the app all the way and open it again. If it reads next time, everything will be there.',
   },
   locked: {
     title: 'Saving is paused',
-    body: 'Steady could not read this device’s storage, so it has stopped writing rather than risk covering something up. Close the app completely and open it again.',
+    body: 'Steady could not read this phone. It has stopped writing rather than risk covering something up. Close the app all the way and open it again.',
   },
   cannotSave: {
-    title: 'This device is not accepting new writes',
-    body: 'Storage is full or unavailable. Everything from this session is still here on screen, and it will still be here until you close the app. Saving a backup now is the one thing that keeps it.',
+    title: 'This phone is not taking new writes',
+    body: 'Storage is full, or it is not working. Everything from this session is still on screen, and it stays there until you close the app. Saving a backup now is the one thing that keeps it.',
     action: 'Save a backup now',
   },
 };
@@ -188,14 +194,14 @@ export const STORAGE_COPY = {
 /* ---------- disclaimer ---------- */
 
 export const DISCLAIMER =
-  "Steady is an educational self-help tool. It isn't therapy, diagnosis, or medical advice. If things are severe or getting worse, please speak to a doctor or a qualified therapist — the Support tab has options.";
+  "Steady is a self-help tool for learning. It isn't therapy, a diagnosis, or medical advice. If things are severe, or getting worse, please talk to a doctor or a therapist. The Support tab has options.";
 
 export const CONTENT_FOOTER =
-  'All content is general and educational, not a substitute for professional assessment or care.';
+  'General information for learning. It does not replace care from a doctor.';
 
 /* ---------- urge counter ----------
    The running resisted count is the single most motivating object in the app: it is a
    tally of times the user did the hard thing, and unlike a symptom score it only ever
    goes up. */
 
-export const urgesResistedLabel = (n: number) => `Urges resisted: ${n}`;
+export const urgesResistedLabel = (n: number) => `Urges you sat through: ${n}`;

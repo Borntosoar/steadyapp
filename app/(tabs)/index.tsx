@@ -2,26 +2,30 @@ import React from 'react';
 import { View, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Path } from 'react-native-svg';
-import { Bleed, Button, Caption, H2, H3, Body, BodySm, Row, Rule, useTheme } from '../../components/ui';
+import { Caption, H2, H3, BodySm, useTheme } from '../../components/ui';
+import { Frost, IconBadge, WeekStrip } from '../../components/frost';
+import { Finish } from '../../components/Finish';
 import { MomentCard } from '../../components/MomentCard';
-import { StorageNotice } from '../../components/StorageNotice';
-import { nextMoment } from '../../lib/moments';
 import { Atmosphere } from '../../components/Atmosphere';
 import {
-  space, radius, type as t, atmosphereForHour, TAB_BAR_HEIGHT, LAYOUT_MAX_WIDTH,
-  type AtmosphereKey,
+  space, radius, type as t, atmosphereForScheme, TAB_BAR_HEIGHT, LAYOUT_MAX_WIDTH,
 } from '../../constants/theme';
 import { useStore } from '../../store/useStore';
 import { computeReclaimed, checkInsInLastDays, reclaimedCopy, previousWeekCheckIns } from '../../lib/reclaimed';
-import { phaseForWeek, weekProgress, recommendedAction, WEEKS_TOTAL } from '../../lib/protocol';
+import { weekProgress, recommendedAction, WEEKS_TOTAL } from '../../lib/protocol';
+import { milestoneCopy } from '../../lib/streak';
+import { lastSevenDays } from '../../lib/week';
+import { nextMoment } from '../../lib/moments';
 
-const RAIL: { key: string; title: string; sub: string; route: string; art: AtmosphereKey }[] = [
-  { key: 'urges', title: 'Urge surfing', sub: '3 min', route: '/urges', art: 'ember' },
-  { key: 'mirror', title: 'Mirror practice', sub: 'Graded', route: '/mirror', art: 'dusk' },
-  { key: 'ground', title: 'Grounding', sub: 'Free', route: '/grounding', art: 'jade' },
-  { key: 'journal', title: 'Thought record', sub: '5 min', route: '/journal', art: 'night' },
-];
+/* Today.
+ *
+ * Rebuilt to the layout the user asked for: a soft question filling the top of the screen,
+ * a week you can see at a glance, one obvious thing to do, and a small grid of everything
+ * else. Frosted cards over botanical light rather than slabs on black.
+ *
+ * The order is deliberate and it is the fix for "no flow to it". Top to bottom the screen
+ * answers, in order: how am I doing → how have I been → what do I do now → what else is
+ * here → what if today is bad. Each answer is one glance. */
 
 export default function Today() {
   const c = useTheme();
@@ -37,12 +41,15 @@ export default function Today() {
   const mirrorSessions = useStore((s) => s.mirrorSessions);
   const thoughtRecords = useStore((s) => s.thoughtRecords);
   const urgeLogs = useStore((s) => s.urgeLogs);
+  const practice = useStore((s) => s.practice);
+  const pendingMilestone = useStore((s) => s.pendingMilestone);
+  const clearMilestone = useStore((s) => s.clearMilestone);
   const checkedInToday = useStore((s) => s.checkedInToday)();
+  const state = useStore();
 
   const week = protocol.currentWeek;
-  const phase = phaseForWeek(week);
   const wp = weekProgress(protocol);
-  const sky = atmosphereForHour();
+  const sky = atmosphereForScheme(c.isDark);
 
   const reclaimed = computeReclaimed(
     baseline,
@@ -67,166 +74,143 @@ export default function Today() {
     recordsThisWeek: since(thoughtRecords),
   });
 
-  const resisted = urgeLogs.filter((u) => u.resisted).length;
-
-  /* Everything the app says unprompted goes through one scheduler: at most one a day,
-     prioritised, capped, and silenced for 24 hours by any sign of a hard day. The screen
-     does not decide what to show — it asks. See lib/moments.ts. */
-  const state = useStore();
   const moment = nextMoment({
     state,
     reclaimedSampleSize: reclaimed.sampleSize,
     weekComplete: wp.complete,
   });
 
+  /* The last seven days. A day counts if anything was practised on it. */
+  const days = lastSevenDays(practice.map((p) => p.date));
+
   const hour = new Date().getHours();
   const greeting = hour < 5 ? 'Late night' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const resisted = urgeLogs.filter((u) => u.resisted).length;
+
+  /* Seven, thirty and a hundred days.
+   *
+   * `pendingMilestone` has been written on every practice since the store was built and
+   * `milestoneCopy` has been fully unit-tested the whole time, and until now nothing in the
+   * app read either one — so every milestone passed in complete silence. This is the
+   * consumer. It takes over the screen once, on the next open, and then clears itself. */
+  if (pendingMilestone != null) {
+    const m = milestoneCopy(pendingMilestone);
+    return (
+      <Finish
+        eyebrow="Worth stopping for"
+        figure={pendingMilestone}
+        figureUnit="days"
+        headline={m.title}
+        body={m.body}
+        doneLabel="Keep going"
+        onDone={clearMilestone}
+      >
+        <Frost>
+          <Caption style={{ marginBottom: space.md }}>Your last seven days</Caption>
+          <WeekStrip days={days} />
+        </Frost>
+      </Finish>
+    );
+  }
+
+  const grid = [
+    { title: 'Check in', sub: '30 seconds', route: '/checkin', icon: 'plus' as const, done: checkedInToday },
+    { title: 'Calm down', sub: 'Free, always', route: '/grounding', icon: 'play' as const },
+    { title: 'Ride out an urge', sub: '3 minutes', route: '/urges', icon: 'play' as const },
+    { title: 'Write it out', sub: 'About 5 minutes', route: '/journal', icon: 'plus' as const },
+  ];
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: c.bg }}
-      contentContainerStyle={{ paddingBottom: insets.bottom + TAB_BAR_HEIGHT + space.xl, alignItems: 'center' }}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={{ width: '100%', maxWidth: LAYOUT_MAX_WIDTH }}>
-        {/* ---- the scene ---- */}
-        <Atmosphere variant={sky} rounded="none" style={{ minHeight: 430 }}>
-          <View style={{ paddingTop: insets.top + space.lg, paddingHorizontal: space.lg, paddingBottom: space.xl }}>
-            <Caption style={{ color: 'rgba(255,255,255,0.72)' }}>
-              {greeting}{profile.firstName ? `, ${profile.firstName}` : ''}
-            </Caption>
+    <View style={{ flex: 1, backgroundColor: c.bg }}>
+      {/* The light everything floats on. Fixed behind the scroll so the frost has
+          something that moves independently of it, which is what sells the glass. */}
+      <Atmosphere variant={sky} rounded="none" scrim={false} style={StyleSheet.absoluteFill as never} />
 
-            <View style={{ marginTop: space.xxxl }}>
-              {/* The figure IS the headline when there is one. Rendering `copy.headline`
-                  under it as well printed the same number twice, stacked. */}
-              {showNumber ? (
-                <Text style={[t.hero, { color: '#fff' }]}>
-                  {Math.abs(reclaimed.hours)}
-                  <Text style={[t.h2, { color: 'rgba(255,255,255,0.66)' }]}>  hours</Text>
-                </Text>
-              ) : (
-                <Text style={[t.display, { color: '#fff' }]}>{copy.headline}</Text>
-              )}
-              <Text style={[t.body, { color: 'rgba(255,255,255,0.82)', marginTop: space.md, maxWidth: 340 }]}>
-                {copy.sub}
-              </Text>
+      <ScrollView
+        contentContainerStyle={{
+          paddingTop: insets.top + space.xxl,
+          paddingBottom: insets.bottom + TAB_BAR_HEIGHT + space.xxl,
+          alignItems: 'center',
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={{ width: '100%', maxWidth: LAYOUT_MAX_WIDTH, paddingHorizontal: space.lg }}>
+          <Caption style={{ color: c.inkSoft }}>
+            {greeting}{profile.firstName ? `, ${profile.firstName}` : ''}
+          </Caption>
+
+          {/* The question that fills the top of the screen. */}
+          <Text style={[t.display, { color: c.ink, marginTop: space.sm }]}>
+            {showNumber ? copy.headline : 'How is today going?'}
+          </Text>
+          <BodySm style={{ marginTop: space.sm, maxWidth: 320 }}>
+            {showNumber ? copy.sub : 'Check in and Steady starts working out how much time this is taking.'}
+          </BodySm>
+
+          {/* Your week, at a glance. The single biggest thing the old home screen lacked:
+              nothing showed you your own run without opening another tab. */}
+          <Frost style={{ marginTop: space.xl }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: space.md }}>
+              <H3>This week</H3>
+              <Caption>
+                {streak.current > 0 ? `${streak.current} day${streak.current === 1 ? '' : 's'} in a row` : 'Week ' + week + ' of ' + WEEKS_TOTAL}
+              </Caption>
             </View>
+            <WeekStrip days={days} />
+          </Frost>
 
-            <Row style={{ marginTop: space.xl }}>
-              <WeekRing week={week} total={WEEKS_TOTAL} />
+          {/* The one thing to do now. */}
+          <Frost style={{ marginTop: space.md }} onPress={() => router.push(action.route)}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.lg }}>
               <View style={{ flex: 1 }}>
-                <Text style={[t.caption, { color: 'rgba(255,255,255,0.72)' }]}>
-                  Week {week} of {WEEKS_TOTAL} · {phase.name}
-                </Text>
-                <Text style={[t.caption, { color: 'rgba(255,255,255,0.55)', marginTop: 2 }]}>
-                  {wp.complete ? 'Week complete' : `${wp.remaining} more day${wp.remaining === 1 ? '' : 's'} to open week ${week + 1}`}
-                </Text>
-              </View>
-            </Row>
-          </View>
-        </Atmosphere>
-
-        {/* Renders nothing unless persistence has actually stopped working. Above the
-            day's action because losing the writing outranks doing more of it. */}
-        <View style={{ paddingHorizontal: space.lg, marginTop: -space.xl }}>
-          <StorageNotice />
-        </View>
-
-        {/* ---- today's one action ---- */}
-        <View style={{ paddingHorizontal: space.lg }}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push(action.route)}
-            style={({ pressed }) => ({
-              backgroundColor: c.surfaceSolid,
-              borderRadius: radius.card,
-              borderWidth: StyleSheet.hairlineWidth,
-              borderColor: c.lineStrong,
-              padding: space.lg,
-              opacity: pressed ? 0.92 : 1,
-            })}
-          >
-            <Row>
-              <View style={{ flex: 1 }}>
-                <Caption>Today</Caption>
+                <Caption style={{ color: c.accentDeep }}>Next up</Caption>
                 <H2 style={{ marginTop: 2 }}>{action.label}</H2>
+                <BodySm style={{ marginTop: space.xs }}>{action.why}</BodySm>
               </View>
-              <View
-                style={{
-                  width: 46, height: 46, borderRadius: radius.pill,
-                  backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center',
-                }}
+              <IconBadge icon="arrow" />
+            </View>
+          </Frost>
+
+          {/* Everything else, two up. */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.md }}>
+            {grid.map((g) => (
+              <Frost
+                key={g.title}
+                style={{ width: '48%', flexGrow: 1 }}
+                onPress={() => router.push(g.route)}
               >
-                <Svg width={15} height={15} viewBox="0 0 15 15">
-                  <Path d="M4 2.6 12.4 7.5 4 12.4z" fill={c.onAccent} />
-                </Svg>
-              </View>
-            </Row>
-            <BodySm style={{ marginTop: space.sm }}>{action.why}</BodySm>
-          </Pressable>
-        </View>
-
-        {/* ---- practice rail ---- */}
-        <View style={{ marginTop: space.xl }}>
-          <Row style={{ paddingHorizontal: space.lg, marginBottom: space.md }}>
-            <H3>Practice</H3>
-            <Pressable accessibilityRole="button" onPress={() => router.push('/practice')}>
-              <Caption>See all</Caption>
-            </Pressable>
-          </Row>
-          <Bleed>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: space.lg, gap: space.md }}
-            >
-              {RAIL.map((r, i) => (
-                <Pressable
-                  key={r.key}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${r.title}, ${r.sub}`}
-                  onPress={() => router.push(r.route)}
-                  style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
-                >
-                  <Atmosphere
-                    variant={r.art}
-                    lightX={0.35 + i * 0.16}
-                    rounded="card"
-                    style={{ width: 168, height: 196, justifyContent: 'flex-end' }}
-                  >
-                    <View style={{ padding: space.md }}>
-                      <Text style={[t.caption, { color: 'rgba(255,255,255,0.7)' }]}>{r.sub}</Text>
-                      <Text style={[t.h3, { color: '#fff', marginTop: 2 }]}>{r.title}</Text>
-                    </View>
-                  </Atmosphere>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </Bleed>
-        </View>
-
-        {/* ---- quiet numbers. rules, not cards. ---- */}
-        <View style={{ paddingHorizontal: space.lg, marginTop: space.xxl }}>
-          <Rule />
-          <Row style={{ paddingVertical: space.lg }}>
-            <Stat value={String(streak.current)} label={`day${streak.current === 1 ? '' : 's'} of practice`} />
-            <Stat value={String(resisted)} label="urges resisted" tone="cool" />
-            <Stat value={`${wp.done}/${wp.required}`} label="this week" />
-          </Row>
-          <Rule />
-        </View>
-
-        {/* ---- the one unprompted message ----
-             Placed after the week's numbers rather than above them, so whatever the app
-             has to say arrives behind what the person actually opened it for. */}
-        {moment && (
-          <View style={{ paddingHorizontal: space.lg, marginTop: space.xxl }}>
-            <MomentCard moment={moment} />
+                <View style={{ minHeight: 92, justifyContent: 'space-between', gap: space.lg }}>
+                  <View>
+                    <H3>{g.title}</H3>
+                    <Caption style={{ marginTop: 2 }}>{g.done ? 'Done today' : g.sub}</Caption>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <IconBadge icon={g.done ? 'check' : g.icon} size={40} tone={g.done ? 'ghost' : 'solid'} />
+                  </View>
+                </View>
+              </Frost>
+            ))}
           </View>
-        )}
 
-        {/* ---- hard day ---- */}
-        <View style={{ paddingHorizontal: space.lg, marginTop: space.lg }}>
+          {resisted > 0 && (
+            <Frost style={{ marginTop: space.md }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.lg }}>
+                <Text style={[t.hero, { color: c.cool, fontSize: 40, lineHeight: 44 }]}>{resisted}</Text>
+                <View style={{ flex: 1 }}>
+                  <H3>urges you sat through</H3>
+                  <Caption style={{ marginTop: 2 }}>This number only ever goes up.</Caption>
+                </View>
+              </View>
+            </Frost>
+          )}
+
+          {moment && (
+            <View style={{ marginTop: space.md }}>
+              <MomentCard moment={moment} />
+            </View>
+          )}
+
+          {/* Hard day. Always last, always there. */}
           <Pressable
             accessibilityRole="button"
             onPress={() => router.push('/grounding?mode=hard')}
@@ -234,66 +218,28 @@ export default function Today() {
               flexDirection: 'row',
               alignItems: 'center',
               gap: space.md,
+              marginTop: space.lg,
               paddingVertical: space.lg,
+              paddingHorizontal: space.lg,
+              borderRadius: radius.card,
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: c.warn,
               opacity: pressed ? 0.8 : 1,
             })}
           >
-            <View
-              style={{
-                width: 8, height: 8, borderRadius: 4, backgroundColor: c.warn,
-              }}
-            />
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: c.warn }} />
             <View style={{ flex: 1 }}>
-              <Body style={{ color: c.ink }}>Today is a hard day</Body>
-              <Caption>Nothing is required. This still counts as showing up.</Caption>
+              <H3>Today is a hard day</H3>
+              <Caption style={{ marginTop: 2 }}>Nothing is asked of you. Opening this counts.</Caption>
             </View>
             <Caption>›</Caption>
           </Pressable>
-        </View>
 
-        <View style={{ paddingHorizontal: space.lg, marginTop: space.md }}>
-          <Caption>
-            A self-help tool, not treatment. Support is one tap away from every screen.
+          <Caption style={{ marginTop: space.lg, textAlign: 'center' }}>
+            A self-help tool, not treatment. Help is one tap away on every screen.
           </Caption>
         </View>
-      </View>
-    </ScrollView>
-  );
-}
-
-function Stat({ value, label, tone }: { value: string; label: string; tone?: 'cool' }) {
-  const c = useTheme();
-  return (
-    <View style={{ flex: 1 }}>
-      <Text style={[t.h1, { color: tone === 'cool' ? c.cool : c.ink }]}>{value}</Text>
-      <Text style={[t.caption, { color: c.inkFaint, marginTop: 2 }]}>{label}</Text>
-    </View>
-  );
-}
-
-function WeekRing({ week, total }: { week: number; total: number }) {
-  const size = 44;
-  const stroke = 3;
-  const r = (size - stroke) / 2;
-  const circ = 2 * Math.PI * r;
-  const pct = Math.min(1, week / total);
-  return (
-    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      <Svg width={size} height={size} style={{ position: 'absolute' }}>
-        <Circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(255,255,255,0.28)" strokeWidth={stroke} fill="none" />
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          stroke="#fff"
-          strokeWidth={stroke}
-          fill="none"
-          strokeDasharray={`${circ * pct} ${circ}`}
-          strokeLinecap="round"
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-      </Svg>
-      <Text style={[t.label, { color: '#fff' }]}>{week}</Text>
+      </ScrollView>
     </View>
   );
 }

@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { View, Pressable, Text, ScrollView } from 'react-native';
+import Svg, { Circle, Path } from 'react-native-svg';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native';
 import {
-  Screen, Button, H1, H2, H3, Body, BodySm, Caption, Rule, useTheme,
+  Button, H1, H2, H3, Body, BodySm, Caption, useTheme,
 } from '../components/ui';
+import { Frost, TopBar, Ground, ListRow, type GlyphKind } from '../components/frost';
+import { CheckMark } from '../components/Finish';
 import { Atmosphere } from '../components/Atmosphere';
 import { BreathCircle, QuietCircle } from '../components/BreathCircle';
 import {
-  space, type as t, LAYOUT_MAX_WIDTH, type AtmosphereKey,
+  space, type as t, LAYOUT_MAX_WIDTH, atmosphereForScheme, type AtmosphereKey,
 } from '../constants/theme';
 import { useStore } from '../store/useStore';
 import { SENSES_STEPS, BREATH, WIDENING, VALUES_ANCHOR, HARD_DAY } from '../content/exercises.ts';
@@ -68,6 +72,15 @@ function SceneExit({ label, onPress }: { label: string; onPress: () => void }) {
   );
 }
 
+/* The line each exercise closes on. Short, and about what just happened rather than about
+ * what it is for — a explanation here would turn the last two seconds back into reading. */
+const CLOSING: Record<string, string> = {
+  breath: BREATH.outro,
+  senses: 'You brought yourself back into the room.',
+  widen: WIDENING.outro,
+  values: 'That is the direction. Nothing else is asked.',
+};
+
 export default function Grounding() {
   const router = useRouter();
   const params = useLocalSearchParams<{ mode?: string }>();
@@ -75,6 +88,11 @@ export default function Grounding() {
 
   const [tool, setTool] = useState<Tool>(params.mode === 'hard' ? 'hardday' : 'menu');
   const [logged, setLogged] = useState(false);
+  /* Which exercises were finished in this visit. Drives the check on the menu row — the
+     menu used to look identical before and after, which is most of why finishing one felt
+     like nothing had happened. */
+  const [doneTools, setDoneTools] = useState<Tool[]>([]);
+  const [closing, setClosing] = useState<Tool | null>(null);
 
   const complete = (kind: 'grounding' | 'hard-day' = 'grounding') => {
     if (!logged) {
@@ -83,93 +101,118 @@ export default function Grounding() {
     }
   };
 
-  if (tool === 'menu') return <Menu onPick={setTool} onBack={() => router.back()} />;
+  /* Every exercise now ends on the same two-and-a-bit seconds: the scene fades to a single
+     mark and one line, then returns by itself. Before this, four of them ended by silently
+     swapping back to the menu. */
+  const finish = (which: Tool) => {
+    complete();
+    setDoneTools((d) => (d.includes(which) ? d : [...d, which]));
+    setClosing(which);
+  };
+
+  if (closing) {
+    return (
+      <SceneClose
+        line={CLOSING[closing] ?? 'Done.'}
+        onEnd={() => {
+          setClosing(null);
+          setTool('menu');
+        }}
+      />
+    );
+  }
+
+  if (tool === 'menu') return <Menu onPick={setTool} onBack={() => router.back()} done={doneTools} />;
   if (tool === 'hardday') return <HardDay onPick={setTool} complete={complete} />;
   if (tool === 'sit') return <Sit onDone={() => { complete('hard-day'); setTool('hardday'); }} />;
-  if (tool === 'senses') return <Senses onDone={() => { complete(); setTool('menu'); }} onExit={() => setTool('menu')} />;
-  if (tool === 'breath') return <Breath onDone={complete} onExit={() => setTool('menu')} />;
-  if (tool === 'widen') return <Widening onDone={() => { complete(); setTool('menu'); }} onExit={() => setTool('menu')} />;
-  return <Values onDone={() => { complete(); setTool('menu'); }} onExit={() => setTool('menu')} />;
+  if (tool === 'senses') return <Senses onDone={() => finish('senses')} onExit={() => setTool('menu')} />;
+  if (tool === 'breath') return <Breath onDone={complete} onFinish={() => finish('breath')} onExit={() => setTool('menu')} />;
+  if (tool === 'widen') return <Widening onDone={() => finish('widen')} onExit={() => setTool('menu')} />;
+  return <Values onDone={() => finish('values')} onExit={() => setTool('menu')} />;
+}
+
+/* ---------- the closing beat ----------
+ *
+ * Two and a bit seconds, no button. A button here would ask for one more decision from
+ * somebody who has just spent three minutes deliberately not making decisions. */
+
+function SceneClose({ line, onEnd }: { line: string; onEnd: () => void }) {
+  useEffect(() => {
+    const id = setTimeout(onEnd, 2400);
+    return () => clearTimeout(id);
+  }, [onEnd]);
+
+  return (
+    <Scene variant="grove">
+      <View style={{ alignItems: 'center' }}>
+        <CheckMark size={96} color="rgba(255,255,255,0.92)" />
+        <Text style={[t.h2, onScene, { marginTop: space.xl, textAlign: 'center', lineHeight: 31 }]}>
+          {line}
+        </Text>
+      </View>
+    </Scene>
+  );
 }
 
 /* ---------- menu ---------- */
 
-function Menu({ onPick, onBack }: { onPick: (t: Tool) => void; onBack: () => void }) {
+function Menu({ onPick, onBack, done }: { onPick: (t: Tool) => void; onBack: () => void; done: Tool[] }) {
   const c = useTheme();
-  const items: { k: Tool; title: string; sub: string; art: AtmosphereKey }[] = [
-    { k: 'breath', title: '4-7-8 breathing', sub: 'Four cycles, about eighty seconds', art: 'jade' },
-    { k: 'senses', title: '5-4-3-2-1', sub: 'Three minutes. No timer, no rush', art: 'night' },
-    { k: 'widen', title: 'Attention widening', sub: 'Sixty seconds of practising the wide view', art: 'day' },
-    { k: 'values', title: 'Values anchor', sub: 'Ninety seconds. Three questions', art: 'dawn' },
+  const items: { k: Tool; title: string; sub: string; glyph: GlyphKind }[] = [
+    { k: 'breath', title: 'Slow your breathing', sub: 'About eighty seconds', glyph: 'rings' },
+    { k: 'senses', title: 'Name five things', sub: 'Three minutes. No timer, no rush', glyph: 'senses' },
+    { k: 'widen', title: 'Widen your attention', sub: 'One minute', glyph: 'wave' },
+    { k: 'values', title: 'Remember what matters', sub: 'Ninety seconds. Three questions', glyph: 'anchor' },
   ];
+
   return (
-    <Screen>
-      <View style={{ marginTop: space.xxl }}>
-        <H1>Grounding</H1>
-        <BodySm style={{ marginTop: space.sm, marginBottom: space.xl }}>
-          Free, always, and never behind a week. Any of these counts as showing up.
-        </BodySm>
+    <Ground>
+      <TopBar onBack={onBack} />
 
+      <H1 style={{ marginTop: space.lg }}>Calm down</H1>
+      <BodySm style={{ marginTop: space.sm, marginBottom: space.xl }}>
+        Free, always. You never have to pay for any of these. Any one of them counts as
+        showing up today.
+      </BodySm>
+
+      <Frost>
         {items.map((x, i) => (
-          <Pressable
+          <ListRow
             key={x.k}
-            accessibilityRole="button"
-            accessibilityLabel={`${x.title}, ${x.sub}`}
+            glyph={x.glyph}
+            title={x.title}
+            sub={x.sub}
+            done={done.includes(x.k)}
+            first={i === 0}
             onPress={() => onPick(x.k)}
-            style={({ pressed }) => ({
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: space.lg,
-              paddingVertical: space.md,
-              opacity: pressed ? 0.85 : 1,
-            })}
-          >
-            <Atmosphere
-              variant={x.art}
-              lightX={0.3 + i * 0.16}
-              rounded="md"
-              scrim={false}
-              style={{ width: 64, height: 64 }}
-            />
-            <View style={{ flex: 1 }}>
-              <H3>{x.title}</H3>
-              <BodySm style={{ marginTop: 2 }}>{x.sub}</BodySm>
-            </View>
-            <Text style={[t.body, { color: c.inkFaint }]}>›</Text>
-          </Pressable>
+          />
         ))}
+      </Frost>
 
-        <View style={{ marginTop: space.xl }}>
-          <Rule />
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => onPick('hardday')}
-            style={({ pressed }) => ({
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: space.md,
-              paddingVertical: space.lg,
-              opacity: pressed ? 0.8 : 1,
-            })}
-          >
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: c.warn }} />
-            <View style={{ flex: 1 }}>
-              <Body style={{ color: c.ink }}>Today is a hard day</Body>
-              <Caption>Nothing is required. This still counts as showing up.</Caption>
-            </View>
-            <Caption>›</Caption>
-          </Pressable>
-          <Rule />
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => onPick('hardday')}
+        style={({ pressed }) => ({
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: space.md,
+          marginTop: space.md,
+          paddingVertical: space.lg,
+          paddingHorizontal: space.lg,
+          borderRadius: 24,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: c.warn,
+          opacity: pressed ? 0.8 : 1,
+        })}
+      >
+        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: c.warn }} />
+        <View style={{ flex: 1 }}>
+          <Body style={{ color: c.ink }}>Today is a hard day</Body>
+          <Caption>Nothing is asked of you. Opening this counts.</Caption>
         </View>
-
-        <Button
-          label="Back"
-          variant="ghost"
-          onPress={onBack}
-          style={{ marginTop: space.lg, alignSelf: 'flex-start' }}
-        />
-      </View>
-    </Screen>
+        <Caption>›</Caption>
+      </Pressable>
+    </Ground>
   );
 }
 
@@ -290,14 +333,22 @@ function Senses({ onDone, onExit }: { onDone: () => void; onExit: () => void }) 
 
 /* ---------- breathing ---------- */
 
-function Breath({ onDone, onExit }: { onDone: () => void; onExit: () => void }) {
+function Breath({
+  onDone,
+  onFinish,
+  onExit,
+}: {
+  onDone: () => void;
+  onFinish: () => void;
+  onExit: () => void;
+}) {
   const [started, setStarted] = useState(false);
   const [finished, setFinished] = useState(false);
 
   if (!started) {
     return (
       <Scene
-        variant="jade"
+        variant="grove"
         footer={
           <>
             <Button label="Start" onPress={() => setStarted(true)} />
@@ -315,8 +366,14 @@ function Breath({ onDone, onExit }: { onDone: () => void; onExit: () => void }) 
 
   return (
     <Scene
-      variant="jade"
-      footer={<SceneExit label={finished ? 'Done' : 'Leave'} onPress={onExit} />}
+      variant="grove"
+      footer={
+        finished ? (
+          <Button label="Done" onPress={onFinish} />
+        ) : (
+          <SceneExit label="Leave" onPress={onExit} />
+        )
+      }
     >
       <View style={{ alignItems: 'center' }}>
         <BreathCircle
@@ -328,7 +385,7 @@ function Breath({ onDone, onExit }: { onDone: () => void; onExit: () => void }) 
         />
         {finished && (
           <Text style={[t.body, onSceneSoft, { marginTop: space.xl, textAlign: 'center' }]}>
-            {BREATH.outro}
+            Four cycles done.
           </Text>
         )}
       </View>
@@ -352,7 +409,7 @@ function Widening({ onDone, onExit }: { onDone: () => void; onExit: () => void }
 
   return (
     <Scene
-      variant="day"
+      variant="grove"
       footer={
         done ? (
           <Button label="Finish" onPress={onDone} />
@@ -383,7 +440,7 @@ function Values({ onDone, onExit }: { onDone: () => void; onExit: () => void }) 
   const last = i === VALUES_ANCHOR.steps.length - 1;
   return (
     <Scene
-      variant="dawn"
+      variant="night"
       footer={
         <>
           <Button label={last ? 'Finish' : 'Next'} onPress={() => (last ? onDone() : setI(i + 1))} />

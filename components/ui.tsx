@@ -10,12 +10,14 @@ import {
 
 /* ---------- theme ---------- */
 
-const ThemeCtx = createContext<Palette>(palette.dark);
+const ThemeCtx = createContext<Palette>(palette.light);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const scheme = useColorScheme();
-  // Dark is the default, not the fallback. Light is served only when explicitly asked for.
-  const c = scheme === 'light' ? (palette.light as Palette) : palette.dark;
+  /* Light is the default now; dark arrives when the phone asks for it. The reasoning is in
+     constants/theme.ts — most opens are in the morning, and meeting that with a near-black
+     slab was the thing that made this app feel like an instrument. */
+  const c = scheme === 'dark' ? (palette.dark as Palette) : palette.light;
   return <ThemeCtx.Provider value={c}>{children}</ThemeCtx.Provider>;
 }
 
@@ -168,13 +170,22 @@ export function Button({
   icon?: React.ReactNode;
 }) {
   const c = useTheme();
-  const bg = variant === 'primary' ? c.accent : variant === 'secondary' ? c.surfaceStrong : 'transparent';
-  const fg = variant === 'primary' ? c.onAccent : variant === 'ghost' ? c.inkSoft : c.ink;
+  /* A disabled button is a button that is WAITING, not a button that is broken. Fading the
+     whole thing to 38% turned the fill muddy and dropped the label to about 1.7:1, so the
+     primary action read as damaged at exactly the moment somebody was deciding whether this
+     app works. Disabled swaps the colours instead of dimming them; the label stays legible. */
+  const off = !!disabled;
+  const bg = off
+    ? c.surface
+    : variant === 'primary' ? c.accent : variant === 'secondary' ? c.surfaceStrong : 'transparent';
+  const fg = off
+    ? c.inkFaint
+    : variant === 'primary' ? c.onAccent : variant === 'ghost' ? c.inkSoft : c.ink;
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled: !!disabled }}
-      onPress={disabled ? undefined : onPress}
+      accessibilityState={{ disabled: off }}
+      onPress={off ? undefined : onPress}
       style={({ pressed }) => [
         {
           backgroundColor: bg,
@@ -185,9 +196,9 @@ export function Button({
           justifyContent: 'center',
           flexDirection: 'row',
           gap: space.sm,
-          borderWidth: variant === 'secondary' ? StyleSheet.hairlineWidth : 0,
-          borderColor: c.line,
-          opacity: disabled ? 0.38 : pressed ? 0.86 : 1,
+          borderWidth: off || variant === 'secondary' ? StyleSheet.hairlineWidth : 0,
+          borderColor: off ? c.lineStrong : c.line,
+          opacity: pressed && !off ? 0.86 : 1,
           minHeight: 50,
         },
         style,
@@ -243,59 +254,11 @@ export function Options<T extends string | number>({
   );
 }
 
-export function Scale({
-  value,
-  onChange,
-  min = 0,
-  max = 10,
-  lowLabel,
-  highLabel,
-}: {
-  value: number | null;
-  onChange: (n: number) => void;
-  min?: number;
-  max?: number;
-  lowLabel?: string;
-  highLabel?: string;
-}) {
-  const c = useTheme();
-  const nums = Array.from({ length: max - min + 1 }, (_, i) => min + i);
-  return (
-    <View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-        {nums.map((n) => {
-          const on = value === n;
-          return (
-            <Pressable
-              key={n}
-              accessibilityRole="button"
-              accessibilityLabel={`${n} out of ${max}`}
-              onPress={() => onChange(n)}
-              style={{
-                width: 40,
-                height: 46,
-                borderRadius: radius.md,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: on ? c.accent : c.surface,
-                borderWidth: StyleSheet.hairlineWidth,
-                borderColor: on ? c.accent : c.line,
-              }}
-            >
-              <Text style={[t.body, { color: on ? c.onAccent : c.inkSoft, fontWeight: on ? '700' : '400' }]}>{n}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-      {(lowLabel || highLabel) && (
-        <Row style={{ marginTop: space.sm }}>
-          <Caption>{lowLabel}</Caption>
-          <Caption>{highLabel}</Caption>
-        </Row>
-      )}
-    </View>
-  );
-}
+/* `Scale`, the 0-to-10 tap grid, lived here and is gone. It was eleven 40px targets that
+ * wrapped to seven-plus-four on a phone, stranding its own end labels under an empty row,
+ * and it asked somebody to grade how bad they feel before they had started. The
+ * replacements are `FaceScale` and `LevelBar` in components/frost.tsx. Both still store
+ * 0-10, so nothing downstream noticed. */
 
 /** Labelled text input. Deliberately borderless with a single underline rule: a boxed
  *  field per question turns a reflective screen into a form, and these screens are asking

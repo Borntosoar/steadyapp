@@ -1,116 +1,132 @@
 import React from 'react';
-import { View, Pressable, Text } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, H1, H3, BodySm, Caption, Chip, Row, useTheme } from '../../components/ui';
-import { Atmosphere } from '../../components/Atmosphere';
-import { space, type as t, type AtmosphereKey } from '../../constants/theme';
+import { H1, BodySm, Caption } from '../../components/ui';
+import { Frost, Ground, ListRow, type GlyphKind } from '../../components/frost';
+import { space } from '../../constants/theme';
 import { useStore } from '../../store/useStore';
 import { mirrorSpecForWeek, phaseForWeek, MIRROR_UNLOCK_WEEK } from '../../lib/protocol';
+import { dayKey } from '../../lib/streak';
+
+/* Practice.
+ *
+ * Was a flat list of six identical rows with no state on any of them, which is a menu
+ * rather than somewhere you come back to. Two changes:
+ *
+ * 1. GROUPED. "This week" and "Always free" are different promises and were sitting in one
+ *    undifferentiated stack, so the free-forever guarantee — the most important thing this
+ *    app says about itself — was a caption at the bottom nobody reads.
+ * 2. STATE ON EVERY ROW. Each one now says how many times you did it this week. It is the
+ *    difference between a list of things you could do and a record of what you have done. */
 
 interface Item {
   title: string;
   sub: string;
   route: string;
-  art: AtmosphereKey;
+  glyph: GlyphKind;
+  /** Which `practice` kinds count toward this row's tally. */
+  kinds?: string[];
   locked?: string;
 }
 
 export default function Practice() {
-  const c = useTheme();
   const router = useRouter();
   const week = useStore((s) => s.protocol.currentWeek);
+  const practice = useStore((s) => s.practice);
   const phase = phaseForWeek(week);
   const mirrorOpen = !!mirrorSpecForWeek(week);
   const experimentsOpen = phase.id >= 3;
 
-  const items: Item[] = [
+  /* Last seven days, by local day key. Never UTC — see lib/streak.ts. */
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 6);
+  const cutKey = dayKey(cutoff);
+  const thisWeek = practice.filter((p) => p.date >= cutKey);
+  const tally = (kinds?: string[]) =>
+    kinds ? thisWeek.filter((p) => kinds.includes(p.kind)).length : 0;
+
+  const work: Item[] = [
     {
-      title: 'Urge surfing',
-      sub: 'Three minutes with the urge, without acting on it',
+      title: 'Ride out an urge',
+      sub: 'Three minutes with it, without acting on it',
       route: '/urges',
-      art: 'ember',
+      glyph: 'wave',
+      kinds: ['urge'],
     },
     {
       title: 'Mirror practice',
-      sub: mirrorOpen ? 'Graded exposure, timed' : 'Graded exposure',
+      sub: mirrorOpen ? 'Step by step, timed' : 'Step by step',
       route: '/mirror',
-      art: 'dusk',
+      glyph: 'mirror',
+      kinds: ['mirror'],
       locked: mirrorOpen ? undefined : `Week ${MIRROR_UNLOCK_WEEK}`,
     },
     {
-      title: 'Thought record',
-      sub: 'Take one thought apart, seven questions',
+      title: 'Take a thought apart',
+      sub: 'Seven questions, about five minutes',
       route: '/journal',
-      art: 'night',
+      glyph: 'page',
+      kinds: ['thought-record'],
     },
     {
-      title: 'Behavioural experiment',
-      sub: 'Predict, do the avoided thing, record what happened',
+      title: 'Test a prediction',
+      sub: 'Guess what will happen, do it, write down what did',
       route: '/journal',
-      art: 'day',
+      glyph: 'flask',
+      kinds: ['experiment'],
       locked: experimentsOpen ? undefined : 'Week 7',
     },
+  ];
+
+  const free: Item[] = [
     {
-      title: 'Grounding',
-      sub: 'Breathing, senses, attention widening. Free forever',
+      title: 'Calm down',
+      sub: 'Breathing, senses, widening your attention',
       route: '/grounding',
-      art: 'jade',
+      glyph: 'rings',
+      kinds: ['grounding', 'hard-day'],
     },
     {
       title: 'Daily check-in',
       sub: 'Four questions, under thirty seconds',
       route: '/checkin',
-      art: 'dawn',
+      glyph: 'plus',
+      kinds: ['checkin'],
     },
   ];
 
+  const row = (it: Item, i: number) => {
+    const n = tally(it.kinds);
+    return (
+      <ListRow
+        key={it.title}
+        glyph={it.glyph}
+        title={it.title}
+        sub={it.sub}
+        count={n > 0 ? `${n} this week · ${it.sub}` : undefined}
+        done={n > 0}
+        lock={it.locked}
+        first={i === 0}
+        onPress={() => !it.locked && router.push(it.route)}
+      />
+    );
+  };
+
   return (
-    <Screen tabBarSpace>
-      <View style={{ marginTop: space.xxl }}>
-        <H1>Practice</H1>
-        <BodySm style={{ marginTop: space.sm, marginBottom: space.xl }}>
-          Phase {phase.id} · {phase.name}. {phase.focus}
-        </BodySm>
+    <Ground tabBarSpace>
+      <H1 style={{ marginTop: space.xl }}>Practice</H1>
+      <BodySm style={{ marginTop: space.sm }}>
+        Week {week}. {phase.name}. {phase.focus}
+      </BodySm>
 
-        {items.map((it, i) => {
-          const locked = !!it.locked;
-          return (
-            <Pressable
-              key={it.title}
-              accessibilityRole="button"
-              accessibilityLabel={`${it.title}${locked ? `, opens week ${it.locked}` : ''}`}
-              onPress={() => router.push(it.route)}
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: space.lg,
-                marginBottom: space.md,
-                opacity: pressed ? 0.9 : locked ? 0.62 : 1,
-              })}
-            >
-              <Atmosphere
-                variant={it.art}
-                lightX={0.3 + (i % 4) * 0.15}
-                rounded="md"
-                scrim={false}
-                style={{ width: 78, height: 78 }}
-              />
-              <View style={{ flex: 1 }}>
-                <Row>
-                  <H3 style={{ flex: 1 }}>{it.title}</H3>
-                  {locked ? <Chip label={it.locked!} /> : null}
-                </Row>
-                <BodySm style={{ marginTop: 2 }}>{it.sub}</BodySm>
-              </View>
-              <Text style={[t.body, { color: c.inkFaint }]}>›</Text>
-            </Pressable>
-          );
-        })}
+      <Caption style={{ marginTop: space.xl, marginBottom: space.sm }}>This week&apos;s work</Caption>
+      <Frost>{work.map(row)}</Frost>
 
-        <Caption style={{ marginTop: space.lg }}>
-          Grounding and crisis support are never paid, and never locked behind a week.
-        </Caption>
-      </View>
-    </Screen>
+      <Caption style={{ marginTop: space.xl, marginBottom: space.sm }}>Always free</Caption>
+      <Frost>{free.map(row)}</Frost>
+
+      <Caption style={{ marginTop: space.md }}>
+        These two, and crisis support, are free forever. They are never locked behind a week.
+      </Caption>
+    </Ground>
   );
 }

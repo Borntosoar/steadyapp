@@ -214,9 +214,9 @@ export const EXPERIMENT_FIELDS: ExperimentField[] = [
 ];
 
 export const EXPERIMENT_COPY = {
-  doItNow: 'Now go and do it. Come back when it is done — the rest of the form is waiting.',
+  doItNow: 'Now go and do it. Come back when it is done. The rest of the form is waiting.',
   archiveIntro:
-    'Your past experiments. Rereading these is not admin — the archive is the evidence, and rereading it is the intervention.',
+    'Your past experiments. Reading these back is the point, not paperwork. This list is your evidence.',
 };
 
 /* ---------- thought record ---------- */
@@ -273,7 +273,7 @@ export const DISTORTIONS: Distortion[] = [
   {
     name: 'Fortune telling',
     definition:
-      'Predicting the outcome with certainty, before it happens, always in the same direction.',
+      'Calling how it will go before it happens, and always calling it badly.',
   },
   {
     name: 'All-or-nothing',

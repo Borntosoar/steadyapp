@@ -2,158 +2,180 @@ import { Platform } from 'react-native';
 
 /* Design tokens.
  *
- * Dark-first, on purpose. The scene: someone opens this at 11pm with the lights off after
- * a bad evening in front of the mirror, or at 7am deciding whether to leave the house.
- * A bright white screen at either of those moments is a small cruelty.
+ * THE BRIEF THIS ANSWERS: "no flow to it, it does not feel rewarding, lacks engagement,
+ * too clinical." The previous palette was near-black with an ochre accent. It was
+ * defensible and it was cold — it looked like an instrument, and somebody opening it after
+ * a bad evening does not want an instrument.
  *
- * Colour strategy is COMMITTED rather than restrained: a cool night ground carries most
- * of the surface, and a single warm amber accent carries every action. Two hues on a real
- * contrast axis, so the interface has a point of view instead of the tinted-neutral-plus-
- * one-accent arrangement that every wellness app arrives at by default.
+ * The direction is organic and frosted: sage and moss, warm sand, translucent cards
+ * floating over soft botanical light. Nothing here reads as a medical device.
  *
- * The accent is ochre, not peach, and that is a deliberate correction. Roughly as many
- * men as women live with this, and a pale salmon accent on a soft dark ground is read
- * instantly as an app for women — which would quietly tell half the people who need it
- * that it isn't for them. Ochre is an earth pigment: warm without being cosmetic. The
- * ground stays cool and the second hue stays jade, so the axis survives the change.
+ * LIGHT IS NOW THE DEFAULT, and that is a reversal worth explaining. The old argument was
+ * that a bright white screen at 11pm is a small cruelty, and that is still true — which is
+ * why the dark palette below is genuinely designed rather than an inversion, and why it
+ * arrives automatically with the system theme at night. But most opens are not at 11pm.
+ * Most are in the morning, deciding whether to leave the house, and meeting that moment
+ * with a dark clinical slab was the actual mistake.
  *
- * Contrast was checked against the darkest ground, not the lightest: body text clears
- * 4.5:1 and captions clear 4.5:1 too, rather than being let off as "large text". */
+ * Both palettes are sage. Neither is a tint of the other. */
 
-const dark = {
-  /* Ground */
-  bg: '#0A0E11',
-  bgDeep: '#05080A',
-  /* Elevation by transparency, not by a lighter slab — slabs read as boxes stacked on
-     boxes, which is the card-soup look. */
-  surface: 'rgba(255,255,255,0.045)',
-  surfaceStrong: 'rgba(255,255,255,0.075)',
-  surfaceSolid: '#121A1F',
-  line: 'rgba(255,255,255,0.10)',
-  lineStrong: 'rgba(255,255,255,0.18)',
-
-  /* Ink — warm off-white against the cool ground */
-  ink: '#F4F1EC',        // 17:1
-  inkSoft: '#AEB6BA',    // 9.5:1
-  inkFaint: '#838C91',   // 5.9:1 — safe for captions
-
-  /* Ochre: every action, every affordance. 7.1:1 on the ground. */
-  accent: '#D98A4E',
-  accentDeep: '#EDAE74',
-  accentDim: 'rgba(217,138,78,0.15)',
-
-  /* Jade: progress and the things that go the right way */
-  cool: '#7FC0A4',
-  coolDim: 'rgba(127,192,164,0.14)',
-
-  /* Held well away from the accent hue so "hard day" never reads as another button. */
-  warn: '#C9605A',
-  onAccent: '#1B0E04',
-  scrim: 'rgba(5,8,10,0.72)',
-};
-
+/* ---------- light: morning, sage and sand ---------- */
 const light = {
-  bg: '#F7F5F1',
-  bgDeep: '#EFEBE4',
-  surface: 'rgba(20,26,30,0.04)',
-  surfaceStrong: 'rgba(20,26,30,0.07)',
-  surfaceSolid: '#FFFFFF',
-  line: 'rgba(20,26,30,0.10)',
-  lineStrong: 'rgba(20,26,30,0.18)',
+  /* Which way the glass tints, which tint BlurView gets, which artwork reads.
+     Components branch on this rather than sniffing a hex value. */
+  isDark: false as boolean,
+  bg: '#EDF0E8',          // pale sage, warmer than any grey
+  bgDeep: '#E2E7DB',
+  /* Cards are translucent so the background reads through them. This is the frosted-glass
+     look, and it is why the ground below has to be interesting rather than flat. */
+  surface: 'rgba(255,255,255,0.58)',
+  surfaceStrong: 'rgba(255,255,255,0.78)',
+  surfaceSolid: '#F7F9F4',
+  line: 'rgba(47,58,42,0.10)',
+  lineStrong: 'rgba(47,58,42,0.20)',
 
-  ink: '#1A1D1F',        // 15:1
-  inkSoft: '#565E62',    // 7:1
-  inkFaint: '#6E777B',   // 5.1:1
+  ink: '#242B20',         // deep moss, not black. 13.6:1 on bg
+  inkSoft: '#4C5745',     // 7.3:1
+  inkFaint: '#6B7663',    // 4.6:1 — still clears AA for small text
 
-  accent: '#96551F',
-  accentDeep: '#7A4517',
-  accentDim: 'rgba(150,85,31,0.10)',
+  /* Moss green carries every action. It is the colour of the reference and it is the one
+     hue nobody reads as an alert. */
+  accent: '#5A6E4A',
+  accentDeep: '#435336',
+  accentDim: 'rgba(90,110,74,0.14)',
+  onAccent: '#F4F7F0',
 
-  cool: '#33705A',
-  coolDim: 'rgba(51,112,90,0.10)',
+  /* Warm clay for the things that went well. Complementary to the moss without shouting. */
+  cool: '#A8734E',
+  coolDim: 'rgba(168,115,78,0.14)',
 
-  warn: '#9C3A36',
-  onAccent: '#FFFFFF',
-  scrim: 'rgba(247,245,241,0.72)',
+  warn: '#A2503F',
+  scrim: 'rgba(237,240,232,0.72)',
 };
 
-export const palette = { dark, light };
-export type Palette = typeof dark;
+/* ---------- dark: night, moss and low light ---------- */
+const dark = {
+  isDark: true as boolean,
+  bg: '#171C16',          // deep moss, not near-black
+  bgDeep: '#101410',
+  surface: 'rgba(255,255,255,0.07)',
+  surfaceStrong: 'rgba(255,255,255,0.12)',
+  surfaceSolid: '#1F261D',
+  line: 'rgba(255,255,255,0.12)',
+  lineStrong: 'rgba(255,255,255,0.22)',
 
-/* Type — serif display against system sans body.
+  ink: '#EDF0E6',         // 14.5:1
+  inkSoft: '#B4BEAA',     // 8.4:1
+  inkFaint: '#8B9683',    // 5.1:1
+
+  accent: '#A3C088',      // sage, lifted so it reads on the dark ground
+  accentDeep: '#BFD6A8',
+  accentDim: 'rgba(163,192,136,0.16)',
+  onAccent: '#182015',
+
+  cool: '#D9A277',
+  coolDim: 'rgba(217,162,119,0.16)',
+
+  warn: '#D2735E',
+  scrim: 'rgba(16,20,16,0.72)',
+};
+
+export const palette = { light, dark };
+export type Palette = typeof light;
+
+/* Type.
  *
- * Two families, paired on a genuine contrast axis rather than two sans-serifs that are
- * almost-but-not-quite the same. Georgia ships on every target platform, so there is no
- * font file to load and nothing to fetch at runtime. */
-const serif = Platform.select({
-  ios: 'Georgia',
-  android: 'serif',
-  default: "Georgia, 'Times New Roman', serif",
-});
-
-const sans = Platform.select({
+ * The reference sets its headlines in a heavy grotesque, not a serif. That is the single
+ * biggest reason it reads friendly rather than editorial: a serif in a health app looks
+ * like a pamphlet, a heavy sans looks like something made this decade. The serif is gone.
+ *
+ * System fonts on every platform, so nothing is fetched at runtime and nothing can fall
+ * back silently to something that ruins the layout. */
+const display = Platform.select({
   ios: 'System',
   android: 'sans-serif',
   default:
-    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
 });
 
-export const fonts = { serif, sans };
+const sans = display;
 
-/* Letter-spacing on display sizes stays at or above -0.03em. Tighter than that and the
-   letterforms touch, which reads as cramped rather than designed. */
+export const fonts = { display, sans };
+
 export const type = {
-  /* The reclaimed-hours number. The largest thing in the app, and well under the
-     shouting threshold. */
-  hero: { fontFamily: serif, fontSize: 68, fontWeight: '400' as const, letterSpacing: -1.6, lineHeight: 72 },
-  display: { fontFamily: serif, fontSize: 40, fontWeight: '400' as const, letterSpacing: -0.9, lineHeight: 46 },
-  h1: { fontFamily: serif, fontSize: 30, fontWeight: '400' as const, letterSpacing: -0.6, lineHeight: 37 },
-  h2: { fontFamily: serif, fontSize: 22, fontWeight: '400' as const, letterSpacing: -0.3, lineHeight: 29 },
-
+  /* The reclaimed-hours figure and the cost mirror. */
+  hero: { fontFamily: display, fontSize: 60, fontWeight: '700' as const, letterSpacing: -2.2, lineHeight: 64 },
+  /* "How are you feeling today?" — the reference's signature move is a big soft question
+     that fills the top of the screen. */
+  display: { fontFamily: display, fontSize: 38, fontWeight: '700' as const, letterSpacing: -1.2, lineHeight: 43 },
+  h1: { fontFamily: display, fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.7, lineHeight: 34 },
+  h2: { fontFamily: display, fontSize: 21, fontWeight: '600' as const, letterSpacing: -0.4, lineHeight: 27 },
   h3: { fontFamily: sans, fontSize: 16, fontWeight: '600' as const, letterSpacing: -0.1, lineHeight: 22 },
   body: { fontFamily: sans, fontSize: 16, fontWeight: '400' as const, lineHeight: 25 },
   bodySm: { fontFamily: sans, fontSize: 14, fontWeight: '400' as const, lineHeight: 21 },
   label: { fontFamily: sans, fontSize: 13, fontWeight: '600' as const, letterSpacing: 0.1, lineHeight: 18 },
-  caption: { fontFamily: sans, fontSize: 12.5, fontWeight: '400' as const, lineHeight: 17 },
-  /* Tabular figures for timers so digits do not jitter as they count. */
-  timer: { fontFamily: serif, fontSize: 56, fontWeight: '400' as const, letterSpacing: 0, lineHeight: 62 },
+  caption: { fontFamily: sans, fontSize: 12.5, fontWeight: '500' as const, lineHeight: 17 },
+  timer: { fontFamily: display, fontSize: 56, fontWeight: '300' as const, letterSpacing: -1, lineHeight: 62 },
 };
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48 };
 
-/* Cards top out at 16. The hero canvas is a full-bleed scene rather than a card, so it
-   carries slightly more. Anything above that starts to read as a toy. */
-export const radius = { sm: 8, md: 12, card: 16, scene: 20, sheet: 24, pill: 999 };
+/* Rounder than before, because the reference is round and roundness is most of what makes
+   an interface read as soft rather than instrumental. Cards at 24, the big frosted panels
+   at 28, and anything tappable that is not a card is a full pill or a circle. */
+export const radius = { sm: 10, md: 16, card: 24, scene: 28, sheet: 32, pill: 999 };
 
-export const motion = { fast: 180, base: 260, slow: 380 };
+export const motion = { fast: 180, base: 260, slow: 420 };
 
 export const LAYOUT_MAX_WIDTH = 460;
-export const TAB_BAR_HEIGHT = 62;
+export const TAB_BAR_HEIGHT = 64;
 
-/* Atmosphere presets.
+/* Atmosphere presets — the light the frosted cards sit on.
  *
- * Keyed to time of day, never to the user's numbers. Tying the visual mood to how well
- * someone is doing would turn the background into a score, and a score is the one thing
- * this app does not do.
+ * Keyed to time of day, never to the user's numbers. Tying the mood of the screen to how
+ * well somebody is doing would turn the background into a score, and a score is the one
+ * thing this app does not do.
  *
- * Every ramp runs mineral — slate, rust, ochre, teal, pine. The rose and mauve midtones
- * an earlier pass had in dawn and dusk were doing the same gendering work the peach
- * accent was: pretty, and pointed at one half of the people who need this. */
-export type AtmosphereKey = 'dawn' | 'day' | 'dusk' | 'night' | 'ember' | 'jade';
+ * Botanical rather than mineral now: these read as light through leaves. */
+export type AtmosphereKey = 'dawn' | 'day' | 'dusk' | 'night' | 'ember' | 'jade' | 'grove' | 'emberDeep';
 
 export const ATMOSPHERES: Record<AtmosphereKey, string[]> = {
-  dawn: ['#1E2833', '#33404E', '#6F6047', '#C29051'],
-  day: ['#1B2A33', '#2E4753', '#4E7A80', '#86AFA6'],
-  dusk: ['#161A24', '#2C2E3C', '#5A3F38', '#A86A4C'],
-  night: ['#070A0E', '#101822', '#1B2A38', '#2D4152'],
-  ember: ['#140D0A', '#33190F', '#6B3520', '#C86A3C'],
-  jade: ['#08110E', '#12251C', '#1F4433', '#3E7C5C'],
+  /* Pale ramps. Ground for frosted cards and for screens that set type in ink. */
+  dawn: ['#C9CFB4', '#DCD9BD', '#E8D9C0', '#F0E4CB'],
+  day: ['#B9C9AE', '#CBD9BC', '#DDE7CD', '#EDF1DC'],
+  dusk: ['#9FAE9A', '#B9B9A6', '#D0B79E', '#E0C7A9'],
+  ember: ['#A8734E', '#C08D5F', '#D2A878', '#E3C39A'],
+  jade: ['#7E9A78', '#94AC88', '#AFC29C', '#C9D6B4'],
+
+  /* Deep ramps, for the full-frame exercise scenes only.
+   *
+   * Those scenes set white type directly on the artwork, so the ramp underneath it is a
+   * contrast requirement rather than a mood choice — white on the pale ramps above lands
+   * around 1.6:1 and is simply unreadable. Keeping the immersive scenes dark is also right
+   * on its own terms: grounding and urge surfing are the two things somebody opens when
+   * they are least able to cope with a bright screen. */
+  night: ['#2A3328', '#39432F', '#4C563A', '#616B49'],
+  grove: ['#16211A', '#22331F', '#2F4529', '#3E5735'],
+  emberDeep: ['#241209', '#3D2011', '#5A3219', '#7A4823'],
 };
 
 export function atmosphereForHour(h = new Date().getHours()): AtmosphereKey {
   if (h < 5) return 'night';
-  if (h < 9) return 'dawn';
+  if (h < 10) return 'dawn';
   if (h < 17) return 'day';
   if (h < 21) return 'dusk';
   return 'night';
+}
+
+/* The same choice, clamped so the palette's ink can actually be read on it.
+ *
+ * `atmosphereForHour` alone is not safe wherever text sits directly on the atmosphere
+ * rather than on a frosted card: dark ink on the `night` ramp at 11pm, or light ink on the
+ * `day` ramp at 2pm, are both unreadable. On the dark palette the ground is always night;
+ * on the light palette a night-time open gets `dusk`, which is the darkest of the pale
+ * ramps and still clears contrast. */
+export function atmosphereForScheme(isDark: boolean, h = new Date().getHours()): AtmosphereKey {
+  if (isDark) return 'night';
+  const k = atmosphereForHour(h);
+  return k === 'night' ? 'dusk' : k;
 }

@@ -138,7 +138,11 @@ describe('the source tree is what SAFETY.md says it is', () => {
 describe('the money never touches the safety surfaces', () => {
   /* Screens somebody reaches while distressed. No upsell, no upgrade link, no Steady+
      mention, in any state, including after a completed exercise. */
-  const SACRED = ['app/grounding.tsx', 'app/support.tsx', 'app/urges.tsx'];
+  /* components/Finish.tsx is on this list because the completion screens for grounding and
+     urge surfing now live inside it. Without it, those two screens keep passing this grep
+     while rendering an upsell through a shared component — the guarantee would still be
+     written down and would quietly stop being tested. */
+  const SACRED = ['app/grounding.tsx', 'app/support.tsx', 'app/urges.tsx', 'components/Finish.tsx'];
 
   for (const path of SACRED) {
     test(`${path} contains no upgrade surface`, () => {

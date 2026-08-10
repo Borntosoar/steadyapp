@@ -3,8 +3,10 @@ import { View, TextInput, Pressable, StyleSheet, Text, ScrollView } from 'react-
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Screen, Button, Field, H1, H2, H3, Body, BodySm, Caption, Chip, Label, Row, Rule, Scale, useTheme,
+  Button, Field, H1, H2, H3, Body, BodySm, Caption, Chip, Label, Row, Rule, useTheme,
 } from '../components/ui';
+import { Frost, Ground, ListRow, LevelBar, Steps, TopBar } from '../components/frost';
+import { Finish } from '../components/Finish';
 import { Atmosphere } from '../components/Atmosphere';
 import {
   space, radius, type as t, LAYOUT_MAX_WIDTH, type AtmosphereKey,
@@ -16,79 +18,9 @@ import {
   THOUGHT_RECORD_STEPS, THOUGHT_RECORD_CLOSING, DISTORTIONS, EXPERIMENT_FIELDS, EXPERIMENT_COPY,
 } from '../content/exercises.ts';
 import { phaseForWeek } from '../lib/protocol';
+import { formatLogDate } from '../lib/dates';
 
 type View_ = 'home' | 'record' | 'experiment';
-
-/** Full-frame close for a finished piece of work. Both flows end on one of these: the
- *  moment a thought moved is the moment worth giving the whole screen to, and it is what
- *  brings somebody back to do the next one. */
-function Finish({
-  eyebrow,
-  figure,
-  headline,
-  body,
-  onDone,
-  art = 'night',
-}: {
-  eyebrow: string;
-  figure?: string;
-  headline: string;
-  body: string;
-  onDone: () => void;
-  art?: AtmosphereKey;
-}) {
-  const c = useTheme();
-  const insets = useSafeAreaInsets();
-  return (
-    <View style={{ flex: 1, backgroundColor: c.bgDeep }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }} showsVerticalScrollIndicator={false}>
-        <View style={{ width: '100%', maxWidth: LAYOUT_MAX_WIDTH, flex: 1 }}>
-          <Atmosphere variant={art} rounded="none" style={{ flex: 1, minHeight: 440 }}>
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'flex-end',
-                paddingTop: insets.top + space.xxxl,
-                paddingHorizontal: space.lg,
-                paddingBottom: space.xl,
-              }}
-            >
-              <Text style={[t.caption, { color: 'rgba(255,255,255,0.72)' }]}>{eyebrow}</Text>
-              {figure ? (
-                <Text style={[t.hero, { color: '#fff', marginTop: space.sm }]}>{figure}</Text>
-              ) : null}
-              <Text style={[t.h2, { color: '#fff', marginTop: figure ? space.xs : space.sm }]}>{headline}</Text>
-              <Text style={[t.body, { color: 'rgba(255,255,255,0.82)', marginTop: space.md }]}>{body}</Text>
-            </View>
-          </Atmosphere>
-          <View style={{ paddingHorizontal: space.lg, paddingTop: space.xl, paddingBottom: insets.bottom + space.xl }}>
-            <Button label="Done" onPress={onDone} />
-          </View>
-        </View>
-      </ScrollView>
-    </View>
-  );
-}
-
-/** Step counter shared by both flows. */
-function Steps({ n, i }: { n: number; i: number }) {
-  const c = useTheme();
-  return (
-    <View style={{ flexDirection: 'row', gap: 4, marginTop: space.lg, marginBottom: space.xl }}>
-      {Array.from({ length: n }, (_, k) => (
-        <View
-          key={k}
-          style={{
-            flex: 1,
-            height: 3,
-            borderRadius: radius.pill,
-            backgroundColor: k <= i ? c.accent : c.surfaceStrong,
-          }}
-        />
-      ))}
-    </View>
-  );
-}
 
 export default function Journal() {
   const c = useTheme();
@@ -110,98 +42,98 @@ export default function Journal() {
   const moved = records.filter((r) => r.emotionIntensity > r.reRatedIntensity).length;
 
   return (
-    <Screen>
-      <View style={{ marginTop: space.xxl }}>
-        <H1>Journal</H1>
-        <BodySm style={{ marginTop: space.sm }}>
-          Thought records take a thought apart. Experiments test one against reality. Both are
-          writing, and the writing is the part that works.
-        </BodySm>
+    <Ground>
+      <TopBar onBack={() => router.back()} />
 
-        {records.length > 0 && (
-          <View style={{ marginTop: space.xl }}>
-            <Rule />
-            <Row style={{ paddingVertical: space.lg, alignItems: 'flex-end' }}>
+      <H1 style={{ marginTop: space.lg }}>Write it out</H1>
+      <BodySm style={{ marginTop: space.sm }}>
+        A thought record takes one thought apart. An experiment tests one against real life.
+        Both are writing, and the writing is the part that works.
+      </BodySm>
+
+      {records.length > 0 && (
+        <Frost style={{ marginTop: space.xl }}>
+          <Row style={{ alignItems: 'flex-end' }}>
+            <View style={{ flex: 1 }}>
+              <Text style={[t.hero, { color: c.ink, fontSize: 52, lineHeight: 56 }]}>{records.length}</Text>
+              <Caption style={{ marginTop: 2 }}>
+                thought{records.length === 1 ? '' : 's'} taken apart
+              </Caption>
+            </View>
+            {moved > 0 && (
               <View style={{ flex: 1 }}>
-                <Text style={[t.hero, { color: c.ink }]}>{records.length}</Text>
-                <Caption style={{ marginTop: 2 }}>
-                  thought{records.length === 1 ? '' : 's'} taken apart
-                </Caption>
+                <Text style={[t.h1, { color: c.cool }]}>{moved}</Text>
+                <Caption style={{ marginTop: 2 }}>came down after</Caption>
               </View>
-              {moved > 0 && (
-                <View style={{ flex: 1 }}>
-                  <Text style={[t.h1, { color: c.cool }]}>{moved}</Text>
-                  <Caption style={{ marginTop: 2 }}>came down after</Caption>
-                </View>
-              )}
-            </Row>
-            <Rule />
-          </View>
-        )}
+            )}
+          </Row>
+        </Frost>
+      )}
 
-        {pending && (
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => setView('experiment')}
-            style={({ pressed }) => ({
-              marginTop: space.xl,
-              borderRadius: radius.card,
-              borderWidth: 1,
-              borderColor: c.accent,
-              backgroundColor: c.accentDim,
-              padding: space.lg,
-              opacity: pressed ? 0.9 : 1,
-            })}
-          >
-            <Label style={{ color: c.accentDeep }}>An experiment is waiting on you</Label>
-            <BodySm style={{ marginTop: space.xs, color: c.ink }}>{pending.avoiding}</BodySm>
-            <Caption style={{ marginTop: space.sm }}>Record what actually happened ›</Caption>
-          </Pressable>
-        )}
+      {pending && (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setView('experiment')}
+          style={({ pressed }) => ({
+            marginTop: space.md,
+            borderRadius: radius.card,
+            borderWidth: 1,
+            borderColor: c.accent,
+            backgroundColor: c.accentDim,
+            padding: space.lg,
+            opacity: pressed ? 0.9 : 1,
+          })}
+        >
+          <Label style={{ color: c.accentDeep }}>An experiment is waiting on you</Label>
+          <BodySm style={{ marginTop: space.xs, color: c.ink }}>{pending.avoiding}</BodySm>
+          <Caption style={{ marginTop: space.sm }}>Write down what actually happened ›</Caption>
+        </Pressable>
+      )}
 
+      <Frost style={{ marginTop: space.md }}>
+        <ListRow
+          glyph="page"
+          title="Take a thought apart"
+          sub="Seven questions, about five minutes"
+          first
+          onPress={() => setView('record')}
+        />
+        <ListRow
+          glyph="flask"
+          title="Test a prediction"
+          sub="Guess what will happen, do it, write down what did"
+          lock={experimentsUnlocked ? undefined : 'Week 7'}
+          onPress={() => experimentsUnlocked && setView('experiment')}
+        />
+      </Frost>
+
+      {experiments.length > 0 && (
         <View style={{ marginTop: space.xl }}>
-          <ToolRow
-            title="Thought record"
-            sub="Seven questions, one per screen. Roughly five minutes."
-            art="night"
-            onPress={() => setView('record')}
-          />
-          <ToolRow
-            title="Behavioural experiment"
-            sub="Predict what will happen, do the avoided thing, record what actually did."
-            art="day"
-            lock={experimentsUnlocked ? undefined : 'Week 7'}
-            onPress={() => experimentsUnlocked && setView('experiment')}
-          />
-        </View>
-
-        {experiments.length > 0 && (
-          <View style={{ marginTop: space.xxl }}>
-            <Rule />
-            <H2 style={{ marginTop: space.lg }}>Past experiments</H2>
-            <BodySm style={{ marginTop: space.xs, marginBottom: space.md }}>
-              {EXPERIMENT_COPY.archiveIntro}
-            </BodySm>
-            {experiments.slice(0, 10).map((e) => (
+          <H2>Past experiments</H2>
+          <BodySm style={{ marginTop: space.xs, marginBottom: space.sm }}>
+            {EXPERIMENT_COPY.archiveIntro}
+          </BodySm>
+          <Frost>
+            {experiments.slice(0, 10).map((e, i) => (
               <View
                 key={e.id}
                 style={{
-                  borderTopWidth: StyleSheet.hairlineWidth,
+                  borderTopWidth: i === 0 ? 0 : StyleSheet.hairlineWidth,
                   borderTopColor: c.line,
                   paddingVertical: space.md,
                 }}
               >
-                <Caption>{e.date}</Caption>
+                <Caption>{formatLogDate(e.date)}</Caption>
                 <BodySm style={{ color: c.ink, marginTop: 2 }}>{e.avoiding}</BodySm>
                 {e.outcome ? (
                   <Row style={{ marginTop: space.sm, alignItems: 'flex-start' }}>
                     <View style={{ flex: 1 }}>
-                      <Caption>Predicted</Caption>
+                      <Caption>You guessed</Caption>
                       <BodySm>{e.prediction}</BodySm>
                       <Caption style={{ marginTop: 2 }}>{e.likelihoodBefore}% likely</Caption>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Caption>Happened</Caption>
+                      <Caption>What happened</Caption>
                       <BodySm>{e.outcome}</BodySm>
                       {typeof e.likelihoodAfter === 'number' && (
                         <Caption style={{ marginTop: 2, color: c.cool }}>now {e.likelihoodAfter}%</Caption>
@@ -209,28 +141,29 @@ export default function Journal() {
                     </View>
                   </Row>
                 ) : (
-                  <Caption style={{ marginTop: space.xs }}>Waiting on the outcome</Caption>
+                  <Caption style={{ marginTop: space.xs }}>Waiting on what happens</Caption>
                 )}
               </View>
             ))}
-          </View>
-        )}
+          </Frost>
+        </View>
+      )}
 
-        {records.length > 0 && (
-          <View style={{ marginTop: space.xxl }}>
-            <Rule />
-            <H2 style={{ marginTop: space.lg }}>Recent records</H2>
-            {records.slice(0, 8).map((r) => (
+      {records.length > 0 && (
+        <View style={{ marginTop: space.xl }}>
+          <H2>Recent records</H2>
+          <Frost style={{ marginTop: space.sm }}>
+            {records.slice(0, 8).map((r, i) => (
               <View
                 key={r.id}
                 style={{
-                  borderTopWidth: StyleSheet.hairlineWidth,
+                  borderTopWidth: i === 0 ? 0 : StyleSheet.hairlineWidth,
                   borderTopColor: c.line,
                   paddingVertical: space.md,
                 }}
               >
                 <Row>
-                  <Caption>{r.date}</Caption>
+                  <Caption>{formatLogDate(r.date)}</Caption>
                   <Caption>
                     {r.emotion} {r.emotionIntensity} → {r.reRatedIntensity}
                   </Caption>
@@ -241,60 +174,14 @@ export default function Journal() {
                 ) : null}
               </View>
             ))}
-          </View>
-        )}
+          </Frost>
+        </View>
+      )}
 
-        <Caption style={{ marginTop: space.xxl }}>
-          {thisMonth.length} record{thisMonth.length === 1 ? '' : 's'} this month
-        </Caption>
-        <Button
-          label="Back"
-          variant="ghost"
-          onPress={() => router.back()}
-          style={{ marginTop: space.md, alignSelf: 'flex-start' }}
-        />
-      </View>
-    </Screen>
-  );
-}
-
-function ToolRow({
-  title,
-  sub,
-  art,
-  lock,
-  onPress,
-}: {
-  title: string;
-  sub: string;
-  art: AtmosphereKey;
-  lock?: string;
-  onPress: () => void;
-}) {
-  const c = useTheme();
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${title}${lock ? `, opens week ${lock}` : ''}`}
-      onPress={onPress}
-      style={({ pressed }) => ({
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: space.lg,
-        paddingVertical: space.md,
-        opacity: pressed ? 0.85 : lock ? 0.62 : 1,
-      })}
-    >
-      <Atmosphere variant={art} lightX={0.4} rounded="md" scrim={false} style={{ width: 64, height: 64 }} />
-      <View style={{ flex: 1 }}>
-        <Row>
-          <H3 style={{ flex: 1 }}>{title}</H3>
-          {lock ? <Chip label={lock} /> : null}
-        </Row>
-        <BodySm style={{ marginTop: 2 }}>{sub}</BodySm>
-      </View>
-      {!lock && <Text style={[t.body, { color: c.inkFaint }]}>›</Text>}
-    </Pressable>
+      <Caption style={{ marginTop: space.xl }}>
+        {thisMonth.length} record{thisMonth.length === 1 ? '' : 's'} this month
+      </Caption>
+    </Ground>
   );
 }
 
@@ -325,7 +212,7 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
      prize, it is the actual deal. */
   if (overLimit) {
     return (
-      <Screen>
+      <Ground>
         <View style={{ marginTop: space.xxxl }}>
           <Caption>Free tier</Caption>
           <H1 style={{ marginTop: space.xs }}>
@@ -346,7 +233,7 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
             <Button label="Back" variant="ghost" onPress={onDone} style={{ marginTop: space.xs }} />
           </View>
         </View>
-      </Screen>
+      </Ground>
     );
   }
 
@@ -355,7 +242,7 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
     return (
       <Finish
         eyebrow="Thought record saved"
-        figure={moved > 0 ? `−${moved}` : undefined}
+        figureText={moved > 0 ? `−${moved}` : undefined}
         headline={moved > 0 ? 'It moved' : 'Recorded'}
         body={THOUGHT_RECORD_CLOSING}
         onDone={onDone}
@@ -391,9 +278,9 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
   };
 
   return (
-    <Screen>
+    <Ground>
       <View style={{ marginTop: space.xl }}>
-        <Steps n={THOUGHT_RECORD_STEPS.length} i={i} />
+        <Steps total={THOUGHT_RECORD_STEPS.length} current={i} />
         <Caption>
           {i + 1} of {THOUGHT_RECORD_STEPS.length}
         </Caption>
@@ -424,13 +311,13 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
               <Caption style={{ marginTop: 2, marginBottom: space.md }}>
                 Tap 0–10. This records as 0–100.
               </Caption>
-              <Scale value={intensity} onChange={setIntensity} min={0} max={10} lowLabel="0" highLabel="100" />
+              <LevelBar value={intensity} onChange={setIntensity} lowLabel="Barely" highLabel="As strong as it gets" />
             </View>
           </>
         )}
 
         {step.kind === 'rating' && (
-          <Scale value={reRated} onChange={setReRated} min={0} max={10} lowLabel="0" highLabel="100" />
+          <LevelBar value={reRated} onChange={setReRated} lowLabel="Barely" highLabel="As strong as it gets" />
         )}
 
         {step.kind === 'distortions' && (
@@ -481,7 +368,7 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
           />
         </View>
       </View>
-    </Screen>
+    </Ground>
   );
 }
 
@@ -514,14 +401,13 @@ function Experiment({ onDone }: { onDone: () => void }) {
     return (
       <Finish
         eyebrow="Experiment closed"
-        figure={drop > 0 ? `${done.from}% → ${done.movedTo}%` : undefined}
+        figureText={drop > 0 ? `${done.from}% → ${done.movedTo}%` : undefined}
         headline={drop > 0 ? 'The prediction was high' : 'Recorded'}
         body={
           drop > 0
             ? 'That gap is the useful part. You did the avoided thing and the thing you were braced for did not arrive at the size you expected. One of these does not settle it. A run of them does.'
             : 'Recorded exactly as it happened. Experiments that do not go the predicted way are still evidence, and they are the ones worth keeping.'
         }
-        art="day"
         onDone={onDone}
       />
     );
@@ -549,9 +435,9 @@ function Experiment({ onDone }: { onDone: () => void }) {
   };
 
   return (
-    <Screen>
+    <Ground>
       <View style={{ marginTop: space.xl }}>
-        <Steps n={fields.length} i={i} />
+        <Steps total={fields.length} current={i} />
         <Caption>
           {pending ? 'Recording the outcome' : 'Setting it up'} · {i + 1} of {fields.length}
         </Caption>
@@ -587,16 +473,14 @@ function Experiment({ onDone }: { onDone: () => void }) {
             />
           ) : (
             <>
-              <Scale
+              <LevelBar
                 value={typeof val === 'number' ? Math.round(val / 10) : null}
                 onChange={(n) => setVals({ ...vals, [field.key]: n * 10 })}
-                min={0}
-                max={10}
-                lowLabel="0%"
-                highLabel="100%"
+                lowLabel="No chance"
+                highLabel="Certain"
               />
               <Caption style={{ marginTop: space.sm }}>
-                {typeof val === 'number' ? `${val}%` : 'Tap a number'}
+                {typeof val === 'number' ? `${val}% likely` : 'Tap the bar'}
               </Caption>
             </>
           )}
@@ -623,7 +507,7 @@ function Experiment({ onDone }: { onDone: () => void }) {
           />
         </View>
       </View>
-    </Screen>
+    </Ground>
   );
 }
 

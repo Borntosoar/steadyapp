@@ -2,9 +2,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Pressable, StyleSheet, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
-  Screen, Card, Button, H1, H2, H3, Body, BodySm, Caption, Chip, Row, Rule, Scale, useTheme,
+  Card, Button, H1, H2, H3, Body, BodySm, Caption, Chip, Row, Rule, useTheme,
 } from '../components/ui';
 import { MirrorSurface, type MirrorMode } from '../components/MirrorSurface';
+import { Frost, Ground, FaceScale, TopBar } from '../components/frost';
+import { Finish } from '../components/Finish';
 import { space, radius, type as t } from '../constants/theme';
 import { useStore } from '../store/useStore';
 import { mirrorSpecForWeek, MIRROR_UNLOCK_WEEK } from '../lib/protocol';
@@ -12,7 +14,7 @@ import {
   MIRROR_RULES, DISTANCE_RATIONALE, NEUTRAL_SWAPS, promptsForPhase, CONDITION_SUGGESTIONS,
 } from '../constants/mirrorPrompts';
 
-type Stage = 'intro' | 'condition' | 'before' | 'session' | 'after';
+type Stage = 'intro' | 'condition' | 'before' | 'session' | 'after' | 'finished';
 
 /** One prompt every 25 seconds — inside the 20–30s band, and a clean divisor of the
  *  90s / 180s / 300s / 480s durations. */
@@ -54,7 +56,7 @@ export default function Mirror() {
 
   if (!spec) {
     return (
-      <Screen>
+      <Ground>
         <View style={{ marginTop: space.xxxl }}>
           <H1>Not yet</H1>
           <Card tone="accent" style={{ marginTop: space.lg }}>
@@ -69,7 +71,7 @@ export default function Mirror() {
           </Card>
           <Button label="Back" variant="secondary" onPress={() => router.back()} />
         </View>
-      </Screen>
+      </Ground>
     );
   }
 
@@ -82,7 +84,7 @@ export default function Mirror() {
       .map((s) => s.sudsBefore - s.sudsAfter);
 
     return (
-      <Screen>
+      <Ground>
         <View style={{ marginTop: space.xxl }}>
           <Row>
             <View style={{ flex: 1 }}>
@@ -168,7 +170,7 @@ export default function Mirror() {
             <Button label="Back" variant="ghost" onPress={() => router.back()} style={{ marginTop: space.xs }} />
           </View>
         </View>
-      </Screen>
+      </Ground>
     );
   }
 
@@ -177,7 +179,7 @@ export default function Mirror() {
   if (stage === 'condition') {
     const options = [...new Set([...avoidedConditions, ...CONDITION_SUGGESTIONS])];
     return (
-      <Screen>
+      <Ground>
         <View style={{ marginTop: space.xxl }}>
           <H1>Add one condition</H1>
           <Body style={{ marginTop: space.sm, color: c.inkSoft }}>
@@ -217,7 +219,7 @@ export default function Mirror() {
           <Button label="Continue" disabled={!condition} onPress={() => setStage('before')} />
           <Button label="Back" variant="ghost" onPress={() => setStage('intro')} style={{ marginTop: space.sm }} />
         </View>
-      </Screen>
+      </Ground>
     );
   }
 
@@ -225,14 +227,14 @@ export default function Mirror() {
 
   if (stage === 'before') {
     return (
-      <Screen>
+      <Ground>
         <View style={{ marginTop: space.xxl }}>
           <H1>Before you start</H1>
           <Body style={{ marginTop: space.sm, color: c.inkSoft }}>
             How much distress are you carrying right now? This is the number the session moves.
           </Body>
           <View style={{ marginTop: space.xl }}>
-            <Scale value={before} onChange={setBefore} lowLabel="None" highLabel="The worst it gets" />
+            <FaceScale value={before} onChange={setBefore} />
           </View>
           <Button
             label="Start"
@@ -244,7 +246,7 @@ export default function Mirror() {
           />
           <Button label="Back" variant="ghost" onPress={() => setStage('intro')} style={{ marginTop: space.sm }} />
         </View>
-      </Screen>
+      </Ground>
     );
   }
 
@@ -258,7 +260,7 @@ export default function Mirror() {
     const ss = String(remaining % 60).padStart(2, '0');
 
     return (
-      <Screen scroll={false}>
+      <Ground>
         <View style={{ paddingTop: space.xxl }}>
           <Row>
             <Caption>{condition ? condition : spec.distance}</Caption>
@@ -290,7 +292,32 @@ export default function Mirror() {
             style={{ marginTop: space.md }}
           />
         </View>
-      </Screen>
+      </Ground>
+    );
+  }
+
+  /* ---------- finished ----------
+   *
+   * This used to be `router.replace('/')` — the app would drop you back on the home screen
+   * with no acknowledgement at all, straight after the single hardest thing it asks anyone
+   * to do. */
+
+  if (stage === 'finished') {
+    const moved = before !== null && after !== null ? before - after : null;
+    const sessionCount = sessions.length;
+    return (
+      <Finish
+        eyebrow="You stayed and looked"
+        figure={sessionCount}
+        figureUnit={sessionCount === 1 ? 'session' : 'sessions'}
+        headline={sessionCount === 1 ? 'That was the first one' : 'That is another one done'}
+        body={
+          moved !== null && moved > 0
+            ? `Distress fell ${moved} ${moved === 1 ? 'point' : 'points'} while you stayed. That is what getting used to something looks like.`
+            : 'It did not fall this time. Single sessions vary a lot. The change shows up across a run of them, not in any one.'
+        }
+        onDone={() => router.replace('/')}
+      />
     );
   }
 
@@ -300,11 +327,11 @@ export default function Mirror() {
   const drop = before !== null && after !== null ? before - after : null;
 
   return (
-    <Screen>
+    <Ground>
       <View style={{ marginTop: space.xxl }}>
         <H1>Where is it now?</H1>
         <Card style={{ marginTop: space.lg }}>
-          <Scale value={after} onChange={setAfter} lowLabel="None" highLabel="The worst it gets" />
+          <FaceScale value={after} onChange={setAfter} />
         </Card>
 
         {drop !== null && (
@@ -345,11 +372,11 @@ export default function Mirror() {
               completed,
               ...(condition ? { condition } : {}),
             });
-            router.replace('/');
+            setStage('finished');
           }}
         />
       </View>
-    </Screen>
+    </Ground>
   );
 }
 

@@ -12,7 +12,9 @@ import { moduleBySlug, MODULES, CONTENT_DISCLAIMER } from '../../content/modules
 import { useStore } from '../../store/useStore';
 import { useEntitlement } from '../../hooks/useEntitlement';
 
-const PHASE_ART: Record<number, AtmosphereKey> = { 1: 'night', 2: 'dawn', 3: 'day', 4: 'dusk' };
+/* Deep ramps only. The module title is set in white directly on the artwork, so a pale
+   ramp here is a contrast failure rather than a mood choice. */
+const PHASE_ART: Record<number, AtmosphereKey> = { 1: 'night', 2: 'grove', 3: 'emberDeep', 4: 'night' };
 
 export default function LearnModuleScreen() {
   const c = useTheme();

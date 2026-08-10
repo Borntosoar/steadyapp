@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Pressable, Text, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useTheme } from '../../components/ui';
 import { space, type as t, TAB_BAR_HEIGHT, LAYOUT_MAX_WIDTH } from '../../constants/theme';
@@ -64,16 +65,20 @@ function TabBar({ state, navigation }: any) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View
+    /* Frosted rather than a solid slab. On a translucent app a solid bar at the bottom
+       reads as a different piece of software bolted to the screen. */
+    <BlurView
+      intensity={64}
+      tint={c.isDark ? 'dark' : 'light'}
       style={{
         position: 'absolute',
         left: 0,
         right: 0,
         bottom: 0,
         paddingBottom: insets.bottom,
-        backgroundColor: c.bgDeep,
+        backgroundColor: c.surface,
         borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: c.line,
+        borderTopColor: c.lineStrong,
       }}
     >
       <View
@@ -111,7 +116,7 @@ function TabBar({ state, navigation }: any) {
           );
         })}
       </View>
-    </View>
+    </BlurView>
   );
 }
 

@@ -3,11 +3,12 @@ import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Button, Field, H1, H2, H3, Body, BodySm, Caption, Label, Options, Scale, Rule, useTheme,
+  Button, Field, H1, H2, H3, Body, BodySm, Caption, Label, Options, Rule, useTheme,
 } from '../../components/ui';
+import { FaceScale, LevelBar } from '../../components/frost';
 import { Atmosphere } from '../../components/Atmosphere';
 import {
-  space, radius, type as t, LAYOUT_MAX_WIDTH, atmosphereForHour,
+  space, radius, type as t, LAYOUT_MAX_WIDTH,
 } from '../../constants/theme';
 import { useStore } from '../../store/useStore';
 import {
@@ -111,7 +112,7 @@ export default function Onboarding() {
           showsVerticalScrollIndicator={false}
         >
           <View style={{ width: '100%', maxWidth: LAYOUT_MAX_WIDTH, flex: 1 }}>
-            <Atmosphere variant={atmosphereForHour()} rounded="none" style={{ flex: 1, minHeight: 520 }}>
+            <Atmosphere variant="grove" rounded="none" style={{ flex: 1, minHeight: 520 }}>
               <View
                 style={{
                   flex: 1,
@@ -258,7 +259,7 @@ export default function Onboarding() {
       <Caption style={{ marginTop: 2, marginBottom: space.md }}>
         Mirrors, reflections, the front camera, asking someone. How strong, typically?
       </Caption>
-      <Scale value={urge} onChange={setUrge} lowLabel="None" highLabel="Constant" />
+      <LevelBar value={urge} onChange={setUrge} lowLabel="None" highLabel="Could not stop" />
 
       <H3 style={{ marginTop: space.xxl }}>Did it stop you doing something?</H3>
       <Caption style={{ marginTop: 2, marginBottom: space.md }}>
@@ -275,7 +276,7 @@ export default function Onboarding() {
       <Caption style={{ marginTop: 2, marginBottom: space.md }}>
         How much it has been hurting, in general. Not how you looked.
       </Caption>
-      <Scale value={suds} onChange={setSuds} lowLabel="None" highLabel="The worst it gets" />
+      <FaceScale value={suds} onChange={setSuds} />
     </View>,
 
     null, // the mirror, handled above

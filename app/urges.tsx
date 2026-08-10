@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Text, Pressable } from 'react-native';
+import { View, StyleSheet, Text, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  Screen, Button, Field, H1, H2, H3, Body, BodySm, Caption, Scale, Row, Rule, useTheme,
+  Button, Field, H1, H2, H3, Body, BodySm, Caption, Row, useTheme,
 } from '../components/ui';
+import { Frost, LevelBar, TopBar, Ground } from '../components/frost';
+import { Finish } from '../components/Finish';
 import { Atmosphere } from '../components/Atmosphere';
 import { QuietCircle } from '../components/BreathCircle';
 import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../constants/theme';
 import { useStore } from '../store/useStore';
 import { URGE_SURF } from '../content/exercises.ts';
 import { urgesResistedLabel } from '../content/copy.ts';
+import { formatLogDate } from '../lib/dates';
 
-type Stage = 'home' | 'before' | 'surfing' | 'after';
+type Stage = 'home' | 'before' | 'surfing' | 'after' | 'finished';
 
 export default function Urges() {
   const c = useTheme();
@@ -49,14 +52,47 @@ export default function Urges() {
       resisted: didResist,
       ...(after !== null ? { intensityAfter: after } : {}),
     });
-    setStage('home');
+    setStage('finished');
+  };
+
+  const reset = () => {
     setTrigger('');
     setWantedTo('');
     setBefore(null);
     setAfter(null);
     setElapsed(0);
     setConfirmExit(false);
+    setStage('home');
   };
+
+  /* ---------- finished ----------
+   *
+   * This screen used to not exist. You would sit through three minutes of an urge — the
+   * hardest thing this app asks of anybody — and then get dropped back on a menu with no
+   * acknowledgement at all.
+   *
+   * The figure is the RESISTED TALLY, not the drop. The drop can be zero, and this screen
+   * has to land the same either way; a number that sometimes says nothing happened is worse
+   * than no number. The tally only ever goes up, which is exactly why it is safe here. */
+
+  if (stage === 'finished') {
+    const drop = before !== null && after !== null ? before - after : null;
+    return (
+      <Finish
+        eyebrow="You did not act on it"
+        figure={resisted}
+        figureUnit={resisted === 1 ? 'time' : 'times'}
+        headline={resisted === 1 ? 'That is one' : 'You have done this ' + resisted + ' times'}
+        body={
+          drop !== null && drop > 0
+            ? `It dropped by ${drop} while you sat with it. That is the urge doing what urges do.`
+            : 'It did not fade much this time. You still did not act on it, and that is the part that counts.'
+        }
+        doneLabel="Done"
+        onDone={reset}
+      />
+    );
+  }
 
   /* ---------- home ---------- */
 
@@ -71,55 +107,57 @@ export default function Urges() {
       : null;
 
     return (
-      <Screen>
-        <View style={{ marginTop: space.xxl }}>
-          <H1>Urges</H1>
-          <BodySm style={{ marginTop: space.sm }}>
-            Three minutes with an urge, without acting on it. That is the whole exercise, and it
-            is the one that changes the most.
-          </BodySm>
+      <Ground>
+        <TopBar onBack={() => router.back()} />
 
-          {/* The most motivating object in the app: a tally of times you did the hard
-              thing. Unlike a symptom score it only ever goes up. */}
-          <View style={{ marginTop: space.xl, marginBottom: space.xl }}>
-            <Rule />
-            <Row style={{ paddingVertical: space.lg, alignItems: 'flex-end' }}>
+        <H1 style={{ marginTop: space.lg }}>Urges</H1>
+        <BodySm style={{ marginTop: space.sm }}>
+          Three minutes with an urge, without acting on it. That is the whole thing, and it is
+          the part that changes the most.
+        </BodySm>
+
+        {/* The most motivating object in the app: a tally of times you did the hard thing.
+            Unlike a symptom score, it only ever goes up. */}
+        <Frost style={{ marginTop: space.xl }}>
+          <Row style={{ alignItems: 'flex-end' }}>
+            <View style={{ flex: 1 }}>
+              <Text style={[t.hero, { color: c.cool, fontSize: 52, lineHeight: 56 }]}>{resisted}</Text>
+              <Caption style={{ marginTop: 2 }}>
+                {urgesResistedLabel(resisted).replace(`: ${resisted}`, '')}
+              </Caption>
+            </View>
+            {meanDrop !== null && (
               <View style={{ flex: 1 }}>
-                <Text style={[t.hero, { color: c.cool }]}>{resisted}</Text>
-                <Text style={[t.caption, { color: c.inkFaint, marginTop: 2 }]}>
-                  {urgesResistedLabel(resisted).replace(`: ${resisted}`, '')}
-                </Text>
+                <Text style={[t.h1, { color: c.ink }]}>−{meanDrop}</Text>
+                <Caption style={{ marginTop: 2 }}>average drop when you sit with one</Caption>
               </View>
-              {meanDrop !== null && (
-                <View style={{ flex: 1 }}>
-                  <Text style={[t.h1, { color: c.ink }]}>−{meanDrop}</Text>
-                  <Text style={[t.caption, { color: c.inkFaint, marginTop: 2 }]}>
-                    average drop when you sit with one
-                  </Text>
-                </View>
-              )}
-            </Row>
-            <Rule />
-          </View>
+            )}
+          </Row>
+        </Frost>
 
-          <Button label="I'm having an urge" onPress={() => setStage('before')} />
+        <Button
+          label="I'm having an urge"
+          onPress={() => setStage('before')}
+          style={{ marginTop: space.md }}
+        />
 
-          {recent.length > 0 && (
-            <View style={{ marginTop: space.xxl }}>
-              <Caption>Recent</Caption>
-              {recent.map((u) => (
+        {recent.length > 0 && (
+          <View style={{ marginTop: space.xxl }}>
+            <Caption>Recent</Caption>
+            <Frost style={{ marginTop: space.sm }}>
+              {recent.map((u, i) => (
                 <View
                   key={u.id}
                   style={{
-                    borderBottomWidth: StyleSheet.hairlineWidth,
-                    borderBottomColor: c.line,
+                    borderTopWidth: i === 0 ? 0 : StyleSheet.hairlineWidth,
+                    borderTopColor: c.line,
                     paddingVertical: space.md,
                   }}
                 >
                   <Row>
                     <View style={{ flex: 1 }}>
                       <BodySm style={{ color: c.ink }}>{u.trigger}</BodySm>
-                      <Caption>{u.date}</Caption>
+                      <Caption>{formatLogDate(u.date)}</Caption>
                     </View>
                     <Caption>
                       {u.intensityBefore}
@@ -131,17 +169,10 @@ export default function Urges() {
                   </Row>
                 </View>
               ))}
-            </View>
-          )}
-
-          <Button
-            label="Back"
-            variant="ghost"
-            onPress={() => router.back()}
-            style={{ marginTop: space.xl, alignSelf: 'flex-start' }}
-          />
-        </View>
-      </Screen>
+            </Frost>
+          </View>
+        )}
+      </Ground>
     );
   }
 
@@ -149,50 +180,46 @@ export default function Urges() {
 
   if (stage === 'before') {
     return (
-      <Screen>
-        <View style={{ marginTop: space.xxl }}>
-          <H1>Before you start</H1>
-          <Body style={{ marginTop: space.md, marginBottom: space.xxl, color: c.inkSoft }}>
-            {URGE_SURF.entry}
-          </Body>
+      <Ground>
+        <TopBar onBack={() => setStage('home')} />
 
+        <H1 style={{ marginTop: space.lg }}>Before you start</H1>
+        <Body style={{ marginTop: space.md, marginBottom: space.xl, color: c.inkSoft }}>
+          {URGE_SURF.entry}
+        </Body>
+
+        <Frost>
           <Field
             label="What set it off?"
             value={trigger}
             onChangeText={setTrigger}
-            placeholder="A mirror, a photo, a comment, nothing in particular"
+            placeholder="A mirror, a photo, a comment, nothing"
           />
 
           <Field
             label="What do you want to do?"
             value={wantedTo}
             onChangeText={setWantedTo}
-            placeholder="Check, ask someone, retake a photo, cancel something"
+            placeholder="Check, ask someone, retake a photo, cancel"
           />
 
-          <H3>How strong is it now?</H3>
+          <H3>How strong is it right now?</H3>
           <View style={{ marginTop: space.md }}>
-            <Scale value={before} onChange={setBefore} lowLabel="Barely there" highLabel="Overwhelming" />
+            <LevelBar value={before} onChange={setBefore} lowLabel="Barely there" highLabel="Very strong" />
           </View>
+        </Frost>
 
-          <View style={{ marginTop: space.xxl }}>
-            <Button
-              label="Start the three minutes"
-              disabled={before === null}
-              onPress={() => {
-                setElapsed(0);
-                setStage('surfing');
-              }}
-            />
-            <Button
-              label="Cancel"
-              variant="ghost"
-              onPress={() => setStage('home')}
-              style={{ marginTop: space.xs }}
-            />
-          </View>
+        <View style={{ marginTop: space.xl }}>
+          <Button
+            label="Start the three minutes"
+            disabled={before === null}
+            onPress={() => {
+              setElapsed(0);
+              setStage('surfing');
+            }}
+          />
         </View>
-      </Screen>
+      </Ground>
     );
   }
 
@@ -209,7 +236,7 @@ export default function Urges() {
        every element still visible is one more thing to look at instead of the urge. */
     return (
       <View style={{ flex: 1, backgroundColor: c.bgDeep }}>
-        <Atmosphere variant="ember" lightX={0.5} rounded="none" scrim={false} style={{ flex: 1 }}>
+        <Atmosphere variant="emberDeep" lightX={0.5} rounded="none" scrim style={{ flex: 1 }}>
           <View
             style={{
               flex: 1,
@@ -265,12 +292,7 @@ export default function Urges() {
                 </View>
 
                 <View style={{ minHeight: 120, justifyContent: 'flex-start' }}>
-                  <Text
-                    style={[
-                      t.h2,
-                      { color: '#fff', textAlign: 'center', lineHeight: 31 },
-                    ]}
-                  >
+                  <Text style={[t.h2, { color: '#fff', textAlign: 'center', lineHeight: 31 }]}>
                     {cue?.text}
                   </Text>
                 </View>
@@ -296,44 +318,28 @@ export default function Urges() {
   /* ---------- after ---------- */
 
   const stayed = elapsed >= URGE_SURF.totalSeconds;
-  const drop = before !== null && after !== null ? before - after : null;
 
   return (
-    <Screen>
-      <View style={{ marginTop: space.xxl }}>
-        <H1>Where is it now?</H1>
-        <BodySm style={{ marginTop: space.sm, marginBottom: space.xl }}>
-          Same scale as before. Whatever it says is the useful answer.
-        </BodySm>
+    <Ground>
+      <TopBar onBack={() => setStage('surfing')} />
 
-        <Scale value={after} onChange={setAfter} lowLabel="Gone" highLabel="Overwhelming" />
+      <H1 style={{ marginTop: space.lg }}>Where is it now?</H1>
+      <BodySm style={{ marginTop: space.sm, marginBottom: space.xl }}>
+        Same scale as before. Whatever it says is the useful answer.
+      </BodySm>
 
-        {drop !== null && drop > 0 && (
-          <View style={{ marginTop: space.xxl }}>
-            <Rule />
-            <Text style={[t.display, { color: c.cool, marginTop: space.lg }]}>−{drop}</Text>
-            <Body style={{ marginTop: space.sm }}>{URGE_SURF.complete}</Body>
-          </View>
+      <Frost>
+        <LevelBar value={after} onChange={setAfter} lowLabel="Gone" highLabel="Very strong" />
+      </Frost>
+
+      <View style={{ marginTop: space.xl }}>
+        <Button label="Log it" disabled={after === null} onPress={() => save(true)} />
+        {!stayed && (
+          <Caption style={{ marginTop: space.md, textAlign: 'center' }}>
+            You left before the timer ended. It still counts — you did not act on it.
+          </Caption>
         )}
-        {drop !== null && drop <= 0 && (
-          <View style={{ marginTop: space.xxl }}>
-            <Rule />
-            <Body style={{ marginTop: space.lg }}>
-              It held steady this time, and you still did not act on it. That is the part that
-              counts — the drop shows up across repetitions rather than every single time.
-            </Body>
-          </View>
-        )}
-
-        <View style={{ marginTop: space.xxl }}>
-          <Button label="Log it" disabled={after === null} onPress={() => save(true)} />
-          {!stayed && (
-            <Caption style={{ marginTop: space.md, textAlign: 'center' }}>
-              You left before the timer ended. It still counts as resisted — you did not act on it.
-            </Caption>
-          )}
-        </View>
       </View>
-    </Screen>
+    </Ground>
   );
 }
