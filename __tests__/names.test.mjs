@@ -121,6 +121,24 @@ describe('the names themselves are usable', () => {
   });
 });
 
+describe('the teaching modules do not refer to themselves by number', () => {
+  test('no module cross-references another by "Module N" or "Phase N"', async () => {
+    /* "From Module 10" and "you'll need it in Phase 4" are the app's filing system, not
+       anything a reader recognises — and both silently become wrong the moment a module is
+       renumbered or reordered, which is a thing that happens. Refer to a week, or to what
+       the piece was about. */
+    const modules = await import('../content/modules.ts');
+    for (const m of modules.MODULES) {
+      const text = [...m.body, m.takeaway, m.title].join(' ');
+      assert.doesNotMatch(
+        text,
+        /\b(module|phase)\s+\d/i,
+        `"${m.title}" refers to another piece by number. Name the week or the idea instead.`
+      );
+    }
+  });
+});
+
 describe('every number on screen can be explained', () => {
   test('each explanation answers a question, in full sentences', () => {
     for (const [key, e] of Object.entries(names.EXPLAIN)) {
