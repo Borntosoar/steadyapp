@@ -95,7 +95,10 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'the-feed-is-not-a-sample-of-reality',
-    title: 'Your feed is not real life',
+    /* Was "Your feed is not real life" — the single most over-used sentence in this
+       category, and generic the moment somebody screenshots it. The module's actual insight
+       is sharper and is already in its own body text. */
+    title: 'You vs. their best two seconds',
     phase: 2,
     week: 4,
     minutes: 4,
@@ -142,7 +145,10 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'what-exposure-actually-does',
-    title: 'What facing it actually does',
+    /* "Facing it" is a pronoun standing on its own; outside the list it does not say what
+       "it" is. This is the module's own closing line, and it is the sentence somebody
+       halfway through a hard exposure actually needs. */
+    title: 'Worse before better',
     phase: 2,
     week: 6,
     minutes: 4,
@@ -188,7 +194,9 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'the-hours-question',
-    title: 'The hours question',
+    /* Did not say what the question was. The real point — reclaimed time refills with the
+       old worry unless something is deliberately put in it — is more useful stated flat. */
+    title: 'Free time does not stay free',
     phase: 3,
     week: 8,
     minutes: 4,
@@ -234,7 +242,10 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'setbacks-are-data',
-    title: 'A bad week is information',
+    /* "X is information" is a wellness cliché, and it still leads with the negative word.
+       The real content is a distinction most readers do not know exists, and it is the exact
+       sentence that intercepts "I have ruined everything". */
+    title: 'A lapse is not a relapse',
     phase: 4,
     week: 10,
     minutes: 4,
@@ -260,7 +271,9 @@ export const MODULES: LearnModule[] = [
 
   {
     slug: 'your-own-plan',
-    title: 'Your own plan',
+    /* Could have been a module in any app about anything. The module ends on its own
+       metaphor, which is specific to what this is: a plan for a day you hope never comes. */
+    title: 'Your fire exit',
     phase: 4,
     week: 11,
     minutes: 5,

@@ -247,6 +247,25 @@ describe('the money never touches the safety surfaces', () => {
     assert.match(pay.src, /remind you/i, 'the paywall does not promise a trial reminder');
   });
 
+  test('the paywall shows the user their own number, not only a citation', () => {
+    /* The headline has always been "You have seen your number." For a long time the screen
+       then did not show it, and put a meta-analysis effect size in its place. That is the
+       whole proposition of the product given away at the moment of the ask: somebody buys
+       because their own hours moved, not because of somebody else's trial. */
+    const pay = FILES.find((f) => f.path === 'app/paywall.tsx');
+    assert.match(pay.src, /computeReclaimed/, 'the paywall does not read the user\'s own figure');
+    assert.match(pay.src, /reclaimed\.hours/, 'the paywall does not render the user\'s own figure');
+  });
+
+  test('the paywall answers the privacy question, not only the efficacy one', () => {
+    /* Privacy is the second-biggest objection in this category, and a person deciding
+       whether to pay is deciding in the same moment whether to hand a body-image app twelve
+       weeks of their most private writing. It was answered in onboarding and in the store
+       listing, and nowhere on the screen asking for a card. */
+    const pay = FILES.find((f) => f.path === 'app/paywall.tsx');
+    assert.match(pay.src, /nothing leaves this phone/i, 'the paywall makes no privacy promise');
+  });
+
   test('the paywall dismiss says what it does, and does not shame', () => {
     const pay = FILES.find((f) => f.path === 'app/paywall.tsx');
     assert.match(pay.src, /accessibilityLabel="Close"/, 'no plainly labelled dismiss');

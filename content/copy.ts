@@ -88,7 +88,7 @@ export const insightsSummary = (v: {
 export const PAYWALL_COPY = {
   headline: 'You have seen your number.',
   sub: 'Weeks 2 to 12 are how you change it.',
-  freeLine: 'Grounding, check-ins and support stay free, always.',
+  freeLine: 'Calming down, check-ins and support stay free, always.',
   /* Said out loud rather than left to be discovered. Removing time pressure converts a
      little worse on the day and a lot better over a year, and in this category it is the
      difference between a brand people recommend and one they warn each other about. */

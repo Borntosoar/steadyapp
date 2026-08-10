@@ -97,8 +97,13 @@ describe('specific promises the copy makes', () => {
   });
 
   test('the paywall promises the free tier explicitly', () => {
+    /* Assert the promise, not the vocabulary. Pinning the word "grounding" made a rename
+       that the whole app agreed on look like a safety regression — the guarantee is that
+       the calming exercises, the check-in and crisis support are named as free, whatever
+       this release happens to call them. */
     assert.match(copy.PAYWALL_COPY.freeLine, /free, always/i);
-    assert.match(copy.PAYWALL_COPY.freeLine, /grounding/i);
+    assert.match(copy.PAYWALL_COPY.freeLine, /grounding|calm/i);
+    assert.match(copy.PAYWALL_COPY.freeLine, /check-in/i);
     assert.match(copy.PAYWALL_COPY.freeLine, /support/i);
   });
 

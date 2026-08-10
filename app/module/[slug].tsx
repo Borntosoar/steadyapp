@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ScrollView, Text, Pressable } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,9 +27,21 @@ export default function LearnModuleScreen() {
   const mod = moduleBySlug(String(slug));
   const locked = mod ? !mod.free && !entitled : false;
 
+  /* "Read" used to mean "opened".
+   *
+   * markModuleRead fired on mount, so the counter on the Learn tab incremented before a
+   * single word had been read, and the only engagement signal in the app was measuring
+   * taps. That matters beyond tidiness: read count feeds the recommended action on Today,
+   * so opening a module by accident could change what the app told you to do next.
+   *
+   * It now fires when the bottom of the piece comes into view. Not a scroll percentage —
+   * somebody who skims to the end has still reached the end, and a percentage would punish
+   * a fast reader while rewarding anybody who flicked past the middle. */
+  const [reachedEnd, setReachedEnd] = useState(false);
+
   useEffect(() => {
-    if (mod && !locked) markModuleRead(mod.slug);
-  }, [mod, locked, markModuleRead]);
+    if (mod && !locked && reachedEnd) markModuleRead(mod.slug);
+  }, [mod, locked, reachedEnd, markModuleRead]);
 
   if (!mod) {
     return (
@@ -75,6 +87,15 @@ export default function LearnModuleScreen() {
       style={{ flex: 1, backgroundColor: c.bg }}
       contentContainerStyle={{ paddingBottom: insets.bottom + space.xxxl, alignItems: 'center' }}
       showsVerticalScrollIndicator={false}
+      scrollEventThrottle={200}
+      onScroll={({ nativeEvent: n }) => {
+        /* Within one screen-height of the bottom counts as reaching the end. A stricter
+           test fails anybody whose device leaves the last paragraph under a home indicator,
+           and a looser one marks short modules read on open. */
+        const remaining =
+          n.contentSize.height - n.layoutMeasurement.height - n.contentOffset.y;
+        if (remaining < n.layoutMeasurement.height) setReachedEnd(true);
+      }}
     >
       <View style={{ width: '100%', maxWidth: LAYOUT_MAX_WIDTH }}>
         {/* Title sits on the artwork rather than above it, so the module opens like a

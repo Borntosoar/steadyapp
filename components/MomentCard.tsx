@@ -5,6 +5,7 @@ import { H2, BodySm, Caption, useTheme } from './ui';
 import { space, radius, type as t } from '../constants/theme';
 import { useStore } from '../store/useStore';
 import { MOMENT_COPY } from '../content/copy.ts';
+import { computeReclaimed, checkInsInLastDays, previousWeekCheckIns } from '../lib/reclaimed';
 import type { Moment } from '../lib/moments';
 
 /* The one place an unprompted message renders.
@@ -42,6 +43,23 @@ export function MomentCard({ moment }: { moment: Moment }) {
 
   const commercial = moment.kind === 'commercial';
 
+  /* The one commercial moment leads into the paywall, and like the paywall it used to make
+     its case without showing the figure the case rests on. The number goes on the card, in
+     the user's own data, ahead of any mention of what weeks two to twelve contain. */
+  const baseline = useStore((s) => s.baseline);
+  const checkIns = useStore((s) => s.checkIns);
+  const reclaimed = computeReclaimed(
+    baseline,
+    checkInsInLastDays(checkIns, 7),
+    7,
+    previousWeekCheckIns(checkIns)
+  );
+  const showFigure =
+    moment.id === 'week-one-ask' &&
+    reclaimed.hasData &&
+    reclaimed.sampleSize >= 3 &&
+    reclaimed.hours > 0;
+
   return (
     <View
       style={{
@@ -53,7 +71,16 @@ export function MomentCard({ moment }: { moment: Moment }) {
       }}
     >
       <Caption style={{ color: commercial ? c.accentDeep : c.inkFaint }}>{copy.eyebrow}</Caption>
-      <H2 style={{ marginTop: space.xs }}>{copy.title}</H2>
+      {showFigure ? (
+        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: space.sm, marginTop: space.xs }}>
+          <Text style={[t.hero, { color: c.ink, fontSize: 44, lineHeight: 48 }]}>
+            {Math.abs(reclaimed.hours)}
+          </Text>
+          <Text style={[t.h2, { color: c.inkSoft }]}>hours back</Text>
+        </View>
+      ) : (
+        <H2 style={{ marginTop: space.xs }}>{copy.title}</H2>
+      )}
       <BodySm style={{ marginTop: space.sm, color: c.ink }}>{copy.body}</BodySm>
 
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xl, marginTop: space.lg }}>

@@ -12,6 +12,8 @@ import { PRICING, TIER_COMPARISON, trialEndDate, type Plan } from '../lib/entitl
 import { useEntitlement } from '../hooks/useEntitlement';
 import { PAYWALL_COPY } from '../content/copy.ts';
 import { PROOF_POINTS, PROOF_QUALIFIER } from '../content/proof';
+import { useStore } from '../store/useStore';
+import { computeReclaimed, checkInsInLastDays, previousWeekCheckIns } from '../lib/reclaimed';
 
 /* No countdown. No fake scarcity. No "limited spots". No disguised dismiss.
  *
@@ -28,6 +30,24 @@ export default function Paywall() {
   const [plan, setPlan] = useState<Plan>('yearly');
   const [hardship, setHardship] = useState(false);
   const [showLifetime, setShowLifetime] = useState(false);
+
+  /* The user's own number, on the screen that asks for money.
+   *
+   * The headline has always said "You have seen your number" and then not shown it. The
+   * evidence block underneath showed somebody else's numbers instead — a meta-analysis
+   * effect size, which is true and is not the reason anybody buys anything. The whole
+   * proposition of this product is that the person can see their own hours moving; putting
+   * the ask beside a citation instead of beside that figure gives away the only argument
+   * it has. */
+  const baseline = useStore((s) => s.baseline);
+  const checkIns = useStore((s) => s.checkIns);
+  const reclaimed = computeReclaimed(
+    baseline,
+    checkInsInLastDays(checkIns, 7),
+    7,
+    previousWeekCheckIns(checkIns)
+  );
+  const hasNumber = reclaimed.hasData && reclaimed.sampleSize >= 3 && reclaimed.hours > 0;
 
   const dismiss = () => {
     if (router.canGoBack()) router.back();
@@ -107,10 +127,29 @@ export default function Paywall() {
               <View style={{ flex: 1 }} />
             </Row>
 
-            <Text style={[t.display, { color: '#fff', marginTop: space.xl }]}>{PAYWALL_COPY.headline}</Text>
-            <Text style={[t.body, { color: 'rgba(255,255,255,0.82)', marginTop: space.md }]}>
-              {PAYWALL_COPY.sub}
-            </Text>
+            {hasNumber ? (
+              <>
+                <Text style={[t.caption, { color: 'rgba(255,255,255,0.72)', marginTop: space.xl }]}>
+                  What you got back this week
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: space.sm }}>
+                  <Text style={[t.hero, { color: '#fff' }]}>{Math.abs(reclaimed.hours)}</Text>
+                  <Text style={[t.h2, { color: 'rgba(255,255,255,0.7)' }]}>hours</Text>
+                </View>
+                <Text style={[t.body, { color: 'rgba(255,255,255,0.86)', marginTop: space.sm }]}>
+                  {PAYWALL_COPY.sub}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={[t.display, { color: '#fff', marginTop: space.xl }]}>
+                  {PAYWALL_COPY.headline}
+                </Text>
+                <Text style={[t.body, { color: 'rgba(255,255,255,0.82)', marginTop: space.md }]}>
+                  {PAYWALL_COPY.sub}
+                </Text>
+              </>
+            )}
             <Text style={[t.bodySm, { color: 'rgba(255,255,255,0.72)', marginTop: space.md }]}>
               {PAYWALL_COPY.freeLine}
             </Text>
@@ -124,7 +163,7 @@ export default function Paywall() {
               any. See .claude/skills/value-first-growth. */}
           <Rule />
           <H2 style={{ marginTop: space.lg }}>Why these twelve weeks</H2>
-          {PROOF_POINTS.slice(0, 2).map((p) => (
+          {[PROOF_POINTS[0], PROOF_POINTS[2]].map((p) => (
             <View key={p.stat} style={{ marginTop: space.lg }}>
               <Text style={[t.h1, { color: c.accentDeep }]}>{p.stat}</Text>
               <BodySm style={{ marginTop: space.xs, color: c.ink }}>{p.claim}</BodySm>
@@ -132,6 +171,24 @@ export default function Paywall() {
             </View>
           ))}
           <Caption style={{ marginTop: space.lg }}>{PROOF_QUALIFIER}</Caption>
+
+          {/* Privacy belongs on the screen asking for a card, not only in onboarding.
+              Somebody deciding whether to pay is deciding, in the same moment, whether to
+              hand a body-image app twelve weeks of their most private writing. That second
+              question was answered everywhere except here. */}
+          <View
+            style={{
+              marginTop: space.lg,
+              padding: space.lg,
+              borderRadius: radius.card,
+              backgroundColor: c.coolDim,
+            }}
+          >
+            <BodySm style={{ color: c.ink }}>
+              No account, and nothing leaves this phone. Everything you write stays on the
+              device, paid or not. There is no server holding any of it.
+            </BodySm>
+          </View>
 
           {/* A free-vs-paid comparison is one of the most consistent additions across
               high-performing paywalls, because a large share of people standing at one
