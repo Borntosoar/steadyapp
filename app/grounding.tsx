@@ -15,6 +15,7 @@ import {
   space, type as t, LAYOUT_MAX_WIDTH, atmosphereForScheme, type AtmosphereKey,
 } from '../constants/theme';
 import { useStore } from '../store/useStore';
+import { setQuietZone } from '../hooks/haptics';
 import { SENSES_STEPS, BREATH, WIDENING, VALUES_ANCHOR, HARD_DAY } from '../content/exercises.ts';
 
 /* Free forever, two taps from anywhere, and never gated. See lib/entitlement.ts. */
@@ -85,6 +86,15 @@ export default function Grounding() {
   const router = useRouter();
   const params = useLocalSearchParams<{ mode?: string }>();
   const logPractice = useStore((s) => s.logPractice);
+
+  /* Nothing taps at anybody on this screen. The whole point of the calm-down path and the
+     hard-day path is that the phone stops asking for things, and a buzz is the phone asking
+     for something. Held for the entire visit, not per component, so a shared piece cannot
+     reintroduce one by accident. */
+  useEffect(() => {
+    setQuietZone(true);
+    return () => setQuietZone(false);
+  }, []);
 
   const [tool, setTool] = useState<Tool>(params.mode === 'hard' ? 'hardday' : 'menu');
   const [logged, setLogged] = useState(false);

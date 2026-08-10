@@ -13,6 +13,7 @@ import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../constants/theme';
 import { useStore } from '../store/useStore';
 import { URGE_SURF } from '../content/exercises.ts';
 import { formatLogDate } from '../lib/dates';
+import { setQuietZone } from '../hooks/haptics';
 import { NAMES, EXPLAIN } from '../content/names';
 
 type Stage = 'home' | 'before' | 'surfing' | 'after' | 'finished';
@@ -38,6 +39,14 @@ export default function Urges() {
     if (stage !== 'surfing') return;
     const id = setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => clearInterval(id);
+  }, [stage]);
+
+  /* Silent for the three minutes themselves. Somebody sitting through an urge is
+     deliberately not acting on a sensation; adding a new one is the wrong help. The finish
+     screen afterwards still taps once, because by then they have done the thing. */
+  useEffect(() => {
+    setQuietZone(stage === 'surfing');
+    return () => setQuietZone(false);
   }, [stage]);
 
   useEffect(() => {

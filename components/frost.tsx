@@ -6,9 +6,10 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { useTheme } from './ui';
 import { Atmosphere } from './Atmosphere';
 import {
-  space, radius, type as t, atmosphereForScheme, LAYOUT_MAX_WIDTH, TAB_BAR_HEIGHT,
-  type AtmosphereKey,
+  space, radius, type as t, atmosphereForScheme, elevation, motion,
+  LAYOUT_MAX_WIDTH, TAB_BAR_HEIGHT, type AtmosphereKey,
 } from '../constants/theme';
+import { haptic } from '../hooks/haptics';
 
 /* The frosted-glass vocabulary.
  *
@@ -58,12 +59,28 @@ export function Frost({
     </BlurView>
   );
 
-  if (!onPress) return <View style={style}>{body}</View>;
+  /* Shadows are what make a translucent panel read as glass in front of something rather
+     than as a lighter rectangle drawn on it. Skipped on the dark palette, where a shadow
+     does nothing at all and the hairline plus the surface tint carry the depth instead. */
+  const sit = c.isDark ? null : elevation.rest;
+
+  if (!onPress) return <View style={[style, sit]}>{body}</View>;
   return (
     <Pressable
       accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [style, { opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.985 : 1 }] }]}
+      onPress={() => {
+        haptic.select();
+        onPress();
+      }}
+      /* The old press was opacity 0.85 and scale 0.985, which is invisible at 60fps. A card
+         that sinks toward the surface is legible, and it only becomes legible once there is
+         a shadow for it to sink into. */
+      style={({ pressed }) => [
+        style,
+        sit,
+        pressed && !c.isDark ? { shadowRadius: 8, shadowOffset: { width: 0, height: 2 } } : null,
+        { transform: [{ scale: pressed ? 0.97 : 1 }] },
+      ]}
     >
       {body}
     </Pressable>
@@ -197,13 +214,19 @@ export function FaceScale({
               accessibilityRole="radio"
               accessibilityState={{ selected: on }}
               accessibilityLabel={f.label}
-              onPress={() => onChange(f.v)}
+              onPress={() => {
+                haptic.select();
+                onChange(f.v);
+              }}
+              /* The deselection is what makes the selection feel like it arrived. Nothing
+                 used to recede, so nothing landed — the chosen face grew by 6% and the
+                 other four sat there at full strength. */
               style={({ pressed }) => ({
                 flex: 1,
                 alignItems: 'center',
                 gap: 6,
-                opacity: pressed ? 0.8 : 1,
-                transform: [{ scale: on ? 1.06 : 1 }],
+                opacity: pressed ? 0.8 : value === null || on ? 1 : 0.55,
+                transform: [{ scale: on ? 1.12 : value === null ? 1 : 0.92 }],
               })}
             >
               <View
@@ -276,7 +299,13 @@ export function LevelBar({
 }) {
   const c = useTheme();
   const v = value ?? 0;
-  const step = (d: number) => onChange(Math.max(0, Math.min(max, v + d)));
+  const step = (d: number) => {
+    const next = Math.max(0, Math.min(max, v + d));
+    /* Only when it actually moved. A control that taps at you while pinned at zero is a
+       control telling you off. */
+    if (next !== v) haptic.select();
+    onChange(next);
+  };
 
   return (
     <View>
@@ -301,7 +330,10 @@ export function LevelBar({
                 key={i}
                 accessibilityRole="button"
                 accessibilityLabel={`${i + 1} out of ${max}`}
-                onPress={() => onChange(i + 1)}
+                onPress={() => {
+                  if (i + 1 !== v) haptic.select();
+                  onChange(i + 1);
+                }}
                 style={{
                   flex: 1,
                   height: 46,

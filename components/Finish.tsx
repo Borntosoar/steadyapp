@@ -6,6 +6,7 @@ import { Button, useTheme } from './ui';
 import { Atmosphere } from './Atmosphere';
 import { space, type as t, LAYOUT_MAX_WIDTH, atmosphereForScheme, type AtmosphereKey } from '../constants/theme';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { haptic } from '../hooks/haptics';
 
 /* The moment the app says something back.
  *
@@ -125,6 +126,13 @@ export function Finish({
   const a = useRef(new Animated.Value(0)).current;
   const count = useRef(new Animated.Value(0)).current;
   const [shown, setShown] = useState(figure ?? 0);
+
+  /* One tap, as the mark lands. This is the single most earned moment in the app — it only
+     renders after somebody has finished something — so it gets the success pattern rather
+     than a light impact. */
+  useEffect(() => {
+    haptic.commit();
+  }, []);
 
   useEffect(() => {
     if (reduced) {

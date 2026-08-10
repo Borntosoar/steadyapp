@@ -3,6 +3,7 @@ import { View, Pressable, Text, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useTheme } from '../../components/ui';
 import { space, type as t, TAB_BAR_HEIGHT, LAYOUT_MAX_WIDTH } from '../../constants/theme';
@@ -66,7 +67,9 @@ function TabBar({ state, navigation }: any) {
 
   return (
     /* Frosted rather than a solid slab. On a translucent app a solid bar at the bottom
-       reads as a different piece of software bolted to the screen. */
+       reads as a different piece of software bolted to the screen.
+       The gradient above it is what stops content being sliced mid-word by the bar's top
+       edge — "Daily check-in" cut in half was visible on four different screens. */
     <BlurView
       intensity={64}
       tint={c.isDark ? 'dark' : 'light'}
@@ -81,6 +84,11 @@ function TabBar({ state, navigation }: any) {
         borderTopColor: c.lineStrong,
       }}
     >
+      <LinearGradient
+        pointerEvents="none"
+        colors={['rgba(0,0,0,0)', c.bg]}
+        style={{ position: 'absolute', left: 0, right: 0, top: -28, height: 28 }}
+      />
       <View
         style={{
           flexDirection: 'row',

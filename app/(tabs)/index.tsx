@@ -8,7 +8,8 @@ import { Finish } from '../../components/Finish';
 import { MomentCard } from '../../components/MomentCard';
 import { Atmosphere } from '../../components/Atmosphere';
 import {
-  space, radius, type as t, atmosphereForScheme, TAB_BAR_HEIGHT, LAYOUT_MAX_WIDTH,
+  space, radius, type as t, atmosphereForScheme, elevation,
+  TAB_BAR_HEIGHT, LAYOUT_MAX_WIDTH,
 } from '../../constants/theme';
 import { useStore } from '../../store/useStore';
 import { computeReclaimed, checkInsInLastDays, reclaimedCopy, previousWeekCheckIns } from '../../lib/reclaimed';
@@ -120,8 +121,13 @@ export default function Today() {
     );
   }
 
+  /* Once the check-in is done its tile leaves rather than sitting there saying so. A grid
+     of four where one is greyed out and labelled "Done today" is a to-do list with a
+     completed item still on it, and the week strip above already records that it happened. */
   const grid = [
-    { title: NAMES.checkin.title, sub: '30 seconds', route: '/checkin', icon: 'plus' as const, done: checkedInToday },
+    ...(checkedInToday
+      ? []
+      : [{ title: NAMES.checkin.title, sub: '30 seconds', route: '/checkin', icon: 'plus' as const }]),
     { title: NAMES.calm.title, sub: 'Free, always', route: '/grounding', icon: 'play' as const },
     { title: NAMES.urge.title, sub: '3 minutes', route: '/urges', icon: 'play' as const },
     { title: NAMES.thought.title, sub: 'About 5 minutes', route: '/journal', icon: 'plus' as const },
@@ -146,57 +152,87 @@ export default function Today() {
             {greeting}{profile.firstName ? `, ${profile.firstName}` : ''}
           </Caption>
 
-          {/* The question that fills the top of the screen. */}
-          <Text style={[t.display, { color: c.ink, marginTop: space.sm }]}>
-            {showNumber ? copy.headline : 'How is today going?'}
-          </Text>
-          <BodySm style={{ marginTop: space.sm, maxWidth: 320 }}>
-            {showNumber ? copy.sub : 'Check in and Steady starts working out how much time this is taking.'}
-          </BodySm>
-          {/* The headline figure is the whole product and it was unexplained. "Back from
-              what?" is the first question anybody has, and there was nowhere to ask it. */}
-          {showNumber && <Explain q={EXPLAIN.hours.q} a={EXPLAIN.hours.a} />}
+          {/* THE NUMBER IS THE PRODUCT, so it is the largest thing on the screen.
+              It used to be set inside a 38px sentence — "15.8 hours back this week" — which
+              wrapped on a 393pt phone and left the word "week" alone on line two. An
+              orphaned hero is the most amateur thing an app can do with type, and it was
+              happening to the one figure nobody else in this category has. */}
+          {showNumber ? (
+            <View style={{ marginTop: space.sm }}>
+              <Text style={[t.hero, { color: c.ink }]}>{Math.abs(reclaimed.hours)}</Text>
+              <Text style={[t.h2, { color: c.inkSoft, marginTop: 2 }]}>hours back this week</Text>
+              <BodySm style={{ marginTop: space.md, maxWidth: 320 }}>{copy.sub}</BodySm>
+              <Explain q={EXPLAIN.hours.q} a={EXPLAIN.hours.a} />
+            </View>
+          ) : (
+            <View style={{ marginTop: space.sm }}>
+              <Text style={[t.display, { color: c.ink }]}>How is today going?</Text>
+              <BodySm style={{ marginTop: space.md, maxWidth: 320 }}>
+                Check in and Steady starts working out how much time this is taking.
+              </BodySm>
+            </View>
+          )}
 
           {/* Your week, at a glance. The single biggest thing the old home screen lacked:
               nothing showed you your own run without opening another tab. */}
-          <Frost style={{ marginTop: space.xl }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: space.md }}>
-              <H3>This week</H3>
+          <View style={{ marginTop: space.xxl }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: space.sm }}>
+              <Caption style={{ color: c.inkSoft }}>This week</Caption>
               <Caption>
-                {streak.current > 0 ? `${streak.current} day${streak.current === 1 ? '' : 's'} in a row` : 'Week ' + week + ' of ' + WEEKS_TOTAL}
+                {streak.current > 0
+                  ? `${streak.current} day${streak.current === 1 ? '' : 's'} in a row`
+                  : `Week ${week} of ${WEEKS_TOTAL}`}
               </Caption>
             </View>
             <WeekStrip days={days} />
             <Explain q={EXPLAIN.week.q} a={EXPLAIN.week.a} />
-          </Frost>
+          </View>
 
-          {/* The one thing to do now. */}
-          <Frost style={{ marginTop: space.md }} onPress={() => router.push(action.route)}>
+          {/* The one thing to do now. Solid, not frosted, and the only object on the
+              screen carrying the deepest shadow — this is the focal point, and translucency
+              was making it recede alongside everything else. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${action.label}. ${action.why}`}
+            onPress={() => router.push(action.route)}
+            style={({ pressed }) => [
+              {
+                marginTop: space.xxl,
+                backgroundColor: c.surfaceSolid,
+                borderRadius: radius.scene,
+                padding: space.xl,
+                transform: [{ scale: pressed ? 0.97 : 1 }],
+              },
+              c.isDark ? { borderWidth: StyleSheet.hairlineWidth, borderColor: c.lineStrong } : elevation.lift,
+            ]}
+          >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.lg }}>
               <View style={{ flex: 1 }}>
                 <Caption style={{ color: c.accentDeep }}>Next up</Caption>
                 <H2 style={{ marginTop: 2 }}>{action.label}</H2>
                 <BodySm style={{ marginTop: space.xs }}>{action.why}</BodySm>
               </View>
-              <IconBadge icon="arrow" />
+              <IconBadge icon="arrow" size={56} />
             </View>
-          </Frost>
+          </Pressable>
 
           {/* Everything else, two up. */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.md }}>
             {grid.map((g) => (
               <Frost
                 key={g.title}
-                style={{ width: '48%', flexGrow: 1 }}
+                /* No flexGrow. With an odd number of tiles the last one stretched to the
+                   full width and stopped reading as part of the grid. */
+                style={{ width: '48%' }}
                 onPress={() => router.push(g.route)}
               >
                 <View style={{ minHeight: 92, justifyContent: 'space-between', gap: space.lg }}>
                   <View>
                     <H3>{g.title}</H3>
-                    <Caption style={{ marginTop: 2 }}>{g.done ? 'Done today' : g.sub}</Caption>
+                    <Caption style={{ marginTop: 2 }}>{g.sub}</Caption>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
-                    <IconBadge icon={g.done ? 'check' : g.icon} size={40} tone={g.done ? 'ghost' : 'solid'} />
+                    <IconBadge icon={g.icon} size={40} />
                   </View>
                 </View>
               </Frost>
@@ -234,7 +270,10 @@ export default function Today() {
               paddingHorizontal: space.lg,
               borderRadius: radius.card,
               borderWidth: StyleSheet.hairlineWidth,
-              borderColor: c.warn,
+              /* Was outlined in `warn`. A red box drawn around "Today is a hard day" is a
+                 warning banner wrapped around kind words, and people feel the contradiction
+                 even when they cannot name it. The dot is the only red on the screen. */
+              borderColor: c.lineStrong,
               opacity: pressed ? 0.8 : 1,
             })}
           >
