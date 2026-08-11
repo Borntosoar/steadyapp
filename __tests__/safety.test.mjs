@@ -38,6 +38,16 @@ function sourceFiles() {
   return out;
 }
 
+/** Source with comments removed, so prose cannot be mistaken for code.
+ *
+ * Not hypothetical tidying. Three separate assertions in this file have failed on English:
+ * a comment reading `tell "fresh install" from "we could not ask"` was read as importing a
+ * package called "we could not ask", and two comments explaining WHY there is no WebView
+ * were read as embedding one. A test that fails on its own explanation is a test people
+ * learn to route around, and the routing-around is what actually costs you. */
+const withoutComments = (src) =>
+  src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+
 const FILES = sourceFiles().map((f) => ({ path: f.replace(ROOT + '/', ''), src: readFileSync(f, 'utf8') }));
 
 describe('the source tree is what SAFETY.md says it is', () => {
@@ -191,23 +201,50 @@ describe('the source tree is what SAFETY.md says it is', () => {
     return spec.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0];
   };
 
+  /** The one file allowed to contain a URL.
+   *
+   *  Centralising them is what makes them auditable: every address this app can send
+   *  somebody to is in one short file that a person can read in a minute, rather than
+   *  scattered across screens where a new one arrives unnoticed. The two assertions below
+   *  are a pair — one says no other file may hold a URL, the other says this file may hold
+   *  nothing but URLs. Neither is useful alone. */
+  const URL_HOME = 'constants/links.ts';
+
   test('nothing in the source tree can open a network connection', () => {
-    /* Not scoped to one file, and it covers the primitives rather than the vendors. Any of
-       these appearing anywhere is either an egress path or a comment that should be
-       reworded — both worth a human looking at it. */
-    const egress = /\bfetch\s*\(|XMLHttpRequest|\bWebSocket\b|EventSource|sendBeacon|\baxios\b|https?:\/\//;
+    /* Covers the primitives rather than the vendors, across the whole tree. */
+    const primitives = /\bfetch\s*\(|XMLHttpRequest|\bWebSocket\b|EventSource|sendBeacon|\baxios\b/;
+    const urls = /https?:\/\//;
     for (const f of FILES) {
-      assert.doesNotMatch(f.src, egress, `${f.path} contains a network primitive`);
+      const code = withoutComments(f.src);
+      assert.doesNotMatch(code, primitives, `${f.path} contains a network primitive`);
+      if (f.path === URL_HOME) continue;
+      assert.doesNotMatch(code, urls,
+        `${f.path} contains a URL — every address the app can open belongs in ${URL_HOME}, ` +
+          `so that the full list stays readable in one place`);
     }
   });
 
-  /** Comments removed, so prose cannot be mistaken for code.
-   *
-   *  This is not hypothetical tidying: a comment reading `tell "fresh install" from "we
-   *  could not ask"` was read as an import of a package named "we could not ask". A test
-   *  that fails on English is a test people learn to work around. */
-  const withoutComments = (src) =>
-    src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+  test('the URL file holds addresses and nothing else', () => {
+    /* The other half. A file exempted from the URL rule must not become the place where a
+       fetch quietly lands, and the addresses in it must be ones the SYSTEM BROWSER opens —
+       a WebView would make the age-rating answer to "Unrestricted Web Access" a Yes. */
+    const links = FILES.find((f) => f.path === URL_HOME);
+    assert.ok(links, `${URL_HOME} is missing`);
+    assert.doesNotMatch(withoutComments(links.src), /\bfetch\s*\(|XMLHttpRequest|WebSocket|WebView|sendBeacon/,
+      `${URL_HOME} is exempt from the URL rule and must not fetch anything`);
+    const urls = [...withoutComments(links.src).matchAll(/https?:\/\/[^\s'"`]+/g)].map((m) => m[0]);
+    assert.ok(urls.length > 0, `${URL_HOME} contains no URLs, which cannot be right`);
+    for (const url of urls) {
+      assert.match(url, /^https:/, `${url} is not https`);
+    }
+  });
+
+  test('URLs are opened in the browser, never in an embedded WebView', () => {
+    for (const f of FILES) {
+      assert.doesNotMatch(withoutComments(f.src), /\bWebView\b|react-native-webview/,
+        `${f.path} embeds a browser — this raises the age rating and is never needed here`);
+    }
+  });
 
   test('every third-party import is on the allowlist', () => {
     for (const f of FILES) {

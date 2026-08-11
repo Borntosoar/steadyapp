@@ -85,6 +85,8 @@ export default function Progress() {
   const { entitled } = useEntitlement();
   const state = useStore();
   const [exportFailed, setExportFailed] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const reset = useStore((st) => st.reset);
 
   const { baseline, checkIns, urgeLogs, mirrorSessions } = state;
 
@@ -228,6 +230,54 @@ export default function Progress() {
           because this file is the only copy.
         </BodySm>
       ) : null}
+
+      {/* ---------- erasure ----------
+          `reset()` has existed in the store since the beginning and NOTHING CALLED IT. The
+          only way to erase anything was to delete the app, which works but is not a control
+          — it is a workaround the user has to think of. Drafting the privacy policy is what
+          surfaced it: the erasure-rights section had to describe app deletion as the route,
+          which is honest and also plainly worse than a button.
+          Placed under export deliberately, and after the sentence explaining that the file
+          is the only copy. Somebody about to erase everything should have just read how to
+          keep a copy of it. */}
+      <View style={{ marginTop: space.xl, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.line, paddingTop: space.lg }}>
+        <H3>Delete everything</H3>
+        {!confirmDelete ? (
+          <>
+            <BodySm style={{ marginTop: space.xs }}>
+              Erases every check-in, every note, your plan and your history from this phone.
+              There is no server copy, so this is final.
+            </BodySm>
+            <Button
+              label="Delete everything"
+              variant="ghost"
+              onPress={() => setConfirmDelete(true)}
+              style={{ marginTop: space.sm, alignSelf: 'flex-start' }}
+            />
+          </>
+        ) : (
+          <>
+            <BodySm style={{ marginTop: space.xs, color: c.warn }}>
+              This cannot be undone and there is no backup to restore from. If you have not
+              saved a copy, do that first — the button is just above.
+            </BodySm>
+            <Row style={{ marginTop: space.md, justifyContent: 'flex-start', gap: space.md }}>
+              {/* The safe choice is the prominent one. A destructive action should not be
+                  the easiest thing to hit on a screen somebody may be scrolling quickly. */}
+              <Button label="Keep my data" onPress={() => setConfirmDelete(false)} />
+              <Button
+                label="Yes, delete it all"
+                variant="ghost"
+                onPress={async () => {
+                  setConfirmDelete(false);
+                  await reset();
+                  router.replace('/');
+                }}
+              />
+            </Row>
+          </>
+        )}
+      </View>
     </Section>
   );
 

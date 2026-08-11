@@ -1,8 +1,8 @@
 # Medical Disclaimer — Steady
 
-**Last updated:** `[EFFECTIVE DATE — TODO]`
+**Last updated:** 11 August 2026
 **Publisher:** `[LEGAL ENTITY NAME — TODO]`
-**Contact:** `[CONTACT EMAIL — TODO]`
+**Contact:** steadyrecovery3@gmail.com
 
 <!-- DRAFT. Not reviewed by a lawyer. See legal/README.md before publishing. -->
 <!-- This is the most important document in this folder. Every sentence has been checked
@@ -190,7 +190,7 @@ A crisis line is not an emergency service. If someone's life is in immediate dan
 
 ### If you find a wrong number, tell us
 
-`[CONTACT EMAIL — TODO]`. We will fix it immediately. This is the one bug report we would drop everything for.
+steadyrecovery3@gmail.com. We will fix it immediately. This is the one bug report we would drop everything for.
 
 <!-- SOURCE: constants/support.ts holds every listed line, with the header comment "Verify
      these periodically — a wrong number here is the worst bug this app could ship."
@@ -254,7 +254,7 @@ The exported file says so on its own front page, in the app's own words: *"This 
 
 If using Steady makes things worse, stop using it and speak to a professional.
 
-If you believe Steady harmed you, please tell us at `[CONTACT EMAIL — TODO]`. We would genuinely rather know.
+If you believe Steady harmed you, please tell us at steadyrecovery3@gmail.com. We would genuinely rather know.
 
 ---
 
@@ -268,7 +268,7 @@ Nothing here removes any right you have under consumer law where you live, and n
 
 ## Contact
 
-`[CONTACT EMAIL — TODO]`
+steadyrecovery3@gmail.com
 `[LEGAL ENTITY NAME — TODO]`
 
 ---

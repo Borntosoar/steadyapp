@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#2F4529"/>
+      <stop offset="1" stop-color="#16211A"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#g)"/>
+  <!-- A damped oscillation resolving into a flat line. The amplitude has to fall HARD —
+       roughly halving each swing — or at 60pt it reads as a scribble rather than as
+       something settling, which is the entire idea. The straight run at the end is the
+       payoff and needs to be long enough to register as deliberate. -->
+  <path
+    d="M 148 512
+       C 200 190, 268 190, 320 512
+       C 366 800, 430 800, 478 512
+       C 516 356, 572 356, 610 512
+       C 640 632, 688 632, 718 512
+       C 740 452, 778 452, 800 512
+       L 876 512"
+    fill="none"
+    stroke="#C6DEA6"
+    stroke-width="62"
+    stroke-linecap="round"
+    stroke-linejoin="round"/>
+</svg>

@@ -1,9 +1,9 @@
 # Cookie Policy — Steady website
 
-**Last updated:** `[EFFECTIVE DATE — TODO]`
+**Last updated:** 11 August 2026
 **Applies to:** `[WEBSITE DOMAIN — TODO]`, the marketing and legal-documents website for Steady.
 **Published by:** `[LEGAL ENTITY NAME — TODO]`
-**Contact:** `[CONTACT EMAIL — TODO]`
+**Contact:** steadyrecovery3@gmail.com
 
 <!-- DRAFT. Not reviewed by a lawyer. See legal/README.md before publishing. -->
 
@@ -48,9 +48,9 @@ Even with no cookies at all, a few things happen automatically. Being straight a
 
 **Your browser** keeps its own cache of pages and images so the site loads faster next time. That is your browser's behaviour, not ours, and you can clear it in your browser settings.
 
-**Our web host** `[HOSTING PROVIDER — TODO]` receives the ordinary information any web server receives when you request a page: your IP address, the page you asked for, the time, your browser type, and the page you came from. This is how the internet works and it cannot be switched off without switching off the website.
+**Our web host** GitHub Pages receives the ordinary information any web server receives when you request a page: your IP address, the page you asked for, the time, your browser type, and the page you came from. This is how the internet works and it cannot be switched off without switching off the website.
 
-We do not use these logs to build a profile of you, we do not combine them with anything else, and we do not sell or share them. `[CONFIRM RETENTION PERIOD WITH YOUR HOST — TODO]` — for example, GitHub Pages, Cloudflare Pages, Netlify and Vercel each keep server logs for their own security and abuse-prevention purposes under their own privacy policies, and you should link the right one here.
+We do not use these logs to build a profile of you, we do not combine them with anything else, and we do not sell or share them. GitHub does not expose these logs to us and states a maximum retention of 14 days — for example, GitHub Pages, Cloudflare Pages, Netlify and Vercel each keep server logs for their own security and abuse-prevention purposes under their own privacy policies, and you should link the right one here.
 
 ---
 
@@ -75,7 +75,7 @@ If we ever add anything to this site that sets a cookie or tracks anything, we w
 
 ## Contact
 
-`[CONTACT EMAIL — TODO]`
+steadyrecovery3@gmail.com
 
 ---
 

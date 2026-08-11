@@ -1,9 +1,9 @@
 # Accessibility Statement — Steady
 
-**Last updated:** `[EFFECTIVE DATE — TODO]`
+**Last updated:** 11 August 2026
 **Applies to:** the Steady iOS app, version 2.0.0
 **Published by:** `[LEGAL ENTITY NAME — TODO]`
-**Feedback:** `[CONTACT EMAIL — TODO]`
+**Feedback:** steadyrecovery3@gmail.com
 
 <!-- DRAFT. Not reviewed by a lawyer or by an accessibility auditor. See legal/README.md. -->
 <!-- Every claim below was checked against the source before it was written. Claims that
@@ -17,7 +17,7 @@ Steady is built to be usable by people with a wide range of needs, and the targe
 
 **We have not been audited and we do not claim to be certified.** No third party has assessed Steady. What follows is our own honest account of what is in place, what we have checked, and what we have not.
 
-If something in Steady does not work for you, please tell us at `[CONTACT EMAIL — TODO]`. We will take it seriously and we would rather hear it than not.
+If something in Steady does not work for you, please tell us at steadyrecovery3@gmail.com. We will take it seriously and we would rather hear it than not.
 
 ---
 
@@ -165,9 +165,9 @@ Everything here is an iOS setting, and Steady follows all of them:
 
 ## Telling us about a problem
 
-Email `[CONTACT EMAIL — TODO]`. Please say which screen, what you were trying to do, and which accessibility settings you use, if you are comfortable sharing that.
+Email steadyrecovery3@gmail.com. Please say which screen, what you were trying to do, and which accessibility settings you use, if you are comfortable sharing that.
 
-We aim to reply within `[RESPONSE TIME COMMITMENT — TODO, e.g. 5 working days]`.
+We aim to reply within 5 working days.
 
 If you report a barrier and we cannot fix it quickly, we will tell you honestly rather than leaving it unanswered.
 

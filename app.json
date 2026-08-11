@@ -2,6 +2,7 @@
   "expo": {
     "name": "Steady",
     "slug": "steady",
+    "icon": "./assets/icon.png",
     "version": "2.0.0",
     "orientation": "portrait",
     "scheme": "steady",
@@ -39,7 +40,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#EDF0E8"
+        "backgroundColor": "#EDF0E8",
+        "foregroundImage": "./assets/adaptive-icon.png"
       },
       "permissions": [
         "android.permission.CAMERA"
@@ -50,7 +52,8 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "single"
+      "output": "single",
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
@@ -72,7 +75,8 @@
     "backgroundColor": "#EDF0E8",
     "splash": {
       "backgroundColor": "#EDF0E8",
-      "resizeMode": "contain"
+      "resizeMode": "contain",
+      "image": "./assets/icon.png"
     }
   }
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Pressable, StyleSheet, ScrollView, Text } from 'react-native';
+import { View, Pressable, StyleSheet, ScrollView, Text, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -11,6 +11,7 @@ import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../constants/theme';
 import { PRICING, RENEWAL_TERMS, TIER_COMPARISON, trialEndDate, type Plan } from '../lib/entitlement';
 import { useEntitlement } from '../hooks/useEntitlement';
 import { PAYWALL_COPY } from '../content/copy.ts';
+import { LINKS } from '../constants/links';
 import { PROOF_POINTS, PROOF_QUALIFIER } from '../content/proof';
 import { useStore } from '../store/useStore';
 import { computeReclaimed, checkInsInLastDays, previousWeekCheckIns } from '../lib/reclaimed';
@@ -333,7 +334,34 @@ export default function Paywall() {
                 settings, in fewer taps than it took to start.
               </BodySm>
             )}
-            <Caption style={{ marginTop: space.lg, textAlign: 'center' }}>
+            {/* Guideline 3.1.2 wants these reachable from inside the app, adjacent to the
+                purchase, not only from the App Store listing. Opened in Safari rather than a
+                WebView on purpose: an in-app browser makes the age-rating answer to
+                "Unrestricted Web Access" a Yes, which raises the rating for nothing. */}
+            <Row style={{ marginTop: space.lg, justifyContent: 'center', gap: space.lg }}>
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel="Privacy policy, opens in your browser"
+                onPress={() => Linking.openURL(LINKS.privacy)}
+                style={({ pressed }) => ({ paddingVertical: space.sm, minHeight: 44, justifyContent: 'center', opacity: pressed ? 0.6 : 1 })}
+              >
+                <Text style={[t.caption, { color: c.inkSoft, textDecorationLine: 'underline' }]}>
+                  Privacy policy
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel="Terms of use, opens in your browser"
+                onPress={() => Linking.openURL(LINKS.terms)}
+                style={({ pressed }) => ({ paddingVertical: space.sm, minHeight: 44, justifyContent: 'center', opacity: pressed ? 0.6 : 1 })}
+              >
+                <Text style={[t.caption, { color: c.inkSoft, textDecorationLine: 'underline' }]}>
+                  Terms of use
+                </Text>
+              </Pressable>
+            </Row>
+
+            <Caption style={{ marginTop: space.md, textAlign: 'center' }}>
               {PAYWALL_COPY.noUrgency}
             </Caption>
           </View>

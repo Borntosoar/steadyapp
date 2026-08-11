@@ -1,8 +1,8 @@
 # Terms of Use — Steady
 
-**Last updated:** `[EFFECTIVE DATE — TODO]`
+**Last updated:** 11 August 2026
 **Publisher:** `[LEGAL ENTITY NAME — TODO]` ("we", "us", "our")
-**Contact:** `[CONTACT EMAIL — TODO]`
+**Contact:** steadyrecovery3@gmail.com
 
 <!-- DRAFT. Not reviewed by a lawyer. See legal/README.md before publishing. -->
 <!-- Verified against the repository at commit f5db0ae, app.json version 2.0.0. -->
@@ -293,7 +293,7 @@ We list them because they help people, and we check them, but:
 - What happens on that call is between you and them.
 - Tapping a number simply hands it to your phone's dialler. We do not place, route, monitor, record, or learn about the call.
 
-**If a number in the app is wrong, please tell us at `[CONTACT EMAIL — TODO]`.** A wrong number is the worst thing this app could ship and we will fix it immediately.
+**If a number in the app is wrong, please tell us at steadyrecovery3@gmail.com.** A wrong number is the worst thing this app could ship and we will fix it immediately.
 
 **In an emergency, call your local emergency number** — 911 in Canada and the US, 999 in the UK, 000 in Australia — rather than relying on anything in this app.
 
@@ -359,7 +359,7 @@ You and we agree that:
 
 ## Contact
 
-`[CONTACT EMAIL — TODO]`
+steadyrecovery3@gmail.com
 `[LEGAL ENTITY NAME — TODO]`, `[REGISTERED ADDRESS — TODO]`
 
 ---

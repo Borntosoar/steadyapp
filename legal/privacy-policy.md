@@ -1,8 +1,8 @@
 # Privacy Policy — Steady
 
-**Last updated:** `[EFFECTIVE DATE — TODO]`
+**Last updated:** 11 August 2026
 **Applies to:** the Steady iOS app, version 2.0.0 and later, published by `[LEGAL ENTITY NAME — TODO]` ("we", "us").
-**Contact:** `[CONTACT EMAIL — TODO]`
+**Contact:** steadyrecovery3@gmail.com
 
 <!-- DRAFT. Not reviewed by a lawyer. See legal/README.md before publishing. -->
 <!-- Every factual claim in this document is sourced in an HTML comment beside it. HTML
@@ -242,7 +242,7 @@ We hold none. So here is what each right means in practice with Steady:
 
 **Special category data.** Information about mental health is "special category" data under Article 9 — the most protected kind. Steady is full of it. That is exactly why it was built with no server: the strongest protection available for special category data is for the operator never to hold it.
 
-**Complaints.** If you think we have got this wrong, please tell us at `[CONTACT EMAIL — TODO]`. You can also complain to your data-protection regulator — in the UK that is the Information Commissioner's Office (ico.org.uk); in the EU it is the supervisory authority for the country you live in.
+**Complaints.** If you think we have got this wrong, please tell us at steadyrecovery3@gmail.com. You can also complain to your data-protection regulator — in the UK that is the Information Commissioner's Office (ico.org.uk); in the EU it is the supervisory authority for the country you live in.
 
 ---
 
@@ -259,7 +259,7 @@ For California residents, under the California Consumer Privacy Act as amended b
 - **Third parties we disclose to:** none.
 - **Retention:** we retain nothing, so there is no retention period to state.
 
-You have the right to know, delete, correct, opt out of sale or sharing, limit the use of sensitive personal information, and not be discriminated against for exercising these rights. Because we hold nothing about you, a request under any of them can be answered in one line — and we will answer it in one line if you send one to `[CONTACT EMAIL — TODO]`.
+You have the right to know, delete, correct, opt out of sale or sharing, limit the use of sensitive personal information, and not be discriminated against for exercising these rights. Because we hold nothing about you, a request under any of them can be answered in one line — and we will answer it in one line if you send one to steadyrecovery3@gmail.com.
 
 We do not offer financial incentives for personal information. We do not process personal information for behavioural advertising, so there is no "Do Not Sell or Share My Personal Information" link to provide.
 
@@ -273,7 +273,7 @@ We do not offer financial incentives for personal information. We do not process
 
 Under the Personal Information Protection and Electronic Documents Act:
 
-- **Accountability.** `[LEGAL ENTITY NAME — TODO]` is accountable for personal information under its control. Questions go to `[PRIVACY CONTACT NAME OR ROLE — TODO]` at `[CONTACT EMAIL — TODO]`.
+- **Accountability.** `[LEGAL ENTITY NAME — TODO]` is accountable for personal information under its control. Questions go to the developer at steadyrecovery3@gmail.com.
 - **Identifying purposes, consent, limiting collection.** We collect no personal information, so there is no purpose to identify and no consent to obtain.
 - **Limiting use, disclosure and retention.** We hold nothing, so there is nothing to use, disclose or retain.
 - **Accuracy.** You control accuracy directly — the data is on your device and you can edit it.
@@ -346,7 +346,7 @@ Nothing you write. No check-in, no distress rating, no thought record, no urge l
 
 **Retention** of purchase data: for as long as your subscription is active, plus whatever period tax and accounting law requires. `[CONFIRM PERIOD FOR YOUR JURISDICTION — TODO]`
 
-**Your rights** over purchase data are the ordinary ones — access, correction, deletion, portability, objection. Ask us at `[CONTACT EMAIL — TODO]`. Note that some purchase records must be kept for tax reasons even after a deletion request, and that Apple holds its own copy of your transaction independently of us.
+**Your rights** over purchase data are the ordinary ones — access, correction, deletion, portability, objection. Ask us at steadyrecovery3@gmail.com. Note that some purchase records must be kept for tax reasons even after a deletion request, and that Apple holds its own copy of your transaction independently of us.
 
 **The App Store privacy label must be updated in the same release that adds the SDK** — Purchases → Purchase History, and Identifiers → User ID, both marked *not linked to identity* and *not used for tracking*. Health and fitness data stays unselected, in every version, because it never leaves the device.
 
@@ -385,7 +385,7 @@ If a future version ever adds a server, an account, cloud sync, or analytics, th
 
 ## 18. Contact
 
-`[CONTACT EMAIL — TODO]`
+steadyrecovery3@gmail.com
 `[LEGAL ENTITY NAME — TODO]`, `[REGISTERED ADDRESS — TODO]`
 
 ---
