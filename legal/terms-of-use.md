@@ -278,7 +278,7 @@ We are not liable for indirect, incidental, special, consequential, or punitive 
 - fraud or fraudulent misrepresentation;
 - anything else the law does not permit us to exclude.
 
-`[REVIEW WITH COUNSEL — TODO]` — the enforceability of a liability cap in a mental-health context is exactly the kind of thing to pay for an opinion on, and the answer differs by jurisdiction.
+<!-- REVIEW WITH COUNSEL: the enforceability of a liability cap in a mental-health context is exactly the kind of thing to pay for an opinion on, and the answer differs by jurisdiction. -->
 
 ---
 
@@ -335,15 +335,43 @@ You and we agree that:
 
 ## 15. Governing law and disputes
 
-> 🔴 **YOU MUST CHOOSE THIS. DO NOT PUBLISH WITHOUT IT.**
->
-> These terms are governed by the laws of `[GOVERNING LAW JURISDICTION — TODO]`, and the courts of `[COURTS — TODO]` have `[exclusive / non-exclusive — TODO]` jurisdiction.
->
-> **We have deliberately not guessed.** The right answer depends on where your legal entity is registered, where you are tax-resident, and where your customers are — and getting it wrong is worse than leaving it blank, because a governing-law clause pointing at a jurisdiction you have no connection to can be struck out and take other clauses with it. The bundle identifier `com.borntosoar.steady` and the App Store organisation requirement in `docs/APP-STORE.md` §5.1 mean an entity exists or is being formed; use that entity's home jurisdiction unless your solicitor says otherwise.
->
-> Two things to raise with them at the same time:
-> 1. **Consumer protection is mandatory and cannot be contracted around.** Wherever you choose, a customer in the UK, the EU, Canada or Australia keeps the consumer rights of their own country. Say so explicitly in the published clause.
-> 2. Decide whether you want an arbitration clause and a class-action waiver. They are common in US-facing apps, largely unenforceable against consumers in the UK and EU, and they read badly in a mental-health product. Our suggestion is to skip both, but it is a real decision.
+These terms are governed by the laws of the Province of `[PROVINCE — TODO]` and the federal laws of Canada that apply in it. The courts of that province have non-exclusive jurisdiction over any dispute.
+
+**Non-exclusive on purpose.** An exclusive clause would tell a customer in Australia that their only route is a Canadian courtroom, which is both unenforceable against a consumer and a bad thing to say to somebody in a mental-health product. Non-exclusive means we will not drag you across the world, and you keep whatever forum your own law gives you.
+
+### Your local rights are not affected
+
+Nothing in these terms takes away consumer rights you have where you live, and nothing in them is meant to.
+
+If you are in Canada, provincial consumer protection legislation applies and cannot be contracted out of. If you are in the EU, the UK, Australia or elsewhere, the mandatory consumer protections of your own country continue to apply in full regardless of the paragraph above. Where those rights conflict with anything in these terms, your rights win.
+
+### No arbitration clause, and no class-action waiver
+
+We have not included either. They are common in apps sold into the United States and they are largely unenforceable against consumers in Canada, the UK, the EU and Australia — but the real reason is that requiring somebody with a mental-health condition to give up access to a court, in a document they accept to use a self-help app, is not a thing we are willing to do for a marginal reduction in legal exposure.
+
+<!-- DECISION RECORD, and the one field still open.
+     Governing law: CANADA, chosen by the developer.
+
+     The PROVINCE is the remaining blank and it is genuinely required, not pedantry: in
+     Canada, contract law and consumer protection are PROVINCIAL. "The laws of Canada" alone
+     is not a complete choice of law, and the formulation above — province plus "the federal
+     laws of Canada applicable therein" — is the standard Canadian construction. Use the
+     province where the entity is registered or where the developer is resident.
+
+     ⚠ IF THE PROVINCE IS QUEBEC, three things change and they are not small:
+       1. The Charter of the French Language (as amended by Bill 96) requires contracts of
+          adhesion and related consumer documentation to be available in French. These terms,
+          the privacy policy and arguably the app's own consumer-facing text would need a
+          French version. That collides directly with the English-only decision recorded in
+          docs/LOCALISATION.md §3 and would need resolving before launch.
+       2. Quebec's Law 25 imposes privacy obligations beyond PIPEDA, including a named
+          privacy officer published on the website and specific breach-reporting duties.
+       3. Quebec consumer law restricts some limitation-of-liability language that is
+          acceptable elsewhere in Canada.
+     Any other province and none of that applies. This is worth deciding before the site is
+     published rather than after.
+
+     Not included, deliberately: an arbitration clause and a class-action waiver. See above. -->
 
 ---
 

@@ -587,9 +587,14 @@ Blockers first.
       regions, assembled from knowledge rather than a live check. A wrong number here is the
       worst bug this app can ship. Mitigated but not removed by the findahelpline.com
       backstop in every region — see `docs/LOCALISATION.md` §2
-- [ ] **Governing law jurisdiction chosen** — blocks the legal site build, which blocks the
-      privacy policy URL, which blocks submission. "Worldwide" is availability, not a
-      governing-law clause; see `docs/LOCALISATION.md` §1
+- [x] **Governing law jurisdiction chosen: Canada.** `legal/terms-of-use.md` §15, standard
+      Canadian construction, non-exclusive jurisdiction, no arbitration clause
+- [ ] **Province named** — the last field blocking the legal site build, which blocks the
+      privacy policy URL, which blocks submission. Canadian contract and consumer law is
+      provincial. **If it is Quebec, Bill 96 requires French versions** and that must be
+      settled before launch — see `docs/LOCALISATION.md` §1
+- [ ] Legal entity name and registered address — likely one decision with the Organization
+      account below, since that needs a D-U-N-S number
 - [ ] Apple Developer Program enrolment is an **Organization**, not an Individual (5.1)
 - [ ] Privacy policy hosted at a real URL, linked in App Store Connect **and in-app** (5.2)
 - [ ] StoreKit / RevenueCat wired — `purchase()` and `restore()` are not stubs (5.3)

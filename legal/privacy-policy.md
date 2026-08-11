@@ -33,7 +33,14 @@ That one fact decides almost everything else in this document.
 
 Where data-protection law needs someone named as the **controller** (the party that decides why and how personal data is handled), that is us. In practice we hold no personal data about you at all, for the reasons set out in section 3.
 
-We have not appointed a Data Protection Officer, and on the facts below we do not believe we are required to. `[CONFIRM WITH COUNSEL — TODO]`
+We are based in Canada, so **PIPEDA** (the Personal Information Protection and Electronic Documents Act) is the law that primarily applies to us. Because the app is sold worldwide, the GDPR, UK GDPR and CCPA/CPRA may also apply to customers in those places, and sections 9 to 12 set out the rights each of them gives you.
+
+We have not appointed a Data Protection Officer. Under the GDPR one is required where an organisation carries out large-scale monitoring or processes special-category data at scale, and we do neither — we receive no personal data at all. PIPEDA requires an accountable individual instead, and that is the developer, reachable at steadyrecovery3@gmail.com.
+
+<!-- The DPO position rests on receiving no personal data, which is verified in the sections
+     below. It changes the day any server-side processing is introduced. Worth a lawyer's
+     confirmation as part of the review in legal/README.md, but it is not a close call on
+     the current facts. -->
 
 ---
 
@@ -230,7 +237,13 @@ We hold none. So here is what each right means in practice with Steady:
 | **Withdraw consent** | See the legal-basis note below — we are not relying on your consent for anything, because we are not processing anything. |
 | **Not be subject to automated decision-making** | Steady makes no decision about you. It does arithmetic on numbers you typed and shows you the result. |
 
-> ⚠ **Product gap, must be fixed or this table is misleading.** The app contains a working "delete everything" function, but **no screen currently calls it**, so today the only way to erase your data is to delete the app. That is a genuine erasure route and it is honest to describe it. But a visible in-app delete control is standard, it is cheap to add, and this table reads better with one. `[PRODUCT — TODO]`
+**How to erase everything.** Open **Progress**, scroll to "Take this with you", and use **Delete everything** at the bottom of that section. It removes every check-in, note, plan and history entry from the device, including any recovery copies the app has made. There is no server copy, so this is final and immediate — which is why the button sits directly below the export, and why it asks once more before doing it.
+
+Deleting the app also erases everything, for the same reason: there is nowhere else it is kept.
+
+<!-- This paragraph used to read as a product gap: reset() existed in the store and NOTHING
+     CALLED IT, so the only erasure route was deleting the app. Writing this section is what
+     surfaced that. The control now exists in app/(tabs)/progress.tsx. -->
 
 <!-- SOURCE: store/useStore.ts reset() cancels the pending write, calls
      lib/storage.ts wipeState() (which removes STORAGE_KEY and every 'steady.unreadable.'
@@ -342,9 +355,13 @@ Nothing you write. No check-in, no distress rating, no thought record, no urge l
 
 **Legal basis** for handling purchase data: performance of a contract (Article 6(1)(b)) — you bought something and we have to know that you did in order to unlock it.
 
-**International transfers:** Apple and RevenueCat are US-headquartered and operate globally, so purchase data will be handled outside the UK/EU. Transfers rely on the mechanisms in those companies' own terms — for RevenueCat, its data-processing agreement and standard contractual clauses. `[CONFIRM THE CURRENT MECHANISM WITH COUNSEL BEFORE PUBLISHING — TODO]`
+**International transfers:** Apple and RevenueCat are US-headquartered and operate globally, so purchase data will be handled outside the UK/EU. Transfers rely on the mechanisms in those companies' own terms — for RevenueCat, its data-processing agreement and standard contractual clauses. <!-- CONFIRM THE CURRENT TRANSFER MECHANISM WITH COUNSEL BEFORE PUBLISHING. -->
 
-**Retention** of purchase data: for as long as your subscription is active, plus whatever period tax and accounting law requires. `[CONFIRM PERIOD FOR YOUR JURISDICTION — TODO]`
+**Retention** of purchase data: for as long as your subscription is active, plus the period Canadian tax law requires records to be kept. The Canada Revenue Agency generally requires business records to be retained for **six years** from the end of the last tax year they relate to, so that is the outside limit on purchase records. We hold none of it directly — it sits with Apple and, once integrated, RevenueCat.
+
+<!-- Six years is the CRA's general rule for books and records. Confirm it against the
+     entity's actual filing position with an accountant; it is the standard answer and not
+     a controversial one. -->
 
 **Your rights** over purchase data are the ordinary ones — access, correction, deletion, portability, objection. Ask us at steadyrecovery3@gmail.com. Note that some purchase records must be kept for tax reasons even after a deletion request, and that Apple holds its own copy of your transaction independently of us.
 

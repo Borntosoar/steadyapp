@@ -129,7 +129,7 @@ We would rather list these than let you find them.
 
 **We have not tested at the largest accessibility text sizes.** Several elements in the app have fixed heights — the mirror surface, some cards, some rows. At the biggest text settings, text may crowd or clip in places. If you use large text and something is cut off, please tell us which screen.
 
-**The paced breathing circle still animates with Reduce Motion on.** In the guided breathing exercise, the circle's growing and shrinking *is* the instruction — it is how you know when to breathe in and out. Switching it off would remove the exercise rather than the decoration. The phase word ("in", "hold", "out") and the cycle count are shown as text throughout, so the same information is available without watching the movement. The slower, decorative circle elsewhere in the app does stop. `[REVIEW — TODO]` we think this is the right call; we are open to being told otherwise.
+**The paced breathing circle still animates with Reduce Motion on.** In the guided breathing exercise, the circle's growing and shrinking *is* the instruction — it is how you know when to breathe in and out. Switching it off would remove the exercise rather than the decoration. The phase word ("in", "hold", "out") and the cycle count are shown as text throughout, so the same information is available without watching the movement. The slower, decorative circle elsewhere in the app does stop. We think this is the right call, and we are open to being told otherwise.
 
 <!-- SOURCE: components/BreathCircle.tsx — BreathCircle (the guided, labelled one) has no
      reduce-motion branch; QuietCircle (the unlabelled ambient one) does. The phase label and
@@ -177,7 +177,7 @@ If you report a barrier and we cannot fix it quickly, we will tell you honestly 
 
 This statement is voluntary. Steady is a mobile app rather than a public-sector website, so the UK's Public Sector Bodies Accessibility Regulations 2018 and the EU Web Accessibility Directive do not apply to it.
 
-The **European Accessibility Act** applies from 28 June 2025 to certain consumer services, including e-commerce services, sold in the EU. `[CONFIRM SCOPE WITH COUNSEL — TODO]` — whether a paid self-help app sold through the App Store falls inside it is a real question, the answer affects whether a formal accessibility statement becomes mandatory rather than voluntary, and there is a micro-enterprise exemption that may or may not apply to your entity.
+The **European Accessibility Act** applies from 28 June 2025 to certain consumer services, including e-commerce services, sold in the EU. <!-- CONFIRM SCOPE WITH COUNSEL: whether a paid self-help app sold through the App Store falls inside it is a real question, the answer affects whether a formal accessibility statement becomes mandatory rather than voluntary, and there is a micro-enterprise exemption that may or may not apply to your entity. -->
 
 Nothing in this statement is a warranty about accessibility. See `terms-of-use.md`.
 

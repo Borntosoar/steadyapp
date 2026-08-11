@@ -11,24 +11,25 @@ done, and where I stopped and why.
 territories; there is no reason to withhold this from any of them, and the marginal cost is
 zero. Done, and the work below is what it implies.
 
-**Governing law is not a distribution decision and cannot be "worldwide".** A contract has to
-name one jurisdiction whose law governs it and whose courts hear a dispute. Left blank, the
-terms are ambiguous and a court imposes an answer anyway — usually the consumer's, which is
-the outcome you would have chosen last. `legal/terms-of-use.md` therefore still carries
-`[GOVERNING LAW JURISDICTION — TODO]`, and it is the one field I could not fill in for you.
+**Governing law is a separate decision, and it is now made: CANADA.**
 
-Two things worth knowing before you pick:
+`legal/terms-of-use.md` §15 uses the standard Canadian construction — the law of a named
+province plus the federal laws of Canada that apply in it — with **non-exclusive**
+jurisdiction. Non-exclusive matters here: an exclusive clause would tell a customer in
+Australia that a Canadian courtroom is their only route, which is unenforceable against a
+consumer and a bad sentence to put in a mental-health product. The clause also states
+explicitly that local consumer rights are unaffected, because in the EU, the UK, Australia
+and Canada itself they cannot be contracted around whatever the document says.
 
-- **You cannot contract out of consumer rights in the EU, the UK, Australia or several US
-  states.** Whatever law you choose, a consumer in Germany keeps their German statutory
-  rights. So the clause needs to name a law *and* say that local mandatory rights are
-  unaffected — the draft already does the second half.
-- **The sensible answer is almost always where you and the entity are.** Choosing somewhere
-  "friendlier" that you have no connection to reads as forum shopping, is expensive to
-  enforce, and buys nothing against consumers who cannot be bound by it anyway.
+**One field remains: the province.** In Canada contract law and consumer protection are
+provincial, so "the laws of Canada" is not a complete choice of law.
 
-This is the last blocker on publishing the legal site, which is the last blocker on
-submission. It is a five-minute decision, not a project.
+⚠ **If the province is Quebec, the English-only decision in §3 collides with the law.** The
+Charter of the French Language, as amended by Bill 96, requires consumer contracts and
+related documentation to be available in French. That would mean a French version of the
+terms and privacy policy at minimum, and arguably of the app's consumer-facing text — which
+is the one scenario in which the localisation question in §3 stops being a growth decision
+and becomes a compliance one. Any other province and it does not arise.
 
 ---
 

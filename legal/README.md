@@ -37,20 +37,43 @@ accounts makes several sentences in `privacy-policy.md` false on the day it ship
 document flags its own load-bearing sentences in an HTML comment at the end. Read those
 before changing anything about data handling.
 
-## Decisions only you can make
+## Decided
 
-These appear as `[... — TODO]` placeholders. Nothing fake was invented, so the documents are
-publishable the moment these are filled in and not before.
+- **Governing law: Canada.** Terms §15 uses the standard Canadian construction — the law of a
+  named province plus the federal laws of Canada applying in it — with **non-exclusive**
+  jurisdiction, so no customer anywhere is told a Canadian courtroom is their only route. No
+  arbitration clause and no class-action waiver; see §15 for why not.
+- **Privacy: PIPEDA is the primary regime**, with GDPR, UK GDPR and CCPA sections retained
+  because the app is sold worldwide. The accountable individual under PIPEDA is the
+  developer.
+- **Contact:** steadyrecovery3@gmail.com, used throughout.
+- **Effective dates:** set.
+- **Hosting:** GitHub Pages, static, no cookies.
+- **Retention of purchase records:** six years, per the CRA's general rule for business
+  records.
 
-1. **Legal entity name.** Sole trader, or a limited company / LLC? This changes the liability
-   position, not only the wording. Worth deciding before launch rather than after.
-2. **Governing law and jurisdiction.** Deliberately left blank. It follows from where you are
-   and where the entity is registered; picking one to fill a gap would be worse than leaving
-   it visible.
-3. **Contact email.** Needs to be one you will actually read — it is the data-subject-rights
-   address and the App Review contact. A forwarding alias is fine.
-4. **Effective date.** Set on the day you publish, not today.
-5. **Hosting.** See below.
+## The three fields still open
+
+Everything else is written. Nothing fake was invented, so these are the whole remaining gap.
+
+1. **Province.** Required, and not pedantry: in Canada, contract law and consumer protection
+   are **provincial**. "The laws of Canada" is not a complete choice of law. Use the province
+   where the entity is registered or where you are resident.
+
+   ⚠ **If the answer is Quebec, three things change.** The Charter of the French Language (as
+   amended by Bill 96) requires consumer contracts and related documentation to be available
+   in French — which collides directly with the English-only decision in
+   `docs/LOCALISATION.md` §3 and needs resolving before launch. Quebec's Law 25 adds privacy
+   duties beyond PIPEDA, including a published privacy officer. And Quebec consumer law
+   restricts some liability language that is fine elsewhere in Canada. Any other province and
+   none of this applies.
+
+2. **Legal entity name.** Sole proprietorship or an incorporated company? It changes the
+   liability position, not just the wording — and Apple's Organization account requirement
+   (`docs/APP-STORE.md` §5.1) usually implies a registered company with a D-U-N-S number, so
+   the two decisions are really one.
+
+3. **Registered address.** Follows from the entity.
 
 ## Publishing
 
