@@ -12,6 +12,24 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Steady uses the camera only as a live mirror for guided practice. Nothing is ever recorded, captured, or saved."
       },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "privacyManifests": {
+        "NSPrivacyTracking": false,
+        "NSPrivacyTrackingDomains": [],
+        "NSPrivacyCollectedDataTypes": [],
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": ["C617.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          }
+        ]
+      },
       "bundleIdentifier": "com.borntosoar.steady",
       "userInterfaceStyle": "automatic"
     },
@@ -36,7 +54,9 @@
         "expo-camera",
         {
           "cameraPermission": "Steady uses the camera only as a live mirror for guided practice. Nothing is ever recorded, captured, or saved.",
-          "recordAudioAndroid": false
+          "recordAudioAndroid": false,
+          "microphonePermission": false,
+          "barcodeScannerEnabled": false
         }
       ]
     ],

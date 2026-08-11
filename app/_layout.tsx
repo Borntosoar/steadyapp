@@ -6,7 +6,15 @@ import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from '../components/ui';
 import { useStore, flushState } from '../store/useStore';
 import { useEntitlement } from '../hooks/useEntitlement';
+import { CrashBoundary } from '../components/CrashScreen';
 import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../constants/theme';
+
+/** Routes that stay reachable before the disclaimer has been accepted.
+ *
+ *  Deliberately only two, and deliberately not `ALWAYS_FREE_ROUTES` — see the redirect
+ *  effect below for why reusing that list would be a consent bug. Pinned by
+ *  `__tests__/safety.test.mjs`. */
+const CRISIS_ROUTES = ['/support', '/grounding'];
 
 /* Support is reachable in <= 2 taps from every screen: this bar is always mounted, so
  * it is always exactly one tap. Non-negotiable, see SAFETY.md. */
@@ -100,10 +108,30 @@ function Gate() {
     return () => sub.remove();
   }, [refresh]);
 
+  /* The disclaimer gate, with the crisis surfaces carved out of it.
+   *
+   * Without the exemption this is a trap rather than a gate, and it closes on the worst
+   * possible person. After a failed load the state is emptyState(), so
+   * `disclaimerAcceptedAt` is null even for somebody who has used the app for months. They
+   * tap the always-mounted Support pill; the pathname changes; this effect fires; they are
+   * replaced back into onboarding. Crisis support is unreachable. It does not clear on
+   * restart either: `acceptDisclaimer` writes through `persist`, which returns early while
+   * `loadOk` is false, so the acceptance never survives — the loop is permanent, and the
+   * person caught in it is the one whose journal just became unreadable.
+   *
+   * NOT `ALWAYS_FREE_ROUTES`. That list is the BILLING carve-out and it contains '/' and
+   * '/paywall', so reusing it here would let a genuine first-run user walk past the
+   * disclaimer onto the home screen — trading a lockout bug for a consent bug. The two
+   * lists answer different questions and only overlap by coincidence.
+   *
+   * These two routes are the ones somebody in trouble reaches for, and neither collects
+   * anything or claims anything that the disclaimer is there to qualify: one is a list of
+   * phone numbers, the other is breathing. */
   useEffect(() => {
     if (!hydrated) return;
     const inOnboarding = pathname.startsWith('/onboarding');
-    if (!disclaimerAcceptedAt && !inOnboarding) {
+    const isCrisisSurface = CRISIS_ROUTES.includes(pathname);
+    if (!disclaimerAcceptedAt && !inOnboarding && !isCrisisSurface) {
       router.replace('/onboarding');
     }
   }, [hydrated, disclaimerAcceptedAt, pathname, router]);
@@ -130,12 +158,26 @@ function Gate() {
   );
 }
 
+/* expo-router mounts a layout's exported `ErrorBoundary` when anything below it throws.
+   Exported here, from the root layout, it covers every screen in the app.
+
+   Before this existed a single render-time TypeError took the whole tree down, SupportBar
+   included, leaving a blank screen with no crisis numbers and no way to export. Several
+   concrete routes to that state were found and fixed alongside this; the boundary is here
+   because that list is not provably complete. */
+export { CrashScreen as ErrorBoundary } from '../components/CrashScreen';
+
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
         <StatusBar style="auto" />
-        <Gate />
+        {/* Belt and braces. expo-router's ErrorBoundary catches throws inside a ROUTE; this
+            catches the ones in Gate itself, which is where hydration and the redirect live
+            and therefore where a bad payload lands first. */}
+        <CrashBoundary>
+          <Gate />
+        </CrashBoundary>
       </ThemeProvider>
     </SafeAreaProvider>
   );

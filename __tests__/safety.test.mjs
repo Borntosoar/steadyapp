@@ -11,7 +11,13 @@ import { fileURLToPath } from 'node:url';
  * opened it. */
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const DIRS = ['app', 'components', 'lib', 'store', 'content', 'types', 'constants'];
+/* `hooks` was missing from this list, and it was the worst possible directory to miss.
+   Nothing in this file scanned it — not the capture test, not the tracker test, not the
+   appearance-metric test — while hooks/useEntitlement.ts is the file both docs/API.md and
+   its own header designate as the place the RevenueCat SDK gets installed. That SDK opens
+   a TLS connection on configure() and ships the vendor identifier. The suite would have
+   stayed green through it. */
+const DIRS = ['app', 'components', 'lib', 'store', 'content', 'types', 'constants', 'hooks'];
 
 function sourceFiles() {
   const out = [];
@@ -40,11 +46,51 @@ describe('the source tree is what SAFETY.md says it is', () => {
   });
 
   // SAFETY.md §1
-  test('no still-image capture API appears anywhere', () => {
-    const forbidden = /takePicture|savePhoto|captureRef|toDataURL|MediaLibrary|getScreenshot|ImagePicker/i;
+  test('no capture API — still OR moving — appears anywhere', () => {
+    /* `recordAsync` was the hole in this list. CameraView.recordAsync() writes video into
+       the app cache, which is a more serious breach of "the camera is a live mirror and
+       nothing is recorded" than any of the still-capture calls the regex did cover, and it
+       would have sailed straight through the test written to prevent exactly this.
+
+       The module specifiers are listed alongside the CamelCase identifiers because
+       `import { saveToLibraryAsync } from 'expo-media-library'` matches neither
+       `MediaLibrary` nor `ImagePicker` — the hyphenated package name is how the dependency
+       actually arrives. */
+    const forbidden =
+      /takePicture|takePhoto|savePhoto|captureRef|toDataURL|MediaLibrary|getScreenshot|ImagePicker|recordAsync|startRecording|expo-media-library|expo-image-picker|expo-screen-capture|getUserMedia\s*\([^)]*audio\s*:\s*true/i;
     for (const f of FILES) {
       assert.doesNotMatch(f.src, forbidden, `capture API referenced in ${f.path}`);
     }
+  });
+
+  test('the disclaimer gate cannot lock somebody out of crisis support', () => {
+    /* After a failed load the state is emptyState(), so `disclaimerAcceptedAt` is null even
+       for a long-time user. Without an exemption, tapping the always-mounted Support pill
+       changes the pathname, re-fires the redirect, and replaces them back into onboarding —
+       crisis support unreachable, permanently, because acceptDisclaimer cannot persist while
+       writes are locked. The person it traps is the one whose journal just became
+       unreadable. */
+    const layout = FILES.find((f) => f.path === 'app/_layout.tsx');
+    assert.match(layout.src, /CRISIS_ROUTES/, 'the disclaimer redirect has no crisis carve-out');
+    for (const route of ['/support', '/grounding']) {
+      assert.match(
+        layout.src,
+        new RegExp(`CRISIS_ROUTES[^;]*'${route}'`, 's'),
+        `${route} is not exempt from the disclaimer redirect`
+      );
+    }
+  });
+
+  test('a render-time crash still leaves a way to crisis support and to the export', () => {
+    /* There was no error boundary at all, so one TypeError unmounted the tree — SupportBar
+       included — and left a blank screen with no numbers, no breathing, and no route to the
+       only copy of a year of private writing. */
+    const layout = FILES.find((f) => f.path === 'app/_layout.tsx');
+    assert.match(layout.src, /ErrorBoundary/, 'the root layout exports no ErrorBoundary');
+    const crash = FILES.find((f) => f.path === 'components/CrashScreen.tsx');
+    assert.ok(crash, 'components/CrashScreen.tsx is missing');
+    assert.match(crash.src, /tel:/, 'the crash screen offers no way to call anybody');
+    assert.match(crash.src, /exportJson/, 'the crash screen offers no way to save the writing');
   });
 
   // SAFETY.md §2
@@ -80,17 +126,116 @@ describe('the source tree is what SAFETY.md says it is', () => {
     }
   });
 
-  // SAFETY.md §6
-  test('storage makes no network call', () => {
-    const storage = FILES.find((f) => f.path === 'lib/storage.ts');
-    assert.doesNotMatch(storage.src, /\bfetch\(|XMLHttpRequest|axios|WebSocket|https?:\/\//);
+  /* ---------- SAFETY.md §6: nothing leaves the phone ----------
+   *
+   * This is the promise the product is built on and the one whose breach would hurt people
+   * most, and until now it was guarded by two tests that could both be walked past without
+   * trying.
+   *
+   * The first checked ONE file — lib/storage.ts — so a fetch() in any screen, in the store,
+   * or in a component passed. The second was a blocklist of six vendor names, defeated four
+   * separate ways: `await import('@sentry/react-native')` never matches because the regex
+   * requires the literal `from '`, and dynamic import is already the house style in
+   * components/MirrorSurface.tsx, so a contributor copying the local idiom bypasses it by
+   * accident; '@react-native-firebase/analytics' does not match because after the optional
+   * `@` the alternation has to hit at position zero; and Bugsnag, Datadog, LogRocket,
+   * AppsFlyer, Branch, react-native-device-info, expo-updates, expo-notifications and
+   * react-native-purchases were simply never on the list.
+   *
+   * Both are replaced with an ALLOWLIST. A blocklist asks "did we think of this vendor?" and
+   * fails silently on every answer of no. An allowlist asks "is this one of the twelve
+   * packages this app is known to use?", which is a question with a correct answer that does
+   * not decay. Adding a dependency now requires editing this file, next to this comment. */
+
+  /** Every third-party module the source tree is permitted to import. */
+  const ALLOWED_PACKAGES = new Set([
+    '@react-native-async-storage/async-storage',
+    'expo-blur',
+    'expo-camera',
+    'expo-haptics',
+    'expo-linear-gradient',
+    'expo-router',
+    'expo-status-bar',
+    'react',
+    'react-native',
+    'react-native-safe-area-context',
+    'react-native-svg',
+    'zustand',
+  ]);
+
+  /** `from 'x'`, `import('x')` and `require('x')` alike. The second and third are the ones
+   *  the old regex could not see. */
+  const SPECIFIERS = /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*)['"]([^'"]+)['"]/g;
+
+  /** '@scope/pkg/deep/path' -> '@scope/pkg';  'pkg/deep/path' -> 'pkg'. */
+  const packageOf = (spec) => {
+    const parts = spec.split('/');
+    return spec.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0];
+  };
+
+  test('nothing in the source tree can open a network connection', () => {
+    /* Not scoped to one file, and it covers the primitives rather than the vendors. Any of
+       these appearing anywhere is either an egress path or a comment that should be
+       reworded — both worth a human looking at it. */
+    const egress = /\bfetch\s*\(|XMLHttpRequest|\bWebSocket\b|EventSource|sendBeacon|\baxios\b|https?:\/\//;
+    for (const f of FILES) {
+      assert.doesNotMatch(f.src, egress, `${f.path} contains a network primitive`);
+    }
   });
 
-  test('no analytics or tracking SDK is imported anywhere', () => {
-    const trackers = /from ['"](@?)(segment|amplitude|mixpanel|firebase|@sentry|posthog|@amplitude)/i;
+  test('every third-party import is on the allowlist', () => {
     for (const f of FILES) {
-      assert.doesNotMatch(f.src, trackers, `tracker imported in ${f.path}`);
+      for (const [, spec] of f.src.matchAll(SPECIFIERS)) {
+        if (spec.startsWith('.') || spec.startsWith('/')) continue; // local module
+        const pkg = packageOf(spec);
+        assert.ok(
+          ALLOWED_PACKAGES.has(pkg),
+          `${f.path} imports "${pkg}", which is not on the allowlist in this file. If it is ` +
+            `genuinely needed, add it here and say in the commit message what it does with ` +
+            `the network.`
+        );
+      }
     }
+  });
+
+  test('the manifest declares no dependency that can phone home', () => {
+    /* The allowlist above governs what the source imports. This governs what is installed,
+       because adding the package is step one and a test that only reads source would go
+       green for a whole commit before the import lands. */
+    const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+    const banned =
+      /sentry|bugsnag|datadog|logrocket|amplitude|mixpanel|segment|posthog|firebase|appsflyer|branch|analytics|expo-updates|expo-notifications|expo-tracking-transparency|device-info|ngrok/i;
+    for (const name of Object.keys(pkg.dependencies ?? {})) {
+      assert.doesNotMatch(name, banned, `${name} is a shipped dependency that reaches the network`);
+    }
+    /* Every shipped dependency is either imported by the source or a platform requirement
+       named here. An unimported package is still compiled into the binary.
+       `expo-constants` and `expo-linking` are imported by nothing in this app; they stay
+       declared because expo-router requires them and Expo's version policy expects them
+       pinned in the manifest. Worth knowing that expo-constants is the module exposing
+       device and session identifiers — it is one line from being misused, which is why it is
+       named here rather than left to look like an app dependency. */
+    const PLATFORM_ONLY = new Set([
+      '@expo/metro-runtime', 'expo', 'expo-constants', 'expo-linking',
+      'react-dom', 'react-native-screens', 'react-native-web',
+    ]);
+    for (const name of Object.keys(pkg.dependencies ?? {})) {
+      assert.ok(
+        ALLOWED_PACKAGES.has(name) || PLATFORM_ONLY.has(name),
+        `${name} is installed but imported nowhere — remove it or justify it in PLATFORM_ONLY`
+      );
+    }
+  });
+
+  test('the app config opens no remote channel', () => {
+    const cfg = JSON.parse(readFileSync(join(ROOT, 'app.json'), 'utf8'));
+    const expo = cfg.expo ?? cfg;
+    /* expo-updates is remote code delivery: it fetches a manifest on launch and can replace
+       the JS bundle in an installed app. Nothing about it is compatible with "there is no
+       code in here that could send anything anywhere". */
+    assert.equal(expo.updates, undefined, 'app.json configures expo-updates (remote code delivery)');
+    const ats = expo.ios?.infoPlist?.NSAppTransportSecurity;
+    assert.equal(ats, undefined, 'app.json weakens App Transport Security');
   });
 
   // SAFETY.md §4
@@ -142,7 +287,14 @@ describe('the money never touches the safety surfaces', () => {
      urge surfing now live inside it. Without it, those two screens keep passing this grep
      while rendering an upsell through a shared component — the guarantee would still be
      written down and would quietly stop being tested. */
-  const SACRED = ['app/grounding.tsx', 'app/support.tsx', 'app/urges.tsx', 'components/Finish.tsx'];
+  /* components/CrashScreen.tsx belongs here for the same reason as the rest: it renders
+     when somebody's app has just broken and their only copy of a year of private writing is
+     on the far side of a button. That is the least acceptable moment in the entire product
+     to mention a subscription. */
+  const SACRED = [
+    'app/grounding.tsx', 'app/support.tsx', 'app/urges.tsx',
+    'components/Finish.tsx', 'components/CrashScreen.tsx',
+  ];
 
   for (const path of SACRED) {
     test(`${path} contains no upgrade surface`, () => {

@@ -115,16 +115,29 @@ export function useEntitlement() {
     },
 
     /** REVENUECAT INTEGRATION POINT — Purchases.restorePurchases().
-     *  A restore re-grants an existing entitlement; it never begins a trial. */
-    async restore() {
+     *  A restore re-grants an existing entitlement; it never begins a trial.
+     *
+     *  Returns false when the provider could not be reached, so the caller can say so
+     *  rather than implying the restore succeeded.
+     *
+     *  WHY THIS NO LONGER GRANTS ON FAILURE. It used to end with an unconditional
+     *  `setEntitlement(localGrant('purchase', null, null))` — a record with no expiry, which
+     *  `isEntitled` returns true for forever. The comment called it a v1 stub, but the
+     *  `.catch(() => null)` above collapses "the network failed" into the same `null` as
+     *  "no provider is wired", so the moment RevenueCat lands this becomes live: airplane
+     *  mode, one tap on Restore, permanent Steady+ with no receipt. In an app that is
+     *  deliberately offline-capable end to end, staying offline is a normal way to use it,
+     *  not a corner case.
+     *
+     *  Note the asymmetry with `refresh()` above, which is deliberate and stays. Failing
+     *  open is right there because it PRESERVES an existing cache — the cost of being wrong
+     *  is somebody keeping access they already paid for. Here it would CREATE one out of
+     *  nothing, and the cost of being wrong is the entitlement model meaning nothing. */
+    async restore(): Promise<boolean> {
       const provider = await fetchProviderEntitlement().catch(() => null);
-      if (provider) {
-        setEntitlement(projectFromProvider(provider, planForProduct));
-        return;
-      }
-      // v1 stub with no provider wired: grant without an expiry rather than fail. This is
-      // the branch to delete first when the SDK goes in.
-      setEntitlement(localGrant('purchase', null, null));
+      if (!provider) return false;
+      setEntitlement(projectFromProvider(provider, planForProduct));
+      return true;
     },
 
     /** The hardship path. Local by design: it must work with no network, no account and

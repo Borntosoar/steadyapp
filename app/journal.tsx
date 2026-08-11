@@ -290,6 +290,9 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
 
         {step.kind === 'text' && (
           <TextInput
+            spellCheck={false}
+            autoCorrect={false}
+            autoComplete="off"
             value={text[step.key] ?? ''}
             onChangeText={(v) => setText({ ...text, [step.key]: v })}
             multiline
@@ -302,6 +305,9 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
         {step.kind === 'emotion' && (
           <>
             <TextInput
+              spellCheck={false}
+              autoCorrect={false}
+              autoComplete="off"
               value={emotion}
               onChangeText={setEmotion}
               placeholder="shame, anxiety, disgust, dread"
@@ -468,6 +474,9 @@ function Experiment({ onDone }: { onDone: () => void }) {
         <View style={{ marginTop: space.xl }}>
           {field.kind === 'text' ? (
             <TextInput
+              spellCheck={false}
+              autoCorrect={false}
+              autoComplete="off"
               value={String(vals[field.key] ?? '')}
               onChangeText={(v) => setVals({ ...vals, [field.key]: v })}
               multiline

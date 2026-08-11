@@ -24,12 +24,13 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { AppState, MomentRecord } from '../types';
+import type { AppState, MomentRecord, AvoidanceLevel, PracticeKind } from '../types';
 import { initialStreak } from './streak.ts';
 /* Imported rather than redefined. Two identical constructors for one persisted shape is
    the same hazard the MomentRecord comment in moments.ts warns about for the type: they
-   compile happily while drifting apart. */
-import { emptyMomentRecord } from './moments.ts';
+   compile happily while drifting apart. `MOMENTS` comes across for the same reason — the
+   moment ids are a closed set and normalise() rejects stored keys outside it. */
+import { emptyMomentRecord, MOMENTS } from './moments.ts';
 import { emptyEntitlement, type Entitlement } from './entitlement.ts';
 
 /* The key never changes again. Versioning happens inside the envelope; the `.v2` suffix is
@@ -96,6 +97,20 @@ export const MIGRATIONS: ((s: Payload) => Payload)[] = [
      refresh replaces this with the truth. */
   (s) => {
     const { entitled, trialStartedAt, ...rest } = s as Record<string, unknown>;
+
+    /* Idempotence guard. Without it this step is destructive when run twice: the second
+       pass finds no `entitled` field, falls into the `!entitled` branch below, and replaces
+       a real purchase with emptyEntitlement(). Verified before the guard —
+
+         after 1 migration:  {"source":"purchase","plan":null,"expiresAt":null,...}
+         after 2 migrations: {"source":"none","plan":null,"expiresAt":null,...}
+
+       — a paying customer silently losing access, with no receipt check wired up to give it
+       back. A migration gets run twice more easily than it sounds: see the version clamp in
+       migrate() below for the two ways it happened here. Every migration in this list must
+       be safe to re-apply; that is a property of the slot, not of this one step. */
+    if (rest.entitlement) return rest;
+
     if (!entitled) return { ...rest, entitlement: emptyEntitlement() };
 
     if (typeof trialStartedAt === 'string') {
@@ -113,9 +128,26 @@ export const MIGRATIONS: ((s: Payload) => Payload)[] = [
   },
 ];
 
+/** True when a stored payload comes from a build NEWER than this one.
+ *
+ *  There is no honest way to read it: the fields it gained are fields this build has never
+ *  heard of, and the migration loop below cannot run backwards. Treating it as unreadable
+ *  routes it to the quarantine-and-lock-writes path, which is exactly the right tool and is
+ *  already built.
+ *
+ *  What happened without this check: a v5 payload read by a v4 build skipped the loop, was
+ *  normalised, and was then written back stamped `{ v: 4 }` — data still v5-shaped, version
+ *  downgraded. On the next upgrade, migrate(data, 4) re-ran MIGRATIONS[4] over data that had
+ *  already been through it. The realistic trigger is not an attacker: it is a TestFlight
+ *  build followed by an App Store build, which every iOS project does. */
+export const isFromNewerBuild = (version: number): boolean => version > SCHEMA_VERSION;
+
 function migrate(data: Payload, from: number): Payload {
   let out = data;
-  for (let v = from; v < SCHEMA_VERSION; v++) {
+  /* Clamped at zero. An unclamped negative — from a hand-edited or corrupt envelope — runs
+     the entire chain over current-shaped data, which produced the same entitlement wipe as
+     the non-idempotent step above. */
+  for (let v = Math.max(0, Math.floor(from)); v < SCHEMA_VERSION; v++) {
     const step = MIGRATIONS[v];
     if (step) out = step(out);
   }
@@ -129,6 +161,62 @@ function migrate(data: Payload, from: number): Payload {
 
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 const obj = (v: unknown): Payload => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Payload) : {});
+
+/* The scalar coercions. Every one of these takes a fallback rather than trusting the stored
+   value, because "the declared type says number" is exactly the assumption this layer exists
+   to stop making.
+
+   `num` rejects NaN and Infinity as well as non-numbers. That is not pedantry: a single
+   non-finite `preoccupationMinutes` propagates through lib/reclaimed.ts into the hero figure
+   on the home screen, and the app renders "NaN hours back this week" as the one number the
+   whole product stakes its credibility on. Verified: a stored "abc" produced hours=NaN, and
+   a stored -99999 produced 11694.6 hours reclaimed. */
+const num = (v: unknown, fallback: number): number =>
+  typeof v === 'number' && Number.isFinite(v) ? v : fallback;
+const str = (v: unknown, fallback: string): string => (typeof v === 'string' ? v : fallback);
+const strOrNull = (v: unknown): string | null => (typeof v === 'string' ? v : null);
+const bool = (v: unknown, fallback: boolean): boolean => (typeof v === 'boolean' ? v : fallback);
+/** Array of strings, dropping anything that is not one. */
+const strArr = (v: unknown): string[] => arr<unknown>(v).filter((x): x is string => typeof x === 'string');
+/** Array of finite numbers, dropping anything that is not one. */
+const numArr = (v: unknown): number[] =>
+  arr<unknown>(v).filter((x): x is number => typeof x === 'number' && Number.isFinite(x));
+
+/** Every row in a collection, rebuilt from an explicit shape. Rows that cannot be rebuilt
+ *  are DROPPED rather than repaired-into-nonsense or passed through.
+ *
+ *  Dropping is the right call for a reason worth stating: a row with no usable date cannot
+ *  be placed on a timeline, in a chart, or in an export, so keeping it only moves the crash
+ *  from here to the first screen that reads it. Losing one corrupt row is a bad outcome;
+ *  losing the whole app because that row is on the launch path is a much worse one. */
+function rows<T>(v: unknown, build: (r: Payload) => T | null): T[] {
+  const out: T[] = [];
+  for (const raw of arr<unknown>(v)) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue;
+    const built = build(raw as Payload);
+    if (built) out.push(built);
+  }
+  return out;
+}
+
+/** Rows restored without a usable id get a synthetic one. Monotonic so two rows on the same
+ *  date cannot collide, which would make them the same row to a keyed list. */
+let restoredSeq = 0;
+
+/** Every row in the app is keyed by a day-resolution date string and an id. A row with no
+ *  date cannot be sorted, grouped, charted or exported, so it is dropped; a row with no id
+ *  is recoverable and gets one. */
+const dated = (r: Payload): { id: string; date: string } | null => {
+  if (typeof r.date !== 'string' || !r.date) return null;
+  return { id: str(r.id, `restored-${r.date}-${restoredSeq++}`), date: r.date };
+};
+
+const avoidance = (v: unknown): AvoidanceLevel =>
+  v === 'none' || v === 'small' || v === 'significant' ? v : 'none';
+
+const PRACTICE_KINDS: PracticeKind[] = [
+  'checkin', 'thought-record', 'grounding', 'mirror', 'urge', 'experiment', 'hard-day',
+];
 
 /** An entitlement record that survived a round trip. A missing or malformed one becomes
  *  'none' rather than being trusted — this is the one field where failing toward access
@@ -151,36 +239,221 @@ function normaliseEntitlement(v: unknown): Entitlement {
   return out;
 }
 
+/**
+ * The type boundary, and now actually one.
+ *
+ * WHAT THIS USED TO DO, AND WHY IT WAS THE MOST DANGEROUS FUNCTION IN THE APP
+ *
+ * It returned `{ ...base, ...p, <some overrides> }`. The `...p` meant every key in the
+ * parsed blob survived into application state — not just the ones AppState declares. The
+ * store then merges that object into itself (`set({ ...state, ... })`, and zustand's
+ * setState is an Object.assign), and store METHODS are ordinary properties on that object.
+ * So a stored key called `logPractice` overwrites the function called `logPractice`.
+ *
+ * Verified before the rewrite, feeding `{"checkedInToday":1,"logPractice":"pwned"}`:
+ *
+ *     checkedInToday: number 1        (app/(tabs)/index.tsx calls it — TypeError on launch)
+ *     logPractice   : string "pwned"
+ *     reset present : true            ("delete my data" throws)
+ *
+ * There is no ErrorBoundary in this app, so that TypeError unmounts the entire tree,
+ * including the always-mounted SupportBar. The person loses grounding, crisis support, their
+ * relapse plan, and the export button — everything, at once, with no route back except
+ * deleting the app, which is total loss. And because JSON.parse succeeded, `loadOk` stays
+ * true, nothing is quarantined, and the poisoned payload is faithfully written back on the
+ * next launch. It is self-perpetuating.
+ *
+ * The trigger does not need an attacker. A field rename, a partial write, or wiring up the
+ * import path that already exists produces the same class of state.
+ *
+ * SO: build the result field by field, from an allowlist. Never spread the payload. The
+ * shape of this function is now the shape of AppState, and adding a field to AppState
+ * without adding it here means it does not survive a restart — which is a loud, cheap
+ * failure, and the correct direction for this to fail in.
+ */
 export function normalise(parsed: unknown): AppState {
   const p = obj(parsed);
   const base = emptyState();
 
-  /* Each moment record is merged against its own default. Merging only the outer map —
-     which is what this used to do — leaves individual records short of fields, and a
-     record missing `shows` produces a prompt that can never retire. */
+  /* Each moment record is rebuilt from its own default, field by field. Merging — which is
+     what this used to do — repairs a MISSING field but happily keeps a wrong-typed one, and
+     the file header explains exactly why that matters: `shows` of "abc" makes `shows + 1`
+     the string "abc1", `"abc1" >= maxShows` is false, and the prompt can never retire. That
+     is the bug the merge was written to prevent, still present in the merge.
+
+     The key is checked too. `moments[k] = …` with k of "__proto__" replaces the prototype of
+     the map: a crafted payload setting it to `{ "trial-ending": { acted: true } }` makes
+     nextMoment() read `acted` through the prototype and permanently retire the trial-ending
+     notice — silencing the billing warning the paywall explicitly promises. Verified. The
+     moment ids are a closed set, so the fix is to only accept keys from it. */
   const moments: Record<string, MomentRecord> = {};
   for (const [k, v] of Object.entries(obj(p.moments))) {
-    moments[k] = { ...emptyMomentRecord(), ...obj(v) } as MomentRecord;
+    /* hasOwnProperty, not `k in MOMENTS`. `in` walks the prototype chain, so
+       `'__proto__' in MOMENTS` is true — the guard would have admitted the exact key it was
+       written to reject, along with 'toString', 'constructor' and the rest of
+       Object.prototype. An own-property check is the only one that means what it says. */
+    if (!Object.prototype.hasOwnProperty.call(MOMENTS, k)) continue;
+    const r = obj(v);
+    moments[k] = {
+      shows: num(r.shows, 0),
+      lastShownDate: strOrNull(r.lastShownDate),
+      dismissals: num(r.dismissals, 0),
+      lastDismissedDate: strOrNull(r.lastDismissedDate),
+      acted: bool(r.acted, false),
+    };
   }
 
+  const profile = obj(p.profile);
+  const streak = obj(p.streak);
+  const protocol = obj(p.protocol);
+  const baseline = obj(p.baseline);
+  const plan = obj(protocol.relapsePlan);
+
   return {
-    ...base,
-    ...p,
-    profile: { ...base.profile, ...obj(p.profile) },
-    streak: { ...initialStreak(), ...obj(p.streak) },
-    protocol: { ...base.protocol, ...obj(p.protocol) },
-    // Collections are coerced to arrays: a corrupted scalar here would otherwise crash
-    // every `.filter` and `.map` downstream on the first render.
-    checkIns: arr(p.checkIns),
-    urgeLogs: arr(p.urgeLogs),
-    thoughtRecords: arr(p.thoughtRecords),
-    mirrorSessions: arr(p.mirrorSessions),
-    experiments: arr(p.experiments),
-    practice: arr(p.practice),
-    readModules: arr(p.readModules),
+    profile: {
+      firstName: typeof profile.firstName === 'string' ? profile.firstName : undefined,
+      onboardedAt: strOrNull(profile.onboardedAt),
+      disclaimerAcceptedAt: strOrNull(profile.disclaimerAcceptedAt),
+      supportRegion: str(profile.supportRegion, base.profile.supportRegion),
+    },
+
+    /* `baseline` is nullable and was not shape-checked at all, so a stored `5` sailed
+       through — truthy, so computeReclaimed walked straight past its `if (!baseline)` guard
+       and read fields off a number. It is only a baseline if it carries the figure the whole
+       product measures against. */
+    baseline:
+      typeof baseline.preoccupationMinutes === 'number' && Number.isFinite(baseline.preoccupationMinutes)
+        ? {
+            capturedAt: str(baseline.capturedAt, ''),
+            preoccupationMinutes: baseline.preoccupationMinutes,
+            urge: num(baseline.urge, 0),
+            avoidance: avoidance(baseline.avoidance),
+            suds: num(baseline.suds, 0),
+          }
+        : null,
+
+    checkIns: rows(p.checkIns, (r) => {
+      const d = dated(r);
+      if (!d) return null;
+      return {
+        ...d,
+        preoccupationMinutes: num(r.preoccupationMinutes, 0),
+        urge: num(r.urge, 0),
+        avoidance: avoidance(r.avoidance),
+        suds: num(r.suds, 0),
+        ...(typeof r.note === 'string' ? { note: r.note } : {}),
+      };
+    }),
+
+    urgeLogs: rows(p.urgeLogs, (r) => {
+      const d = dated(r);
+      if (!d) return null;
+      return {
+        ...d,
+        trigger: str(r.trigger, ''),
+        wantedTo: str(r.wantedTo, ''),
+        intensityBefore: num(r.intensityBefore, 0),
+        resisted: bool(r.resisted, false),
+        ...(typeof r.intensityAfter === 'number' && Number.isFinite(r.intensityAfter)
+          ? { intensityAfter: r.intensityAfter }
+          : {}),
+      };
+    }),
+
+    /* Thought records and experiments carry the most free text and the most optional
+       fields. Strings are kept as written — this is the user's own writing and nothing here
+       may edit it — but a non-string in a string slot becomes an empty string rather than
+       reaching a `.slice` or a `.trim` on a screen. */
+    thoughtRecords: rows(p.thoughtRecords, (r) => {
+      const d = dated(r);
+      if (!d) return null;
+      return {
+        ...d,
+        situation: str(r.situation, ''),
+        emotion: str(r.emotion, ''),
+        emotionIntensity: num(r.emotionIntensity, 0),
+        automaticThought: str(r.automaticThought, ''),
+        distortions: strArr(r.distortions),
+        evidenceFor: str(r.evidenceFor, ''),
+        evidenceAgainst: str(r.evidenceAgainst, ''),
+        balancedThought: str(r.balancedThought, ''),
+        reRatedIntensity: num(r.reRatedIntensity, 0),
+      };
+    }),
+
+    mirrorSessions: rows(p.mirrorSessions, (r) => {
+      const d = dated(r);
+      if (!d) return null;
+      return {
+        ...d,
+        phase: num(r.phase, 1),
+        durationSeconds: num(r.durationSeconds, 0),
+        sudsBefore: num(r.sudsBefore, 0),
+        sudsAfter: num(r.sudsAfter, 0),
+        completed: bool(r.completed, false),
+      };
+    }),
+
+    experiments: rows(p.experiments, (r) => {
+      const d = dated(r);
+      if (!d) return null;
+      return {
+        ...d,
+        avoiding: str(r.avoiding, ''),
+        prediction: str(r.prediction, ''),
+        likelihoodBefore: num(r.likelihoodBefore, 0),
+        safetyBehavioursDropped: str(r.safetyBehavioursDropped, ''),
+        ...(typeof r.outcome === 'string' ? { outcome: r.outcome } : {}),
+        ...(typeof r.comparison === 'string' ? { comparison: r.comparison } : {}),
+        ...(typeof r.likelihoodAfter === 'number' && Number.isFinite(r.likelihoodAfter)
+          ? { likelihoodAfter: r.likelihoodAfter }
+          : {}),
+        ...(typeof r.conclusion === 'string' ? { conclusion: r.conclusion } : {}),
+        ...(typeof r.completedAt === 'string' ? { completedAt: r.completedAt } : {}),
+      };
+    }),
+
+    practice: rows(p.practice, (r) => {
+      const d = dated(r);
+      if (!d) return null;
+      if (!PRACTICE_KINDS.includes(r.kind as PracticeKind)) return null;
+      return { ...d, kind: r.kind as PracticeKind };
+    }),
+
+    streak: {
+      current: num(streak.current, 0),
+      longest: num(streak.longest, 0),
+      freezesRemaining: num(streak.freezesRemaining, initialStreak().freezesRemaining),
+      lastPracticeDate: strOrNull(streak.lastPracticeDate),
+      frozenDates: strArr(streak.frozenDates),
+    },
+
+    /* The nested arrays. These were merged as a plain object, so they got no array coercion
+       at all while the seven top-level collections did. Verified: a stored
+       `protocol: { weekPracticeDates: 5 }` survived, and `weekProgress` — called on the
+       launch screen — threw "number 5 is not iterable". */
+    protocol: {
+      currentWeek: num(protocol.currentWeek, 1),
+      weekPracticeDates: strArr(protocol.weekPracticeDates),
+      completedWeeks: numArr(protocol.completedWeeks),
+      avoidedConditions: strArr(protocol.avoidedConditions),
+      ...(plan.updatedAt || plan.earlyWarnings || plan.whatHelps || plan.whoToTell || plan.firstStep
+        ? {
+            relapsePlan: {
+              earlyWarnings: str(plan.earlyWarnings, ''),
+              whatHelps: str(plan.whatHelps, ''),
+              whoToTell: str(plan.whoToTell, ''),
+              firstStep: str(plan.firstStep, ''),
+              updatedAt: str(plan.updatedAt, ''),
+            },
+          }
+        : {}),
+    },
+
+    readModules: strArr(p.readModules),
     moments,
     entitlement: normaliseEntitlement(p.entitlement),
-  } as AppState;
+  };
 }
 
 /* ---------- load / save ---------- */
@@ -212,18 +485,31 @@ export async function loadState(): Promise<LoadResult> {
     const versioned = typeof enveloped.v === 'number';
     const version = versioned ? (enveloped.v as number) : 2;
     const data = versioned ? obj(enveloped.data) : enveloped;
+
+    /* A payload from a newer build takes the same route as an unparseable one, and for the
+       same reason: we cannot read it, so we must not write over it. Reading it as far as we
+       understand and then stamping our own lower version on the way out is the destructive
+       option, because it downgrades the envelope while leaving the data in the newer shape —
+       and the next upgrade then re-runs a migration over data that has already had it. */
+    if (isFromNewerBuild(version)) return quarantine(raw);
+
     return { state: normalise(migrate(data, version)), ok: true };
   } catch {
     /* Unparseable. Keep the bytes before doing anything else — a truncated write or a
        corrupted row is often still largely readable by hand, and this is somebody's
        journal. Quarantine first, degrade second, and never write until restart. */
-    const key = `${QUARANTINE_PREFIX}${Date.now()}`;
-    try {
-      await AsyncStorage.setItem(key, raw);
-      return { state: emptyState(), ok: false, quarantinedAt: key };
-    } catch {
-      return { state: emptyState(), ok: false };
-    }
+    return quarantine(raw);
+  }
+}
+
+/** Copy bytes we refuse to interpret somewhere safe, and lock writes. */
+async function quarantine(raw: string): Promise<LoadResult> {
+  const key = `${QUARANTINE_PREFIX}${Date.now()}`;
+  try {
+    await AsyncStorage.setItem(key, raw);
+    return { state: emptyState(), ok: false, quarantinedAt: key };
+  } catch {
+    return { state: emptyState(), ok: false };
   }
 }
 
@@ -243,9 +529,23 @@ export async function saveState(state: AppState): Promise<boolean> {
   }
 }
 
+/** "Delete my data" — and it has to mean all of it.
+ *
+ *  This used to remove STORAGE_KEY alone, which left every quarantined payload on disk:
+ *  full, plaintext, uncensored copies of the journal, written by the recovery path and
+ *  never garbage-collected by design. Somebody who taps a button reading "delete
+ *  everything" and is told it is gone has been told something false, and the copies left
+ *  behind are the most sensitive bytes the app ever writes. */
 export async function wipeState(): Promise<void> {
   try {
     await AsyncStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* nothing useful to do */
+  }
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    const quarantined = keys.filter((k) => k.startsWith(QUARANTINE_PREFIX));
+    if (quarantined.length) await AsyncStorage.multiRemove(quarantined);
   } catch {
     /* nothing useful to do */
   }

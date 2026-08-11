@@ -2,6 +2,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   normalise, emptyState, exportText, exportJson, importJson, MIGRATIONS, SCHEMA_VERSION,
+  isFromNewerBuild,
 } from '../lib/storage.ts';
 
 /* Persistence.
@@ -186,5 +187,152 @@ describe('export is a backup, not a progress summary', () => {
 
   test('an empty state exports without throwing', () => {
     assert.ok(exportText(emptyState()).length > 0);
+  });
+});
+
+/* ---------- the hostile-payload suite ----------
+ *
+ * Added after a security review found `normalise` was documented as "the type boundary" and
+ * implemented as `{ ...base, ...p }` — a merge, which passed every key of the stored blob
+ * straight into application state. Each test below corresponds to a failure reproduced by
+ * execution against the old implementation, and every one of them ended the same way: an
+ * unhandled TypeError on the launch screen, which with no error boundary meant a blank app
+ * with no crisis numbers and no route to the only copy of the person's writing.
+ *
+ * The threat here is almost never an attacker. It is a partial write, a field rename, or
+ * the import path that already exists getting wired up. */
+describe('normalise survives a hostile or corrupt payload', () => {
+  test('keys that are not part of AppState do not survive', () => {
+    /* THE CRITICAL ONE. The store merges this object into itself and zustand's setState is
+       an Object.assign, so store METHODS are ordinary properties on the target: a stored key
+       called `logPractice` overwrote the function called `logPractice`. Reproduced before
+       the fix as `logPractice: string "pwned"`, then TypeError on the first render. */
+    const s = normalise({ checkedInToday: 1, logPractice: 'pwned', reset: null, __proto__: { x: 1 } });
+    assert.equal(s.checkedInToday, undefined);
+    assert.equal(s.logPractice, undefined);
+    assert.ok(!('reset' in s));
+    assert.deepEqual(Object.keys(s).sort(), Object.keys(emptyState()).sort());
+  });
+
+  test('the nested arrays are coerced, not only the top-level collections', () => {
+    // `protocol` and `streak` were merged as plain objects, so their arrays got nothing.
+    // `weekProgress` — called on the launch screen — threw "number 5 is not iterable".
+    const s = normalise({
+      protocol: { weekPracticeDates: 5, completedWeeks: 'x', avoidedConditions: {} },
+      streak: { frozenDates: 7 },
+    });
+    assert.ok(Array.isArray(s.protocol.weekPracticeDates));
+    assert.ok(Array.isArray(s.protocol.completedWeeks));
+    assert.ok(Array.isArray(s.protocol.avoidedConditions));
+    assert.ok(Array.isArray(s.streak.frozenDates));
+  });
+
+  test('a malformed row is dropped rather than propagated to the first screen that reads it', () => {
+    const s = normalise({
+      checkIns: [null, 'nope', { date: 20260101 }, { id: 'ok', date: '2026-01-02' }],
+      practice: [{ id: 'p', date: '2026-01-02', kind: 'not-a-kind' }, { id: 'q', date: '2026-01-02', kind: 'checkin' }],
+    });
+    assert.equal(s.checkIns.length, 1);
+    assert.equal(s.checkIns[0].date, '2026-01-02');
+    assert.equal(s.practice.length, 1, 'an unknown practice kind should not survive');
+  });
+
+  test('every surviving row has the fields the screens read off it', () => {
+    const s = normalise({ checkIns: [{ date: '2026-01-02' }], urgeLogs: [{ date: '2026-01-02' }] });
+    for (const c of s.checkIns) {
+      assert.equal(typeof c.id, 'string');
+      assert.ok(Number.isFinite(c.preoccupationMinutes));
+      assert.ok(['none', 'small', 'significant'].includes(c.avoidance));
+    }
+    for (const u of s.urgeLogs) assert.equal(typeof u.resisted, 'boolean');
+  });
+
+  test('non-finite numbers never reach the figure the whole product is sold on', () => {
+    /* Unguarded, a stored "abc" produced hours=NaN and a stored -99999 produced 11694.6
+       hours reclaimed — rendered at hero size on the home screen as the one number the user
+       is asked to trust. */
+    const s = normalise({
+      checkIns: [
+        { id: 'a', date: '2026-01-02', preoccupationMinutes: 'abc' },
+        { id: 'b', date: '2026-01-03', preoccupationMinutes: Infinity },
+      ],
+      baseline: { capturedAt: 'x', preoccupationMinutes: NaN },
+    });
+    for (const c of s.checkIns) assert.ok(Number.isFinite(c.preoccupationMinutes));
+    assert.equal(s.baseline, null, 'a baseline with no usable figure is not a baseline');
+  });
+
+  test('a moment record with wrong-typed fields is repaired, not merely backfilled', () => {
+    /* The merge repaired a MISSING field and kept a WRONG-TYPED one, which is the bug it was
+       written to prevent: shows of "abc" makes `shows + 1` the string "abc1", and
+       `"abc1" >= maxShows` is false, so the prompt can never retire. */
+    const s = normalise({ moments: { 'week-one-ask': { shows: 'abc', acted: 'no' } } });
+    assert.equal(s.moments['week-one-ask'].shows, 0);
+    assert.equal(s.moments['week-one-ask'].acted, false);
+  });
+
+  test('a crafted moments key cannot replace the map prototype', () => {
+    /* `moments[k] = …` with k of "__proto__" set the prototype of the map. A payload
+       setting it to { 'trial-ending': { acted: true } } made nextMoment() read `acted`
+       through the prototype and permanently retire the trial-ending notice — silencing the
+       billing warning the paywall explicitly promises. Note `k in MOMENTS` does NOT fix
+       this: `in` walks the prototype chain, so '__proto__' in MOMENTS is true. */
+    const s = normalise(JSON.parse('{"moments":{"__proto__":{"trial-ending":{"acted":true}}}}'));
+    assert.equal(Object.getPrototypeOf(s.moments), Object.prototype);
+    assert.equal(s.moments['trial-ending'], undefined);
+  });
+
+  test('a stored baseline that is not an object cannot masquerade as one', () => {
+    // `baseline: 5` is truthy, so computeReclaimed walked past its `if (!baseline)` guard.
+    for (const bad of [5, 'x', [], true]) assert.equal(normalise({ baseline: bad }).baseline, null);
+  });
+
+  test('exportText never throws, whatever came out of normalise', () => {
+    /* The recovery path must not be the first thing to break. It is free on every tier and,
+       because the container is excluded from iCloud backup, it is the only copy that
+       survives a dead phone — and the copy prompt fires precisely when saving has failed. */
+    const hostile = [
+      { checkIns: [null] }, { checkIns: [{ date: 12345 }] }, { urgeLogs: [null] },
+      { mirrorSessions: [null] }, { experiments: [null] }, { practice: [null] },
+      { protocol: { weekPracticeDates: 5 } }, { baseline: 5 }, {},
+    ];
+    for (const h of hostile) {
+      const s = normalise(h);
+      assert.equal(typeof exportText(s), 'string');
+      assert.equal(typeof exportJson(s), 'string');
+    }
+  });
+});
+
+describe('migrations are safe to re-apply', () => {
+  test('every migration is idempotent', () => {
+    /* MIGRATIONS[3] was not. Applied twice it found no `entitled` field, took the !entitled
+       branch, and replaced a real purchase with emptyEntitlement() — a paying customer
+       silently losing access with no receipt check wired up to give it back. The realistic
+       trigger is a TestFlight build followed by an App Store build. */
+    const sample = {
+      entitled: true,
+      entitlement: { source: 'purchase', plan: 'yearly', expiresAt: null, verifiedAt: '2026-08-01T00:00:00Z' },
+      checkIns: [{ id: 'c', date: '2026-01-02' }],
+    };
+    for (let i = 0; i < MIGRATIONS.length; i++) {
+      const once = MIGRATIONS[i](structuredClone(sample));
+      const twice = MIGRATIONS[i](structuredClone(once));
+      assert.deepEqual(twice, once, `MIGRATIONS[${i}] is not idempotent`);
+    }
+  });
+
+  test('a re-run of the entitlement migration does not revoke a purchase', () => {
+    const paid = { entitlement: { source: 'purchase', plan: 'yearly', expiresAt: null, verifiedAt: '2026-08-01T00:00:00Z' } };
+    assert.equal(MIGRATIONS[3](structuredClone(paid)).entitlement.source, 'purchase');
+  });
+
+  test('a payload from a newer build is not readable and must not be re-stamped', () => {
+    /* Reading a v(N+1) payload with a vN build skipped the loop, normalised what it
+       understood, and wrote it back stamped vN — data still in the newer shape, version
+       downgraded, so the next upgrade re-ran a migration over already-migrated data. */
+    assert.equal(isFromNewerBuild(SCHEMA_VERSION + 1), true);
+    assert.equal(isFromNewerBuild(SCHEMA_VERSION), false);
+    assert.equal(isFromNewerBuild(SCHEMA_VERSION - 1), false);
   });
 });

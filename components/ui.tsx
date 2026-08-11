@@ -293,6 +293,16 @@ export function Field({
         placeholder={placeholder}
         placeholderTextColor={c.inkFaint}
         multiline={multiline}
+        /* Inert on native; load-bearing on web. react-native-web renders this as a
+           <textarea>, and browser spellcheck is on by default — Chrome's Enhanced Spellcheck
+           and Edge's Microsoft Editor upload the full contents of such a field to Google and
+           Microsoft. For the one surface in this app where somebody writes about their own
+           body, that is the difference between "nothing leaves this phone" being true and
+           being true only on iOS. autoComplete for the same reason: this text must never
+           reach a browser's saved-form store. */
+        spellCheck={false}
+        autoCorrect={false}
+        autoComplete="off"
         style={{
           ...t.body,
           color: c.ink,

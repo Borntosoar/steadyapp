@@ -30,6 +30,7 @@ export default function Paywall() {
   const [plan, setPlan] = useState<Plan>('yearly');
   const [hardship, setHardship] = useState(false);
   const [showLifetime, setShowLifetime] = useState(false);
+  const [restoreFailed, setRestoreFailed] = useState(false);
 
   /* The user's own number, on the screen that asks for money.
    *
@@ -372,15 +373,27 @@ export default function Paywall() {
             </View>
           )}
 
+          {/* Restore can fail, and it now says so instead of silently doing nothing.
+              It used to grant a permanent entitlement whenever the provider could not be
+              reached, which meant this button read as "it worked" in every case — including
+              the one where it had just handed out a free subscription to anybody in airplane
+              mode. Honest failure needs somewhere to be said. */}
           <Button
             label="Restore purchase"
             variant="ghost"
             onPress={async () => {
-              await restore();
-              router.replace('/');
+              const ok = await restore();
+              if (ok) router.replace('/');
+              else setRestoreFailed(true);
             }}
             style={{ marginTop: space.lg }}
           />
+          {restoreFailed ? (
+            <BodySm style={{ textAlign: 'center', color: c.cool, marginTop: space.xs }}>
+              We could not reach the App Store just now. Nothing was charged and nothing
+              changed. Try again when you have a connection.
+            </BodySm>
+          ) : null}
           <Button label="Not now" variant="ghost" onPress={dismiss} />
         </View>
       </View>
