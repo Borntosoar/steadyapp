@@ -1,0 +1,163 @@
+# Going worldwide
+
+The decision is worldwide availability. This is what that actually breaks down into, what is
+done, and where I stopped and why.
+
+---
+
+## 1. Two different things called "worldwide"
+
+**Availability** is a distribution decision and it is a good one. The App Store sells in 175
+territories; there is no reason to withhold this from any of them, and the marginal cost is
+zero. Done, and the work below is what it implies.
+
+**Governing law is not a distribution decision and cannot be "worldwide".** A contract has to
+name one jurisdiction whose law governs it and whose courts hear a dispute. Left blank, the
+terms are ambiguous and a court imposes an answer anyway — usually the consumer's, which is
+the outcome you would have chosen last. `legal/terms-of-use.md` therefore still carries
+`[GOVERNING LAW JURISDICTION — TODO]`, and it is the one field I could not fill in for you.
+
+Two things worth knowing before you pick:
+
+- **You cannot contract out of consumer rights in the EU, the UK, Australia or several US
+  states.** Whatever law you choose, a consumer in Germany keeps their German statutory
+  rights. So the clause needs to name a law *and* say that local mandatory rights are
+  unaffected — the draft already does the second half.
+- **The sensible answer is almost always where you and the entity are.** Choosing somewhere
+  "friendlier" that you have no connection to reads as forum shopping, is expensive to
+  enforce, and buys nothing against consumers who cannot be bound by it anyway.
+
+This is the last blocker on publishing the legal site, which is the last blocker on
+submission. It is a five-minute decision, not a project.
+
+---
+
+## 2. Crisis lines: done, and this was the urgent part
+
+This is where worldwide availability actually hurt someone, so it went first.
+
+Before: four countries and a "Somewhere else" entry pointing at one web address. That is
+defensible when the listing is English-only. The moment the app is in every territory, the
+fallback stops being an edge case and becomes the **default for most users** — and "open a
+browser and find your own crisis line" is the wrong sentence to hand somebody at the moment
+they open that screen. The default region was also hard-coded to `us`, so a person in Germany
+having a bad day was being shown 911.
+
+Now: **31 regions**, each with national services in the local language, plus three structural
+rules enforced by `__tests__/support.test.mjs`:
+
+1. **Every region carries `findahelpline.com` as a backstop** — not as a fallback for regions
+   I did not cover, but *inside* every region I did. National numbers get renumbered, merged
+   and defunded; the directory's whole job is staying current. This is what makes a stale
+   entry a degradation rather than a dead end.
+2. **Every region flags an emergency number**, structurally (`emergency: true`), not by
+   matching the line's name. The first version of that test pattern-matched names and failed
+   on Dutch — and would have silently stopped covering every future region written in a
+   language nobody had added to the regex.
+3. **Nothing is machine-translated.** Services are named as they are actually known —
+   Telefonseelsorge, よりそいホットライン, Línea de la Vida — because that is what somebody
+   will recognise and what they will hear when they call.
+
+The region is now guessed from the device locale on first launch only (`hooks/deviceLocale.ts`),
+never overriding a stored choice, and an unrecognised locale lands on the international
+directory rather than on a confident wrong country.
+
+**Before ship:** every number needs confirming against its provider. Rule 1 is why that is a
+"must do" and not a "cannot ship without" — a stale entry still leaves a working route.
+
+---
+
+## 3. Translating the app: not done, and here is the honest reason
+
+"All languages" is the request. I have built toward it and stopped short of doing it, because
+doing it badly here is worse than not doing it.
+
+### The objection that is specific to this app
+
+`docs/GROWTH.md` §2.6 puts it precisely, and it is the single best observation in that
+document:
+
+> `__tests__/copy.test.mjs` and `__tests__/readability.test.mjs` enforce Steady's tone — no
+> shaming language, no appearance evaluation, no treatment claims, eighth-grade reading level
+> — **using English-language pattern matching.** Translate the app and the entire enforcement
+> mechanism silently stops covering the shipped product.
+
+SAFETY.md's central claim is that the rules are tests rather than review notes. Ship a
+machine-translated Spanish build and that claim becomes false in Spanish, quietly, with every
+test still green. The app would *look* as safe as it does now and would not be.
+
+### What specifically goes wrong
+
+- **The disclaimer.** "Steady is not therapy and has not been trialled" is a legal position.
+  A translation that softens it into "Steady is a treatment" is a medical claim in a
+  jurisdiction whose regulator did not read the English.
+- **The crisis copy.** The hard-day path is written to be usable by somebody in real
+  distress. Tone is the entire design, and tone is what machine translation loses first.
+- **Reading level.** The 8th-grade constraint is enforced by a Flesch-Kincaid implementation
+  that is English-specific. German compounds and Japanese have no equivalent metric in
+  `lib/readability.ts`.
+- **The module content.** ~12,000 words of clinically-informed prose about a condition where
+  the wrong phrasing reinforces the very comparison the exercise exists to interrupt.
+
+### What it actually costs
+
+`docs/GROWTH.md` §2.6, which I agree with: **$4,000–$6,000 per language** — professional
+translation of ~18,000 words, plus a clinician who speaks the language reviewing it, plus
+per-locale test work. Not $0 and a translation API.
+
+### The recommendation
+
+**One language, after English shows product-market fit, chosen from App Store Connect's
+territory breakdown** — which arrives free, with no analytics SDK, once there are installs.
+Let the data pick it rather than guessing now. Do not do four at once.
+
+### What I would build first, when you say go
+
+In this order, because it front-loads the safety-critical and cheap parts:
+
+1. **Extract strings into a locale table.** `content/*.ts` is already the single source for
+   all copy, which is most of this job done. It becomes `content/en/*.ts` plus a typed key
+   union, so a missing translation is a compile error rather than a blank screen.
+2. **Make the safety tests locale-parameterised.** Every rule in `copy.test.mjs` gets a
+   per-language word list, and the suite runs once per shipped locale. A language cannot ship
+   until its list exists. This is the piece that keeps SAFETY.md true.
+3. **Ship the crisis screen and the disclaimer first, alone.** They are short, they are the
+   highest-stakes text in the app, and they are worth human translation even for a locale
+   where the rest stays English. An app that is English throughout but hands you your own
+   country's crisis line in your own language is a coherent product; one where the module
+   text is fluent and the crisis line is wrong is not.
+4. **Then the modules**, professionally translated and clinically reviewed.
+
+---
+
+## 4. Store listing localisation
+
+`fastlane/metadata/` currently holds `en-US` only. Listing metadata is short, cheap to
+translate well, and is the one place localisation pays off before the app itself is
+translated: an app listed in German with an English UI still ranks and still converts, and
+several categories of user will happily use an English app they found in their own language.
+
+`__tests__/store-metadata.test.mjs` reads whatever locale folders exist and applies the
+treatment-vocabulary, safety and field-limit rules to all of them. Adding `de-DE` therefore
+gets checked automatically — except for the vocabulary lists, which are English. That gap is
+the same one as §3.2 and gets closed the same way.
+
+---
+
+## 5. What is done
+
+- [x] 31 crisis regions with national services, up from 4
+- [x] `findahelpline.com` backstop in every region
+- [x] Emergency number flagged structurally in every region
+- [x] Device-locale region guess on first launch, never overriding a choice
+- [x] `__tests__/support.test.mjs` — 13 tests holding all of the above
+- [x] Store metadata test reads any locale folder
+
+## 6. What is not, and what it needs
+
+- [ ] **Governing law jurisdiction** — one word from you, blocks the legal site and submission
+- [ ] Verify all 31 regions' numbers against their providers
+- [ ] String extraction into a locale table
+- [ ] Locale-parameterised safety and readability tests
+- [ ] First translated locale: crisis + disclaimer first, then modules
+- [ ] Per-locale store listings

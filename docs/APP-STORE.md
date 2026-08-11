@@ -583,6 +583,13 @@ and the app enters 5.1.3 territory.
 
 Blockers first.
 
+- [ ] **Every crisis number in `constants/support.ts` verified against its provider.** 31
+      regions, assembled from knowledge rather than a live check. A wrong number here is the
+      worst bug this app can ship. Mitigated but not removed by the findahelpline.com
+      backstop in every region — see `docs/LOCALISATION.md` §2
+- [ ] **Governing law jurisdiction chosen** — blocks the legal site build, which blocks the
+      privacy policy URL, which blocks submission. "Worldwide" is availability, not a
+      governing-law clause; see `docs/LOCALISATION.md` §1
 - [ ] Apple Developer Program enrolment is an **Organization**, not an Individual (5.1)
 - [ ] Privacy policy hosted at a real URL, linked in App Store Connect **and in-app** (5.2)
 - [ ] StoreKit / RevenueCat wired — `purchase()` and `restore()` are not stubs (5.3)

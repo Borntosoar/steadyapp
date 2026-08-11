@@ -207,5 +207,17 @@ export interface Distortion {
 export interface SupportRegion {
   key: string;
   label: string;
-  lines: { name: string; contact: string; note?: string }[];
+  lines: SupportLine[];
+}
+
+export interface SupportLine {
+  name: string;
+  contact: string;
+  note?: string;
+  /** The national emergency service. Flagged structurally rather than detected from the
+   *  name, because the name is in the local language — "Noodgeval", "Notruf", "救急" — and a
+   *  test that pattern-matches those is a test that silently stops covering a region the
+   *  moment somebody adds one in a language nobody thought of. Which is precisely what
+   *  happened the first time this was checked. */
+  emergency?: true;
 }

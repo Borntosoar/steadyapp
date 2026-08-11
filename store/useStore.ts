@@ -11,6 +11,8 @@ import type {
   UrgeLog,
 } from '../types';
 import { emptyState, loadState, saveState, wipeState, isEncryptionActive } from '../lib/storage';
+import { regionForLocale } from '../constants/support';
+import { deviceLocale } from '../hooks/deviceLocale';
 import { dayKey, registerPractice, milestoneReached } from '../lib/streak';
 import { recordPracticeDay } from '../lib/protocol';
 import { markShown, markDismissed, markActed, type MomentId } from '../lib/moments';
@@ -126,8 +128,20 @@ export const useStore = create<StoreApi>((set, get) => ({
 
   hydrate: async () => {
     const { state, ok, quarantinedAt } = await loadState();
+
+    /* Guess the crisis-line region from the device, but ONLY on a genuinely fresh install.
+       `onboardedAt` is the marker: once somebody has been through onboarding, what is stored
+       is either their explicit choice or a default they have already lived with, and quietly
+       changing it because they picked up a phone in another country would be the app
+       overriding a person about where they are.
+       Before this, the default was 'us' for everybody on earth — a reasonable guess for an
+       English-only listing and a bad one for an app available in every territory. */
+    const fresh = !state.profile.onboardedAt;
+    const supportRegion = fresh ? regionForLocale(deviceLocale()) : state.profile.supportRegion;
+
     set({
       ...state,
+      profile: { ...state.profile, supportRegion },
       hydrated: true,
       loadOk: ok,
       quarantinedAt: quarantinedAt ?? null,
