@@ -328,10 +328,21 @@ export default function Paywall() {
                 ? `${RENEWAL_TERMS.lifetime}.`
                 : `Free until ${trialEndDate()}. Then ${RENEWAL_TERMS[plan]}.`}
             </BodySm>
+            {/* "We will remind you" was an overstatement, and writing the test for it is what
+                made that obvious. The reminder is an in-app card: it fires on each of the
+                last three days, outranks every other moment, and survives the distress
+                suppression that silences everything else — but somebody who does not open
+                Steady during that week is not reminded at all. For an app deliberately built
+                to be missable, with no streak and no nagging, that is a realistic person
+                rather than an edge case.
+                So the sentence says where the reminder appears, and puts the mechanism that
+                does not depend on us first. A promise the app keeps only for people who
+                happened to show up is the kind of small untruth this whole screen exists not
+                to tell. */}
             {plan !== 'lifetime' && (
               <BodySm style={{ marginTop: space.xs, textAlign: 'center', color: c.inkFaint }}>
-                We will remind you two days before it ends. Cancel any time in your app store
-                settings, in fewer taps than it took to start.
+                Cancel any time in your app store settings, in fewer taps than it took to
+                start. Steady will also show you a reminder here in the last two days.
               </BodySm>
             )}
             {/* Guideline 3.1.2 wants these reachable from inside the app, adjacent to the

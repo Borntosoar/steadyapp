@@ -603,16 +603,22 @@ Blockers first.
       anything a customer reads
 - [ ] Free trial configured at a duration App Store Connect sells. `PRICING.trialDays` is
       30, i.e. the "1 month" introductory offer. Asserted in `__tests__/entitlement.test.mjs`
-- [ ] App Privacy label matches what the build actually does, including RevenueCat (5.7)
-- [ ] New age-rating questionnaire completed; result is 16+ (5.6)
-- [ ] App Review notes written, including the hardship path and the camera alternative (5.3)
-- [ ] Category is Health & Fitness (5.5)
+- [ ] App Privacy label matches what the build actually does, including RevenueCat (5.7) — both states written out in `docs/SUBMISSION-ANSWERS.md` §3. Today the honest answer is Data Not Collected; the RevenueCat rows go in the SAME submission as the SDK
+- [ ] New age-rating questionnaire completed — answers written in `docs/SUBMISSION-ANSWERS.md` §2; expected result 4+, and if it comes out higher find out which answer did it rather than accepting it
+- [x] App Review notes written, including the hardship path and the camera alternative (5.3) — `docs/SUBMISSION-ANSWERS.md` §1
+- [x] Category is Health & Fitness (5.5) — `fastlane/metadata/en-US/primary_category.txt`, asserted by test
 - [ ] No treatment vocabulary anywhere in name, subtitle, keywords, screenshots or
       description (5.5)
-- [ ] `trial-ending` reminder actually fires (5.4)
+- [x] `trial-ending` reminder actually fires (5.4) — `__tests__/trial-reminder.test.mjs`
+      proves it fires on each of the last three days, outranks every other moment, survives
+      the distress suppression, and cannot be dismissed away. **Known gap:** it is in-app
+      only, so a user who does not open Steady that week is not reminded. The paywall copy
+      was corrected to say so rather than overstate it. A local notification is the real
+      fix and is the one notification this app has a clean justification for — service, not
+      engagement
 - [ ] No human face in any screenshot (§4)
-- [ ] Keyword field is 99 characters, no spaces after commas, nothing repeated from the
-      name or subtitle (§2)
+- [x] Keyword field is 99 characters, no spaces after commas, nothing repeated from the
+      name or subtitle (§2) — in `fastlane/metadata/`, all four rules asserted by test
 
 ---
 
