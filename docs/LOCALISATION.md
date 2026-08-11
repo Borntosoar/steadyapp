@@ -67,10 +67,27 @@ directory rather than on a confident wrong country.
 
 ---
 
-## 3. Translating the app: not done, and here is the honest reason
+## 3. Translating the app: DECIDED — English only
 
-"All languages" is the request. I have built toward it and stopped short of doing it, because
-doing it badly here is worse than not doing it.
+**The decision is English.** One interface language, available in every territory. This is a
+normal, coherent App Store configuration and it is the right one for now.
+
+What that means concretely, and what it does not:
+
+- The interface, the twelve modules, the crisis copy and the store listing are English.
+- The app is still listed and sold **worldwide**. Availability and listing language are
+  separate settings; a person in Germany can find, buy and use it.
+- The **crisis lines are not English-only** and must not become so. 31 regions, national
+  services named as they are actually known. An English app that hands you your own
+  country's crisis line is coherent; an English app that hands a German 911 is not. See §2.
+- Region labels, notes and the word "Emergency" ARE English, because that is the app
+  speaking. Service names are left in their own language, because those are the words you
+  will hear when somebody answers the phone. `__tests__/support.test.mjs` holds both halves
+  of that line, in both directions — it fails if a label drifts out of English, and it also
+  fails if every service name gets anglicised.
+
+The rest of this section is the reasoning that led here, kept because the question will come
+back the first time somebody looks at the non-English App Store markets.
 
 ### The objection that is specific to this app
 
@@ -105,13 +122,13 @@ test still green. The app would *look* as safe as it does now and would not be.
 translation of ~18,000 words, plus a clinician who speaks the language reviewing it, plus
 per-locale test work. Not $0 and a translation API.
 
-### The recommendation
+### The recommendation, which is now the decision
 
-**One language, after English shows product-market fit, chosen from App Store Connect's
-territory breakdown** — which arrives free, with no analytics SDK, once there are installs.
-Let the data pick it rather than guessing now. Do not do four at once.
+**English only for launch.** If a second language is ever added, pick it from App Store
+Connect's territory breakdown — which arrives free, with no analytics SDK, once there are
+installs. Let the data choose rather than guessing now, and do one, not four.
 
-### What I would build first, when you say go
+### What to build first, if that day comes
 
 In this order, because it front-loads the safety-critical and cheap parts:
 
@@ -146,6 +163,10 @@ the same one as §3.2 and gets closed the same way.
 
 ## 5. What is done
 
+- [x] **Interface language decided: English, worldwide availability**
+- [x] `primary_locale.txt` = `en-US`, single locale folder, with the reasoning recorded
+- [x] Region labels and notes in English; service names left in their own language, both
+      directions enforced by test
 - [x] 31 crisis regions with national services, up from 4
 - [x] `findahelpline.com` backstop in every region
 - [x] Emergency number flagged structurally in every region
@@ -157,7 +178,9 @@ the same one as §3.2 and gets closed the same way.
 
 - [ ] **Governing law jurisdiction** — one word from you, blocks the legal site and submission
 - [ ] Verify all 31 regions' numbers against their providers
-- [ ] String extraction into a locale table
-- [ ] Locale-parameterised safety and readability tests
-- [ ] First translated locale: crisis + disclaimer first, then modules
-- [ ] Per-locale store listings
+Deferred by decision, not outstanding:
+
+- String extraction into a locale table
+- Locale-parameterised safety and readability tests
+- A second interface language
+- Per-locale store listings — the cheapest first step if a market ever justifies it

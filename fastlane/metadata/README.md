@@ -3,6 +3,24 @@
 Every indexed App Store field, as a file. `docs/APP-STORE.md` is the reasoning; this is the
 decision, in the shape `fastlane deliver` and App Store Connect actually consume.
 
+## One language, every territory
+
+`primary_locale.txt` is `en-US`, and `en-US` is the only locale folder. That is a decision,
+not a gap — see `docs/LOCALISATION.md`.
+
+The app is **available worldwide and listed in English**. Those are separate settings in App
+Store Connect and it is a normal, coherent combination: someone in Germany can find, buy and
+use the app, and the listing they read is in English. What they must not get is an English
+listing with a German crisis line that is wrong, which is why `constants/support.ts` covers
+31 regions while the interface stays in one language.
+
+Adding a locale folder here later is cheap and is the right first step into a new market —
+listing metadata is short, translates well, and pays off before the app itself is translated.
+`__tests__/store-metadata.test.mjs` reads every locale folder it finds, so a new one is
+covered automatically for field limits and forbidden vocabulary. Its word lists are English,
+which is the same gap `docs/LOCALISATION.md` §3 describes for the app's own copy tests, and
+it closes the same way.
+
 ## Why it lives here rather than only in the dashboard
 
 `docs/GROWTH.md` §7 ends with this line:

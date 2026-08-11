@@ -116,6 +116,43 @@ describe('picking a region from the device locale', () => {
   });
 });
 
+describe('the app speaks English; the services keep their own names', () => {
+  /* Steady's interface language is English (docs/LOCALISATION.md). The line between "the
+     app speaking" and "the name of a real thing" runs through this file, and it is worth
+     holding, because the natural drift is in both directions: someone tidying up translates
+     Telefonseelsorge into something nobody can dial, or someone adding a region writes the
+     picker label in a language the rest of the app does not use. */
+  const ASCII_ISH = /^[\x20-\x7E–—·’]+$/;
+
+  test('region labels are English, because the picker is the app talking to the reader', () => {
+    for (const r of SUPPORT_REGIONS) {
+      assert.match(r.label, ASCII_ISH,
+        `"${r.label}" is a region label — in an English app these read in English ` +
+          `(Germany, not Deutschland). Service names are the exception, not labels.`);
+    }
+  });
+
+  test('notes are English, because a note is a description rather than a name', () => {
+    for (const r of SUPPORT_REGIONS) {
+      for (const l of r.lines) {
+        if (!l.note) continue;
+        assert.match(l.note, ASCII_ISH, `${r.key}: note "${l.note}" is not in English`);
+      }
+    }
+  });
+
+  test('but service names are left alone, whatever script they are in', () => {
+    /* The inverse assertion, and the more important one. If this ever fails it means
+       somebody has "helpfully" anglicised a crisis line into a name that cannot be found,
+       asked for, or recognised when it is answered. */
+    const localNames = SUPPORT_REGIONS.flatMap((r) => r.lines)
+      .map((l) => l.name)
+      .filter((n) => !ASCII_ISH.test(n));
+    assert.ok(localNames.length >= 3,
+      'no crisis line is named in its own language any more — service names must not be translated');
+  });
+});
+
 describe('the words on the screen', () => {
   test('the intro leads with the action, not with a preamble', () => {
     assert.ok(SUPPORT_INTRO.length < 160, 'too long for somebody in distress to read');

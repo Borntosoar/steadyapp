@@ -25,9 +25,18 @@ import type { SupportRegion } from '../types';
  *      maintained by people whose entire job is maintaining it.
  *   2. EVERY region names its emergency number. It is the one number that is never wrong and
  *      never busy, and it was missing from the fallback entirely.
- *   3. NOTHING here is machine-translated. The line names are given in the local language
- *      where that is how the service is actually known, because that is what somebody will
- *      recognise and what they will hear when they call.
+ *   3. THE APP IS ENGLISH, THE SERVICE NAMES ARE NOT, AND THAT IS NOT A CONTRADICTION.
+ *
+ *      Steady's interface language is English and stays English — see docs/LOCALISATION.md
+ *      for the decision and the reasoning. So everything in this file that is the APP
+ *      SPEAKING is in English: region labels, notes, and the word "Emergency".
+ *
+ *      Service NAMES are left exactly as they are — Telefonseelsorge, よりそいホットライン,
+ *      Línea de la Vida. Those are not the app speaking. They are the name of the thing you
+ *      dial, and the words you will hear when somebody picks up. "Telephone Pastoral Care"
+ *      is not a service anybody can find, ask for, or recognise, and a crisis line the
+ *      person cannot identify is a crisis line that does not work. Proper nouns do not get
+ *      translated because the sentence around them is English.
  *
  * VERIFICATION STATUS. These were assembled from knowledge, not from a live check of each
  * provider — the network here cannot reach most of them. Before this ships, every number
@@ -102,31 +111,31 @@ export const SUPPORT_REGIONS: SupportRegion[] = [
   },
   {
     key: 'de',
-    label: 'Deutschland',
+    label: 'Germany',
     lines: [
-      { name: 'Telefonseelsorge', contact: '0800 111 0 111 · 0800 111 0 222', note: '24/7, kostenlos' },
-      { name: 'Nummer gegen Kummer', contact: '116 111', note: 'Für junge Menschen' },
-      { name: 'Notruf', contact: '112', emergency: true },
+      { name: 'Telefonseelsorge', contact: '0800 111 0 111 · 0800 111 0 222', note: '24/7, free' },
+      { name: 'Nummer gegen Kummer', contact: '116 111', note: 'For young people' },
+      { name: 'Emergency', contact: '112', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
   {
     key: 'at',
-    label: 'Österreich',
+    label: 'Austria',
     lines: [
-      { name: 'Telefonseelsorge', contact: '142', note: '24/7, kostenlos' },
-      { name: 'Rat auf Draht', contact: '147', note: 'Für junge Menschen' },
-      { name: 'Notruf', contact: '112', emergency: true },
+      { name: 'Telefonseelsorge', contact: '142', note: '24/7, free' },
+      { name: 'Rat auf Draht', contact: '147', note: 'For young people' },
+      { name: 'Emergency', contact: '112', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
   {
     key: 'ch',
-    label: 'Schweiz / Suisse',
+    label: 'Switzerland',
     lines: [
       { name: 'Die Dargebotene Hand / La Main Tendue', contact: '143', note: '24/7' },
-      { name: 'Pro Juventute', contact: '147', note: 'Für junge Menschen' },
-      { name: 'Notruf / Urgences', contact: '112', emergency: true },
+      { name: 'Pro Juventute', contact: '147', note: 'For young people' },
+      { name: 'Emergency', contact: '112', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
@@ -134,95 +143,95 @@ export const SUPPORT_REGIONS: SupportRegion[] = [
     key: 'fr',
     label: 'France',
     lines: [
-      { name: 'Numéro national de prévention du suicide', contact: '3114', note: '24h/24, gratuit' },
+      { name: 'Numéro national de prévention du suicide', contact: '3114', note: '24/7, free' },
       { name: 'SOS Amitié', contact: '09 72 39 40 50' },
-      { name: 'Urgences', contact: '112', emergency: true },
+      { name: 'Emergency', contact: '112', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
   {
     key: 'es',
-    label: 'España',
+    label: 'Spain',
     lines: [
-      { name: 'Línea de atención a la conducta suicida', contact: '024', note: '24h, gratuito' },
+      { name: 'Línea de atención a la conducta suicida', contact: '024', note: '24/7, free' },
       { name: 'Teléfono de la Esperanza', contact: '717 003 717' },
-      { name: 'Emergencias', contact: '112', emergency: true },
+      { name: 'Emergency', contact: '112', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
   {
     key: 'it',
-    label: 'Italia',
+    label: 'Italy',
     lines: [
       { name: 'Telefono Amico Italia', contact: '02 2327 2327' },
       { name: 'Samaritans Onlus', contact: '06 77208977' },
-      { name: 'Emergenze', contact: '112', emergency: true },
+      { name: 'Emergency', contact: '112', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
   {
     key: 'nl',
-    label: 'Nederland',
+    label: 'Netherlands',
     lines: [
-      { name: '113 Zelfmoordpreventie', contact: '0800 0113 · 113', note: '24/7, gratis' },
-      { name: 'Noodgeval', contact: '112', emergency: true },
+      { name: '113 Zelfmoordpreventie', contact: '0800 0113 · 113', note: '24/7, free' },
+      { name: 'Emergency', contact: '112', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
   {
     key: 'be',
-    label: 'België / Belgique',
+    label: 'Belgium',
     lines: [
       { name: 'Zelfmoordlijn 1813', contact: '1813', note: '24/7' },
       { name: 'Centre de Prévention du Suicide', contact: '0800 32 123', note: '24h/24' },
-      { name: 'Noodgeval / Urgences', contact: '112', emergency: true },
+      { name: 'Emergency', contact: '112', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
   {
     key: 'se',
-    label: 'Sverige',
+    label: 'Sweden',
     lines: [
       { name: 'Mind Självmordslinjen', contact: '90101', note: '24/7' },
-      { name: 'Nödsituation', contact: '112', emergency: true },
+      { name: 'Emergency', contact: '112', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
   {
     key: 'no',
-    label: 'Norge',
+    label: 'Norway',
     lines: [
       { name: 'Mental Helse Hjelpetelefonen', contact: '116 123', note: '24/7' },
       { name: 'Kirkens SOS', contact: '22 40 00 40' },
-      { name: 'Nødnummer', contact: '113', emergency: true },
+      { name: 'Emergency', contact: '113', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
   {
     key: 'dk',
-    label: 'Danmark',
+    label: 'Denmark',
     lines: [
       { name: 'Livslinien', contact: '70 201 201' },
-      { name: 'Nødopkald', contact: '112', emergency: true },
+      { name: 'Emergency', contact: '112', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
   {
     key: 'fi',
-    label: 'Suomi',
+    label: 'Finland',
     lines: [
       { name: 'Kriisipuhelin (MIELI)', contact: '09 2525 0111' },
-      { name: 'Hätänumero', contact: '112', emergency: true },
+      { name: 'Emergency', contact: '112', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
   {
     key: 'pl',
-    label: 'Polska',
+    label: 'Poland',
     lines: [
-      { name: 'Centrum Wsparcia', contact: '800 70 2222', note: '24/7, bezpłatnie' },
+      { name: 'Centrum Wsparcia', contact: '800 70 2222', note: '24/7, free' },
       { name: 'Telefon zaufania dla dzieci i młodzieży', contact: '116 111' },
-      { name: 'Numer alarmowy', contact: '112', emergency: true },
+      { name: 'Emergency', contact: '112', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
@@ -232,25 +241,25 @@ export const SUPPORT_REGIONS: SupportRegion[] = [
     lines: [
       { name: 'SNS 24', contact: '808 24 24 24' },
       { name: 'Voz de Apoio', contact: '225 506 070' },
-      { name: 'Emergência', contact: '112', emergency: true },
+      { name: 'Emergency', contact: '112', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
   {
     key: 'br',
-    label: 'Brasil',
+    label: 'Brazil',
     lines: [
-      { name: 'CVV — Centro de Valorização da Vida', contact: '188', note: '24h, gratuito' },
+      { name: 'CVV — Centro de Valorização da Vida', contact: '188', note: '24/7, free' },
       { name: 'SAMU', contact: '192', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
   {
     key: 'mx',
-    label: 'México',
+    label: 'Mexico',
     lines: [
-      { name: 'Línea de la Vida', contact: '800 911 2000', note: '24h, gratuito' },
-      { name: 'Emergencias', contact: '911', emergency: true },
+      { name: 'Línea de la Vida', contact: '800 911 2000', note: '24/7, free' },
+      { name: 'Emergency', contact: '911', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
@@ -259,7 +268,7 @@ export const SUPPORT_REGIONS: SupportRegion[] = [
     label: 'Argentina',
     lines: [
       { name: 'Salud Mental Responde', contact: '0800 999 0091' },
-      { name: 'Emergencias', contact: '911', emergency: true },
+      { name: 'Emergency', contact: '911', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
@@ -275,21 +284,21 @@ export const SUPPORT_REGIONS: SupportRegion[] = [
   },
   {
     key: 'jp',
-    label: '日本',
+    label: 'Japan',
     lines: [
-      { name: 'よりそいホットライン', contact: '0120-279-338', note: '24時間、無料' },
+      { name: 'よりそいホットライン', contact: '0120-279-338', note: '24/7, free' },
       { name: 'いのちの電話', contact: '0570-783-556' },
-      { name: '救急', contact: '119', emergency: true },
+      { name: 'Emergency', contact: '119', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
   {
     key: 'kr',
-    label: '대한민국',
+    label: 'South Korea',
     lines: [
-      { name: '자살예방상담전화', contact: '109', note: '24시간' },
+      { name: '자살예방상담전화', contact: '109', note: '24/7' },
       { name: '청소년전화', contact: '1388' },
-      { name: '응급', contact: '119', emergency: true },
+      { name: 'Emergency', contact: '119', emergency: true },
       { name: 'Find a helpline', contact: 'findahelpline.com', note: 'If a number above has changed' },
     ],
   },
@@ -305,7 +314,7 @@ export const SUPPORT_REGIONS: SupportRegion[] = [
   },
   {
     key: 'hk',
-    label: '香港',
+    label: 'Hong Kong',
     lines: [
       { name: 'The Samaritans Hong Kong', contact: '2896 0000', note: '24/7, multilingual' },
       { name: '香港撒瑪利亞防止自殺會', contact: '2389 2222' },
@@ -325,7 +334,7 @@ export const SUPPORT_REGIONS: SupportRegion[] = [
   },
   {
     key: 'il',
-    label: 'ישראל',
+    label: 'Israel',
     lines: [
       { name: 'ער"ן — ERAN', contact: '1201', note: '24/7' },
       { name: 'Emergency', contact: '101', emergency: true },
