@@ -24,14 +24,25 @@ export function StorageNotice({ onBackup }: { onBackup?: () => void }) {
   const loadOk = useStore((s) => s.loadOk);
   const saveOk = useStore((s) => s.saveOk);
   const quarantinedAt = useStore((s) => s.quarantinedAt);
+  const encrypted = useStore((s) => s.encrypted);
 
-  if (loadOk && saveOk) return null;
+  if (loadOk && saveOk && encrypted) return null;
 
+  /* Ordered by what it costs the person. Being unable to read or write is the emergency;
+     writing unsealed is a disclosure. When both are true the storage failure takes the slot,
+     because that is the one where they need to do something.
+
+     The unsealed case is here at all because lib/storage.ts falls back to plaintext rather
+     than refusing to write — the right call, since the alternative is a keychain hiccup
+     silently stopping somebody recording anything on a bad day. But a silent downgrade of a
+     promise made on screen one is not something to leave silent. */
   const copy = !loadOk
     ? quarantinedAt
       ? STORAGE_COPY.unreadable
       : STORAGE_COPY.locked
-    : STORAGE_COPY.cannotSave;
+    : !saveOk
+      ? STORAGE_COPY.cannotSave
+      : STORAGE_COPY.notEncrypted;
 
   const showBackup = loadOk && !saveOk && !!onBackup;
 

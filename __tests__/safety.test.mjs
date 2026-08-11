@@ -253,6 +253,36 @@ describe('the source tree is what SAFETY.md says it is', () => {
     }
   });
 
+  test('the journal is sealed on disk, and the user is told when it is not', () => {
+    /* lib/storage.ts falls back to plaintext when the keychain is unreachable, which is the
+       right call — refusing to write would mean a keychain hiccup silently stops somebody
+       recording anything on a bad day. But a silent downgrade of a promise made on screen
+       one is a different thing from a considered fallback, and the code comment claiming it
+       is "surfaced to the user rather than hidden" was, for a while, simply not true. */
+    const storage = FILES.find((f) => f.path === 'lib/storage.ts');
+    assert.match(storage.src, /\bseal\(/, 'saveState does not encrypt');
+    assert.match(storage.src, /isEncryptionActive/, 'the encryption state is not readable');
+
+    const notice = FILES.find((f) => f.path === 'components/StorageNotice.tsx');
+    assert.match(notice.src, /notEncrypted/,
+      'nothing tells the user when their writing is being stored unsealed');
+
+    const copy = FILES.find((f) => f.path === 'content/copy.ts');
+    assert.match(copy.src, /notEncrypted:/, 'the disclosure has no copy');
+  });
+
+  test('the key never leaves the device and never syncs to iCloud', () => {
+    /* WHEN_UNLOCKED_THIS_DEVICE_ONLY is the whole point. Without THIS_DEVICE_ONLY the key
+       goes into iCloud Keychain, which puts it on Apple's servers — and "nothing leaves this
+       phone" would then be false about the one secret that protects everything else. */
+    const key = FILES.find((f) => f.path === 'hooks/deviceKey.ts');
+    assert.ok(key, 'hooks/deviceKey.ts is missing');
+    assert.match(key.src, /WHEN_UNLOCKED_THIS_DEVICE_ONLY/,
+      'the device key is not pinned to this device');
+    assert.doesNotMatch(key.src, /AFTER_FIRST_UNLOCK(?!_THIS_DEVICE_ONLY)/,
+      'a weaker keychain accessibility class is in use');
+  });
+
   test('the file-system module is used for files, never for transfers', () => {
     /* The allowlist above is name-based and cannot tell which half of a package is in use.
        expo-file-system ships `downloadAsync` and `uploadAsync`, which are a straightforward

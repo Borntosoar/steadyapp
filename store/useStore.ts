@@ -10,7 +10,7 @@ import type {
   ThoughtRecord,
   UrgeLog,
 } from '../types';
-import { emptyState, loadState, saveState, wipeState } from '../lib/storage';
+import { emptyState, loadState, saveState, wipeState, isEncryptionActive } from '../lib/storage';
 import { dayKey, registerPractice, milestoneReached } from '../lib/streak';
 import { recordPracticeDay } from '../lib/protocol';
 import { markShown, markDismissed, markActed, type MomentId } from '../lib/moments';
@@ -59,6 +59,9 @@ interface StoreApi extends AppState {
   saveOk: boolean;
   /** Key an unreadable payload was copied to, if there was one. */
   quarantinedAt: string | null;
+  /** False when the device keychain could not be reached, so writes are going out in plain
+   *  text rather than sealed. Surfaced to the user — see components/StorageNotice.tsx. */
+  encrypted: boolean;
 
   checkedInToday: () => boolean;
 }
@@ -73,7 +76,7 @@ let writeChain: Promise<unknown> = Promise.resolve();
    written to disk, so a field that is not part of AppState must appear in this
    destructure — `quarantinedAt` did not, and was being serialised into the payload. */
 function snapshot(get: () => StoreApi): AppState {
-  const { hydrated, pendingMilestone, loadOk, saveOk, quarantinedAt, ...rest } =
+  const { hydrated, pendingMilestone, loadOk, saveOk, quarantinedAt, encrypted, ...rest } =
     get() as StoreApi & Record<string, unknown>;
   return rest as AppState;
 }
@@ -117,10 +120,21 @@ export const useStore = create<StoreApi>((set, get) => ({
   loadOk: true,
   saveOk: true,
   quarantinedAt: null,
+  /* Optimistic default, corrected on hydrate. Starting false would flash a "not scrambled"
+     notice on every launch during the moment before the keychain answers. */
+  encrypted: true,
 
   hydrate: async () => {
     const { state, ok, quarantinedAt } = await loadState();
-    set({ ...state, hydrated: true, loadOk: ok, quarantinedAt: quarantinedAt ?? null });
+    set({
+      ...state,
+      hydrated: true,
+      loadOk: ok,
+      quarantinedAt: quarantinedAt ?? null,
+      /* Read AFTER loadState, because initDeviceCrypto has configured it by then. This is
+         the real answer to "is this install encrypted", not an assumption. */
+      encrypted: isEncryptionActive(),
+    });
   },
 
   reset: async () => {

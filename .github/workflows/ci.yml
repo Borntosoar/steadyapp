@@ -1,0 +1,60 @@
+name: CI
+
+# The test suite is the thing that actually enforces SAFETY.md — the no-capture rule, the
+# no-egress import allowlist, the free-forever routes, the contrast floor. Until now nothing
+# ran it except a person remembering to. A guarantee that depends on somebody remembering is
+# not a guarantee.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # `npm ci` and not `npm install`: the lockfile is committed, and installing instead of
+      # ci-installing means the pinned versions are decorative.
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      # No jest, no transform. The suite imports lib/*.ts straight into .mjs files under bare
+      # Node, which only works while lib/ stays free of React and the store — and that
+      # constraint is itself asserted by one of the tests.
+      - name: Test
+        run: npm test
+
+      # A build that typechecks and passes tests can still fail to bundle. Metro resolves
+      # differently from tsc, and this is the cheapest place to find that out.
+      - name: Web export
+        run: npx expo export -p web --output-dir dist
+
+  legal-site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      # Builds with ALLOW_TODOS so an unfilled placeholder does not fail the branch — that is
+      # a publishing gate, enforced in deploy-site.yml, not a reason to block development.
+      - name: Build the legal site
+        run: ALLOW_TODOS=1 node site/build.mjs

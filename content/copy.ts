@@ -196,6 +196,17 @@ export const STORAGE_COPY = {
     body: 'Storage is full, or it is not working. Everything from this session is still on screen, and it stays there until you close the app. Saving a backup now is the one thing that keeps it.',
     action: 'Save a backup now',
   },
+  /* Shown when the device keychain could not be reached, so what gets written is plain
+     rather than scrambled.
+     Saying it costs a little trust. Not saying it costs more: the app tells people on screen
+     one that their writing stays on the phone and is protected, and on the one run where
+     that is less true than usual they are entitled to know before they type. It is worded as
+     a fact with a cause and a fix, not as an alarm — this is still a screen somebody may be
+     reading on a bad day. Nothing is lost and nothing needs doing. */
+  notEncrypted: {
+    title: 'Saved, but not scrambled this time',
+    body: 'Steady normally scrambles what you write so it is unreadable to anything else on this phone. It could not reach the phone’s key store just now, so this session is being saved in plain text instead. It is still only on this device and still goes nowhere. Closing the app all the way and opening it again usually fixes it.',
+  },
 };
 
 /* ---------- disclaimer ---------- */

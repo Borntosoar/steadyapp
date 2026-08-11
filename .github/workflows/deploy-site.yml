@@ -1,0 +1,60 @@
+name: Deploy the legal site
+
+# Publishes legal/ to GitHub Pages. That URL is a hard App Store blocker: App Store Connect
+# will not accept a submission without a publicly reachable privacy policy.
+#
+# TO TURN THIS ON: repository Settings → Pages → Source: "GitHub Actions". Nothing else.
+# There is no server to provision, because there is nothing dynamic to serve — which is the
+# same reason legal/cookie-policy.md is four paragraphs long.
+#
+# It runs `site/build.mjs` WITHOUT ALLOW_TODOS, so the deploy fails while any legal document
+# still contains `[LEGAL ENTITY NAME — TODO]` or similar. That is deliberate: a live privacy
+# policy with a hole in it is worse than no page at all, and this is the last point at which
+# anybody would notice.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'legal/**'
+      - 'site/**'
+      - '.github/workflows/deploy-site.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      - name: Build (fails on any unfilled placeholder)
+        run: node site/build.mjs
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

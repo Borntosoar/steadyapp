@@ -7,3 +7,9 @@ web-build/
 
 # Web export output. Rebuilt with `npx expo export --platform web`.
 dist/
+
+# Generated site output. Rebuilt with `npm run site`.
+site/dist/
+
+# Generated screenshots. Rebuilt with `npm run shots`.
+screenshots/
