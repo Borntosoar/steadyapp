@@ -19,6 +19,7 @@ import { lastSevenDays } from '../../lib/week';
 import { nextMoment } from '../../lib/moments';
 import { MODULES } from '../../content/modules';
 import { NAMES, EXPLAIN } from '../../content/names';
+import { markHardDayIntent } from '../../hooks/navIntent';
 
 /* Today.
  *
@@ -260,7 +261,14 @@ export default function Today() {
           {/* Hard day. Always last, always there. */}
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.push('/grounding?mode=hard')}
+            onPress={() => {
+              /* Says "a person inside this app tapped this", which the URL cannot say — the
+                 same URL is reachable from any link on the device. See hooks/navIntent.ts:
+                 this is what lets the hard-day path log on open here while refusing to log
+                 for a `steady://grounding?mode=hard` arriving from outside. */
+              markHardDayIntent();
+              router.push('/grounding?mode=hard');
+            }}
             style={({ pressed }) => ({
               flexDirection: 'row',
               alignItems: 'center',

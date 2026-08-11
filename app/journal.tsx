@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Button, Field, H1, H2, H3, Body, BodySm, Caption, Chip, Label, Row, Rule, useTheme,
+  FIELD_MAX_MULTILINE,
 } from '../components/ui';
 import { Frost, Ground, ListRow, LevelBar, Steps, TopBar, Explain, STRENGTH_WORDS, CHANCE_WORDS } from '../components/frost';
 import { Finish } from '../components/Finish';
@@ -293,6 +294,7 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
             spellCheck={false}
             autoCorrect={false}
             autoComplete="off"
+            maxLength={FIELD_MAX_MULTILINE}
             value={text[step.key] ?? ''}
             onChangeText={(v) => setText({ ...text, [step.key]: v })}
             multiline
@@ -308,6 +310,7 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
               spellCheck={false}
               autoCorrect={false}
               autoComplete="off"
+              maxLength={FIELD_MAX_MULTILINE}
               value={emotion}
               onChangeText={setEmotion}
               placeholder="shame, anxiety, disgust, dread"
@@ -477,6 +480,7 @@ function Experiment({ onDone }: { onDone: () => void }) {
               spellCheck={false}
               autoCorrect={false}
               autoComplete="off"
+              maxLength={FIELD_MAX_MULTILINE}
               value={String(vals[field.key] ?? '')}
               onChangeText={(v) => setVals({ ...vals, [field.key]: v })}
               multiline

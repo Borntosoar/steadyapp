@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Platform, Share, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -13,6 +13,7 @@ import { useEntitlement } from '../../hooks/useEntitlement';
 import {
   reclaimedByWeek, computeReclaimed, checkInsInLastDays, previousWeekCheckIns,
 } from '../../lib/reclaimed';
+import { File, Paths } from 'expo-file-system';
 import { exportText, exportJson } from '../../lib/storage';
 import { insightsSummary } from '../../content/copy.ts';
 import { weekProgress, WEEKS_TOTAL } from '../../lib/protocol';
@@ -83,6 +84,7 @@ export default function Progress() {
   const router = useRouter();
   const { entitled } = useEntitlement();
   const state = useStore();
+  const [exportFailed, setExportFailed] = useState(false);
 
   const { baseline, checkIns, urgeLogs, mirrorSessions } = state;
 
@@ -133,6 +135,24 @@ export default function Progress() {
      that copy behind $79.99/yr made the sentence false, and it is the only thing standing
      between somebody and total loss on a phone that dies. Nothing in the export is a paid
      analysis — it is their own writing handed back. */
+  /* Shared as a FILE, not as a message body.
+   *
+   * `Share.share({ message })` discards the filename and the type and hands iOS a string, so
+   * UIActivityViewController treats it as text — and the sheet it builds for text leads with
+   * Messages, Mail and WhatsApp. The button says "Save a full backup", which does not prepare
+   * anyone for a destination picker whose most prominent rows are messaging apps, and the
+   * body of that string is every thought record, every urge trigger, and the relapse plan
+   * including whoToTell. One mis-tap put a year of somebody's most private writing into an
+   * iMessage thread.
+   *
+   * Given a file `url` with a .json/.txt extension, the same sheet leads with "Save to
+   * Files". This is user-initiated export either way and entirely legitimate — SAFETY.md
+   * §11b — but it is the highest-probability route by which this data ever leaves a phone,
+   * and the UI was not treating it like one.
+   *
+   * Written to the cache directory on purpose: the OS reclaims it under storage pressure, so
+   * a plaintext copy of the journal does not accumulate in the container forever just because
+   * somebody once tapped export. */
   const download = async (body: string, name: string, mime: string) => {
     if (Platform.OS === 'web') {
       const blob = new Blob([body], { type: mime });
@@ -143,12 +163,33 @@ export default function Progress() {
       URL.revokeObjectURL(a.href);
       return;
     }
-    await Share.share({ message: body });
+    try {
+      const file = new File(Paths.cache, name);
+      if (file.exists) file.delete();
+      file.create();
+      file.write(body);
+      await Share.share({ url: file.uri, title: name });
+    } catch {
+      /* If the file write fails, falling back to the text sheet is still better than the
+         person getting nothing — this is the recovery path, and a clumsy export beats no
+         export when the alternative is losing everything. */
+      await Share.share({ message: body });
+    }
   };
 
   const stamp = new Date().toISOString().slice(0, 10);
-  const doExport = () => download(exportText(state), `steady-summary-${stamp}.txt`, 'text/plain');
-  const doBackup = () => download(exportJson(state), `steady-backup-${stamp}.json`, 'application/json');
+  /* Both wrapped. exportText walks every collection, and while normalise() now guarantees
+     the shapes it reads, this is the one button somebody presses when everything else has
+     already gone wrong — it is the last place in the app that should be allowed to throw. */
+  const safely = (fn: () => Promise<void>) => () => {
+    fn().catch(() => setExportFailed(true));
+  };
+  const doExport = safely(async () =>
+    download(exportText(state), `steady-summary-${stamp}.txt`, 'text/plain')
+  );
+  const doBackup = safely(async () =>
+    download(exportJson(state), `steady-backup-${stamp}.json`, 'application/json')
+  );
 
   const exportSection = (
     <Section title="Take this with you">
@@ -173,6 +214,20 @@ export default function Progress() {
         onPress={doBackup}
         style={{ marginTop: space.xs, alignSelf: 'flex-start' }}
       />
+      {/* Said before they tap, not after. The sheet that opens can send this anywhere on the
+          phone, and the file is everything they have written — the one place in the app
+          where a mis-tap is unrecoverable in a way that matters. */}
+      <Caption style={{ marginTop: space.sm }}>
+        The backup contains everything you have written, including your plan. Saving it to
+        Files keeps it on this phone; the same menu can also send it to other people, so pick
+        carefully.
+      </Caption>
+      {exportFailed ? (
+        <BodySm style={{ marginTop: space.sm, color: c.warn }}>
+          That did not work. Try once more — and if it keeps failing, do not delete the app,
+          because this file is the only copy.
+        </BodySm>
+      ) : null}
     </Section>
   );
 

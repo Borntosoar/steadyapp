@@ -15,6 +15,7 @@ import {
   space, type as t, LAYOUT_MAX_WIDTH, atmosphereForScheme, type AtmosphereKey,
 } from '../constants/theme';
 import { useStore } from '../store/useStore';
+import { consumeHardDayIntent } from '../hooks/navIntent';
 import { setQuietZone } from '../hooks/haptics';
 import { SENSES_STEPS, BREATH, WIDENING, VALUES_ANCHOR, HARD_DAY } from '../content/exercises.ts';
 
@@ -98,6 +99,17 @@ export default function Grounding() {
 
   const [tool, setTool] = useState<Tool>(params.mode === 'hard' ? 'hardday' : 'menu');
   const [logged, setLogged] = useState(false);
+
+  /* Whether the hard-day screen may write a record the moment it opens.
+   *
+   * True when the app navigated here, false when a link did. `steady://grounding?mode=hard`
+   * from any other app, or from a message, used to log a hard-day entry with no interaction
+   * at all — fabricating "this person had a bad day" in a record that gets exported to a
+   * clinician, and advancing the practice-day count that gates the exposure work.
+   *
+   * Read once, on mount, and deliberately not in a dependency array: consuming it twice
+   * would return false the second time and silently disable the in-app path. */
+  const [mayAutoLog] = useState(() => params.mode !== 'hard' || consumeHardDayIntent());
   /* Which exercises were finished in this visit. Drives the check on the menu row — the
      menu used to look identical before and after, which is most of why finishing one felt
      like nothing had happened. */
@@ -133,7 +145,7 @@ export default function Grounding() {
   }
 
   if (tool === 'menu') return <Menu onPick={setTool} onBack={() => router.back()} done={doneTools} />;
-  if (tool === 'hardday') return <HardDay onPick={setTool} complete={complete} />;
+  if (tool === 'hardday') return <HardDay onPick={setTool} complete={complete} autoLog={mayAutoLog} />;
   if (tool === 'sit') return <Sit onDone={() => { complete('hard-day'); setTool('hardday'); }} />;
   if (tool === 'senses') return <Senses onDone={() => finish('senses')} onExit={() => setTool('menu')} />;
   if (tool === 'breath') return <Breath onDone={complete} onFinish={() => finish('breath')} onExit={() => setTool('menu')} />;
@@ -228,16 +240,36 @@ function Menu({ onPick, onBack, done }: { onPick: (t: Tool) => void; onBack: () 
 
 /* ---------- hard day ---------- */
 
-function HardDay({ onPick, complete }: { onPick: (t: Tool) => void; complete: (k?: 'hard-day') => void }) {
+function HardDay({
+  onPick,
+  complete,
+  autoLog,
+}: {
+  onPick: (t: Tool) => void;
+  complete: (k?: 'hard-day') => void;
+  /** False when a link opened this screen rather than the app. See hooks/navIntent.ts. */
+  autoLog: boolean;
+}) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  // Showing up on a hard day is logged the moment the screen opens. It is the single
-  // most clinically valuable thing someone can do on a bad day, so it must not depend on
-  // them completing anything afterwards.
+  /* Showing up on a hard day is logged the moment the screen opens. It is the single most
+     clinically valuable thing someone can do on a bad day, so it must not depend on them
+     completing anything afterwards.
+     Unless a link opened it, in which case nobody has shown up yet and there is nothing
+     true to record. The screen still renders in full — somebody who arrived here from a
+     message deserves the help exactly as much — it simply waits for them to touch something
+     before it writes anything down. */
   useEffect(() => {
-    complete('hard-day');
-  }, [complete]);
+    if (autoLog) complete('hard-day');
+  }, [complete, autoLog]);
+
+  /** Every route out of this screen goes through here, so the deep-link arrival is recorded
+   *  the moment the person actually does something rather than never. */
+  const pick = (t: Tool) => {
+    if (!autoLog) complete('hard-day');
+    onPick(t);
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#05080A' }}>
@@ -266,9 +298,9 @@ function HardDay({ onPick, complete }: { onPick: (t: Tool) => void; complete: (k
                   label={o.label}
                   variant={o.key === 'talk' ? 'secondary' : 'primary'}
                   onPress={() => {
-                    if (o.key === 'breathe') onPick('breath');
-                    else if (o.key === 'ground') onPick('senses');
-                    else if (o.key === 'sit') onPick('sit');
+                    if (o.key === 'breathe') pick('breath');
+                    else if (o.key === 'ground') pick('senses');
+                    else if (o.key === 'sit') pick('sit');
                     else router.push('/support');
                   }}
                   style={{ marginBottom: space.sm }}

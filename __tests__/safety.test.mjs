@@ -149,9 +149,27 @@ describe('the source tree is what SAFETY.md says it is', () => {
 
   /** Every third-party module the source tree is permitted to import. */
   const ALLOWED_PACKAGES = new Set([
+    /* The cipher behind encryption at rest. Chosen partly BECAUSE of this list: audited,
+       zero runtime dependencies, no native code, no install script, and small enough that
+       reading it is a realistic afternoon rather than an act of faith. It does no I/O of any
+       kind — it takes bytes and returns bytes. */
+    '@noble/ciphers',
     '@react-native-async-storage/async-storage',
     'expo-blur',
     'expo-camera',
+    /* Key custody and the CSPRNG for encryption at rest. expo-secure-store is the iOS
+       Keychain; the key is stored WHEN_UNLOCKED_THIS_DEVICE_ONLY specifically so it does NOT
+       sync to iCloud Keychain, because a synced key is a key on Apple's servers and that
+       would break the promise on screen one. expo-crypto is used only for getRandomBytes. */
+    'expo-crypto',
+    'expo-secure-store',
+    /* expo-file-system is the one package on this list that CAN reach the network:
+       `downloadAsync` and `uploadAsync` are part of its surface. Steady uses it for exactly
+       one thing — writing the export to the cache directory so the iOS share sheet offers
+       "Save to Files" instead of leading with Messages — and the test below asserts the
+       networking half is never touched. Admitted deliberately, with a guard, rather than
+       waved through. */
+    'expo-file-system',
     'expo-haptics',
     'expo-linear-gradient',
     'expo-router',
@@ -183,9 +201,17 @@ describe('the source tree is what SAFETY.md says it is', () => {
     }
   });
 
+  /** Comments removed, so prose cannot be mistaken for code.
+   *
+   *  This is not hypothetical tidying: a comment reading `tell "fresh install" from "we
+   *  could not ask"` was read as an import of a package named "we could not ask". A test
+   *  that fails on English is a test people learn to work around. */
+  const withoutComments = (src) =>
+    src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+
   test('every third-party import is on the allowlist', () => {
     for (const f of FILES) {
-      for (const [, spec] of f.src.matchAll(SPECIFIERS)) {
+      for (const [, spec] of withoutComments(f.src).matchAll(SPECIFIERS)) {
         if (spec.startsWith('.') || spec.startsWith('/')) continue; // local module
         const pkg = packageOf(spec);
         assert.ok(
@@ -224,6 +250,17 @@ describe('the source tree is what SAFETY.md says it is', () => {
         ALLOWED_PACKAGES.has(name) || PLATFORM_ONLY.has(name),
         `${name} is installed but imported nowhere — remove it or justify it in PLATFORM_ONLY`
       );
+    }
+  });
+
+  test('the file-system module is used for files, never for transfers', () => {
+    /* The allowlist above is name-based and cannot tell which half of a package is in use.
+       expo-file-system ships `downloadAsync` and `uploadAsync`, which are a straightforward
+       route out of the device for the export file — the one artefact in this app that
+       contains everything somebody has written. */
+    const forbidden = /downloadAsync|uploadAsync|createDownloadResumable|FileSystemNetwork/;
+    for (const f of FILES) {
+      assert.doesNotMatch(f.src, forbidden, `${f.path} uses a file-system transfer API`);
     }
   });
 

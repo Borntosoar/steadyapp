@@ -263,6 +263,12 @@ export function Options<T extends string | number>({
 /** Labelled text input. Deliberately borderless with a single underline rule: a boxed
  *  field per question turns a reflective screen into a form, and these screens are asking
  *  for things people find hard to type at all. */
+/** Character ceilings for a single field. Generous — roughly 700 words on a multiline
+ *  field — and there to bound the serialised payload, not to ration what anybody writes.
+ *  See the note on `maxLength` below. */
+export const FIELD_MAX_MULTILINE = 4000;
+export const FIELD_MAX_SINGLE = 300;
+
 export function Field({
   label,
   hint,
@@ -271,6 +277,7 @@ export function Field({
   placeholder,
   multiline,
   minHeight,
+  maxLength,
   style,
 }: {
   label?: string;
@@ -280,6 +287,7 @@ export function Field({
   placeholder?: string;
   multiline?: boolean;
   minHeight?: number;
+  maxLength?: number;
   style?: ViewStyle;
 }) {
   const c = useTheme();
@@ -303,6 +311,19 @@ export function Field({
         spellCheck={false}
         autoCorrect={false}
         autoComplete="off"
+        /* A ceiling on one field, not on how much somebody may write overall.
+           The whole state is serialised into a single value on every mutation, so payload
+           size is a real constraint: measured, 5,000 thought records is a 49MB blob and an
+           800ms JSON.stringify on desktop, and the web build's localStorage gives up around
+           5MB and then fails every write from then on. This caps the input that drives that,
+           at a length no honest journal entry reaches — around 700 words on a multiline
+           field.
+           What this deliberately does NOT do is prune old records. Dropping somebody's
+           oldest writing to save a few hundred milliseconds is not a trade this app gets to
+           make on their behalf; there is no server and no backup, so a pruned record is
+           gone. If the payload ever does get large, the answer is to say so, not to quietly
+           delete the thing they came here to keep. */
+        maxLength={maxLength ?? (multiline ? FIELD_MAX_MULTILINE : FIELD_MAX_SINGLE)}
         style={{
           ...t.body,
           color: c.ink,

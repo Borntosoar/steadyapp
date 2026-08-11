@@ -7,6 +7,7 @@ import { ThemeProvider, useTheme } from '../components/ui';
 import { useStore, flushState } from '../store/useStore';
 import { useEntitlement } from '../hooks/useEntitlement';
 import { CrashBoundary } from '../components/CrashScreen';
+import { initDeviceCrypto } from '../hooks/deviceKey';
 import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../constants/theme';
 
 /** Routes that stay reachable before the disclaimer has been accepted.
@@ -76,8 +77,18 @@ function Gate() {
 
   const { refresh } = useEntitlement();
 
+  /* The device key is fetched BEFORE hydration, and the ordering is the whole point.
+     loadState() cannot read a sealed payload without it, and its correct response to a
+     sealed payload with no key is to quarantine and lock writes — which is right when the
+     keychain is genuinely unreachable and catastrophic if it merely had not been asked yet.
+     Awaited, never raced.
+     initDeviceCrypto resolves rather than rejects on every path, so a keychain failure
+     degrades to plaintext storage instead of an app that will not start. */
   useEffect(() => {
-    void hydrate();
+    void (async () => {
+      await initDeviceCrypto();
+      await hydrate();
+    })();
   }, [hydrate]);
 
   /* Re-ask the store who this person is, at launch and every time the app comes forward.

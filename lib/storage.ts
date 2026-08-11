@@ -32,6 +32,7 @@ import { initialStreak } from './streak.ts';
    moment ids are a closed set and normalise() rejects stored keys outside it. */
 import { emptyMomentRecord, MOMENTS } from './moments.ts';
 import { emptyEntitlement, type Entitlement } from './entitlement.ts';
+import { seal, open, isSealed } from './crypto.ts';
 
 /* The key never changes again. Versioning happens inside the envelope; the `.v2` suffix is
    a historical artefact of the first release and renaming it now would strand real data. */
@@ -467,6 +468,36 @@ export interface LoadResult {
   quarantinedAt?: string;
 }
 
+/* ---------- encryption at rest ----------
+ *
+ * The key and the CSPRNG are INJECTED, from hooks/deviceKey.ts, because both come from
+ * native modules and this file has to stay loadable under bare `node --test`. That is not a
+ * technicality: it is the only reason the cipher and its failure paths have tests at all.
+ *
+ * Until `configureCrypto` runs, `key` is null and this layer reads and writes plaintext —
+ * which is exactly what the test suite wants, and exactly what an existing install already
+ * has on disk. The upgrade is transparent in one direction: a plaintext payload is read as
+ * it always was and then written back sealed on the next save. There is no migration step
+ * and nobody is asked anything. */
+let cryptoConfig: {
+  key: Uint8Array | null;
+  randomBytes: (n: number) => Uint8Array;
+  nonceBytes: number;
+} | null = null;
+
+export function configureCrypto(c: {
+  key: Uint8Array | null;
+  randomBytes: (n: number) => Uint8Array;
+  nonceBytes: number;
+}): void {
+  cryptoConfig = c;
+}
+
+/** Test seam. Also the honest answer to "is this install encrypted?". */
+export function isEncryptionActive(): boolean {
+  return !!cryptoConfig?.key;
+}
+
 export async function loadState(): Promise<LoadResult> {
   let raw: string | null = null;
   try {
@@ -480,7 +511,25 @@ export async function loadState(): Promise<LoadResult> {
   if (!raw) return { state: emptyState(), ok: true }; // genuinely a fresh install
 
   try {
-    const parsed = JSON.parse(raw);
+    const outer = JSON.parse(raw);
+
+    /* Sealed payloads. Three ways this goes wrong and all three take the quarantine path,
+       because the alternative — returning an empty state that is safe to write over — is
+       how adding encryption turns a bad launch into permanent loss:
+         - no key configured, because the keychain could not be reached this launch;
+         - the key does not match, because it was regenerated or restored from elsewhere;
+         - the bytes were tampered with, which Poly1305 catches.
+       Quarantine keeps the bytes and locks writes, so a later launch with a working keychain
+       can still read them. */
+    let parsed: unknown = outer;
+    if (isSealed(outer)) {
+      const key = cryptoConfig?.key;
+      if (!key) return quarantine(raw);
+      const plain = open(outer, key);
+      if (plain === null) return quarantine(raw);
+      parsed = JSON.parse(plain);
+    }
+
     const enveloped = obj(parsed);
     const versioned = typeof enveloped.v === 'number';
     const version = versioned ? (enveloped.v as number) : 2;
@@ -522,7 +571,17 @@ async function quarantine(raw: string): Promise<LoadResult> {
  *  is every entry from now on, silently, until reinstall. The caller needs to know. */
 export async function saveState(state: AppState): Promise<boolean> {
   try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ v: SCHEMA_VERSION, data: state }));
+    const envelope = JSON.stringify({ v: SCHEMA_VERSION, data: state });
+    /* Sealed when a key is available, plaintext when one is not.
+       Falling back to plaintext rather than refusing to write is deliberate and is the
+       lesser of two harms: the alternative is that a keychain hiccup silently stops somebody
+       recording anything, in an app people open on their worst days. The state of this is
+       surfaced to the user rather than hidden — see components/StorageNotice.tsx. */
+    const body =
+      cryptoConfig?.key
+        ? JSON.stringify(seal(envelope, cryptoConfig.key, cryptoConfig.randomBytes(cryptoConfig.nonceBytes)))
+        : envelope;
+    await AsyncStorage.setItem(STORAGE_KEY, body);
     return true;
   } catch {
     return false;

@@ -11,6 +11,8 @@ import { Finish } from '../components/Finish';
 import { space, radius, type as t } from '../constants/theme';
 import { useStore } from '../store/useStore';
 import { mirrorSpecForWeek, MIRROR_UNLOCK_WEEK } from '../lib/protocol';
+import { isGated } from '../lib/entitlement';
+import { useEntitlement } from '../hooks/useEntitlement';
 import {
   MIRROR_RULES, DISTANCE_RATIONALE, NEUTRAL_SWAPS, promptsForPhase, CONDITION_SUGGESTIONS,
 } from '../constants/mirrorPrompts';
@@ -25,6 +27,7 @@ export default function Mirror() {
   const c = useTheme();
   const router = useRouter();
 
+  const { entitled } = useEntitlement();
   const week = useStore((s) => s.protocol.currentWeek);
   const sessions = useStore((s) => s.mirrorSessions);
   const addMirrorSession = useStore((s) => s.addMirrorSession);
@@ -52,6 +55,47 @@ export default function Mirror() {
   useEffect(() => {
     if (stage === 'session' && elapsed >= duration) setStage('after');
   }, [stage, elapsed, duration]);
+
+  /* ---------- the entitlement boundary ----------
+   *
+   * This screen had no entitlement check at all, while TIER_COMPARISON in lib/entitlement.ts
+   * lists mirror practice as paid. The only thing standing in front of it was the week-4
+   * protocol gate, and the app's own custom scheme made it directly addressable:
+   * `steady:///mirror` from any other app on the device opened the flagship paid feature.
+   *
+   * It routes through `isGated` rather than reading `entitled` inline, which is what
+   * lib/entitlement.ts has always claimed happens — "the single place that decides". It was
+   * not true: `isGated` and `weekGated` had zero production call sites, so the one consumer
+   * of that module was the ALWAYS_FREE_ROUTES half. A policy function nobody calls is how
+   * the free-route half silently rots later, and that half is the safety guarantee.
+   *
+   * Ordered before the week gate deliberately. "You have not reached this yet" is the more
+   * useful sentence when both are true, but a free user cannot reach week 4 in the first
+   * place, so anybody seeing this screen has genuinely hit the paid boundary. */
+  if (isGated('/mirror', entitled)) {
+    return (
+      <Ground>
+        <View style={{ marginTop: space.xxxl }}>
+          <Caption>Part of Steady+</Caption>
+          <H1 style={{ marginTop: space.xs }}>Mirror practice</H1>
+          <Body style={{ marginTop: space.md }}>
+            Standing in front of a mirror on purpose, for a set time, without checking or
+            fixing. It is the part of the programme that changes the most, and it is the part
+            that needs the rest of the weeks underneath it first.
+          </Body>
+          <BodySm style={{ marginTop: space.md, color: c.cool }}>
+            Calming down, checking in, the hard-day path and crisis support are not affected.
+            Those are free forever and are not part of this.
+          </BodySm>
+
+          <View style={{ marginTop: space.xxl }}>
+            <Button label="See Steady+" onPress={() => router.push('/paywall')} />
+            <Button label="Back" variant="ghost" onPress={() => router.back()} style={{ marginTop: space.xs }} />
+          </View>
+        </View>
+      </Ground>
+    );
+  }
 
   /* ---------- locked ---------- */
 
