@@ -203,13 +203,16 @@ two.
 |---|---|
 | Contrast ≥4.5:1, **measured** | ✅ computed and tested against the real background |
 | Touch targets ≥44pt | ✅ |
-| Labels and roles | 🟡 17 of 26 files |
+| Labels and roles | ✅ every Pressable has a role; icon-only controls have labels — both asserted |
 | Reduced motion | ✅ with one documented, deliberate exception |
-| **Dynamic Type** | ❌ **untested — fixed heights will clip at large sizes** |
-| Screen reader pass | ❌ not done on device |
+| **Dynamic Type** | ✅ verified clean at 3.1x (iOS max) with `npm run bigtext`, running uncapped — harsher than a device |
+| Screen reader pass | 🟡 structure asserted; announcement ORDER still needs a device and a person |
 
 **The most common accessibility gap in shipped apps is Dynamic Type**, because it only
 breaks for people who have already changed a setting — so it never breaks for the developer.
+`npm run bigtext` is the answer to that: it scales every rendered font size and reports what
+overflows. Two real defects came out of the first run — the greeting ran under the
+always-mounted Support pill, and the four tab labels collided into one unreadable word.
 
 ## 3.4 Words
 
@@ -264,9 +267,9 @@ between them. Note the placement: last on the screen, below every crisis line, a
 6. **The store listing drifting from the code.** Advertised trial length vs actual — a refund, a bad review and a metadata violation in one.
 7. **A "delete my data" function nothing calls.** Written, tested, never wired.
 
-Steady had **six of the seven**, plus a review button wired to nothing. All fixed except
-Dynamic Type — including two closed while writing this page, which is the argument for
-writing it down rather than keeping it in your head.
+Steady had **six of the seven**, plus a review button wired to nothing. **All seven are now
+fixed** — four of them found by writing this page, which is the argument for writing it down
+rather than keeping it in your head.
 
 ---
 
@@ -276,7 +279,7 @@ writing it down rather than keeping it in your head.
 |---|---|
 | Functionality | **Strong.** Failure paths are the most thoroughly built part. |
 | Legal | **Written, blocked on three fields.** Province, entity name, address. |
-| Customer experience | **Good. One hole left:** Dynamic Type untested. |
+| Customer experience | **Closed.** Every gap this document opened with is fixed. |
 | Store readiness | **Blocked on the Apple account**, which is weeks. Everything else is close. |
 
 ## Next, in order
@@ -284,7 +287,7 @@ writing it down rather than keeping it in your head.
 1. **Start the Apple Organization enrolment.** Longest lead item; everything is downstream.
 2. **Name the province and the entity.** Unblocks the site → privacy URL → submission chain.
    ⚠ If Quebec, Bill 96 collides with the English-only decision.
-3. **Test at the largest Dynamic Type setting** and fix what clips. The last CX hole, and the
-   one that only breaks for people who already changed a setting.
-4. **Wire RevenueCat.** Stubs are a rejection.
-5. **Verify the 31 crisis numbers.**
+3. **Wire RevenueCat.** Stubs are a rejection under 2.1.
+4. **Verify the 31 crisis numbers** against their providers.
+5. **A device pass** — VoiceOver announcement order, real launch time, real binary size. The
+   three things in this document no test can reach.

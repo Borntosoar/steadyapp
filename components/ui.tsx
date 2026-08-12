@@ -79,7 +79,37 @@ export function Bleed({ children, style }: { children: React.ReactNode; style?: 
   return <View style={[{ marginHorizontal: -space.lg }, style]}>{children}</View>;
 }
 
-/* ---------- text ---------- */
+/* ---------- text ----------
+ *
+ * DYNAMIC TYPE. iOS lets a person set text anywhere from 82% to 310% of the default, and a
+ * meaningful share of this app's audience will have moved that slider — appearance anxiety
+ * co-occurs with a lot of things, and reading a twelve-week programme is a lot of reading.
+ * React Native scales text automatically, which is the right default and stays on. The
+ * failure mode is not the text: it is layouts that assumed a height.
+ *
+ * WHY THERE ARE CAPS AT ALL, AND WHY THEY DIFFER BY VARIANT.
+ *
+ * Body text is capped generously (2x) because it is the content — somebody who needs 300%
+ * text needs to read the module, and a screen that scrolls further is a fine outcome.
+ *
+ * Display and hero type are capped hard (1.4x / 1.3x), and that is not a compromise on
+ * accessibility. `hero` is already 64pt: at 310% it is 198pt, which fits roughly two
+ * characters on an iPhone and turns "15.8 hours back this week" into a wall nobody can read.
+ * A number that is too big to see is not more accessible than one that is merely large. The
+ * capped size is still far above the default body size, so the hierarchy survives and the
+ * figure stays legible.
+ *
+ * Nothing here disables scaling. `allowFontScaling={false}` appears nowhere in this
+ * codebase, and __tests__/a11y.test.mjs fails if it ever does. */
+
+const MAX_SCALE: Partial<Record<keyof typeof t, number>> = {
+  hero: 1.3,
+  timer: 1.3,
+  display: 1.4,
+  h1: 1.6,
+  h2: 1.7,
+  // h3, body, bodySm, label, caption: uncapped. Content scales as far as the user asked.
+};
 
 type TxtProps = { children: React.ReactNode; style?: TextStyle | TextStyle[]; numberOfLines?: number };
 
@@ -87,7 +117,11 @@ const mk = (variant: keyof typeof t, colorKey: keyof Palette = 'ink') =>
   function Txt({ children, style, numberOfLines }: TxtProps) {
     const c = useTheme();
     return (
-      <Text numberOfLines={numberOfLines} style={[t[variant], { color: c[colorKey] as string }, style as TextStyle]}>
+      <Text
+        numberOfLines={numberOfLines}
+        maxFontSizeMultiplier={MAX_SCALE[variant]}
+        style={[t[variant], { color: c[colorKey] as string }, style as TextStyle]}
+      >
         {children}
       </Text>
     );
@@ -102,6 +136,14 @@ export const Body = mk('body');
 export const BodySm = mk('bodySm', 'inkSoft');
 export const Label = mk('label', 'inkSoft');
 export const Caption = mk('caption', 'inkFaint');
+
+/** For text inside a shape that cannot grow — a 44pt disc, a week-strip circle, a badge.
+ *
+ *  The shape is the constraint, not the type. Scaling the glyph inside a fixed circle does
+ *  not make it readable, it makes it clipped, and a clipped character is worse than a small
+ *  one. Use this ONLY where the container is genuinely fixed by design and the text is a
+ *  single character or a short number; anywhere else, make the container grow instead. */
+export const IN_FIXED_SHAPE = 1.15;
 
 /* ---------- surfaces ----------
  * Cards are used sparingly and never nested. Most grouping is done with spacing and

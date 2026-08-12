@@ -337,7 +337,7 @@ function Sit({ onDone }: { onDone: () => void }) {
     <Scene variant="night" footer={<SceneExit label="Finish" onPress={onDone} />}>
       <View style={{ alignItems: 'center' }}>
         <QuietCircle tone="light" />
-        <View style={{ height: 44, marginTop: space.xxl, justifyContent: 'center' }}>
+        <View style={{ minHeight: 44, marginTop: space.xxl, justifyContent: 'center' }}>
           {showMid ? <Text style={[t.h2, onScene]}>{HARD_DAY.sit.midpoint.text}</Text> : null}
         </View>
       </View>

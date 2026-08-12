@@ -17,6 +17,15 @@ import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../constants/theme';
  *  `__tests__/safety.test.mjs`. */
 const CRISIS_ROUTES = ['/support', '/grounding'];
 
+/** Horizontal space a screen must leave clear in its top-right corner.
+ *
+ *  The Support pill is absolutely positioned over every screen, so nothing can flow around
+ *  it — content simply passes underneath. At default text size the greeting on Today cleared
+ *  it by luck; at larger sizes, or with a longer name, the name went behind the pill.
+ *  Exported so the screens that put text in that corner reserve the space deliberately
+ *  rather than each guessing a padding. */
+export const SUPPORT_PILL_CLEARANCE = 104;
+
 /* Support is reachable in <= 2 taps from every screen: this bar is always mounted, so
  * it is always exactly one tap. Non-negotiable, see SAFETY.md. */
 function SupportBar() {
@@ -60,7 +69,12 @@ function SupportBar() {
           })}
         >
           <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: c.warn }} />
-          <Text style={[t.caption, { color: c.ink, fontWeight: '600' }]}>Support</Text>
+          {/* Capped: this label lives in a pill that overlays content and must stay one
+              line. It is chrome, not content — the word is a landmark rather than something
+              to read, and it is the same word every time. */}
+          <Text maxFontSizeMultiplier={1.3} style={[t.caption, { color: c.ink, fontWeight: '600' }]}>
+            Support
+          </Text>
         </Pressable>
       </View>
     </View>

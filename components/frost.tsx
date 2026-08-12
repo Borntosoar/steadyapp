@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView, StyleSheet, type ViewStyle } from 'r
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { useTheme } from './ui';
+import { useTheme, IN_FIXED_SHAPE } from './ui';
 import { Atmosphere } from './Atmosphere';
 import {
   space, radius, type as t, atmosphereForScheme, elevation, motion,
@@ -336,7 +336,7 @@ export function LevelBar({
                 }}
                 style={{
                   flex: 1,
-                  height: 46,
+                  minHeight: 46,
                   borderRadius: 8,
                   backgroundColor: filled ? c.accent : c.surfaceStrong,
                   borderWidth: filled ? 0 : StyleSheet.hairlineWidth,
@@ -538,7 +538,10 @@ export function Explain({ q, a }: { q: string; a: string }) {
             justifyContent: 'center',
           }}
         >
-          <Text style={[t.caption, { color: c.accentDeep, fontSize: 11, lineHeight: 13, fontWeight: '700' }]}>
+          <Text
+            maxFontSizeMultiplier={IN_FIXED_SHAPE}
+            style={[t.caption, { color: c.accentDeep, fontSize: 11, lineHeight: 13, fontWeight: '700' }]}
+          >
             {open ? '−' : '?'}
           </Text>
         </View>

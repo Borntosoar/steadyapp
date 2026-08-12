@@ -430,7 +430,7 @@ function DeltaBars({ deltas }: { deltas: number[] }) {
   const c = useTheme();
   const max = Math.max(1, ...deltas.map((d) => Math.abs(d)));
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 70, marginTop: space.md }}>
+    <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, minHeight: 70, marginTop: space.md }}>
       {[...deltas].reverse().map((d, i) => (
         <View key={i} style={{ flex: 1, alignItems: 'center' }}>
           <View

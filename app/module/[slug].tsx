@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Screen, Card, Button, H1, H3, BodySm, Caption, Label, Rule, useTheme,
+  IN_FIXED_SHAPE,
 } from '../../components/ui';
 import { Frost, CircleButton, IconBadge } from '../../components/frost';
 import { CheckMark } from '../../components/Finish';
@@ -231,7 +232,7 @@ export default function LearnModuleScreen() {
                         backgroundColor: c.accentDim,
                       }}
                     >
-                      <Text style={[t.label, { color: c.accentDeep }]}>{next.week}</Text>
+                      <Text maxFontSizeMultiplier={IN_FIXED_SHAPE} style={[t.label, { color: c.accentDeep }]}>{next.week}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
                       <Caption>{nextLocked ? 'Next · Steady+' : 'Next'}</Caption>

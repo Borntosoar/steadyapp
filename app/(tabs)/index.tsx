@@ -20,6 +20,7 @@ import { nextMoment } from '../../lib/moments';
 import { MODULES } from '../../content/modules';
 import { NAMES, EXPLAIN } from '../../content/names';
 import { markHardDayIntent } from '../../hooks/navIntent';
+import { SUPPORT_PILL_CLEARANCE } from '../_layout';
 
 /* Today.
  *
@@ -149,7 +150,12 @@ export default function Today() {
         showsVerticalScrollIndicator={false}
       >
         <View style={{ width: '100%', maxWidth: LAYOUT_MAX_WIDTH, paddingHorizontal: space.lg }}>
-          <Caption style={{ color: c.inkSoft }}>
+          {/* Right padding reserves the corner the always-mounted Support pill sits in.
+              Without it, a longer name — or any text-size setting above the default — runs
+              the greeting straight under the pill, and the name is what disappears. Found at
+              2.2x scale, where "Good afternoon, Sam" had its Sam hidden behind "Support".
+              The pill is chrome and cannot move; the content is what yields. */}
+          <Caption style={{ color: c.inkSoft, paddingRight: SUPPORT_PILL_CLEARANCE }}>
             {greeting}{profile.firstName ? `, ${profile.firstName}` : ''}
           </Caption>
 

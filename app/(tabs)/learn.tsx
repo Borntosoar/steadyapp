@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Pressable, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
-import { Button, H1, H2, H3, BodySm, Caption, Chip, useTheme } from '../../components/ui';
+import { Button, H1, H2, H3, BodySm, Caption, Chip, useTheme, IN_FIXED_SHAPE } from '../../components/ui';
 import { Frost, Ground, IconBadge } from '../../components/frost';
 import { space, type as t } from '../../constants/theme';
 import { MODULES, CONTENT_DISCLAIMER } from '../../content/modules';
@@ -118,7 +118,7 @@ export default function LearnIndex() {
                           />
                         </Svg>
                       ) : (
-                        <Text style={[t.label, { color: c.accentDeep }]}>{m.week}</Text>
+                        <Text maxFontSizeMultiplier={IN_FIXED_SHAPE} style={[t.label, { color: c.accentDeep }]}>{m.week}</Text>
                       )}
                     </View>
 

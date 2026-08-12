@@ -119,7 +119,20 @@ function TabBar({ state, navigation }: any) {
               style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingTop: 6 }}
             >
               <Icon color={color} active={focused} />
-              <Text style={[t.caption, { color, fontSize: 11 }]}>{label}</Text>
+              {/* Capped and single-line. The tab bar is fixed chrome sharing one row between
+                  four labels: at large text sizes "Practice" and "Progress" run into each
+                  other and become one unreadable word, which serves the person who needed the
+                  bigger text worse than a slightly smaller label does.
+                  The icon carries the meaning at any size, the accessibilityLabel above is
+                  uncapped and complete for VoiceOver, and every destination is reachable from
+                  the screens themselves as well as from here. */}
+              <Text
+                numberOfLines={1}
+                maxFontSizeMultiplier={1.2}
+                style={[t.caption, { color, fontSize: 11 }]}
+              >
+                {label}
+              </Text>
             </Pressable>
           );
         })}
