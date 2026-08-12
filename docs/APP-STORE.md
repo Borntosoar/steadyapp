@@ -600,12 +600,23 @@ Blockers first.
       changing — see `docs/LOCALISATION.md` §2
 - [x] **Governing law jurisdiction chosen: Canada.** `legal/terms-of-use.md` §15, standard
       Canadian construction, non-exclusive jurisdiction, no arbitration clause
-- [ ] **Province named** — the last field blocking the legal site build, which blocks the
-      privacy policy URL, which blocks submission. Canadian contract and consumer law is
-      provincial. **If it is Quebec, Bill 96 requires French versions** and that must be
-      settled before launch — see `docs/LOCALISATION.md` §1
-- [ ] Legal entity name and registered address — likely one decision with the Organization
-      account below, since that needs a D-U-N-S number
+- [ ] **`legal/entity.json` filled in** — province, entity name, entity kind, registered
+      address. These four are the whole remaining legal gap, they now live in **one file**,
+      and `node site/build.mjs` refuses to publish while any is null. Filling it is a single
+      edit; everything downstream is already wired and verified end to end.
+      Each still needs a real answer from a person:
+      - **Province** decides the governing-law clause and which consumer and privacy regime
+        applies. Spell it in full; the build rejects `ON`. **If it is Quebec** the documents
+        as written are not usable: Bill 96 (French consumer contracts, colliding with
+        `docs/LOCALISATION.md` §1), Law 25 (privacy duties beyond PIPEDA, published privacy
+        officer) and the Consumer Protection Act (liability language). The build blocks
+        Quebec until `quebecCounselConfirmed` is set.
+      - **Entity kind** is one decision with the Organization account below — Apple's
+        Organization enrolment needs a D-U-N-S number, which in practice means a
+        corporation, and the number itself takes weeks
+      - **Registered address** is published on a public URL attached to a body-dysmorphia
+        app. For a sole proprietor that is normally the home address. See `legal/README.md`
+        §3 for the three ordinary ways around it
 - [ ] Apple Developer Program enrolment is an **Organization**, not an Individual (5.1)
 - [ ] Privacy policy hosted at a real URL, linked in App Store Connect **and in-app** (5.2)
 - [ ] StoreKit / RevenueCat wired — `purchase()` and `restore()` are not stubs (5.3)
