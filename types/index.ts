@@ -210,14 +210,54 @@ export interface SupportRegion {
   lines: SupportLine[];
 }
 
-export interface SupportLine {
+interface SupportLineBase {
   name: string;
   contact: string;
+  /** Anything else worth knowing before dialling: who it is for, what it costs, what
+   *  language it answers in. Never opening hours — those have their own field, below. */
   note?: string;
-  /** The national emergency service. Flagged structurally rather than detected from the
-   *  name, because the name is in the local language — "Noodgeval", "Notruf", "救急" — and a
-   *  test that pattern-matches those is a test that silently stops covering a region the
-   *  moment somebody adds one in a language nobody thought of. Which is precisely what
-   *  happened the first time this was checked. */
-  emergency?: true;
 }
+
+/** A staffed line somebody rings and a person answers.
+ *
+ *  `hours` is REQUIRED, and that is the entire point of splitting this type up.
+ *
+ *  Checking all 31 regions against their providers found the numbers were almost all
+ *  correct and the AVAILABILITY was not: Denmark's Livslinien closes at 05:00, Germany's
+ *  116 111 only answers Monday to Saturday afternoons, Portugal's Voz de Apoio runs for
+ *  three hours a night, Italy's Telefono Amico stops at midnight, Japan's いのちの電話 at
+ *  22:00. Every one of those was listed here with no hours at all.
+ *
+ *  A line with nothing said about its hours does not read as "hours unknown". It reads as
+ *  "open now", because that is what a crisis number is assumed to be. Somebody at 3am gets
+ *  a ringing phone and the conclusion that nobody came. Making the field optional is what
+ *  made that silence possible, so it is not optional: the compiler now refuses a staffed
+ *  line that has not said when it answers. */
+export interface StaffedLine extends SupportLineBase {
+  hours: string;
+  emergency?: never;
+  directory?: never;
+}
+
+/** The national emergency service. Flagged structurally rather than detected from the
+ *  name, because the name is in the local language — "Noodgeval", "Notruf", "救急" — and a
+ *  test that pattern-matches those is a test that silently stops covering a region the
+ *  moment somebody adds one in a language nobody thought of. Which is precisely what
+ *  happened the first time this was checked.
+ *
+ *  Carries no `hours`: an emergency number that closed would not be one. */
+export interface EmergencyLine extends SupportLineBase {
+  emergency: true;
+  hours?: never;
+  directory?: never;
+}
+
+/** The maintained international directory, and the reason a stale number above is a
+ *  degradation rather than a dead end. A website, so hours do not apply. */
+export interface DirectoryLine extends SupportLineBase {
+  directory: true;
+  hours?: never;
+  emergency?: never;
+}
+
+export type SupportLine = StaffedLine | EmergencyLine | DirectoryLine;

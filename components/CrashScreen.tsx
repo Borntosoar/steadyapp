@@ -90,7 +90,11 @@ export function CrashScreen({ error, onReset }: { error?: Error; onReset?: () =>
             }}
           >
             <Text style={[t.h3, { color: c.ink }]}>If you need someone right now</Text>
-            {region.lines.slice(0, 2).map((line) => (
+            {/* Round-the-clock lines only. This screen appears when the app has already
+                failed, and there is no room on it to explain that the number it just offered
+                does not answer until two in the afternoon. Filtered rather than sliced blind,
+                so that reordering a region's lines can never put a part-time one here. */}
+            {region.lines.filter((l) => l.hours === '24/7').slice(0, 2).map((line) => (
               <Pressable
                 key={line.contact}
                 accessibilityRole="button"

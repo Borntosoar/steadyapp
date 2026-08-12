@@ -86,7 +86,10 @@ export default function Support() {
             <Pressable
               key={i}
               accessibilityRole={Platform.OS === 'web' ? 'text' : 'button'}
-              accessibilityLabel={`${l.name}, ${l.contact}`}
+              /* Hours belong in the spoken label too, and before the note. Somebody using
+                 VoiceOver at 4am needs to hear "daily, 10:00 to 22:00" while deciding
+                 whether to dial, not discover it from a phone that rings out. */
+              accessibilityLabel={[l.name, l.contact, l.hours, l.note].filter(Boolean).join(', ')}
               onPress={() => dial(l.contact)}
               style={({ pressed }) => ({
                 paddingVertical: space.lg,
@@ -97,6 +100,14 @@ export default function Support() {
             >
               <H3>{l.name}</H3>
               <Text style={[t.h2, { color: c.accentDeep, marginTop: 2 }]}>{l.contact}</Text>
+              {/* Two lines, not one joined by a separator. At large text sizes a middot
+                  between them wraps onto its own line and sits there as an orphan; and the
+                  hours are the thing being read, so they get the row. */}
+              {l.hours ? (
+                <Text style={[t.caption, { color: c.inkSoft, fontWeight: '600', marginTop: 3 }]}>
+                  {l.hours}
+                </Text>
+              ) : null}
               {l.note ? <Caption style={{ marginTop: 2 }}>{l.note}</Caption> : null}
             </Pressable>
           ))}

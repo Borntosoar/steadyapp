@@ -55,6 +55,67 @@ describe('every region can reach help even if its numbers are out of date', () =
     }
   });
 
+  test('every staffed line says when somebody actually answers it', () => {
+    /* The finding from verifying all 31 regions against their providers, turned into a test.
+       The numbers were nearly all correct; the HOURS were wrong almost everywhere, and wrong
+       by omission — eight lines that close overnight, or run for three hours an evening, were
+       listed with nothing said about hours at all.
+       Silence here is not neutral. A crisis number with no hours beside it reads as open,
+       because that is what a crisis number is assumed to be, and the person who finds out
+       otherwise finds out by listening to it ring.
+       The type enforces this at compile time (types/index.ts, StaffedLine). This enforces it
+       at runtime as well, because these constants are also read as plain data, and by anyone
+       who edits them without running tsc. */
+    for (const r of SUPPORT_REGIONS) {
+      for (const l of r.lines) {
+        if (l.emergency || l.directory) continue;
+        assert.ok(
+          typeof l.hours === 'string' && l.hours.trim().length > 0,
+          `${r.key}: "${l.name}" does not say when it is open, which reads as "always"`
+        );
+      }
+    }
+  });
+
+  test('a line that is not open round the clock does not claim to be', () => {
+    /* The corollary. "24/7" is the only shorthand allowed for always-open; anything else has
+       to be a legible span. Catches the original bug returning in a new shape — a placeholder
+       value, or the word "always" on a line that is not. */
+    const SPAN = /\d{1,2}[:.]\d{2}|\b(mon|tue|wed|thu|fri|sat|sun|daily)\b/i;
+    for (const r of SUPPORT_REGIONS) {
+      for (const l of r.lines.filter((x) => x.hours)) {
+        assert.ok(
+          l.hours === '24/7' || SPAN.test(l.hours),
+          `${r.key}: "${l.name}" has hours "${l.hours}" — use exactly "24/7", or state days and times`
+        );
+      }
+    }
+  });
+
+  test('hours read in English, because the hours are the app talking', () => {
+    /* The same line the notes rule draws below: the service keeps its own name, the app
+       describes it in the app's own language. "Täglich 09:00–24:00" would be the app
+       speaking German to somebody who chose an English app. */
+    for (const r of SUPPORT_REGIONS) {
+      for (const l of r.lines.filter((x) => x.hours)) {
+        assert.match(l.hours, /^[\x20-\x7E–—·’]+$/, `${r.key}: hours "${l.hours}" are not in English`);
+      }
+    }
+  });
+
+  test("the crash screen's region has two lines that answer at any hour", () => {
+    /* components/CrashScreen.tsx is hard-coded to 'us' — the profile it would otherwise read
+       lives in the state that may be the thing that just crashed — and it now shows only the
+       lines marked 24/7, because a crash screen has no room to qualify a number. Both
+       decisions are sound and together they have a failure mode: if the US region ever stops
+       carrying two round-the-clock lines, the crisis box on that screen quietly empties.
+       Nothing else in the suite would notice. */
+    const us = SUPPORT_REGIONS.find((r) => r.key === 'us');
+    const allHours = us.lines.filter((l) => l.hours === '24/7');
+    assert.ok(allHours.length >= 2,
+      'CrashScreen shows the first two 24/7 US lines; there are no longer two');
+  });
+
   test('no region is a dead end', () => {
     for (const r of SUPPORT_REGIONS) {
       assert.ok(r.lines.length >= 2, `${r.key} offers only one route to help`);

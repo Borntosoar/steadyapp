@@ -583,10 +583,21 @@ and the app enters 5.1.3 territory.
 
 Blockers first.
 
-- [ ] **Every crisis number in `constants/support.ts` verified against its provider.** 31
-      regions, assembled from knowledge rather than a live check. A wrong number here is the
-      worst bug this app can ship. Mitigated but not removed by the findahelpline.com
-      backstop in every region — see `docs/LOCALISATION.md` §2
+- [x] **Every crisis number in `constants/support.ts` verified against its provider.**
+      Done 12 August 2026, all 31 regions, checked against providers and national health
+      services directly. The numbers were nearly all correct. What was wrong was
+      **availability**, and it was wrong by omission: eight staffed lines that close
+      overnight, or run for a few hours an evening, were listed with no hours at all — which
+      on a crisis screen reads as "open now". Denmark, Germany, Italy (both lines), Japan,
+      Portugal (both lines).
+      Two substantive fixes beyond hours: India's KIRAN has been merged into Tele-MANAS and
+      no longer stands alone, and Argentina's 0800 999 0091 was filed under the name of a
+      different, Buenos-Aires-only service.
+      Fixed structurally rather than line by line: `hours` is now a **required** field on
+      every staffed line (`types/index.ts`, `StaffedLine`), so the compiler rejects a new
+      line that has not said when it answers, and `__tests__/support.test.mjs` asserts the
+      same at runtime. **Re-verify annually**, and whenever a national line is reported
+      changing — see `docs/LOCALISATION.md` §2
 - [x] **Governing law jurisdiction chosen: Canada.** `legal/terms-of-use.md` §15, standard
       Canadian construction, non-exclusive jurisdiction, no arbitration clause
 - [ ] **Province named** — the last field blocking the legal site build, which blocks the
