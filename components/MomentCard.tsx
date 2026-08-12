@@ -6,6 +6,7 @@ import { space, radius, type as t } from '../constants/theme';
 import { useStore } from '../store/useStore';
 import { MOMENT_COPY } from '../content/copy.ts';
 import { computeReclaimed, checkInsInLastDays, previousWeekCheckIns } from '../lib/reclaimed';
+import * as StoreReview from 'expo-store-review';
 import { daysUntilExpiry, RENEWAL_TERMS } from '../lib/entitlement';
 import { countOf } from '../content/names.ts';
 import type { Moment } from '../lib/moments';
@@ -147,12 +148,18 @@ export function MomentCard({ moment }: { moment: Moment }) {
           onPress={() => {
             momentActed(moment.id);
             if (moment.id === 'rate-app') {
-              /* STORE REVIEW INTEGRATION POINT
-               * Swap for expo-store-review: `await StoreReview.requestReview()`, guarded
-               * by `isAvailableAsync()`. iOS caps the native prompt at three a year per
-               * user, which is the reason this moment fires once, after something has
-               * demonstrably gone well, and never during a bad stretch — a prompt spent
-               * on somebody mid bad week is one of three gone. */
+              /* This branch used to `return` and nothing else — so the button read "Write a
+                 review ›" and did literally nothing when tapped. A dead control is worse
+                 than an absent one: the person concluded the app was broken at the exact
+                 moment they were feeling well enough about it to say so publicly.
+                 iOS caps the native prompt at three a year per user, which is why this
+                 moment fires once, after something has demonstrably gone well, and never
+                 during a bad stretch — a prompt spent on somebody mid bad week is one of
+                 three gone. Guarded by isAvailableAsync so an unavailable prompt is a quiet
+                 no-op rather than a crash. */
+              void StoreReview.isAvailableAsync()
+                .then((ok) => (ok ? StoreReview.requestReview() : undefined))
+                .catch(() => {});
               return;
             }
             router.push(ROUTES[moment.id] ?? '/');

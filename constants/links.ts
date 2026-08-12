@@ -27,3 +27,26 @@ export const LINKS = {
    *  closely. */
   disclaimer: `${SITE_ORIGIN}/disclaimer.html`,
 } as const;
+
+/** The address a person can reach a human on.
+ *
+ *  Not a crisis line, and the support screen says so directly beneath it — on that screen of
+ *  all screens somebody could reasonably assume otherwise.
+ *
+ *  It exists because without it the app had no outbound channel at all: a user who hit a bug
+ *  or lost writing could only reach the public review page, which is slow, one-directional,
+ *  and costs a rating for something that might have been fixable the same day. */
+export const SUPPORT_EMAIL = 'steadyrecovery3@gmail.com';
+
+/** Pre-filled so the reply is useful without asking somebody in distress to describe their
+ *  setup. Deliberately carries NO device identifier, no state, and nothing from the journal:
+ *  a mail draft the user can read and edit before sending is the only kind of report this
+ *  app is willing to produce. */
+export const SUPPORT_MAILTO =
+  `mailto:${SUPPORT_EMAIL}` +
+  `?subject=${encodeURIComponent('Steady — feedback')}` +
+  `&body=${encodeURIComponent(
+    'What happened:\n\n\nWhat you expected instead:\n\n\n' +
+      '(Please do not paste anything private you would rather not send. ' +
+      'Nothing is attached to this message automatically.)\n'
+  )}`;

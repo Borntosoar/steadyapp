@@ -173,6 +173,10 @@ describe('the source tree is what SAFETY.md says it is', () => {
        would break the promise on screen one. expo-crypto is used only for getRandomBytes. */
     'expo-crypto',
     'expo-secure-store',
+    /* The native review prompt. iOS caps it at three a year per user, which is why the
+       moment that triggers it fires once, after something has gone well, and never during a
+       bad stretch. No network access of its own — it asks the OS to show a system sheet. */
+    'expo-store-review',
     /* expo-file-system is the one package on this list that CAN reach the network:
        `downloadAsync` and `uploadAsync` are part of its surface. Steady uses it for exactly
        one thing — writing the export to the cache directory so the iOS share sheet offers
@@ -318,6 +322,31 @@ describe('the source tree is what SAFETY.md says it is', () => {
       'the device key is not pinned to this device');
     assert.doesNotMatch(key.src, /AFTER_FIRST_UNLOCK(?!_THIS_DEVICE_ONLY)/,
       'a weaker keychain accessibility class is in use');
+  });
+
+  test('there is a way to reach a human that is not the review page', () => {
+    /* Without one, a person who hits a bug, loses writing, or wants to say the mirror
+       exercise made things worse has exactly one channel: the public App Store review page.
+       Slow, one-directional, and it costs a rating for something that might have been fixed
+       the same day. It sits LAST on the support screen — below every crisis line — because
+       it is about the software and must not compete with a phone number. */
+    const support = FILES.find((f) => f.path === 'app/support.tsx');
+    assert.match(support.src, /SUPPORT_MAILTO/, 'no in-app route to a human');
+    assert.match(support.src, /not a crisis line/i,
+      'the support address does not distinguish itself from the crisis lines above it');
+
+    const links = FILES.find((f) => f.path === 'constants/links.ts');
+    assert.doesNotMatch(withoutComments(links.src), /getState\(\)|thoughtRecords|useStore|entitlement/,
+      'the feedback draft must not attach app state — the user sends only what they write');
+  });
+
+  test('no prompt is a dead control', () => {
+    /* The review button read "Write a review ›" and its handler did nothing but return, so
+       tapping it convinced the person the app was broken at the exact moment they felt well
+       enough about it to say so publicly. */
+    const card = FILES.find((f) => f.path === 'components/MomentCard.tsx');
+    assert.match(card.src, /StoreReview\.requestReview/, 'the review prompt does nothing');
+    assert.match(card.src, /isAvailableAsync/, 'the review prompt is not guarded');
   });
 
   test('the file-system module is used for files, never for transfers', () => {

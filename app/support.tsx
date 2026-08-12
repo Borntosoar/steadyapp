@@ -7,6 +7,7 @@ import {
 import { space, radius, type as t } from '../constants/theme';
 import { useStore } from '../store/useStore';
 import { SUPPORT_REGIONS, regionByKey, THERAPY_GUIDANCE, SUPPORT_INTRO } from '../constants/support';
+import { LINKS, SUPPORT_EMAIL, SUPPORT_MAILTO } from '../constants/links';
 
 /* Free, always, and never gated. Action first — someone reading this may be in real
  * distress, so the numbers come before any explanation, and nothing on the way to them
@@ -123,6 +124,52 @@ export default function Support() {
               {g.replace(/\*\*/g, '')}
             </Body>
           ))}
+        </View>
+
+        {/* ---------- reaching us ----------
+            Last on the screen, deliberately. Everything above is about reaching a person who
+            can help right now; this is about the software, and it must not compete for
+            attention with a crisis line.
+
+            It exists because without it there was no route out of the app at all. Somebody
+            who hit a bug, lost writing, or wanted to say that the mirror exercise made things
+            worse had exactly one channel: the public review page. That is the worst possible
+            place for the first report of a real problem — slow, one-directional, and it costs
+            a rating for something that might have been fixable in a day. */}
+        <View style={{ marginTop: space.xxl }}>
+          <Rule />
+          <H2 style={{ marginTop: space.lg }}>Something wrong with the app?</H2>
+          <BodySm style={{ marginTop: space.sm }}>
+            Bugs, lost writing, or anything in here that made things worse rather than better.
+            We would much rather hear it than not.
+          </BodySm>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={`Email ${SUPPORT_EMAIL}`}
+            onPress={() => Linking.openURL(SUPPORT_MAILTO).catch(() => {})}
+            style={({ pressed }) => ({ paddingVertical: space.md, minHeight: 44, opacity: pressed ? 0.6 : 1 })}
+          >
+            <Text style={[t.h3, { color: c.accentDeep, textDecorationLine: 'underline' }]}>
+              {SUPPORT_EMAIL}
+            </Text>
+          </Pressable>
+          {/* Said plainly, because on this screen of all screens somebody could reasonably
+              assume otherwise. */}
+          <Caption>
+            This is an email address, not a crisis line. One person reads it, and not always
+            the same day — if today is urgent, use the numbers above.
+          </Caption>
+
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel="What Steady is and is not, opens in your browser"
+            onPress={() => Linking.openURL(LINKS.disclaimer).catch(() => {})}
+            style={({ pressed }) => ({ paddingTop: space.lg, paddingBottom: space.md, minHeight: 44, opacity: pressed ? 0.6 : 1 })}
+          >
+            <BodySm style={{ color: c.inkSoft, textDecorationLine: 'underline' }}>
+              What Steady is, and what it is not
+            </BodySm>
+          </Pressable>
         </View>
 
         <Button
