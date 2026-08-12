@@ -24,6 +24,7 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync } from 'nod
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
+import { loadEntity, problems, fill } from './entity.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'site', 'dist');
@@ -137,17 +138,6 @@ const stripComments = (md) => md.replace(/<!--[\s\S]*?-->/g, '');
 const wrapTables = (html) => html.replace(/<table>/g, '<div class="table-scroll"><table>')
   .replace(/<\/table>/g, '</table></div>');
 
-/** Loud, checkable failure. Publishing a policy that still says `[LEGAL ENTITY NAME — TODO]`
- *  would be worse than publishing nothing: it is a live legal document with a hole in it.
- *  The build refuses unless ALLOW_TODOS=1 is set for a preview. */
-function checkPlaceholders(all) {
-  const found = [];
-  for (const { file, md } of all) {
-    for (const m of md.matchAll(/`\[([^\]]*?TODO[^\]]*?)\]`/g)) found.push(`${file}: ${m[1]}`);
-  }
-  return found;
-}
-
 mkdirSync(OUT, { recursive: true });
 for (const f of readdirSync(OUT)) rmSync(join(OUT, f), { recursive: true, force: true });
 
@@ -156,17 +146,29 @@ const loaded = PAGES.map((p) => ({
   md: readFileSync(join(ROOT, 'legal', p.file), 'utf8'),
 }));
 
-const todos = checkPlaceholders(loaded);
-if (todos.length && !process.env.ALLOW_TODOS) {
-  console.error('\nRefusing to build: the legal documents still contain placeholders.\n');
-  for (const t of todos) console.error('  ' + t);
-  console.error('\nFill them in (see legal/README.md), or set ALLOW_TODOS=1 to build a preview.\n');
+/* Publishing a policy that is vague about who publishes it would be worse than publishing
+   nothing: it is a live legal document with a hole in it, and the hole is the identity of the
+   party the reader is contracting with.
+   One gate, reading legal/entity.json, rather than a grep for the word TODO — a grep only
+   ever catches the placeholder shape somebody remembered to use. */
+const entity = loadEntity();
+const blocking = problems(entity);
+if (blocking.length && !process.env.ALLOW_TODOS) {
+  console.error('\nRefusing to build. The legal documents are not ready to publish:\n');
+  for (const t of blocking) console.error('  · ' + t);
+  console.error(
+    '\nFill in legal/entity.json — see legal/README.md, "The three fields still open".\n' +
+      'ALLOW_TODOS=1 builds a preview with the gaps left standing. Never publish that one.\n'
+  );
   process.exit(1);
 }
 
 for (const p of loaded) {
-  const html = wrapTables(marked.parse(stripComments(p.md)));
-  const first = p.md.match(/^#\s+(.+)$/m)?.[1] ?? p.nav;
+  /* A preview leaves the tokens visible rather than substituting the word "null" into a
+     sentence about who you are contracting with — which would read as a filled-in answer. */
+  const md = blocking.length ? p.md : fill(p.md, entity);
+  const html = wrapTables(marked.parse(stripComments(md)));
+  const first = md.match(/^#\s+(.+)$/m)?.[1] ?? p.nav;
   writeFileSync(
     join(OUT, `${p.slug}.html`),
     shell(`${first} — Steady`, `${p.nav} for the Steady app.`, `<main>${html}</main>`)
@@ -245,4 +247,7 @@ writeFileSync(
 writeFileSync(join(OUT, 'robots.txt'), 'User-agent: *\nAllow: /\n');
 
 console.log(`Built ${PAGES.length + 1} pages into site/dist/`);
-if (todos.length) console.log(`(preview build — ${todos.length} placeholders still present)`);
+if (blocking.length) {
+  console.log(`\n(preview build — ${blocking.length} thing(s) unresolved, do not publish this)`);
+  for (const t of blocking) console.log('  · ' + t);
+}

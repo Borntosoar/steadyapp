@@ -1,8 +1,8 @@
 # Terms of Use — Steady
 
 **Last updated:** 11 August 2026
-**Publisher:** `[LEGAL ENTITY NAME — TODO]` ("we", "us", "our")
-**Contact:** steadyrecovery3@gmail.com
+**Publisher:** {{ENTITY_NAME}} ("we", "us", "our")
+**Contact:** {{CONTACT_EMAIL}}
 
 <!-- DRAFT. Not reviewed by a lawyer. See legal/README.md before publishing. -->
 <!-- Verified against the repository at commit f5db0ae, app.json version 2.0.0. -->
@@ -39,7 +39,7 @@ If you are in danger right now, call your local emergency number.
 
 ## 1. What this agreement is
 
-These terms are a contract between you and `[LEGAL ENTITY NAME — TODO]` about your use of the Steady iOS app.
+These terms are a contract between you and {{ENTITY_NAME}} about your use of the Steady iOS app.
 
 By installing or using Steady, you agree to them. If you do not agree, do not use the app — and delete it, which also removes everything it stored.
 
@@ -293,7 +293,7 @@ We list them because they help people, and we check them, but:
 - What happens on that call is between you and them.
 - Tapping a number simply hands it to your phone's dialler. We do not place, route, monitor, record, or learn about the call.
 
-**If a number in the app is wrong, please tell us at steadyrecovery3@gmail.com.** A wrong number is the worst thing this app could ship and we will fix it immediately.
+**If a number in the app is wrong, please tell us at {{CONTACT_EMAIL}}.** A wrong number is the worst thing this app could ship and we will fix it immediately.
 
 **In an emergency, call your local emergency number** — 911 in Canada and the US, 999 in the UK, 000 in Australia — rather than relying on anything in this app.
 
@@ -335,7 +335,7 @@ You and we agree that:
 
 ## 15. Governing law and disputes
 
-These terms are governed by the laws of the Province of `[PROVINCE — TODO]` and the federal laws of Canada that apply in it. The courts of that province have non-exclusive jurisdiction over any dispute.
+These terms are governed by the laws of the Province of {{PROVINCE}} and the federal laws of Canada that apply in it. The courts of that province have non-exclusive jurisdiction over any dispute.
 
 **Non-exclusive on purpose.** An exclusive clause would tell a customer in Australia that their only route is a Canadian courtroom, which is both unenforceable against a consumer and a bad thing to say to somebody in a mental-health product. Non-exclusive means we will not drag you across the world, and you keep whatever forum your own law gives you.
 
@@ -387,8 +387,8 @@ We have not included either. They are common in apps sold into the United States
 
 ## Contact
 
-steadyrecovery3@gmail.com
-`[LEGAL ENTITY NAME — TODO]`, `[REGISTERED ADDRESS — TODO]`
+{{CONTACT_EMAIL}}
+{{ENTITY_NAME}}, {{ENTITY_ADDRESS}}
 
 ---
 

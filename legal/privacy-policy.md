@@ -1,8 +1,8 @@
 # Privacy Policy — Steady
 
 **Last updated:** 11 August 2026
-**Applies to:** the Steady iOS app, version 2.0.0 and later, published by `[LEGAL ENTITY NAME — TODO]` ("we", "us").
-**Contact:** steadyrecovery3@gmail.com
+**Applies to:** the Steady iOS app, version 2.0.0 and later, published by {{ENTITY_NAME}} ("we", "us").
+**Contact:** {{CONTACT_EMAIL}}
 
 <!-- DRAFT. Not reviewed by a lawyer. See legal/README.md before publishing. -->
 <!-- Every factual claim in this document is sourced in an HTML comment beside it. HTML
@@ -29,13 +29,13 @@ That one fact decides almost everything else in this document.
 
 ## 1. Who this policy is from
 
-`[LEGAL ENTITY NAME — TODO]`, of `[REGISTERED ADDRESS — TODO]`, publishes Steady.
+{{ENTITY_NAME}}, of {{ENTITY_ADDRESS}}, publishes Steady.
 
 Where data-protection law needs someone named as the **controller** (the party that decides why and how personal data is handled), that is us. In practice we hold no personal data about you at all, for the reasons set out in section 3.
 
 We are based in Canada, so **PIPEDA** (the Personal Information Protection and Electronic Documents Act) is the law that primarily applies to us. Because the app is sold worldwide, the GDPR, UK GDPR and CCPA/CPRA may also apply to customers in those places, and sections 9 to 12 set out the rights each of them gives you.
 
-We have not appointed a Data Protection Officer. Under the GDPR one is required where an organisation carries out large-scale monitoring or processes special-category data at scale, and we do neither — we receive no personal data at all. PIPEDA requires an accountable individual instead, and that is the developer, reachable at steadyrecovery3@gmail.com.
+We have not appointed a Data Protection Officer. Under the GDPR one is required where an organisation carries out large-scale monitoring or processes special-category data at scale, and we do neither — we receive no personal data at all. PIPEDA requires an accountable individual instead, and that is the developer, reachable at {{CONTACT_EMAIL}}.
 
 <!-- The DPO position rests on receiving no personal data, which is verified in the sections
      below. It changes the day any server-side processing is introduced. Worth a lawyer's
@@ -255,7 +255,7 @@ Deleting the app also erases everything, for the same reason: there is nowhere e
 
 **Special category data.** Information about mental health is "special category" data under Article 9 — the most protected kind. Steady is full of it. That is exactly why it was built with no server: the strongest protection available for special category data is for the operator never to hold it.
 
-**Complaints.** If you think we have got this wrong, please tell us at steadyrecovery3@gmail.com. You can also complain to your data-protection regulator — in the UK that is the Information Commissioner's Office (ico.org.uk); in the EU it is the supervisory authority for the country you live in.
+**Complaints.** If you think we have got this wrong, please tell us at {{CONTACT_EMAIL}}. You can also complain to your data-protection regulator — in the UK that is the Information Commissioner's Office (ico.org.uk); in the EU it is the supervisory authority for the country you live in.
 
 ---
 
@@ -272,7 +272,7 @@ For California residents, under the California Consumer Privacy Act as amended b
 - **Third parties we disclose to:** none.
 - **Retention:** we retain nothing, so there is no retention period to state.
 
-You have the right to know, delete, correct, opt out of sale or sharing, limit the use of sensitive personal information, and not be discriminated against for exercising these rights. Because we hold nothing about you, a request under any of them can be answered in one line — and we will answer it in one line if you send one to steadyrecovery3@gmail.com.
+You have the right to know, delete, correct, opt out of sale or sharing, limit the use of sensitive personal information, and not be discriminated against for exercising these rights. Because we hold nothing about you, a request under any of them can be answered in one line — and we will answer it in one line if you send one to {{CONTACT_EMAIL}}.
 
 We do not offer financial incentives for personal information. We do not process personal information for behavioural advertising, so there is no "Do Not Sell or Share My Personal Information" link to provide.
 
@@ -286,7 +286,7 @@ We do not offer financial incentives for personal information. We do not process
 
 Under the Personal Information Protection and Electronic Documents Act:
 
-- **Accountability.** `[LEGAL ENTITY NAME — TODO]` is accountable for personal information under its control. Questions go to the developer at steadyrecovery3@gmail.com.
+- **Accountability.** {{ENTITY_NAME}} is accountable for personal information under its control. Questions go to the developer at {{CONTACT_EMAIL}}.
 - **Identifying purposes, consent, limiting collection.** We collect no personal information, so there is no purpose to identify and no consent to obtain.
 - **Limiting use, disclosure and retention.** We hold nothing, so there is nothing to use, disclose or retain.
 - **Accuracy.** You control accuracy directly — the data is on your device and you can edit it.
@@ -363,7 +363,7 @@ Nothing you write. No check-in, no distress rating, no thought record, no urge l
      entity's actual filing position with an accountant; it is the standard answer and not
      a controversial one. -->
 
-**Your rights** over purchase data are the ordinary ones — access, correction, deletion, portability, objection. Ask us at steadyrecovery3@gmail.com. Note that some purchase records must be kept for tax reasons even after a deletion request, and that Apple holds its own copy of your transaction independently of us.
+**Your rights** over purchase data are the ordinary ones — access, correction, deletion, portability, objection. Ask us at {{CONTACT_EMAIL}}. Note that some purchase records must be kept for tax reasons even after a deletion request, and that Apple holds its own copy of your transaction independently of us.
 
 **The App Store privacy label must be updated in the same release that adds the SDK** — Purchases → Purchase History, and Identifiers → User ID, both marked *not linked to identity* and *not used for tracking*. Health and fitness data stays unselected, in every version, because it never leaves the device.
 
@@ -402,8 +402,8 @@ If a future version ever adds a server, an account, cloud sync, or analytics, th
 
 ## 18. Contact
 
-steadyrecovery3@gmail.com
-`[LEGAL ENTITY NAME — TODO]`, `[REGISTERED ADDRESS — TODO]`
+{{CONTACT_EMAIL}}
+{{ENTITY_NAME}}, {{ENTITY_ADDRESS}}
 
 ---
 

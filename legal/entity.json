@@ -1,0 +1,13 @@
+{
+  "_README": "Single source of truth for who publishes Steady. See site/entity.mjs for how these are used and legal/README.md for what each one means. A null value is an open question, and site/build.mjs refuses to publish while any remain null — see the note there. Do not fill one in with a guess: a legal document that names the wrong entity is worse than one that admits it does not know yet.",
+
+  "name": null,
+  "kind": null,
+  "address": null,
+  "province": null,
+
+  "contactEmail": "steadyrecovery3@gmail.com",
+  "siteOrigin": "https://steadyapp.co",
+
+  "quebecCounselConfirmed": false
+}

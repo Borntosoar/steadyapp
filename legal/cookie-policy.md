@@ -2,8 +2,8 @@
 
 **Last updated:** 11 August 2026
 **Applies to:** borntosoar.github.io/steadyapp, the marketing and legal-documents website for Steady.
-**Published by:** `[LEGAL ENTITY NAME — TODO]`
-**Contact:** steadyrecovery3@gmail.com
+**Published by:** {{ENTITY_NAME}}
+**Contact:** {{CONTACT_EMAIL}}
 
 <!-- DRAFT. Not reviewed by a lawyer. See legal/README.md before publishing. -->
 
@@ -75,7 +75,7 @@ If we ever add anything to this site that sets a cookie or tracks anything, we w
 
 ## Contact
 
-steadyrecovery3@gmail.com
+{{CONTACT_EMAIL}}
 
 ---
 

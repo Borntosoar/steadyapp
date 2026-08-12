@@ -56,9 +56,23 @@ before changing anything about data handling.
 
 Everything else is written. Nothing fake was invented, so these are the whole remaining gap.
 
+**They all live in `legal/entity.json`**, and the documents fill themselves from it — they
+carry `{{ENTITY_NAME}}`, `{{ENTITY_ADDRESS}}`, `{{PROVINCE}}` and `{{CONTACT_EMAIL}}` rather
+than the text. Not tidiness: the publisher's identity was written out by hand in **nineteen**
+places across five documents, and a privacy policy naming one entity while the terms of use
+name another is a real defect in a real contract that nothing here would have caught. Now it
+is one edit in one file.
+
+`node site/build.mjs` **refuses to run** while any value is null, while a province is
+abbreviated, or while the province is Quebec and nobody has confirmed a lawyer looked.
+`ALLOW_TODOS=1` builds a preview with the gaps left standing; never publish that one.
+`__tests__/legal.test.mjs` holds the documents and the data to each other, and fails if a
+future edit writes the entity name back into a document inline.
+
 1. **Province.** Required, and not pedantry: in Canada, contract law and consumer protection
    are **provincial**. "The laws of Canada" is not a complete choice of law. Use the province
-   where the entity is registered or where you are resident.
+   where the entity is registered or where you are resident. Spell it in full — it is printed
+   verbatim into the governing-law clause, and the build rejects `ON`.
 
    ⚠ **If the answer is Quebec, three things change.** The Charter of the French Language (as
    amended by Bill 96) requires consumer contracts and related documentation to be available
@@ -73,7 +87,19 @@ Everything else is written. Nothing fake was invented, so these are the whole re
    (`docs/APP-STORE.md` §5.1) usually implies a registered company with a D-U-N-S number, so
    the two decisions are really one.
 
-3. **Registered address.** Follows from the entity.
+3. **Registered address.** Follows from the entity — with one thing worth deciding
+   deliberately rather than by default.
+
+   A sole proprietor's registered address is normally their **home address**, and this one
+   does not stay private: it is printed in the privacy policy and the terms, on a public URL,
+   attached to an app about body dysmorphia. That is a real exposure to a real person, and
+   it is the sort of thing that is obvious only after it is already indexed.
+
+   Three ways out, all ordinary: incorporate and use the corporation's registered office;
+   use a registered-agent or virtual-office address (roughly $200–400/yr in Canada, and it
+   is what the service is for); or a commercial mailbox, though note that some registries and
+   some of Apple's checks will not accept a PO box. Whatever is chosen has to be an address
+   where legal notice can actually reach you — that is what it is for.
 
 ## Publishing
 
