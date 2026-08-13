@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  loadEntity, problems, fill, tokensUsed, TOKENS, REQUIRED, PROVINCES, KINDS, LEGAL_DIR,
+  loadEntity, problems, legalNameProblems, fill, tokensUsed, TOKENS, REQUIRED, PROVINCES,
+  KINDS, LEGAL_DIR, appName,
 } from '../site/entity.mjs';
 
 /* The legal documents.
@@ -120,7 +121,12 @@ describe('a half-answered entity cannot be published', () => {
     for (const bad of ['LLC', 'partnership', 'Corporation']) {
       assert.ok(problems({ ...complete, kind: bad }).length >= 1, `"${bad}" was accepted`);
     }
-    for (const good of KINDS) assert.deepEqual(problems({ ...complete, kind: good }), []);
+    /* Each kind needs a name of its own shape — "Example Ltd." is not a sole proprietor and
+       "Jane Doe" is not a corporation — which is what legalNameProblems is checking. */
+    const nameFor = { corporation: 'Example Ltd.', 'sole proprietorship': 'Jane Doe' };
+    for (const good of KINDS) {
+      assert.deepEqual(problems({ ...complete, kind: good, name: nameFor[good] }), []);
+    }
   });
 
   test('Quebec is blocked until a lawyer has actually looked', () => {
@@ -210,6 +216,87 @@ describe('the factual claims the documents make about the app', () => {
         assert.equal(e, entity.contactEmail,
           `${file} points at ${e}, but legal/entity.json says ${entity.contactEmail}`);
       }
+    }
+  });
+});
+
+describe('the entity name has to be a legal person', () => {
+  /* The decision "publish Steady under its own entity called Steady" is a decision about a
+     brand. `name` is a party to a contract. Those are different objects, and the gap between
+     them is invisible on the page: "Steady" in the publisher line of a privacy policy looks
+     exactly as finished as a registered corporate name does. It is only wrong in the place
+     it matters — a term enforced by, or against, a company that does not exist. */
+  const base = {
+    address: '1 Road', province: 'Ontario', contactEmail: 'a@b.co',
+    siteOrigin: 'https://x.co', quebecCounselConfirmed: false,
+  };
+  const brand = appName();
+
+  test('the bare app name is refused, whichever kind is chosen', () => {
+    for (const kind of KINDS) {
+      const found = legalNameProblems({ ...base, kind, name: brand });
+      assert.equal(found.length, 1, `"${brand}" was accepted as a legal name for a ${kind}`);
+      assert.match(found[0], /not a legal entity/);
+    }
+    /* Case and padding are the same mistake wearing a hat. */
+    assert.equal(legalNameProblems({ ...base, kind: 'corporation', name: '  steady ' }).length, 1);
+  });
+
+  test('a corporation must carry a legal suffix', () => {
+    assert.match(
+      legalNameProblems({ ...base, kind: 'corporation', name: 'Steady Technologies' })[0],
+      /does not end in a legal suffix/
+    );
+    for (const ok of ['Steady Technologies Inc.', 'Steady Labs Ltd.', 'Steady Corp.',
+                      '1234567 Ontario Limited', 'Steady Technologies Ltée']) {
+      assert.deepEqual(legalNameProblems({ ...base, kind: 'corporation', name: ok }), [],
+        `${ok} should be an acceptable corporate name`);
+    }
+  });
+
+  test('a sole proprietorship is a human, named as one', () => {
+    /* A sole proprietorship has no legal personality of its own. Publishing as
+       "Steady Recovery" with kind "sole proprietorship" names nobody. */
+    assert.match(
+      legalNameProblems({ ...base, kind: 'sole proprietorship', name: 'Steady Recovery' })[0],
+      /without naming the person behind it/
+    );
+    assert.match(
+      legalNameProblems({ ...base, kind: 'sole proprietorship', name: 'Steady Ltd.' })[0],
+      /no separate legal personality/
+    );
+    for (const ok of ['Jane Doe', 'Jane Doe, carrying on business as Steady',
+                      'Jane Doe o/a Steady']) {
+      assert.deepEqual(legalNameProblems({ ...base, kind: 'sole proprietorship', name: ok }), [],
+        `${ok} should be an acceptable sole-proprietor name`);
+    }
+  });
+
+  test('problems() surfaces a name defect alongside the unanswered fields', () => {
+    const found = problems({ ...base, kind: 'corporation', name: brand });
+    assert.ok(found.some((p) => /not a legal entity/.test(p)));
+  });
+});
+
+describe('the site has one address', () => {
+  test('the app and the legal documents cannot point at different hosts', () => {
+    /* They did. `constants/links.ts` opened borntosoar.github.io/steadyapp — a host belonging
+       to a different company — while entity.json declared steadyapp.co, and nothing compared
+       them. The app's privacy link and the address printed in the cookie policy have to be
+       the same place, and it has to be a place this entity controls. */
+    const entity = loadEntity();
+    if (!entity.siteOrigin) return; // still an open question; the build blocks on it
+    const links = readFileSync(join(LEGAL_DIR, '..', 'constants', 'links.ts'), 'utf8');
+    const declared = links.match(/export const SITE_ORIGIN = '([^']+)'/)?.[1];
+    assert.equal(declared, entity.siteOrigin,
+      'constants/links.ts and legal/entity.json disagree about where the site lives');
+  });
+
+  test('no legal document hard-codes a host', () => {
+    for (const { file, md } of DOCS) {
+      if (file === 'README.md') continue;
+      assert.doesNotMatch(withoutComments(md), /borntosoar|github\.io/i,
+        `${file} names a host inline; use {{SITE_ORIGIN}}`);
     }
   });
 });

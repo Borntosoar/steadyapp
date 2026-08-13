@@ -1,7 +1,7 @@
 # Cookie Policy — Steady website
 
 **Last updated:** 11 August 2026
-**Applies to:** borntosoar.github.io/steadyapp, the marketing and legal-documents website for Steady.
+**Applies to:** {{SITE_ORIGIN}}, the marketing and legal-documents website for Steady.
 **Published by:** {{ENTITY_NAME}}
 **Contact:** {{CONTACT_EMAIL}}
 
@@ -34,7 +34,7 @@ Similar technologies do the same job by other means — local storage, session s
 
 **Nothing.**
 
-borntosoar.github.io/steadyapp is a set of static pages. It sets no cookies, uses no local storage, runs no analytics, loads no tracking pixels, embeds no advertising, and has no sign-in.
+{{SITE_ORIGIN}} is a set of static pages. It sets no cookies, uses no local storage, runs no analytics, loads no tracking pixels, embeds no advertising, and has no sign-in.
 
 There is no cookie banner because there is nothing to consent to. If you ever see a cookie banner on this site, something has changed and this page is out of date — please tell us.
 

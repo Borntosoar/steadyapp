@@ -14,9 +14,15 @@
  * app as well as from the App Store listing (Guideline 3.1.2 / 5.1.1). They render beneath
  * the purchase button on the paywall. */
 
-/** Set once the Pages deploy is live. Derived from the repository, so it is knowable now —
- *  but the site itself will not build until the legal documents' remaining blanks are
- *  filled, which is the intended order. See legal/README.md. */
+/** ⚠ PROVISIONAL, AND UNDER THE WRONG ACCOUNT. This is a GitHub Pages URL belonging to
+ *  Borntosoar — a different company. Steady is published by its own entity now, so the
+ *  documents a user opens from inside the app should not be served by a host that entity
+ *  does not control, and `legal/cookie-policy.md` names this address in its first line.
+ *
+ *  The real answer goes in `legal/entity.json` → `siteOrigin`, which is the single source
+ *  for it; `__tests__/legal.test.mjs` fails if this constant and that field disagree once
+ *  the field is answered. The value below stays only so the app still builds meanwhile.
+ *  See legal/README.md §3. */
 export const SITE_ORIGIN = 'https://borntosoar.github.io/steadyapp';
 
 export const LINKS = {

@@ -48,17 +48,21 @@ before changing anything about data handling.
   developer.
 - **Contact:** steadyrecovery3@gmail.com, used throughout.
 - **Effective dates:** set.
-- **Hosting:** GitHub Pages, static, no cookies.
+- **Hosting:** static, no cookies. **Which host is now an open question** — see §3.5.
+- **Publisher: Steady's own entity, separate from SOAR.** Steady is not published under the
+  SOAR entity or its Apple Developer account. This settles ownership; it does not settle the
+  entity's *name* — see §3.2, and the two places SOAR's identity is still baked into the
+  build at §3.6.
 - **Retention of purchase records:** six years, per the CRA's general rule for business
   records.
 
-## The three fields still open
+## 3. What is still open
 
 Everything else is written. Nothing fake was invented, so these are the whole remaining gap.
 
 **They all live in `legal/entity.json`**, and the documents fill themselves from it — they
-carry `{{ENTITY_NAME}}`, `{{ENTITY_ADDRESS}}`, `{{PROVINCE}}` and `{{CONTACT_EMAIL}}` rather
-than the text. Not tidiness: the publisher's identity was written out by hand in **nineteen**
+carry `{{ENTITY_NAME}}`, `{{ENTITY_ADDRESS}}`, `{{PROVINCE}}`, `{{CONTACT_EMAIL}}` and
+`{{SITE_ORIGIN}}` rather than the text. Not tidiness: the publisher's identity was written out by hand in **nineteen**
 places across five documents, and a privacy policy naming one entity while the terms of use
 name another is a real defect in a real contract that nothing here would have caught. Now it
 is one edit in one file.
@@ -82,10 +86,30 @@ future edit writes the entity name back into a document inline.
    restricts some liability language that is fine elsewhere in Canada. Any other province and
    none of this applies.
 
-2. **Legal entity name.** Sole proprietorship or an incorporated company? It changes the
-   liability position, not just the wording — and Apple's Organization account requirement
-   (`docs/APP-STORE.md` §5.1) usually implies a registered company with a D-U-N-S number, so
-   the two decisions are really one.
+2. **Legal entity name.** ⚠ **"Steady" is not an answer to this field, and the build now
+   says so.** The brand and the party to a contract are different objects. Terms of use are
+   enforceable by and against a *legal person that exists*; "Steady" on its own is neither a
+   registered corporation nor a human, so a contract naming it has nobody on the other side,
+   and PIPEDA's accountability section has nobody to be accountable. `legalNameProblems()`
+   in `site/entity.mjs` rejects the bare app name outright, requires a corporate name to end
+   in a real suffix, and requires a sole proprietorship to name the human. It cannot check
+   registration, a NUANS search, or the trademark — only the error that looks finished.
+
+   Turning "Steady" into a legal name means picking one of two shapes:
+
+   - **Incorporate** — `Steady Technologies Inc.`, or whatever survives a NUANS name search.
+     "Steady" alone is a common word and unlikely to clear on its own. This is also what
+     Apple's Organization account requirement (`docs/APP-STORE.md` §5.1) effectively forces,
+     since the D-U-N-S number it needs in practice means a corporation — and that number
+     takes weeks, so it is worth starting before it is the last thing standing.
+   - **Sole proprietorship with a registered trade name** — the party is you, written
+     `Firstname Lastname, carrying on business as Steady`. Faster and cheaper, but there is
+     no corporate veil: a claim about an app in this subject area reaches personal assets.
+
+   Separately, and not checked by anything here: **the App Store name `Steady` has to be
+   free.** App Store names are unique across the store, the word is heavily used, and a
+   rejection on that ground arrives after everything else is finished. Worth checking in App
+   Store Connect early, and worth a trademark search before printing the name on a contract.
 
 3. **Registered address.** Follows from the entity — with one thing worth deciding
    deliberately rather than by default.
@@ -100,6 +124,31 @@ future edit writes the entity name back into a document inline.
    is what the service is for); or a commercial mailbox, though note that some registries and
    some of Apple's checks will not accept a PO box. Whatever is chosen has to be an address
    where legal notice can actually reach you — that is what it is for.
+
+4. **Entity kind.** `"sole proprietorship"` or `"corporation"`, matching the choice in §3.2.
+   It is a separate field because the name check depends on it.
+
+5. **Site origin.** Where the published documents actually live. This became an open question
+   the moment Steady stopped being a SOAR product: the repo held **two different answers**,
+   `https://borntosoar.github.io/steadyapp` in `constants/links.ts` and `https://steadyapp.co`
+   in `entity.json`, with nothing comparing them. The first is a host belonging to a different
+   company. This is the address the app's own privacy link opens and the address printed in
+   the first line of the cookie policy, so it has to be one answer, and one this entity
+   controls. `__tests__/legal.test.mjs` now fails if the two disagree once the field is
+   answered.
+
+### 3.6 Two places SOAR is still baked in
+
+Neither is a legal document, and both get harder to change later:
+
+- **`app.json` → `bundleIdentifier` and `package` are `com.borntosoar.steady`.** Reverse-DNS
+  under SOAR's domain, on an app that is no longer SOAR's. This is worth getting right
+  **before the first submission**, because a bundle identifier is permanent afterwards — it
+  cannot be renamed, it ties the app to the Apple account that first registers it, and
+  changing it means a new App Store listing with no reviews and no downloads. Left as-is
+  deliberately: the correct value depends on which domain the Steady entity ends up owning.
+- **`README.md`** still clones from `Borntosoar/steadyapp`. Cosmetic, but it is where a new
+  contributor forms their first idea of who owns this.
 
 ## Publishing
 

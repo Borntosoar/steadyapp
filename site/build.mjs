@@ -157,7 +157,7 @@ if (blocking.length && !process.env.ALLOW_TODOS) {
   console.error('\nRefusing to build. The legal documents are not ready to publish:\n');
   for (const t of blocking) console.error('  · ' + t);
   console.error(
-    '\nFill in legal/entity.json — see legal/README.md, "The three fields still open".\n' +
+    '\nFill in legal/entity.json — see legal/README.md, "What is still open".\n' +
       'ALLOW_TODOS=1 builds a preview with the gaps left standing. Never publish that one.\n'
   );
   process.exit(1);

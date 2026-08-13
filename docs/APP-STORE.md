@@ -263,10 +263,15 @@ be an Organization. Converting an Individual account to an Organization requires
 number and takes days to weeks.
 
 **What to change:** submit from an Organization developer account, with the seller name
-matching the entity. The bundle identifier `com.borntosoar.steady` suggests an entity
-already exists; confirm the Apple Developer Program enrolment type before building anything
-else in this document. If it is currently an Individual enrolment, start the conversion now
-— it is the longest-lead item on the list.
+matching the entity — which, as of the publisher decision in `legal/entity.json`, is
+**Steady's own entity, not SOAR's**. So the SOAR developer account is not the one to submit
+from, and the bundle identifier `com.borntosoar.steady` is under the wrong namespace; fix it
+**before the first submission**, because a bundle ID is permanent afterwards and binds the
+app to the account that first registers it (see `legal/README.md` §3.6).
+
+The Steady entity therefore needs its own Organization enrolment, and that needs a D-U-N-S
+number, which takes days to weeks to issue. It is the longest-lead item on the list and it
+cannot start until the entity in §3.2 of `legal/README.md` actually exists.
 
 Steady's actual posture helps the argument if it is ever contested: it provides no
 healthcare service, holds no sensitive user information off-device, and has no account.
@@ -600,17 +605,28 @@ Blockers first.
       changing — see `docs/LOCALISATION.md` §2
 - [x] **Governing law jurisdiction chosen: Canada.** `legal/terms-of-use.md` §15, standard
       Canadian construction, non-exclusive jurisdiction, no arbitration clause
-- [ ] **`legal/entity.json` filled in** — province, entity name, entity kind, registered
-      address. These four are the whole remaining legal gap, they now live in **one file**,
+- [x] **Publisher decided: Steady's own entity, separate from SOAR.** Not the SOAR entity and
+      not its Apple account. Recorded in `legal/entity.json` → `_DECIDED`
+- [ ] **`legal/entity.json` filled in** — entity name, entity kind, registered address,
+      province, site origin. These five are the whole remaining legal gap, they live in
+      **one file**,
       and `node site/build.mjs` refuses to publish while any is null. Filling it is a single
       edit; everything downstream is already wired and verified end to end.
       Each still needs a real answer from a person:
+      - **Entity name is not "Steady".** The brand is not a party to a contract. It has to be
+        a registered corporation (`Steady Technologies Inc.`, subject to a NUANS search) or
+        the human behind it (`Firstname Lastname, carrying on business as Steady`). The build
+        rejects the bare app name. Separately: the App Store name `Steady` must be free —
+        names are unique store-wide and it is a common word, so check it early
       - **Province** decides the governing-law clause and which consumer and privacy regime
         applies. Spell it in full; the build rejects `ON`. **If it is Quebec** the documents
         as written are not usable: Bill 96 (French consumer contracts, colliding with
         `docs/LOCALISATION.md` §1), Law 25 (privacy duties beyond PIPEDA, published privacy
         officer) and the Consumer Protection Act (liability language). The build blocks
         Quebec until `quebecCounselConfirmed` is set.
+      - **Site origin** — `constants/links.ts` opened `borntosoar.github.io/steadyapp` while
+        `entity.json` declared `steadyapp.co`. A host belonging to a different company cannot
+        serve the privacy policy Apple is given
       - **Entity kind** is one decision with the Organization account below — Apple's
         Organization enrolment needs a D-U-N-S number, which in practice means a
         corporation, and the number itself takes weeks

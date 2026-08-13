@@ -36,12 +36,41 @@ export const TOKENS = {
   ENTITY_ADDRESS: 'address',
   PROVINCE: 'province',
   CONTACT_EMAIL: 'contactEmail',
+  SITE_ORIGIN: 'siteOrigin',
 };
 
-/** The fields that must be answered before anything is published. `contactEmail` and
- *  `siteOrigin` are already known and are not in here; `quebecCounselConfirmed` is a gate
- *  rather than a field, handled separately below. */
-export const REQUIRED = ['name', 'kind', 'address', 'province'];
+/** The app's own name, read from app.json rather than repeated here. Used to catch the
+ *  mistake described at `legalNameProblems` below: writing the brand into the field that
+ *  has to hold a legal person. */
+export function appName(root = ROOT) {
+  return JSON.parse(readFileSync(join(root, 'app.json'), 'utf8')).expo.name;
+}
+
+/** Suffixes that mark a Canadian corporate name. Federal incorporation and every province
+ *  require the name to end in some member of this set (or its French equivalent), so a
+ *  corporate name without one is not yet a corporate name. */
+const CORPORATE_SUFFIXES = [
+  'inc', 'inc.', 'incorporated', 'ltd', 'ltd.', 'limited', 'corp', 'corp.', 'corporation',
+  'ltée', 'ltée.', 'limitée', 'ulc', 'société',
+];
+
+/** How "this human trades under this name" is written — which is what a sole proprietor's
+ *  legal name looks like when they publish under a brand rather than under their own name. */
+const TRADE_NAME_FORMS = [
+  'carrying on business as', 'operating as', 'o/a', 'c.o.b.', 'doing business as', 'd/b/a',
+];
+
+/** The fields that must be answered before anything is published. `contactEmail` is already
+ *  known and is not in here; `quebecCounselConfirmed` is a gate rather than a field, handled
+ *  separately below.
+ *
+ *  `siteOrigin` joined this list when Steady became its own entity. It had been
+ *  `borntosoar.github.io/steadyapp` in `constants/links.ts` and `steadyapp.co` here — two
+ *  different answers, neither checked against the other, one of them a URL under an account
+ *  belonging to a different company. It is the address printed in the cookie policy and the
+ *  address the app's own privacy link opens, so it has to be one answer and it has to be
+ *  one this entity controls. */
+export const REQUIRED = ['name', 'kind', 'address', 'province', 'siteOrigin'];
 
 /** Canada's provinces and territories, spelled as the documents will print them. Checked
  *  rather than accepted freely, because "ON" or "Ontario, Canada" in a choice-of-law clause
@@ -71,6 +100,71 @@ export function tokensUsed(dir = LEGAL_DIR) {
   return used;
 }
 
+/** Whether `name` is a name a contract can actually be against.
+ *
+ *  THE MISTAKE THIS CATCHES. The decision "publish this under a separate entity called
+ *  Steady" is a decision about a brand. `name` is not the brand — it is the party to a
+ *  contract, and terms of use are only enforceable by, and against, a legal person that
+ *  exists. "Steady" on its own is neither: until a corporation of that name is registered
+ *  or a human declares they trade under it, there is nobody on the other side of §42 of the
+ *  terms. A privacy policy naming a company that does not exist is not a smaller problem
+ *  than one naming the wrong company; PIPEDA's accountability section needs somebody real to
+ *  be accountable.
+ *
+ *  So the brand alone is rejected, and each kind is held to the shape its own name takes:
+ *  a corporation ends in a legal suffix, a sole proprietor is a human — either under their
+ *  own name, or their own name plus the trade name they operate under.
+ *
+ *  Deliberately shallow. It cannot know whether the name is registered, whether it survived
+ *  a NUANS search, or whether somebody else holds the trademark. It only refuses the one
+ *  error that looks completely finished on the page. */
+export function legalNameProblems(entity, root = ROOT) {
+  const out = [];
+  const name = typeof entity.name === 'string' ? entity.name.trim() : '';
+  if (!name) return out;
+
+  const brand = appName(root);
+  if (name.toLowerCase() === brand.toLowerCase()) {
+    out.push(
+      `entity.json: "${name}" is the app's name, not a legal entity. A contract needs a ` +
+        `party that exists: either a registered corporation ("${brand} Technologies Inc.") ` +
+        `or the human behind it ("Firstname Lastname, carrying on business as ${brand}"). ` +
+        `See legal/README.md §3.`
+    );
+    return out;
+  }
+
+  const lower = name.toLowerCase();
+  const lastWord = lower.split(/\s+/).pop();
+
+  if (entity.kind === 'corporation' && !CORPORATE_SUFFIXES.includes(lastWord)) {
+    out.push(
+      `entity.json: kind is "corporation" but "${name}" does not end in a legal suffix ` +
+        `(Inc., Ltd., Corp., Limited, Ltée …). Use the name exactly as it appears on the ` +
+        `certificate of incorporation — it is printed verbatim into the terms.`
+    );
+  }
+
+  if (entity.kind === 'sole proprietorship') {
+    const usesTradeName = TRADE_NAME_FORMS.some((f) => lower.includes(f));
+    if (CORPORATE_SUFFIXES.includes(lastWord)) {
+      out.push(
+        `entity.json: kind is "sole proprietorship" but "${name}" ends in a corporate ` +
+          `suffix. A sole proprietorship has no separate legal personality — the party is ` +
+          `the individual. Either set kind to "corporation" or name the human.`
+      );
+    } else if (lower.includes(brand.toLowerCase()) && !usesTradeName) {
+      out.push(
+        `entity.json: kind is "sole proprietorship" and "${name}" carries the brand without ` +
+          `naming the person behind it. Write it as "Firstname Lastname, carrying on ` +
+          `business as ${brand}" so the contract has a party.`
+      );
+    }
+  }
+
+  return out;
+}
+
 /** Everything wrong with the current entity.json, as a list of sentences a person can act on.
  *
  *  Returns [] when it is publishable. Deliberately reports ALL of them rather than the first:
@@ -94,6 +188,8 @@ export function problems(entity, dir = LEGAL_DIR) {
   if (entity.kind && !KINDS.includes(entity.kind)) {
     out.push(`entity.json: kind must be one of ${KINDS.map((k) => `"${k}"`).join(' or ')}.`);
   }
+
+  out.push(...legalNameProblems(entity));
 
   /* Quebec is a different legal package, not a different word in the same one.
    *

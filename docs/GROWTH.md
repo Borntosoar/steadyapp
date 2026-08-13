@@ -251,8 +251,10 @@ dilute.
 | Innovate UK digital mental health | Varies | UKRI has run dedicated digital mental health competitions |
 | **Mitacs Accelerate (Canada)** | ~$15k per internship unit, roughly half matched by Mitacs **[est. — verify current rates]** | **Pairs directly with §2.1.** The cheapest possible on-ramp if the entity is Canadian. |
 
-**The eligibility question decides the strategy.** The bundle ID `com.borntosoar.steady` and
-the crisis-line ordering in `constants/` (CA first) suggest a Canadian entity. If so, SBIR is
+**The eligibility question decides the strategy.** The publisher is Steady's own entity,
+separate from SOAR (`legal/entity.json`), and the governing law is Canadian with the
+crisis-line ordering in `constants/` putting CA first — so a Canadian entity, though it is
+not yet incorporated and the province is still open. If so, SBIR is
 out unless you incorporate a US subsidiary, and the realistic path is **Mitacs + CIHR +
 NRC IRAP, anchored on the academic partnership in §2.1.** If there is a US or UK entity, the
 ranking changes materially. **See §8, decision 4.**
