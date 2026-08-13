@@ -29,8 +29,11 @@
  */
 
 const CANDIDATES = [
-  'Tarn', 'Ballast', 'Elsewhere', 'Keel', 'Slackwater',
-  'Unhook', 'Sidelong', 'Plumbline', 'Lull', 'Bearing',
+  /* Plain and steady — the first pass. */
+  'Ballast', 'Keel', 'Elsewhere', 'Slackwater', 'Plumbline',
+  /* More presence: a picture behind the word, without the mystical vocabulary that would
+     undercut the clinician and academic channels this product depends on. */
+  'Cairn', 'Lodestar', 'Stillpoint', 'Anneal', 'Fathom', 'Meridian', 'Solace', 'Nocturne',
 ];
 
 /** Domains worth holding for an app like this. `.app` is a real TLD, enforces HTTPS, and is
