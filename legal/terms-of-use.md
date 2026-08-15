@@ -1,4 +1,4 @@
-# Terms of Use — Steady
+# Terms of Use — {{APP_NAME}}
 
 **Last updated:** 11 August 2026
 **Publisher:** {{ENTITY_NAME}} ("we", "us", "our")
@@ -11,7 +11,7 @@
 
 ## Read this first
 
-**Steady is a self-help tool. It is not therapy, not medical advice, not a diagnosis, and not a medical device.** It does not treat or cure anything. If appearance worry is taking hours out of most of your days, that is worth a proper assessment by a professional.
+**{{APP_NAME}} is a self-help tool. It is not therapy, not medical advice, not a diagnosis, and not a medical device.** It does not treat or cure anything. If appearance worry is taking hours out of most of your days, that is worth a proper assessment by a professional.
 
 The full version of that is in `medical-disclaimer.md`, and it forms part of these terms. Please read it.
 
@@ -29,7 +29,7 @@ If you are in danger right now, call your local emergency number.
 >
 > **Recommendation: link Apple's standard EULA in App Store Connect and on the paywall, and publish this document alongside it as your Terms of Use.**
 >
-> Reasons. Apple's EULA is short, familiar to reviewers, pre-accepted by every iPhone owner, and cannot be argued with — using it removes a whole category of review friction for zero effort. But it says nothing about the things that are actually specific to Steady: the hardship tier, what the free forever tier is, what the app is not (a treatment), and how the crisis lines work. Those are the terms most likely to matter to a real customer and to a regulator, and Apple's document does not cover them.
+> Reasons. Apple's EULA is short, familiar to reviewers, pre-accepted by every iPhone owner, and cannot be argued with — using it removes a whole category of review friction for zero effort. But it says nothing about the things that are actually specific to {{APP_NAME}}: the hardship tier, what the free forever tier is, what the app is not (a treatment), and how the crisis lines work. Those are the terms most likely to matter to a real customer and to a regulator, and Apple's document does not cover them.
 >
 > Using a custom EULA instead of Apple's is also permitted — Apple requires only that a custom one meets or exceeds Apple's minimum terms and includes the "Apple as third-party beneficiary" clause, which section 14 below carries. If you do go custom-only, the custom EULA has to be linked in App Store Connect and in the app.
 >
@@ -39,11 +39,11 @@ If you are in danger right now, call your local emergency number.
 
 ## 1. What this agreement is
 
-These terms are a contract between you and {{ENTITY_NAME}} about your use of the Steady iOS app.
+These terms are a contract between you and {{ENTITY_NAME}} about your use of the {{APP_NAME}} iOS app.
 
-By installing or using Steady, you agree to them. If you do not agree, do not use the app — and delete it, which also removes everything it stored.
+By installing or using {{APP_NAME}}, you agree to them. If you do not agree, do not use the app — and delete it, which also removes everything it stored.
 
-You must be **16 or older** to use Steady. The app is rated 16+ on the App Store.
+You must be **16 or older** to use {{APP_NAME}}. The app is rated 16+ on the App Store.
 
 <!-- SOURCE: docs/APP-STORE.md §5.6 sets the intended rating at 16+ based on an honest
      "Frequent" answer to the Medical or Treatment Information descriptor. There is no age
@@ -52,9 +52,9 @@ You must be **16 or older** to use Steady. The app is rated 16+ on the App Store
 
 ---
 
-## 2. Your licence to use Steady
+## 2. Your licence to use {{APP_NAME}}
 
-We give you a personal, limited, non-exclusive, non-transferable, revocable licence to use one copy of Steady on Apple devices that you own or control, as permitted by Apple's App Store Terms of Service and the Usage Rules in them.
+We give you a personal, limited, non-exclusive, non-transferable, revocable licence to use one copy of {{APP_NAME}} on Apple devices that you own or control, as permitted by Apple's App Store Terms of Service and the Usage Rules in them.
 
 That is a licence, not a sale. You do not own the app. We keep everything we have not explicitly given you here.
 
@@ -71,11 +71,11 @@ You may not:
 
 ## 3. What you write stays yours
 
-Everything you type into Steady — your check-ins, thought records, experiments, your relapse plan, all of it — belongs to you. We claim no rights over any of it.
+Everything you type into {{APP_NAME}} — your check-ins, thought records, experiments, your relapse plan, all of it — belongs to you. We claim no rights over any of it.
 
 We could not do anything with it even if we wanted to. It stays on your device and we never receive it. See `privacy-policy.md`.
 
-Because there is no server, **there is no backup**. If you delete the app, or lose the phone, it is gone. Steady gives you a free export and a free full backup file on every tier for exactly this reason, including the free tier, and we strongly suggest you use them. **Keeping a copy is your responsibility. We cannot recover anything for you, because we never had it.**
+Because there is no server, **there is no backup**. If you delete the app, or lose the phone, it is gone. {{APP_NAME}} gives you a free export and a free full backup file on every tier for exactly this reason, including the free tier, and we strongly suggest you use them. **Keeping a copy is your responsibility. We cannot recover anything for you, because we never had it.**
 
 <!-- SOURCE: app/onboarding/index.tsx step 2 makes this promise before any data is entered;
      lib/entitlement.ts TIER_COMPARISON lists export as "Forever" on both tiers;
@@ -86,7 +86,7 @@ Because there is no server, **there is no backup**. If you delete the app, or lo
 
 ## 4. What is free, and what stays free
 
-Some parts of Steady are free permanently, with no card, no account and no end date:
+Some parts of {{APP_NAME}} are free permanently, with no card, no account and no end date:
 
 - The daily check-in and your reclaimed-hours number
 - Every calming exercise, and the hard-day path
@@ -103,17 +103,17 @@ Some parts of Steady are free permanently, with no card, no account and no end d
 
 ---
 
-## 5. Steady+ — what you are buying
+## 5. {{APP_NAME}}+ — what you are buying
 
-Steady+ unlocks weeks 2 to 12, all twelve short reads, unlimited thought records, guided mirror practice, behavioural experiments, and the full progress history.
+{{APP_NAME}}+ unlocks weeks 2 to 12, all twelve short reads, unlimited thought records, guided mirror practice, behavioural experiments, and the full progress history.
 
 Three ways to buy it:
 
 | Product | Price | What happens |
 |---|---|---|
-| **Steady+ Yearly** | $79.99 a year | Renews every year until you cancel |
-| **Steady+ Monthly** | $12.99 a month | Renews every month until you cancel |
-| **Steady+ One-Time** | $149 once | Not a subscription. Nothing renews, nothing to cancel |
+| **{{APP_NAME}}+ Yearly** | $79.99 a year | Renews every year until you cancel |
+| **{{APP_NAME}}+ Monthly** | $12.99 a month | Renews every month until you cancel |
+| **{{APP_NAME}}+ One-Time** | $149 once | Not a subscription. Nothing renews, nothing to cancel |
 
 Prices are in US dollars and are the prices in the US App Store. In other countries Apple sets the local price, and it will not be a straight currency conversion. The price you are charged is the one shown in the App Store purchase sheet at the moment you confirm — that one is authoritative, not this table.
 
@@ -148,7 +148,7 @@ Subscriptions (yearly and monthly) come with a **30-day free trial**. The one-ti
 - Payment is charged to your Apple Account when you confirm the purchase.
 - A subscription renews automatically unless you turn off auto-renew **at least 24 hours before** the current period ends.
 - Your account is charged for the renewal within 24 hours before the period ends.
-- **Manage or cancel in your Apple Account settings** (Settings → your name → Subscriptions). You cannot cancel from inside Steady, and neither can we cancel for you — Apple does not give developers that ability.
+- **Manage or cancel in your Apple Account settings** (Settings → your name → Subscriptions). You cannot cancel from inside {{APP_NAME}}, and neither can we cancel for you — Apple does not give developers that ability.
 
 ### Refunds
 
@@ -158,9 +158,9 @@ Consumer law in your country may give you rights on top of that — for example,
 
 ### If your subscription lapses
 
-You keep everything in the free tier forever, including all of your own writing, your history, the export, and all crisis support. Steady never deletes or holds hostage anything you wrote.
+You keep everything in the free tier forever, including all of your own writing, your history, the export, and all crisis support. {{APP_NAME}} never deletes or holds hostage anything you wrote.
 
-If we cannot check your subscription status — you are offline, on a plane, somewhere with no signal — Steady keeps your access on rather than switching it off. We would rather occasionally give away access we should not have than lock someone out of a twelve-week programme on a bad day because a receipt check timed out.
+If we cannot check your subscription status — you are offline, on a plane, somewhere with no signal — {{APP_NAME}} keeps your access on rather than switching it off. We would rather occasionally give away access we should not have than lock someone out of a twelve-week programme on a bad day because a receipt check timed out.
 
 <!-- SOURCE: lib/entitlement.ts isEntitled() and the "THE DIRECTION THIS FAILS IN" comment;
      BILLING_GRACE_DAYS = 16 (matched to Apple's declined-card retry window),
@@ -171,7 +171,7 @@ If we cannot check your subscription status — you are offline, on a plane, som
 
 ## 6. The hardship tier
 
-If the price is out of reach, there is a link on the purchase screen that gives you **three months of Steady+, immediately, free**.
+If the price is out of reach, there is a link on the purchase screen that gives you **three months of {{APP_NAME}}+, immediately, free**.
 
 There is no form. No proof. No questions. No eligibility check. Nobody reviews it and nobody is told. You tap it and it works, including with no internet connection.
 
@@ -183,7 +183,7 @@ There is no form. No proof. No questions. No eligibility check. Nobody reviews i
 
 Terms of the hardship grant:
 
-- It gives you the same access as a paid Steady+ subscription, for three months.
+- It gives you the same access as a paid {{APP_NAME}}+ subscription, for three months.
 - It costs nothing and creates no debt. If it helps and you can pay later, you can. If you never pay, that is fine, and nothing about the app will nag you about it.
 - It is for people who cannot afford the price. We are not going to check, and we would rather it be used by someone who could have paid than missed by someone who could not.
 - We may limit or withdraw it if it is being abused at a scale that threatens the app's existence, but we will not do so quietly — and we will never take a grant back from someone who already has one.
@@ -196,14 +196,14 @@ Terms of the hardship grant:
 
 ---
 
-## 7. How you may use Steady
+## 7. How you may use {{APP_NAME}}
 
 Use it for yourself, for your own wellbeing. That is the whole intended use.
 
 Do not:
 
-- use Steady to diagnose, treat, or manage anyone else's condition;
-- present anything Steady produces as a clinical assessment (the export file says on its face that it is self-tracked information from a self-help app, and not a clinical assessment — do not remove that line if you pass the file on);
+- use {{APP_NAME}} to diagnose, treat, or manage anyone else's condition;
+- present anything {{APP_NAME}} produces as a clinical assessment (the export file says on its face that it is self-tracked information from a self-help app, and not a clinical assessment — do not remove that line if you pass the file on);
 - use it in a way that breaks the law where you are.
 
 <!-- SOURCE: lib/storage.ts exportText() writes "This is self-tracked information from a
@@ -220,23 +220,23 @@ The app, its name, its design, its written content, the twelve modules, the exer
 
 You get the licence in section 2 and nothing else. In particular, you may not copy the module content or the exercises into another product.
 
-The clinical methods Steady is built on — cognitive behavioural therapy, exposure and response prevention, attention training — are not ours and we claim no ownership of them. They are a published body of work by many researchers, some of whom are cited inside the app. What is ours is this particular implementation of them.
+The clinical methods {{APP_NAME}} is built on — cognitive behavioural therapy, exposure and response prevention, attention training — are not ours and we claim no ownership of them. They are a published body of work by many researchers, some of whom are cited inside the app. What is ours is this particular implementation of them.
 
 <!-- SOURCE: content/proof.ts credits Harrison et al., Wilhelm et al., Veale & Riley,
      and population-prevalence surveys by name, and the rule in that file is that "every claim
-     is about the published literature. None is about Steady." -->
+     is about the published literature. None is about {{APP_NAME}}." -->
 
 ---
 
 ## 9. Availability, changes, and the app going away
 
-We try to keep Steady working, and we do not promise it always will.
+We try to keep {{APP_NAME}} working, and we do not promise it always will.
 
 - We can change, add to, or remove features. If we remove something you paid for, see below.
-- We can stop selling Steady, or stop supporting it, or shut it down entirely. This is a small operation and we would rather say that plainly than pretend otherwise.
+- We can stop selling {{APP_NAME}}, or stop supporting it, or shut it down entirely. This is a small operation and we would rather say that plainly than pretend otherwise.
 - An operating system update, a device change, or an App Store policy change can break the app in ways we did not choose and cannot always fix.
 
-**If Steady is discontinued:** the copy on your phone keeps working for as long as your device and iOS let it, because it needs no server. Your data stays yours and the export keeps working. We will give as much notice as we reasonably can, and we would stop selling subscriptions before we stopped supporting the app.
+**If {{APP_NAME}} is discontinued:** the copy on your phone keeps working for as long as your device and iOS let it, because it needs no server. Your data stays yours and the export keeps working. We will give as much notice as we reasonably can, and we would stop selling subscriptions before we stopped supporting the app.
 
 **This is the honest reason the one-time product is called "Pay once" and not "lifetime".** Nobody can promise software for the length of your life, and we are not going to pretend to.
 
@@ -248,7 +248,7 @@ We try to keep Steady working, and we do not promise it always will.
 
 ## 10. Disclaimer of warranties
 
-Steady is provided **"as is" and "as available"**, with no warranty of any kind, to the fullest extent the law allows.
+{{APP_NAME}} is provided **"as is" and "as available"**, with no warranty of any kind, to the fullest extent the law allows.
 
 We specifically do not promise that:
 
@@ -268,9 +268,9 @@ We disclaim implied warranties of merchantability, fitness for a particular purp
 
 To the fullest extent the law allows:
 
-We are not liable for indirect, incidental, special, consequential, or punitive damages; for lost profits, lost data, or lost opportunity; or for anything arising from your use of, or inability to use, Steady.
+We are not liable for indirect, incidental, special, consequential, or punitive damages; for lost profits, lost data, or lost opportunity; or for anything arising from your use of, or inability to use, {{APP_NAME}}.
 
-**Our total liability to you, for everything, is limited to the greater of (a) what you actually paid us for Steady in the 12 months before the claim, or (b) $50 USD.** If you have never paid us anything, that limit is $50.
+**Our total liability to you, for everything, is limited to the greater of (a) what you actually paid us for {{APP_NAME}} in the 12 months before the claim, or (b) $50 USD.** If you have never paid us anything, that limit is $50.
 
 **What we do not, and cannot, exclude:**
 
@@ -284,7 +284,7 @@ We are not liable for indirect, incidental, special, consequential, or punitive 
 
 ## 12. Crisis lines and third-party services
 
-Steady lists crisis helplines and directories run by other organisations. **We do not run any of them.** We are not connected to them and they have not endorsed Steady.
+{{APP_NAME}} lists crisis helplines and directories run by other organisations. **We do not run any of them.** We are not connected to them and they have not endorsed {{APP_NAME}}.
 
 We list them because they help people, and we check them, but:
 
@@ -305,7 +305,7 @@ We list them because they help people, and we check them, but:
 
 ## 13. Ending this agreement
 
-**You** can end it at any time by deleting the app. That also deletes everything Steady stored, permanently.
+**You** can end it at any time by deleting the app. That also deletes everything {{APP_NAME}} stored, permanently.
 
 Cancelling a subscription is separate — do that in your Apple Account settings. Deleting the app does not cancel a subscription, and you will keep being billed if you do not cancel.
 
@@ -319,11 +319,11 @@ When this agreement ends, sections 3, 8, 10, 11, 12, 14 and 15 survive.
 
 You and we agree that:
 
-- These terms are between **you and us**, not between you and Apple. Apple is not responsible for Steady or its contents.
-- Apple has no obligation to provide any support or maintenance for Steady.
-- If Steady fails to conform to any applicable warranty, you may notify Apple and Apple will refund the purchase price. Beyond that refund, Apple has no other warranty obligation whatsoever with respect to Steady.
-- Apple is not responsible for any claim about Steady, including product liability claims, claims that Steady fails to conform to a legal or regulatory requirement, and claims under consumer protection or similar law.
-- Apple is not responsible for investigating, defending, settling, or discharging any third-party claim that Steady infringes intellectual property rights.
+- These terms are between **you and us**, not between you and Apple. Apple is not responsible for {{APP_NAME}} or its contents.
+- Apple has no obligation to provide any support or maintenance for {{APP_NAME}}.
+- If {{APP_NAME}} fails to conform to any applicable warranty, you may notify Apple and Apple will refund the purchase price. Beyond that refund, Apple has no other warranty obligation whatsoever with respect to {{APP_NAME}}.
+- Apple is not responsible for any claim about {{APP_NAME}}, including product liability claims, claims that {{APP_NAME}} fails to conform to a legal or regulatory requirement, and claims under consumer protection or similar law.
+- Apple is not responsible for investigating, defending, settling, or discharging any third-party claim that {{APP_NAME}} infringes intellectual property rights.
 - You confirm you are not in a country subject to a US Government embargo or designated as "terrorist supporting", and are not on any US Government list of prohibited or restricted parties.
 - **Apple and its subsidiaries are third-party beneficiaries of these terms**, and on your acceptance Apple has the right to enforce them against you.
 
@@ -377,11 +377,11 @@ We have not included either. They are common in apps sold into the United States
 
 ## 16. The rest
 
-- **Whole agreement.** These terms, plus `privacy-policy.md` and `medical-disclaimer.md`, are the whole agreement between us about Steady.
+- **Whole agreement.** These terms, plus `privacy-policy.md` and `medical-disclaimer.md`, are the whole agreement between us about {{APP_NAME}}.
 - **Severability.** If a court decides part of this is unenforceable, the rest still stands.
 - **No waiver.** If we do not enforce something straight away, we have not given up the right to enforce it later.
 - **Assignment.** You may not transfer your rights under these terms. We may transfer ours if the app changes hands, and we will say so in the app if that happens.
-- **Changes.** We may update these terms. If a change is significant we will say so in the app. Carrying on using Steady after a change means you accept it. If you do not accept it, delete the app.
+- **Changes.** We may update these terms. If a change is significant we will say so in the app. Carrying on using {{APP_NAME}} after a change means you accept it. If you do not accept it, delete the app.
 
 ---
 
@@ -422,7 +422,7 @@ SENTENCES THAT BECOME FALSE IF THE PRODUCT CHANGES
   changes, this table, RENEWAL_TERMS, the paywall, and the App Store description all
   change together.
 - §5 "30-day free trial" — see the conflict flag. Resolve before publishing.
-- §5 "You cannot cancel from inside Steady" — breaks if a manage-subscription deep link
+- §5 "You cannot cancel from inside {{APP_NAME}}" — breaks if a manage-subscription deep link
   is added (which would be a good idea; it does not change who does the cancelling).
 - §6 hardship "three months" — comes from grantHardship(months = 3).
 - §12 "we do not learn about the call" — breaks on any analytics.

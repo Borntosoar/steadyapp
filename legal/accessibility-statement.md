@@ -1,7 +1,7 @@
-# Accessibility Statement — Steady
+# Accessibility Statement — {{APP_NAME}}
 
 **Last updated:** 11 August 2026
-**Applies to:** the Steady iOS app, version 2.0.0
+**Applies to:** the {{APP_NAME}} iOS app, version 2.0.0
 **Published by:** {{ENTITY_NAME}}
 **Feedback:** {{CONTACT_EMAIL}}
 
@@ -13,11 +13,11 @@
 
 ## What we are aiming for
 
-Steady is built to be usable by people with a wide range of needs, and the target is **WCAG 2.1 Level AA** — the international standard most accessibility law points at.
+{{APP_NAME}} is built to be usable by people with a wide range of needs, and the target is **WCAG 2.1 Level AA** — the international standard most accessibility law points at.
 
-**We have not been audited and we do not claim to be certified.** No third party has assessed Steady. What follows is our own honest account of what is in place, what we have checked, and what we have not.
+**We have not been audited and we do not claim to be certified.** No third party has assessed {{APP_NAME}}. What follows is our own honest account of what is in place, what we have checked, and what we have not.
 
-If something in Steady does not work for you, please tell us at {{CONTACT_EMAIL}}. We will take it seriously and we would rather hear it than not.
+If something in {{APP_NAME}} does not work for you, please tell us at {{CONTACT_EMAIL}}. We will take it seriously and we would rather hear it than not.
 
 ---
 
@@ -25,7 +25,7 @@ If something in Steady does not work for you, please tell us at {{CONTACT_EMAIL}
 
 ### Colour contrast — checked automatically, on every build
 
-Every text colour in Steady is measured against the **worst** background it can appear on, and each one must reach at least **4.5:1** — the WCAG AA threshold for normal-size body text. Large text is allowed a lower ratio under the standard, and nothing in Steady relies on that allowance.
+Every text colour in {{APP_NAME}} is measured against the **worst** background it can appear on, and each one must reach at least **4.5:1** — the WCAG AA threshold for normal-size body text. Large text is allowed a lower ratio under the standard, and nothing in {{APP_NAME}} relies on that allowance.
 
 This is not a claim in a comment somewhere. It is a test that runs with the rest of the suite and fails the build if a colour is changed to something unreadable. It checks:
 
@@ -44,7 +44,7 @@ The test exists because the previous claims were wrong. The colour notes in the 
 
 ### Text size
 
-Steady uses the system's text-size setting. If you have made text larger on your iPhone, Steady's text gets larger with it, on every screen. Nothing in the app is set to ignore that.
+{{APP_NAME}} uses the system's text-size setting. If you have made text larger on your iPhone, {{APP_NAME}}'s text gets larger with it, on every screen. Nothing in the app is set to ignore that.
 
 The smallest text anywhere in the app is 13pt, and that floor is enforced by a test.
 
@@ -55,7 +55,7 @@ The smallest text anywhere in the app is 13pt, and that floor is enforced by a t
 
 ### Reduced motion
 
-If you have **Reduce Motion** switched on in iOS Settings, Steady honours it:
+If you have **Reduce Motion** switched on in iOS Settings, {{APP_NAME}} honours it:
 
 - The celebration animation at the end of an exercise does not animate. It appears in place.
 - The slow background breathing circle on the hard-day screen and the urge timer holds still instead of pulsing.
@@ -69,7 +69,7 @@ Both react to the setting immediately if you change it while the app is open, ra
 
 ### Screen reader support
 
-Steady is built with VoiceOver in mind:
+{{APP_NAME}} is built with VoiceOver in mind:
 
 - Buttons, radio options, expandable sections and tab bar items carry the right roles and states, so VoiceOver says what a control is and whether it is selected, expanded, or disabled.
 - Rating controls announce their meaning — a face on the distress scale reads out its label, and a level on the urge scale reads out "3 out of 10" rather than an unlabelled dot.
@@ -96,7 +96,7 @@ Buttons, tab items, crisis-line rows and the rescue controls on the error screen
 
 ### Light and dark appearance
 
-Steady follows your system appearance setting, and both are first-class. The dark palette is not the light one dimmed — it is measured separately against its own backgrounds by the same contrast test.
+{{APP_NAME}} follows your system appearance setting, and both are first-class. The dark palette is not the light one dimmed — it is measured separately against its own backgrounds by the same contrast test.
 
 <!-- SOURCE: app.json sets userInterfaceStyle "automatic"; constants/palette.ts defines
      palette.light and palette.dark as separate objects, both checked by the contrast test. -->
@@ -121,7 +121,7 @@ These are not formal WCAG criteria, but they matter for the people who use this 
 
 We would rather list these than let you find them.
 
-**No audit.** Nobody independent has assessed Steady. There is no VPAT, no accessibility conformance report, and no certification. Our WCAG AA target is a target, not a verified result.
+**No audit.** Nobody independent has assessed {{APP_NAME}}. There is no VPAT, no accessibility conformance report, and no certification. Our WCAG AA target is a target, not a verified result.
 
 **Only contrast and type size are tested automatically.** The screen-reader labelling, focus order, and touch target sizes were written by hand and reviewed by eye. There is no automated test that would catch a control shipped without a label. That means the coverage described above is our best current understanding, not a guarantee.
 
@@ -139,7 +139,7 @@ We would rather list these than let you find them.
 
 **Charts have a text description but no data table.** A screen reader will read a summary of a chart, not the individual values. Your full history is always available in the plain-text export, which is free on every tier and is fully readable.
 
-**No in-app text-size or contrast controls.** Steady relies entirely on your iOS settings. There is no high-contrast mode of its own.
+**No in-app text-size or contrast controls.** {{APP_NAME}} relies entirely on your iOS settings. There is no high-contrast mode of its own.
 
 **No captions or transcripts**, because there is no audio or video content in the app.
 
@@ -151,9 +151,9 @@ We would rather list these than let you find them.
 
 ---
 
-## How to make Steady work better for you
+## How to make {{APP_NAME}} work better for you
 
-Everything here is an iOS setting, and Steady follows all of them:
+Everything here is an iOS setting, and {{APP_NAME}} follows all of them:
 
 - **Larger text** — Settings → Accessibility → Display & Text Size → Larger Text
 - **Bold text** — Settings → Accessibility → Display & Text Size → Bold Text
@@ -175,7 +175,7 @@ If you report a barrier and we cannot fix it quickly, we will tell you honestly 
 
 ## Legal position
 
-This statement is voluntary. Steady is a mobile app rather than a public-sector website, so the UK's Public Sector Bodies Accessibility Regulations 2018 and the EU Web Accessibility Directive do not apply to it.
+This statement is voluntary. {{APP_NAME}} is a mobile app rather than a public-sector website, so the UK's Public Sector Bodies Accessibility Regulations 2018 and the EU Web Accessibility Directive do not apply to it.
 
 The **European Accessibility Act** applies from 28 June 2025 to certain consumer services, including e-commerce services, sold in the EU. <!-- CONFIRM SCOPE WITH COUNSEL: whether a paid self-help app sold through the App Store falls inside it is a real question, the answer affects whether a formal accessibility statement becomes mandatory rather than voluntary, and there is a micro-enterprise exemption that may or may not apply to your entity. -->
 

@@ -1,7 +1,7 @@
 {
-  "_README": "Single source of truth for who publishes Steady. See site/entity.mjs for how these are used and legal/README.md for what each one means. A null value is an open question, and site/build.mjs refuses to publish while any remain null — see the note there. Do not fill one in with a guess: a legal document that names the wrong entity is worse than one that admits it does not know yet.",
+  "_README": "Single source of truth for who publishes Cairn. See site/entity.mjs for how these are used and legal/README.md for what each one means. A null value is an open question, and site/build.mjs refuses to publish while any remain null — see the note there. Do not fill one in with a guess: a legal document that names the wrong entity is worse than one that admits it does not know yet.",
 
-  "_DECIDED": "Steady is published by its OWN entity, separate from SOAR. That settles the ownership question and rules out publishing under the SOAR entity or its Apple Developer account. It does NOT by itself fill in \"name\" below: \"Steady\" is the brand, and \"name\" has to hold a legal person that exists — a registered corporation, or the human who trades under the brand. site/entity.mjs rejects the bare brand for that reason. See legal/README.md §3.",
+  "_DECIDED": "Cairn is published by its OWN entity, separate from SOAR. That settles the ownership question and rules out publishing under the SOAR entity or its Apple Developer account. It does NOT by itself fill in \"name\" below: \"Cairn\" is the brand, and \"name\" has to hold a legal person that exists — a registered corporation, or the human who trades under the brand. site/entity.mjs rejects the bare brand for that reason. See legal/README.md §3.",
 
   "name": null,
   "kind": null,

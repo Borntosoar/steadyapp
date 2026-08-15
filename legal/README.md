@@ -1,7 +1,7 @@
 # Legal and policy set
 
 **These are drafts, not legal advice.** They were written against the actual source — every
-factual claim about what Steady does was checked in the code rather than assumed — but
+factual claim about what Cairn does was checked in the code rather than assumed — but
 neither the person who wrote them nor the person reading them is a lawyer. Have a qualified
 solicitor or attorney review them before publication. §5 below lists the specific questions
 worth paying for, so the review is an hour rather than a project.
@@ -49,7 +49,7 @@ before changing anything about data handling.
 - **Contact:** steadyrecovery3@gmail.com, used throughout.
 - **Effective dates:** set.
 - **Hosting:** static, no cookies. **Which host is now an open question** — see §3.5.
-- **Publisher: Steady's own entity, separate from SOAR.** Steady is not published under the
+- **Publisher: Cairn's own entity, separate from SOAR.** Cairn is not published under the
   SOAR entity or its Apple Developer account. This settles ownership; it does not settle the
   entity's *name* — see §3.2, and the two places SOAR's identity is still baked into the
   build at §3.6.
@@ -86,30 +86,34 @@ future edit writes the entity name back into a document inline.
    restricts some liability language that is fine elsewhere in Canada. Any other province and
    none of this applies.
 
-2. **Legal entity name.** ⚠ **"Steady" is not an answer to this field, and the build now
+2. **Legal entity name.** ⚠ **"Cairn" is not an answer to this field, and the build now
    says so.** The brand and the party to a contract are different objects. Terms of use are
-   enforceable by and against a *legal person that exists*; "Steady" on its own is neither a
+   enforceable by and against a *legal person that exists*; "Cairn" on its own is neither a
    registered corporation nor a human, so a contract naming it has nobody on the other side,
    and PIPEDA's accountability section has nobody to be accountable. `legalNameProblems()`
    in `site/entity.mjs` rejects the bare app name outright, requires a corporate name to end
    in a real suffix, and requires a sole proprietorship to name the human. It cannot check
    registration, a NUANS search, or the trademark — only the error that looks finished.
 
-   Turning "Steady" into a legal name means picking one of two shapes:
+   Turning "Cairn" into a legal name means picking one of two shapes:
 
-   - **Incorporate** — `Steady Technologies Inc.`, or whatever survives a NUANS name search.
-     "Steady" alone is a common word and unlikely to clear on its own. This is also what
+   - **Incorporate** — `Cairn Inc.` or `Cairn Technologies Inc.`, whichever survives a NUANS
+     name search. Unlike the previous name, "Cairn" is uncommon enough that the bare form has
+     a real chance of clearing, so try it first. This is also what
      Apple's Organization account requirement (`docs/APP-STORE.md` §5.1) effectively forces,
      since the D-U-N-S number it needs in practice means a corporation — and that number
      takes weeks, so it is worth starting before it is the last thing standing.
    - **Sole proprietorship with a registered trade name** — the party is you, written
-     `Firstname Lastname, carrying on business as Steady`. Faster and cheaper, but there is
+     `Firstname Lastname, carrying on business as Cairn`. Faster and cheaper, but there is
      no corporate veil: a claim about an app in this subject area reaches personal assets.
 
-   Separately, and not checked by anything here: **the App Store name `Steady` has to be
-   free.** App Store names are unique across the store, the word is heavily used, and a
-   rejection on that ground arrives after everything else is finished. Worth checking in App
-   Store Connect early, and worth a trademark search before printing the name on a contract.
+   Separately, and **still unverified at the time of the rename**: the App Store name `Cairn`
+   has to be free. App Store names are unique store-wide, and a rejection on that ground
+   arrives after everything else is finished. `scripts/check-name.mjs` checks shipped apps and
+   domain registration in one command — it could not run in the sandbox this was renamed in,
+   so run it somewhere with outbound HTTPS. Reserve the name in App Store Connect as soon as
+   it looks clear (free, and it holds it), and do a CIPO trademark search before the name is
+   printed on a contract.
 
 3. **Registered address.** Follows from the entity — with one thing worth deciding
    deliberately rather than by default.
@@ -129,7 +133,7 @@ future edit writes the entity name back into a document inline.
    It is a separate field because the name check depends on it.
 
 5. **Site origin.** Where the published documents actually live. This became an open question
-   the moment Steady stopped being a SOAR product: the repo held **two different answers**,
+   the moment Cairn stopped being a SOAR product: the repo held **two different answers**,
    `https://borntosoar.github.io/steadyapp` in `constants/links.ts` and `https://steadyapp.co`
    in `entity.json`, with nothing comparing them. The first is a host belonging to a different
    company. This is the address the app's own privacy link opens and the address printed in
@@ -141,12 +145,12 @@ future edit writes the entity name back into a document inline.
 
 Neither is a legal document, and both get harder to change later:
 
-- **`app.json` → `bundleIdentifier` and `package` are `com.borntosoar.steady`.** Reverse-DNS
-  under SOAR's domain, on an app that is no longer SOAR's. This is worth getting right
+- **`app.json` → `bundleIdentifier` and `package` are `com.borntosoar.steady`.** Stale twice
+  over: reverse-DNS under SOAR's domain, on an app that is neither SOAR's nor called Steady. This is worth getting right
   **before the first submission**, because a bundle identifier is permanent afterwards — it
   cannot be renamed, it ties the app to the Apple account that first registers it, and
   changing it means a new App Store listing with no reviews and no downloads. Left as-is
-  deliberately: the correct value depends on which domain the Steady entity ends up owning.
+  deliberately: the correct value depends on which domain the Cairn entity ends up owning.
 - **`README.md`** still clones from `Borntosoar/steadyapp`. Cosmetic, but it is where a new
   contributor forms their first idea of who owns this.
 
@@ -199,7 +203,7 @@ are the ones specific to this product, and they are where the money is well spen
 1. **Crisis-line liability.** The app lists third-party helplines it does not operate, cannot
    guarantee are staffed, and cannot guarantee are correct in every country. What is the
    exposure, and does the disclaimer in `medical-disclaimer.md` actually reduce it?
-2. **The medical-device line.** Steady is self-help built on CBT/ERP methods, offered to a
+2. **The medical-device line.** Cairn is self-help built on CBT/ERP methods, offered to a
    population with a recognised diagnosis. Where exactly does it sit relative to UK MHRA and
    EU MDR software-as-a-medical-device rules, and does any copy in `content/modules.ts` or
    `content/proof.ts` push it across?

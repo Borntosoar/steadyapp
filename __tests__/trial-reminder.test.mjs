@@ -108,7 +108,7 @@ describe('nothing suppresses it, because it is not marketing', () => {
 
 /* WHAT THIS DOES NOT PROVE, and what to do about it.
  *
- * Everything above is in-app. If the person does not open Steady during the last three days
+ * Everything above is in-app. If the person does not open Cairn during the last three days
  * of the trial, they are not reminded, and the paywall's promise is kept only for people who
  * happened to show up. For an app deliberately built to be missable — no streak, no
  * shaming, missed days neutral — that is a real gap rather than a theoretical one.

@@ -1,4 +1,4 @@
-# Medical Disclaimer — Steady
+# Medical Disclaimer — {{APP_NAME}}
 
 **Last updated:** 11 August 2026
 **Publisher:** {{ENTITY_NAME}}
@@ -19,13 +19,13 @@
 
 Do not work through an app. Do not wait to finish a session. Go and get a person.
 
-The Support screen in Steady is one tap from every screen, it lists crisis lines, and it is free forever on every tier — including if you have never paid us anything and never will.
+The Support screen in {{APP_NAME}} is one tap from every screen, it lists crisis lines, and it is free forever on every tier — including if you have never paid us anything and never will.
 
 ---
 
 ## The short version
 
-Steady is a **self-help tool**. It is educational.
+{{APP_NAME}} is a **self-help tool**. It is educational.
 
 It is **not** therapy.
 It is **not** a diagnosis.
@@ -38,15 +38,15 @@ It does not diagnose any condition. It cannot tell you whether you have body dys
 If appearance worry is taking hours out of most of your days, or you are avoiding work, school, or people because of how you think you look, that is worth a proper assessment by someone qualified to give one. An app is not that.
 
 <!-- SOURCE: this mirrors the disclaimer gate the app itself shows at onboarding step 7
-     (app/onboarding/index.tsx), which reads: "Steady is a self-help tool. It is not therapy,
+     (app/onboarding/index.tsx), which reads: "{{APP_NAME}} is a self-help tool. It is not therapy,
      not a medical device, and not a substitute for professional care. It does not diagnose or
      treat any condition." Keeping the two documents in the same words is deliberate. -->
 
 ---
 
-## 1. What Steady actually is
+## 1. What {{APP_NAME}} actually is
 
-Steady is a twelve-week structured self-help programme for appearance worry. It gives you:
+{{APP_NAME}} is a twelve-week structured self-help programme for appearance worry. It gives you:
 
 - a short daily check-in — how long you spent thinking about how you look, how strong the urge to check was, whether you avoided something, how hard the day was;
 - twelve short readings about what appearance worry does and why;
@@ -66,19 +66,19 @@ That number is **not a health measurement**. It is arithmetic on your own rough 
 
 ---
 
-## 2. What Steady is not, in detail
+## 2. What {{APP_NAME}} is not, in detail
 
 ### Not therapy
 
 Therapy is a relationship with a trained person who can see you, ask you questions you did not expect, notice what you are not saying, adjust as they go, and be accountable to a professional body.
 
-Steady is a piece of software following a fixed structure. It cannot see you. It does not know your history. It cannot tell when something is going wrong. It has no judgement and no clinical responsibility, and it is not supervised by anyone.
+{{APP_NAME}} is a piece of software following a fixed structure. It cannot see you. It does not know your history. It cannot tell when something is going wrong. It has no judgement and no clinical responsibility, and it is not supervised by anyone.
 
-If you have a therapist, Steady is not a substitute for them and it is not a reason to stop going. Show them your export if it is useful. If it clashes with what they have asked you to do, do what they have asked you to do.
+If you have a therapist, {{APP_NAME}} is not a substitute for them and it is not a reason to stop going. Show them your export if it is useful. If it clashes with what they have asked you to do, do what they have asked you to do.
 
 ### Not a diagnosis
 
-Nothing in Steady diagnoses anything.
+Nothing in {{APP_NAME}} diagnoses anything.
 
 The four questions in the daily check-in are not a diagnostic test. They are not the BDD-YBOCS, the BDDQ, or any other validated instrument, and they should not be read as one or scored like one. They exist so you can watch your own numbers move over time.
 
@@ -89,9 +89,9 @@ Body dysmorphic disorder is named in the educational content, because being able
 
 ### Not medical advice
 
-Nothing in Steady is advice about your health, your medication, or your care.
+Nothing in {{APP_NAME}} is advice about your health, your medication, or your care.
 
-Steady names medication as a conversation to have with a doctor. It gives no dosing information, no recommendation to start or stop anything, and no opinion on any specific drug. **Do not start, stop, or change any medication because of anything in this app.** Talk to the person who prescribed it.
+{{APP_NAME}} names medication as a conversation to have with a doctor. It gives no dosing information, no recommendation to start or stop anything, and no opinion on any specific drug. **Do not start, stop, or change any medication because of anything in this app.** Talk to the person who prescribed it.
 
 <!-- SOURCE: docs/APP-STORE.md §5.9 confirms guideline 1.4.2 (drug dosage calculators) does
      not apply: "Module 12 mentions medication as a topic for a doctor and gives no dosing
@@ -99,7 +99,7 @@ Steady names medication as a conversation to have with a doctor. It gives no dos
 
 ### Not a medical device
 
-Steady is not registered, cleared, approved, or certified as a medical device by any regulator. Not by the FDA in the United States, not by the MHRA in the United Kingdom, not under the EU Medical Device Regulation, not by Health Canada, not by the TGA in Australia.
+{{APP_NAME}} is not registered, cleared, approved, or certified as a medical device by any regulator. Not by the FDA in the United States, not by the MHRA in the United Kingdom, not under the EU Medical Device Regulation, not by Health Canada, not by the TGA in Australia.
 
 It is not intended to diagnose, prevent, monitor, predict, or manage any disease or condition, and it should not be used as if it were. It is a general wellbeing and educational product.
 
@@ -107,13 +107,13 @@ It carries no CE mark, no UKCA mark, and no equivalent. We claim no certificatio
 
 ---
 
-## 3. Steady itself has never been trialled
+## 3. {{APP_NAME}} itself has never been trialled
 
 This is the sentence that matters most in the whole document, so it gets its own section.
 
-**Steady has not been tested in a clinical trial. There is no study of Steady. There are no published results about Steady. Nobody has measured whether Steady helps anyone.**
+**{{APP_NAME}} has not been tested in a clinical trial. There is no study of {{APP_NAME}}. There are no published results about {{APP_NAME}}. Nobody has measured whether {{APP_NAME}} helps anyone.**
 
-What Steady *does* have is a method built out of approaches that have been studied — cognitive behavioural therapy, exposure and response prevention, and attention training for appearance concerns. There is a real research literature behind those approaches, and the app cites it by name where it shows a figure.
+What {{APP_NAME}} *does* have is a method built out of approaches that have been studied — cognitive behavioural therapy, exposure and response prevention, and attention training for appearance concerns. There is a real research literature behind those approaches, and the app cites it by name where it shows a figure.
 
 Those two things are not the same thing, and we will not let them blur:
 
@@ -123,10 +123,10 @@ Those two things are not the same thing, and we will not let them blur:
 
 Wherever those figures appear inside the app, this sentence is attached to them and cannot be separated from them:
 
-> *"Steady is not therapy and has not itself been trialled. These are findings about the methods the exercises are built from."*
+> *"{{APP_NAME}} is not therapy and has not itself been trialled. These are findings about the methods the exercises are built from."*
 
 <!-- SOURCE: content/proof.ts — PROOF_QUALIFIER, and the file rule: "every claim below is
-     about the published literature. None is about Steady." __tests__/safety.test.mjs asserts
+     about the published literature. None is about {{APP_NAME}}." __tests__/safety.test.mjs asserts
      the qualifier is present on any screen that renders PROOF_POINTS, and docs/APP-STORE.md
      §5.5 requires it stay visually adjacent to the figures rather than below the fold.
      The four cited sources are Harrison et al. (meta-analysis, 7 RCTs, N = 299),
@@ -146,11 +146,11 @@ Please talk to a professional — a doctor, a therapist, a nurse, a school or un
 - You are having thoughts of hurting yourself. **This means today, not eventually.**
 - You are seriously considering cosmetic procedures to fix a problem other people say they cannot see.
 - You are using alcohol or drugs to cope with how you feel about how you look.
-- You have stopped eating properly, or eating has become the way this shows up. Steady is **not** built for eating disorders and contains nothing about food, weight, or body size. If that is what is happening, an eating disorder service is the right place, and it is a different service from this app.
+- You have stopped eating properly, or eating has become the way this shows up. {{APP_NAME}} is **not** built for eating disorders and contains nothing about food, weight, or body size. If that is what is happening, an eating disorder service is the right place, and it is a different service from this app.
 - Things are getting worse, or they are staying the same after a real effort.
 - Someone who loves you has told you they are worried.
 
-Using Steady is not a reason to delay any of that. If you are on a waiting list, Steady can be something to do while you wait. It is not the thing you were waiting for.
+Using {{APP_NAME}} is not a reason to delay any of that. If you are on a waiting list, {{APP_NAME}} can be something to do while you wait. It is not the thing you were waiting for.
 
 <!-- SOURCE: the thresholds match app/onboarding/index.tsx step 7 and constants/support.ts
      THERAPY_GUIDANCE, which points at CBT with exposure and response prevention, the IOCDF
@@ -160,15 +160,15 @@ Using Steady is not a reason to delay any of that. If you are on a waiting list,
 
 ---
 
-## 5. The crisis lines listed in Steady
+## 5. The crisis lines listed in {{APP_NAME}}
 
-Steady lists crisis helplines for Canada, the United States, the United Kingdom and Australia, plus international directories for everywhere else. Tapping a number hands it to your phone's dialler.
+{{APP_NAME}} lists crisis helplines for Canada, the United States, the United Kingdom and Australia, plus international directories for everywhere else. Tapping a number hands it to your phone's dialler.
 
 **Please read this part carefully. It is the part with real consequences.**
 
 ### We do not operate any of these services
 
-Every number and service listed in Steady is run by an independent organisation. We are not affiliated with any of them, we do not fund them, we do not staff them, we do not train them, and they have not endorsed Steady.
+Every number and service listed in {{APP_NAME}} is run by an independent organisation. We are not affiliated with any of them, we do not fund them, we do not staff them, we do not train them, and they have not endorsed {{APP_NAME}}.
 
 We list them because they are the right thing to reach for, and because a person in distress should not have to go looking.
 
@@ -202,7 +202,7 @@ A crisis line is not an emergency service. If someone's life is in immediate dan
 
 ---
 
-## 6. What Steady deliberately will not do
+## 6. What {{APP_NAME}} deliberately will not do
 
 These are not missing features. Each one is left out because including it would make things worse, and the reasoning is written into the codebase so a future version cannot quietly reverse it.
 
@@ -220,7 +220,7 @@ These are not missing features. Each one is left out because including it would 
 
 ## 7. Exposure practice, and doing it safely
 
-From week 4 onward Steady includes timed mirror practice. This is a form of graded exposure — deliberately staying with something uncomfortable rather than avoiding it or checking compulsively.
+From week 4 onward {{APP_NAME}} includes timed mirror practice. This is a form of graded exposure — deliberately staying with something uncomfortable rather than avoiding it or checking compulsively.
 
 Two honest things about it:
 
@@ -228,7 +228,7 @@ Two honest things about it:
 
 **Uncomfortable is not the same as harmful.** If a session leaves you feeling genuinely unsafe, or much worse for hours afterwards, or thinking about hurting yourself — **stop, and talk to a professional before doing another one.** You can end any session at any time and the app records it without comment.
 
-Steady controls the pace on purpose: mirror practice is locked until week 4, durations increase by phase, and the order cannot be skipped ahead. That is deliberate — exposure before you have seen your own baseline is exposure without a reason, and that is the version people quit.
+{{APP_NAME}} controls the pace on purpose: mirror practice is locked until week 4, durations increase by phase, and the order cannot be skipped ahead. That is deliberate — exposure before you have seen your own baseline is exposure without a reason, and that is the version people quit.
 
 <!-- SOURCE: lib/protocol.ts mirrorSpecForWeek() returns null before week 4;
      __tests__/protocol.test.mjs asserts durations never decrease with phase; SAFETY.md §9. -->
@@ -239,7 +239,7 @@ Steady controls the pace on purpose: mirror practice is locked until week 4, dur
 
 ## 8. Your export is not a clinical record
 
-Steady lets you export a plain-text summary to hand to a doctor or therapist. That is a good use of it and it is free on every tier.
+{{APP_NAME}} lets you export a plain-text summary to hand to a doctor or therapist. That is a good use of it and it is free on every tier.
 
 But the file is a record of what **you** typed. It is self-report, not assessment. It has not been reviewed by anyone. It is not a medical record, it is not evidence of a diagnosis, and it should not be used to support one on its own.
 
@@ -252,9 +252,9 @@ The exported file says so on its own front page, in the app's own words: *"This 
 
 ## 9. If something goes wrong
 
-If using Steady makes things worse, stop using it and speak to a professional.
+If using {{APP_NAME}} makes things worse, stop using it and speak to a professional.
 
-If you believe Steady harmed you, please tell us at {{CONTACT_EMAIL}}. We would genuinely rather know.
+If you believe {{APP_NAME}} harmed you, please tell us at {{CONTACT_EMAIL}}. We would genuinely rather know.
 
 ---
 
@@ -281,10 +281,10 @@ INTERNAL NOTES — will not render
 VOCABULARY DISCIPLINE
 This document deliberately does not use "treat", "cure", "heal", "fix", "clinically
 proven", "therapeutic", "recovery programme", or "clinically validated" as descriptions
-of Steady. Where "treatment" appears it refers to what happened in published TRIALS OF
-THERAPY (§3), never to what Steady does — which is the same distinction content/proof.ts
+of {{APP_NAME}}. Where "treatment" appears it refers to what happened in published TRIALS OF
+THERAPY (§3), never to what {{APP_NAME}} does — which is the same distinction content/proof.ts
 draws and __tests__/copy.test.mjs enforces with:
-  /\b(steady|this app) (treats|cures|heals|will fix)\b|\bclinically proven\b|
+  /\b(cairn|this app) (treats|cures|heals|will fix)\b|\bclinically proven\b|
    \bguaranteed to (work|help|fix)\b/i
 docs/APP-STORE.md §5.5 extends the ban to store metadata, which the copy test does NOT
 cover. If this document is ever revised, re-read that section first.
@@ -318,7 +318,7 @@ FACT CHECK TRAIL
   no regulatory submission and no claim of one anywhere in the repo. app.json declares
   no medical entitlements. docs/APP-STORE.md §5.5 directs shipping under Health & Fitness
   rather than Medical, precisely to avoid inviting 1.4.1 scrutiny.
-- "Steady has not been tested in a clinical trial": true by absence, and stated by the
+- "{{APP_NAME}} has not been tested in a clinical trial": true by absence, and stated by the
   app itself in content/proof.ts PROOF_QUALIFIER.
 - Crisis lines listed: Canada (988, Kids Help Phone, 911), US (988, Crisis Text Line 741741,
   911), UK (Samaritans 116 123, Shout 85258, NHS 111 option 2, 999), Australia (Lifeline

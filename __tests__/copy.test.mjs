@@ -90,7 +90,7 @@ describe('tone rules across every user-facing string', () => {
 });
 
 describe('specific promises the copy makes', () => {
-  test('the disclaimer states what Steady is not, and points at Support', () => {
+  test('the disclaimer states what Cairn is not, and points at Support', () => {
     assert.match(copy.DISCLAIMER, /isn'?t therapy/i);
     assert.match(copy.DISCLAIMER, /diagnosis/i);
     assert.match(copy.DISCLAIMER, /Support tab/i);

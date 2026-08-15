@@ -84,7 +84,7 @@ export default function LearnIndex() {
                   <Pressable
                     key={m.slug}
                     accessibilityRole="button"
-                    accessibilityLabel={`${m.title}${locked ? ', part of Steady plus' : ''}${read ? ', read' : ''}`}
+                    accessibilityLabel={`${m.title}${locked ? ', part of Cairn plus' : ''}${read ? ', read' : ''}`}
                     onPress={() => router.push(locked ? '/paywall' : `/module/${m.slug}`)}
                     style={({ pressed }) => ({
                       flexDirection: 'row',
@@ -135,7 +135,7 @@ export default function LearnIndex() {
                     </View>
 
                     {locked ? (
-                      <Chip label="Steady+" tone="accent" />
+                      <Chip label="Cairn+" tone="accent" />
                     ) : m.free ? (
                       <Chip label="Free" tone="cool" />
                     ) : ahead ? (
@@ -161,7 +161,7 @@ export default function LearnIndex() {
             crisis support.
           </BodySm>
           <Button
-            label="See Steady+"
+            label="See Cairn+"
             onPress={() => router.push('/paywall')}
             style={{ marginTop: space.lg, alignSelf: 'flex-start' }}
           />

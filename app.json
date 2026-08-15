@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "Steady",
-    "slug": "steady",
+    "name": "Cairn",
+    "slug": "cairn",
     "icon": "./assets/icon.png",
     "version": "2.0.0",
     "orientation": "portrait",
-    "scheme": "steady",
+    "scheme": "cairn",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "Steady uses the camera only as a live mirror for guided practice. Nothing is ever recorded, captured, or saved."
+        "NSCameraUsageDescription": "Cairn uses the camera only as a live mirror for guided practice. Nothing is ever recorded, captured, or saved."
       },
       "config": {
         "usesNonExemptEncryption": false
@@ -60,7 +60,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Steady uses the camera only as a live mirror for guided practice. Nothing is ever recorded, captured, or saved.",
+          "cameraPermission": "Cairn uses the camera only as a live mirror for guided practice. Nothing is ever recorded, captured, or saved.",
           "recordAudioAndroid": false,
           "microphonePermission": false,
           "barcodeScannerEnabled": false

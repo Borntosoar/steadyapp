@@ -52,7 +52,7 @@ export const FREE_LIMITS = {
  *     cohort. A low price does not buy loyalty, it buys people who were leaving anyway.
  *   - Price is read as a quality signal in a category where the customer cannot evaluate
  *     the product before buying it. Sitting far under the category reads as thin.
- *   - The hardship tier is what makes this defensible. Nobody is priced out of Steady —
+ *   - The hardship tier is what makes this defensible. Nobody is priced out of Cairn —
  *     they are one visible, form-free tap from three months free. Given that, pricing the
  *     paid tier at its worth costs nobody anything and funds the free tier.
  *

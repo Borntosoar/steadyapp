@@ -1,4 +1,4 @@
-# Applied to Steady
+# Applied to Cairn
 
 The general model, resolved into this codebase. Read `SAFETY.md` in the repo root first —
 where the two conflict, SAFETY.md wins, and it is not a close call.
@@ -7,7 +7,7 @@ where the two conflict, SAFETY.md wins, and it is not a close call.
 
 ## The asset
 
-Steady has something almost no app in this category has: **a true number about the
+Cairn has something almost no app in this category has: **a true number about the
 customer's own life, computed from their own data, that moves when the product works.**
 
 Hours reclaimed is not a proxy, not a mood score, not a badge. It is minutes per day of
@@ -70,7 +70,7 @@ editing a list with a comment telling you not to. Leave that in place.
 
 ## Upgrade surfaces, and where they are forbidden
 
-Three places may mention Steady+:
+Three places may mention Cairn+:
 
 1. **Progress**, under the locked charts — the customer is looking at their own data
 2. **Learn**, at the week 2 boundary — the customer is trying to read the next thing
@@ -136,14 +136,14 @@ Hardship access stays visible on the paywall — no form, no proof, no explanati
 
 ## Evidence instead of social proof
 
-Steady has no users, no ratings, and no analytics, so it has no social proof and will not
+Cairn has no users, no ratings, and no analytics, so it has no social proof and will not
 invent any. What it has is a real evidence base for the *method*, and that converts better
 in a low-trust category anyway.
 
 `content/proof.ts` holds the citations. Every claim there is about the literature, never
-about Steady, and every one carries this qualifier somewhere adjacent:
+about Cairn, and every one carries this qualifier somewhere adjacent:
 
-> Steady is not therapy and has not itself been trialled. These are the findings behind the
+> Cairn is not therapy and has not itself been trialled. These are the findings behind the
 > exercises it is built from.
 
 Source figures live in the `bdd-expert` skill's `references/evidence-base.md`. Do not add a

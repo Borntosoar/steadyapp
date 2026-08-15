@@ -12,7 +12,7 @@ import { SUPPORT_REGIONS } from '../constants/support.ts';
  * discipline problem, not a test problem." It was right, and the fix is to move the listing
  * out of a web dashboard nobody can diff and into files that a build can read.
  *
- * The listing is the first thing an App Review reader sees and the only Steady copy most
+ * The listing is the first thing an App Review reader sees and the only Cairn copy most
  * people will ever read. Every rule the app's own copy is held to should apply to it, and
  * until now none did. */
 
@@ -62,7 +62,7 @@ describe('the listing exists in the repository, not only in a dashboard', () => 
     if (!d) return;
     assert.ok(d.length <= 4000, `description is ${d.length} chars, over Apple's 4000 limit`);
     const fold = d.slice(0, 125);
-    assert.doesNotMatch(fold, /\bSteady is an? (app|tool)\b/i,
+    assert.doesNotMatch(fold, /\bCairn is an? (app|tool)\b/i,
       'the visible fragment opens by describing the category rather than the problem');
     assert.match(fold, /hours/i, 'the hours idea is the whole pitch and it is not above the fold');
   });
@@ -85,7 +85,7 @@ describe('Apple field limits', () => {
 
 describe('no treatment or efficacy claim anywhere in the listing', () => {
   /* Guideline 1.4.1, and — separately and more importantly — these words would be false.
-     Steady is self-help built on methods that have been trialled; it has not itself been
+     Cairn is self-help built on methods that have been trialled; it has not itself been
      trialled. docs/APP-STORE.md §5.5.
    *
    * A CLAIM AND ITS DENIAL USE THE SAME WORDS, which the first version of this test did not
@@ -95,7 +95,7 @@ describe('no treatment or efficacy claim anywhere in the listing', () => {
    * that forbids the disclaimer is a test that makes the listing worse.
    *
    * So the unit is the sentence, and a sentence carrying a negation is read as a disclaimer.
-   * The hole this leaves is a sentence that both claims and negates ("Steady treats body
+   * The hole this leaves is a sentence that both claims and negates ("Cairn treats body
    * dysmorphia and does not cost much") — narrow, contrived, and vastly preferable to either
    * blanket-allowing the vocabulary or blanket-banning the disclaimer. */
   const CLAIMS =

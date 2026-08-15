@@ -1,7 +1,7 @@
-# Cookie Policy — Steady website
+# Cookie Policy — {{APP_NAME}} website
 
 **Last updated:** 11 August 2026
-**Applies to:** {{SITE_ORIGIN}}, the marketing and legal-documents website for Steady.
+**Applies to:** {{SITE_ORIGIN}}, the marketing and legal-documents website for {{APP_NAME}}.
 **Published by:** {{ENTITY_NAME}}
 **Contact:** {{CONTACT_EMAIL}}
 
@@ -11,7 +11,7 @@
 
 ## This is about the website, not the app
 
-**The Steady iOS app has no cookies, no web tracking, and no analytics of any kind.** It is not a web page and there is nothing on your phone for this policy to describe. See `privacy-policy.md` for how the app works.
+**The {{APP_NAME}} iOS app has no cookies, no web tracking, and no analytics of any kind.** It is not a web page and there is nothing on your phone for this policy to describe. See `privacy-policy.md` for how the app works.
 
 This page is only about the website where these documents are hosted.
 
@@ -103,7 +103,7 @@ BEFORE YOU ADD ANYTHING TO THE MARKETING SITE, CHECK
     contradiction is the real risk here, not the cookie itself.
 
 RELATED, AND EASY TO MISS
-The Steady repo can build a web version of the app (react-native-web, app.json
+The {{APP_NAME}} repo can build a web version of the app (react-native-web, app.json
 web.output "single", and a built dist/ directory exists). If a playable web build is ever
 hosted at this domain, this page is no longer accurate: the web build persists the same
 journal data in the browser's localStorage. That is not a cookie, but it is exactly the

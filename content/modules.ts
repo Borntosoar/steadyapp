@@ -1,6 +1,6 @@
 /* Learn modules — seed content.
  *
- * Week 1's three modules are free forever. The rest unlock with Steady+.
+ * Week 1's three modules are free forever. The rest unlock with Cairn+.
  *
  * Editorial rules these were written to, worth preserving in any future module:
  *   - second person, warm, plain language
@@ -274,7 +274,7 @@ export const MODULES: LearnModule[] = [
       '**One.** Write down five things that would matter to you if appearance were entirely off the table. Not achievements — directions. Making things. Being outdoors. Knowing your family. Being good at something difficult.',
       '**Two.** For each, write one concrete action that takes under an hour and could be done this week.',
       '**Three.** Schedule one of them into a slot where you’d normally have been checking, scrolling, or getting ready. Not extra time — *that* time. The swap is the exercise.',
-      '**Four.** After you do it, come back and log it. Steady tracks hours reclaimed; you should know what they went into.',
+      '**Four.** After you do it, come back and log it. Cairn tracks hours reclaimed; you should know what they went into.',
       "There is a second effect worth naming. Appearance anxiety shrinks who you are down to one thing. Doing what you care about puts the other things back. Someone who is a good friend, and is building something, and is getting better at a skill is standing on more than one leg. That protects you, and it lasts longer than any single exercise in here.",
     ],
     takeaway: 'Pick the smallest item on your list and do it before the day ends.',

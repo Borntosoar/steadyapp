@@ -35,10 +35,21 @@ import { emptyEntitlement, type Entitlement } from './entitlement.ts';
 import { seal, open, isSealed } from './crypto.ts';
 
 /* The key never changes again. Versioning happens inside the envelope; the `.v2` suffix is
-   a historical artefact of the first release and renaming it now would strand real data. */
+   a historical artefact of the first release and renaming it now would strand real data.
+
+   ⚠ THE `steady.` PREFIX IS NOT A LEFTOVER. The app was called Steady before it was called
+   Cairn, and these two keys — plus `steady.device.key.v1` in hooks/deviceKey.ts — were the
+   only strings deliberately left behind by that rename. They are not brand. They are the
+   addresses real data already lives at. Renaming them migrates nothing: it points the app
+   at an empty key and silently orphans every existing user's twelve weeks of journal,
+   urges and streak, with the old data still on the device and unreachable. If a rename is
+   ever genuinely wanted it needs a read-old-write-new migration in this file first, and
+   there is no reason to want it, because nobody ever sees these strings. */
 export const STORAGE_KEY = 'steady.state.v2';
 
-/** Prefix for payloads that could not be read. Never garbage-collected automatically. */
+/** Prefix for payloads that could not be read. Never garbage-collected automatically.
+ *  Keeps the pre-rename prefix for the reason above — quarantined data is precisely the
+ *  data least able to survive being re-addressed. */
 export const QUARANTINE_PREFIX = 'steady.unreadable.';
 
 /** Bumped whenever a migration is added below. */
@@ -742,7 +753,7 @@ export function importJson(raw: string): AppState | null {
     const version = versioned ? (enveloped.v as number) : 2;
     const data = versioned ? obj(enveloped.data) : enveloped;
     // A file with none of the expected collections is somebody's shopping list, not a
-    // Steady backup, and silently replacing their journal with it would be unforgivable.
+    // Cairn backup, and silently replacing their journal with it would be unforgivable.
     if (!Array.isArray(data.checkIns) && !Array.isArray(data.thoughtRecords) && !data.profile) {
       return null;
     }

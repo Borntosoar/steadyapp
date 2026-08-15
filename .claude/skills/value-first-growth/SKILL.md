@@ -122,7 +122,7 @@ Refuse these and rewrite. Each one appears in shipped apps and each one is a lia
 | `references/funnel.md` | Designing or reviewing any stage: install → renewal → winback |
 | `references/moments.md` | Deciding **when** a prompt fires, how often, and what silences it |
 | `references/copy-patterns.md` | Writing the words on a paywall, prompt, or notification |
-| `references/steady.md` | Working on Steady specifically — the applied version |
+| `references/steady.md` | Working on Cairn specifically — the applied version |
 
 ## The two-line version of timing
 

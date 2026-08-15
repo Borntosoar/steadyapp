@@ -1,14 +1,14 @@
 /* Evidence, standing in for social proof.
  *
- * Steady has no users, no ratings and no analytics, so it has no social proof — and it is
+ * Cairn has no users, no ratings and no analytics, so it has no social proof — and it is
  * not going to invent any. Fabricated review counts are the single most common lie on a
  * paywall and they are aimed, here, at somebody who came to this app because they cannot
  * trust their own read on reality. That is not a trade worth making at any conversion rate.
  *
- * What Steady does have is a real evidence base for the METHOD. In a low-trust category
+ * What Cairn does have is a real evidence base for the METHOD. In a low-trust category
  * that converts better than testimonials anyway, on the condition that it is exact.
  *
- * THE RULE: every claim below is about the published literature. None is about Steady.
+ * THE RULE: every claim below is about the published literature. None is about Cairn.
  * The qualifier travels with them wherever they are rendered — see PROOF_QUALIFIER, which
  * safety.test.mjs checks is present on any screen that renders PROOF_POINTS.
  *
@@ -51,7 +51,7 @@ export const PROOF_POINTS: ProofPoint[] = [
 
 /** Travels with PROOF_POINTS wherever they appear. Non-negotiable. */
 export const PROOF_QUALIFIER =
-  'Steady is not therapy and has not itself been trialled. These are findings about the methods the exercises are built from.';
+  'Cairn is not therapy and has not itself been trialled. These are findings about the methods the exercises are built from.';
 
 /* ---------- the plateau ----------
  *

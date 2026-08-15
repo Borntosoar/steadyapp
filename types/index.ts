@@ -1,6 +1,6 @@
 import type { Entitlement } from '../lib/entitlement';
 
-/* Steady — domain types.
+/* Cairn — domain types.
  *
  * Note what is absent and must stay absent: there is no field anywhere in this file
  * for weight, measurements, calories, body-part ratings, photo URIs, or any appearance

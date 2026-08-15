@@ -2,7 +2,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   normalise, emptyState, exportText, exportJson, importJson, MIGRATIONS, SCHEMA_VERSION,
-  isFromNewerBuild,
+  isFromNewerBuild, STORAGE_KEY, QUARANTINE_PREFIX,
 } from '../lib/storage.ts';
 
 /* Persistence.
@@ -150,7 +150,7 @@ describe('import refuses things that are not backups', () => {
     assert.equal(importJson(''), null);
   });
 
-  test('a JSON file that is not a Steady backup is rejected', () => {
+  test('a JSON file that is not a Cairn backup is rejected', () => {
     // Silently replacing somebody's journal with their shopping list would be unforgivable.
     assert.equal(importJson('{"items":["milk"]}'), null);
     assert.equal(importJson('[1,2,3]'), null);
@@ -334,5 +334,28 @@ describe('migrations are safe to re-apply', () => {
     assert.equal(isFromNewerBuild(SCHEMA_VERSION + 1), true);
     assert.equal(isFromNewerBuild(SCHEMA_VERSION), false);
     assert.equal(isFromNewerBuild(SCHEMA_VERSION - 1), false);
+  });
+});
+
+describe('the storage keys survive a rename of the app', () => {
+  /* THE FAILURE THIS EXISTS FOR. The app was renamed Steady → Cairn across ~300 occurrences
+     in 40 files. These two strings, and `steady.device.key.v1` in hooks/deviceKey.ts, were
+     the only ones deliberately left alone — they are not brand, they are where real data
+     already lives.
+
+     A find-and-replace does not know that. Changing them looks like finishing the rename and
+     behaves like deleting every user's twelve weeks of journal, urges and streak: the app
+     reads an empty key, writes a fresh empty state, and the real record sits on the device
+     at the old address with nothing pointing at it. It is silent, it is not an exception,
+     and the first report of it is somebody saying their history is gone.
+
+     If these ever genuinely need to change, write the read-old-write-new migration first and
+     then change this test on purpose. */
+  test('the state key is exactly the one already on every device', () => {
+    assert.equal(STORAGE_KEY, 'steady.state.v2');
+  });
+
+  test('the quarantine prefix is unchanged, because quarantined data can least afford it', () => {
+    assert.equal(QUARANTINE_PREFIX, 'steady.unreadable.');
   });
 });

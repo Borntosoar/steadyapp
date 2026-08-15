@@ -13,7 +13,7 @@ before they are typed into a web form that keeps no history.
 Paste into **App Review Information → Notes**.
 
 ```
-Steady is a self-help programme for appearance anxiety and body dysmorphia. Three things
+Cairn is a self-help programme for appearance anxiety and body dysmorphia. Three things
 about it are unusual enough to flag before you test.
 
 NO ACCOUNT IS NEEDED. There is no sign-in, no server and no demo account to provide. All
@@ -36,11 +36,11 @@ WHAT IS FREE AND MUST STAY FREE: grounding, breathing, the hard-day path, the da
 check-in, and the crisis line directory. These are never behind a payment and are reachable
 in two taps from any screen via the Support control in the top right.
 
-MEDICAL POSITIONING. Steady is educational self-help built on the methods used in cognitive
+MEDICAL POSITIONING. Cairn is educational self-help built on the methods used in cognitive
 behavioural therapy for body dysmorphic disorder. It is not therapy, does not diagnose, does
 not treat, and is not a medical device. The description and the in-app disclaimer both say
 so. Effect sizes shown on the purchase screen are cited to published studies of the methods
-and are accompanied by a qualifier stating that Steady itself has not been trialled.
+and are accompanied by a qualifier stating that Cairn itself has not been trialled.
 
 The app collects nothing. There is no analytics SDK, no crash reporter, no attribution SDK
 and no tracker of any kind.
@@ -57,7 +57,7 @@ Answer **No** to every content question. The two that need thought:
 
 | Question | Answer | Why |
 |---|---|---|
-| Medical/Treatment Information | **No** | Steady is educational self-help. It makes no diagnostic or treatment claim, and the description says so explicitly. Answering Yes here invites 1.4.1 scrutiny for a claim the app does not make. |
+| Medical/Treatment Information | **No** | Cairn is educational self-help. It makes no diagnostic or treatment claim, and the description says so explicitly. Answering Yes here invites 1.4.1 scrutiny for a claim the app does not make. |
 | Unrestricted Web Access | **No** | The app opens three URLs (privacy, terms, disclaimer) and they go to Safari via `Linking.openURL`. There is no in-app browser — `__tests__/safety.test.mjs` asserts no WebView exists anywhere in the source. |
 | Horror/Fear, Violence, Profanity, Sexual Content, Gambling, Contests, Drugs, Alcohol | **No** | None present. |
 
@@ -99,7 +99,7 @@ and ends the "no tracker" claim.
 ### App Tracking Transparency
 
 **Not required, and must not be added.** ATT applies to tracking across apps and websites
-owned by other companies. Steady does none, and an ATT prompt when you are not tracking is a
+owned by other companies. Cairn does none, and an ATT prompt when you are not tracking is a
 rejection risk in itself.
 
 ---
@@ -128,9 +128,9 @@ exemption. This is the ordinary answer for an app in this shape.
 
 | Reference name | Display name | Type | Price | Trial |
 |---|---|---|---|---|
-| `steady_plus_yearly` | Steady+ Yearly | Auto-renewable subscription | $79.99/year | 1 month free |
-| `steady_plus_monthly` | Steady+ Monthly | Auto-renewable subscription | $12.99/month | 1 month free |
-| `steady_plus_onetime` | Steady+ One-Time | Non-consumable | $149 | — |
+| `steady_plus_yearly` | Cairn+ Yearly | Auto-renewable subscription | $79.99/year | 1 month free |
+| `steady_plus_monthly` | Cairn+ Monthly | Auto-renewable subscription | $12.99/month | 1 month free |
+| `steady_plus_onetime` | Cairn+ One-Time | Non-consumable | $149 | — |
 
 Display names are indexed by App Store search, so they are worth getting right, and they are
 shown in the purchase sheet, so they have to stay honest.

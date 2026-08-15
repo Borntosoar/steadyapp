@@ -46,7 +46,7 @@ export function CrashScreen({ error, onReset }: { error?: Error; onReset?: () =>
         const blob = new Blob([json], { type: 'application/json' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `steady-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `cairn-backup-${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(a.href);
       } else {

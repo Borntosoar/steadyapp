@@ -102,7 +102,7 @@ export const EXPLAIN = {
   },
   week: {
     q: 'What are the twelve weeks?',
-    a: 'Steady is a twelve-week plan. Each week adds one thing and gives you a short read explaining why it works. You can go slower than a week if you want to. Nothing expires and nothing is taken away if you fall behind.',
+    a: 'Cairn is a twelve-week plan. Each week adds one thing and gives you a short read explaining why it works. You can go slower than a week if you want to. Nothing expires and nothing is taken away if you fall behind.',
   },
   distress: {
     q: 'What does this chart show?',
@@ -113,7 +113,7 @@ export const EXPLAIN = {
     a: 'How often worry about your looks stopped you doing something. Nothing skipped is 0. Changing your plans a bit is 1. Skipping it altogether is 2. This one usually moves last, and it is the one worth waiting for.',
   },
   plus: {
-    q: 'What is Steady+?',
+    q: 'What is Cairn+?',
     a: 'It is the paid part: weeks 2 to 12, the full picture on the Progress tab, and unlimited writing. Checking in, calming down and crisis support are free forever and are not part of it.',
   },
 } as const;

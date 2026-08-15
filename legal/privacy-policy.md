@@ -1,7 +1,7 @@
-# Privacy Policy — Steady
+# Privacy Policy — {{APP_NAME}}
 
 **Last updated:** 11 August 2026
-**Applies to:** the Steady iOS app, version 2.0.0 and later, published by {{ENTITY_NAME}} ("we", "us").
+**Applies to:** the {{APP_NAME}} iOS app, version 2.0.0 and later, published by {{ENTITY_NAME}} ("we", "us").
 **Contact:** {{CONTACT_EMAIL}}
 
 <!-- DRAFT. Not reviewed by a lawyer. See legal/README.md before publishing. -->
@@ -13,7 +13,7 @@
 
 ## The short version
 
-Steady has no server. There is no account, no sign-in, no cloud, no analytics, and no third-party tracker. Everything you write stays in the app, on your phone.
+{{APP_NAME}} has no server. There is no account, no sign-in, no cloud, no analytics, and no third-party tracker. Everything you write stays in the app, on your phone.
 
 We do not receive your data. We do not store it, read it, sell it, or share it. Not because we promise not to — because there is no code in the app that could send it anywhere.
 
@@ -29,7 +29,7 @@ That one fact decides almost everything else in this document.
 
 ## 1. Who this policy is from
 
-{{ENTITY_NAME}}, of {{ENTITY_ADDRESS}}, publishes Steady.
+{{ENTITY_NAME}}, of {{ENTITY_ADDRESS}}, publishes {{APP_NAME}}.
 
 Where data-protection law needs someone named as the **controller** (the party that decides why and how personal data is handled), that is us. In practice we hold no personal data about you at all, for the reasons set out in section 3.
 
@@ -63,7 +63,7 @@ The only thing the app can reach out to the network for is a phone call you star
 
 ## 3. What is stored on your phone, and why that is different
 
-Steady stores what you write so the app can show it back to you. All of it lives in the app's own storage area on your device, in a single record.
+{{APP_NAME}} stores what you write so the app can show it back to you. All of it lives in the app's own storage area on your device, in a single record.
 
 <!-- SOURCE: lib/storage.ts — AsyncStorage.setItem(STORAGE_KEY, …) where STORAGE_KEY is
      'steady.state.v2'. On iOS AsyncStorage is a file in the app's container. -->
@@ -96,7 +96,7 @@ What is in that record:
 
 Most privacy law is about what an organisation does with your data once it has it. We never have it.
 
-Data that stays inside an app on your own device, that we cannot see, cannot request, and have built no means of receiving, is not data we process. Apple draws the same line: its App Store definition of *collect* is transmitting data off the device where the developer can then access it. Nothing in Steady transmits anything.
+Data that stays inside an app on your own device, that we cannot see, cannot request, and have built no means of receiving, is not data we process. Apple draws the same line: its App Store definition of *collect* is transmitting data off the device where the developer can then access it. Nothing in {{APP_NAME}} transmits anything.
 
 <!-- SOURCE: Apple's App Privacy definition of "collect", quoted and applied in
      docs/APP-STORE.md §6 ("App Privacy nutrition label"), which records the correct answer as
@@ -111,11 +111,11 @@ This is the sentence that makes the rest of this policy short. If we ever add a 
 
 ## 4. The camera
 
-Steady uses the camera for one thing: showing you a live mirror during guided mirror practice, from week 4 onward.
+{{APP_NAME}} uses the camera for one thing: showing you a live mirror during guided mirror practice, from week 4 onward.
 
 - The picture is shown and thrown away, frame by frame. Nothing is captured, recorded, saved, uploaded, or written to your photo library.
 - There is no photo-taking function in the app. Not a hidden one, not a disabled one — the code to do it does not exist.
-- Steady never asks for access to your photo library.
+- {{APP_NAME}} never asks for access to your photo library.
 - You can say no. If you decline the camera, the session runs with text prompts instead and records exactly the same before-and-after ratings. It is a fully supported path, not a broken one.
 
 <!-- SOURCE: components/MirrorSurface.tsx. Native path renders expo-camera's CameraView with
@@ -129,12 +129,12 @@ Steady uses the camera for one thing: showing you a live mirror during guided mi
 
 ## 5. Getting your data out (export and backup)
 
-Because there is no server, there is also no backup. If you delete Steady, everything in it is gone. The app tells you this on the second onboarding screen, before you have written a word.
+Because there is no server, there is also no backup. If you delete {{APP_NAME}}, everything in it is gone. The app tells you this on the second onboarding screen, before you have written a word.
 
 <!-- SOURCE: app/onboarding/index.tsx step 2: "That also means there is no backup. If you
      delete the app it is gone. You can export a plain-text copy whenever you like." -->
 
-So Steady gives you two free ways to take a copy, on every tier including the free one:
+So {{APP_NAME}} gives you two free ways to take a copy, on every tier including the free one:
 
 - **Export summary** — a plain-text file you could hand to a doctor or therapist.
 - **Save a full backup** — a complete, lossless file that can be read back into the app.
@@ -160,9 +160,9 @@ We want to be exact here rather than reassuring.
 **What genuinely protects your data:**
 
 - It never leaves your phone, so there is no server for anyone to break into and no employee who could look at it.
-- iOS keeps every app's storage separate from every other app's. Another app cannot read Steady's data.
-- iOS encrypts the file system, and that protection is tied to your device passcode. **If you do not have a passcode set on your iPhone, that protection is weaker.** Setting one is the single most useful thing you can do to protect what you write in Steady.
-- Steady's stored data is **excluded from iCloud and iTunes/Finder backups by default**, so it is not copied into your iCloud account. This is a consequence of the storage library the app uses, which sets Apple's "exclude from backup" flag unless an app overrides it. Steady does not override it.
+- iOS keeps every app's storage separate from every other app's. Another app cannot read {{APP_NAME}}'s data.
+- iOS encrypts the file system, and that protection is tied to your device passcode. **If you do not have a passcode set on your iPhone, that protection is weaker.** Setting one is the single most useful thing you can do to protect what you write in {{APP_NAME}}.
+- {{APP_NAME}}'s stored data is **excluded from iCloud and iTunes/Finder backups by default**, so it is not copied into your iCloud account. This is a consequence of the storage library the app uses, which sets Apple's "exclude from backup" flag unless an app overrides it. {{APP_NAME}} does not override it.
 
 <!-- SOURCE: node_modules/@react-native-async-storage/async-storage/ios/RNCAsyncStorage.mm
      lines 518-527: reads the Info.plist key RCTAsyncStorageExcludeFromBackup, and where the
@@ -170,21 +170,21 @@ We want to be exact here rather than reassuring.
      backup"), then sets NSURLIsExcludedFromBackupKey on the storage directory. app.json's
      ios.infoPlist block sets only NSCameraUsageDescription, so the key is absent and the
      default applies. RE-VERIFY THIS after any upgrade of that dependency — it is a library
-     default, not something Steady states in its own configuration. -->
+     default, not something {{APP_NAME}} states in its own configuration. -->
 
 **What does not protect it:**
 
-- Steady does not add its own encryption on top of what iOS provides. What the app writes to storage is ordinary readable text inside the app's container.
-- Anyone who can unlock your phone can open Steady and read everything in it. There is no PIN, no Face ID lock, and no hidden mode inside the app.
+- {{APP_NAME}} does not add its own encryption on top of what iOS provides. What the app writes to storage is ordinary readable text inside the app's container.
+- Anyone who can unlock your phone can open {{APP_NAME}} and read everything in it. There is no PIN, no Face ID lock, and no hidden mode inside the app.
 - The export and backup files you create are not encrypted or password-protected.
 
 <!-- SOURCE: lib/storage.ts:525 — AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(...)),
      plain JSON. package.json has no expo-secure-store, no keychain module and no crypto
      library. There is no app-lock screen in app/. -->
 
-> ⚠ **Depends on the build.** An at-rest encryption layer is being built for Steady in parallel with this policy. **Until that ships and is confirmed present in the submitted build, do not add any sentence here claiming Steady encrypts your data.** When it does ship, this section must be rewritten to say exactly what is encrypted, what is not, and where the key is kept — and the export/backup files will probably still be plain text unless that is changed too.
+> ⚠ **Depends on the build.** An at-rest encryption layer is being built for {{APP_NAME}} in parallel with this policy. **Until that ships and is confirmed present in the submitted build, do not add any sentence here claiming {{APP_NAME}} encrypts your data.** When it does ship, this section must be rewritten to say exactly what is encrypted, what is not, and where the key is kept — and the export/backup files will probably still be plain text unless that is changed too.
 
-**One more thing worth knowing.** If Steady ever finds stored data it cannot read — a corrupted file, or a file written by a newer version of the app — it makes a copy of those bytes and sets them aside rather than overwriting them, so nothing is destroyed while it is still recoverable. Those set-aside copies stay on your device until you delete your data or delete the app. They contain the same private material as the main file.
+**One more thing worth knowing.** If {{APP_NAME}} ever finds stored data it cannot read — a corrupted file, or a file written by a newer version of the app — it makes a copy of those bytes and sets them aside rather than overwriting them, so nothing is destroyed while it is still recoverable. Those set-aside copies stay on your device until you delete your data or delete the app. They contain the same private material as the main file.
 
 <!-- SOURCE: lib/storage.ts quarantine() writes the unreadable payload to a key prefixed
      'steady.unreadable.' and is documented as never garbage-collected automatically;
@@ -194,7 +194,7 @@ We want to be exact here rather than reassuring.
 
 ## 7. Payments
 
-At the version described at the top of this page, Steady does not take payment at all. The purchase buttons do not yet connect to Apple.
+At the version described at the top of this page, {{APP_NAME}} does not take payment at all. The purchase buttons do not yet connect to Apple.
 
 <!-- SOURCE: hooks/useEntitlement.ts — purchase(), restore() and fetchProviderEntitlement()
      are marked "REVENUECAT INTEGRATION POINT" and set local flags only; no StoreKit or
@@ -225,17 +225,17 @@ See `medical-disclaimer.md` for what we can and cannot promise about those lines
 
 If you are in the UK, the EU or the EEA, the General Data Protection Regulation and the UK GDPR give you rights over personal data an organisation holds about you.
 
-We hold none. So here is what each right means in practice with Steady:
+We hold none. So here is what each right means in practice with {{APP_NAME}}:
 
 | Right | How it works here |
 |---|---|
 | **Access** — get a copy of your data | Open Progress and tap **Save a full backup**. That file is everything the app holds. We could not give you a copy because we do not have one. |
-| **Portability** — get it in a reusable format | The same backup file. It is JSON, and it can be read back into Steady. |
+| **Portability** — get it in a reusable format | The same backup file. It is JSON, and it can be read back into {{APP_NAME}}. |
 | **Rectification** — correct wrong data | Edit it in the app. Nothing you correct needs to reach us, because nothing reached us in the first place. |
-| **Erasure** ("right to be forgotten") | Delete the app from your iPhone. That removes the app's container, including everything Steady stored. There is nothing left anywhere else. |
+| **Erasure** ("right to be forgotten") | Delete the app from your iPhone. That removes the app's container, including everything {{APP_NAME}} stored. There is nothing left anywhere else. |
 | **Restriction** and **objection** | There is no processing by us to restrict or object to. |
 | **Withdraw consent** | See the legal-basis note below — we are not relying on your consent for anything, because we are not processing anything. |
-| **Not be subject to automated decision-making** | Steady makes no decision about you. It does arithmetic on numbers you typed and shows you the result. |
+| **Not be subject to automated decision-making** | {{APP_NAME}} makes no decision about you. It does arithmetic on numbers you typed and shows you the result. |
 
 **How to erase everything.** Open **Progress**, scroll to "Take this with you", and use **Delete everything** at the bottom of that section. It removes every check-in, note, plan and history entry from the device, including any recovery copies the app has made. There is no server copy, so this is final and immediate — which is why the button sits directly below the export, and why it asks once more before doing it.
 
@@ -253,7 +253,7 @@ Deleting the app also erases everything, for the same reason: there is nowhere e
 
 **Legal basis.** Data-protection law asks an organisation to name a lawful basis for each processing activity. We do not have one to name, because we carry out no processing of your personal data. If a regulator took the view that publishing the app is itself processing, the basis would be our legitimate interest in providing software you asked to use (Article 6(1)(f)), and the balancing test is unusually easy: the interference with your privacy is zero, because we receive nothing.
 
-**Special category data.** Information about mental health is "special category" data under Article 9 — the most protected kind. Steady is full of it. That is exactly why it was built with no server: the strongest protection available for special category data is for the operator never to hold it.
+**Special category data.** Information about mental health is "special category" data under Article 9 — the most protected kind. {{APP_NAME}} is full of it. That is exactly why it was built with no server: the strongest protection available for special category data is for the operator never to hold it.
 
 **Complaints.** If you think we have got this wrong, please tell us at {{CONTACT_EMAIL}}. You can also complain to your data-protection regulator — in the UK that is the Information Commissioner's Office (ico.org.uk); in the EU it is the supervisory authority for the country you live in.
 
@@ -265,7 +265,7 @@ For California residents, under the California Consumer Privacy Act as amended b
 
 - **Categories of personal information collected in the last 12 months:** none.
 - **Categories sold:** none. We have never sold personal information and have no way to.
-- **Categories shared for cross-context behavioural advertising:** none. There is no advertising in Steady.
+- **Categories shared for cross-context behavioural advertising:** none. There is no advertising in {{APP_NAME}}.
 - **Sensitive personal information collected:** none. (Health information you type stays on your device and never reaches us, so it is not collected.)
 - **Sources of personal information:** not applicable.
 - **Business or commercial purpose for collecting:** not applicable.
@@ -299,11 +299,11 @@ Under the Personal Information Protection and Electronic Documents Act:
 
 ## 12. Children and young people
 
-Steady is intended for people **aged 16 and over**, and is rated 16+ on the App Store.
+{{APP_NAME}} is intended for people **aged 16 and over**, and is rated 16+ on the App Store.
 
 We do not knowingly collect personal information from anyone of any age, including children, because we do not collect personal information at all. There is no account to create, so there is no under-age account for us to detect, suspend, or delete.
 
-If you are under 16 and using Steady, please talk to a parent, carer, or someone at school about what you are going through. The crisis lines in the Support screen include services specifically for young people, and they are free.
+If you are under 16 and using {{APP_NAME}}, please talk to a parent, carer, or someone at school about what you are going through. The crisis lines in the Support screen include services specifically for young people, and they are free.
 
 <!-- SOURCE: docs/APP-STORE.md §5.6 sets 16+ as the intended rating, driven by an honest
      "Frequent" answer to the Medical or Treatment Information descriptor. constants/support.ts
@@ -326,18 +326,18 @@ None. Your data does not travel to another country because it does not travel an
 
 **By us:** nothing, for no time, because we never receive anything.
 
-**On your device:** for as long as you keep the app installed. Steady does not expire, thin out, or delete your history on its own. Delete the app and it is gone — completely, with no copy anywhere, which is the flip side of a promise that nothing is uploaded.
+**On your device:** for as long as you keep the app installed. {{APP_NAME}} does not expire, thin out, or delete your history on its own. Delete the app and it is gone — completely, with no copy anywhere, which is the flip side of a promise that nothing is uploaded.
 
 ---
 
 ## 15. What changes when payments are switched on
 
-Steady will sell subscriptions through **Apple's In-App Purchase**, with **RevenueCat** used to keep track of what you bought. When that ships, the following becomes true and everything above must be read with it in mind.
+{{APP_NAME}} will sell subscriptions through **Apple's In-App Purchase**, with **RevenueCat** used to keep track of what you bought. When that ships, the following becomes true and everything above must be read with it in mind.
 
 **What is collected then:**
 
-- **Purchase history** — which Steady product you bought, when it started, when it renews or ends, whether it is a trial, whether it was cancelled or refunded.
-- **An anonymous app user ID** — a random identifier RevenueCat generates so it can tell one anonymous customer from another. It is not your name, not your email, not your Apple Account, and it is not linked to anything you write in Steady.
+- **Purchase history** — which {{APP_NAME}} product you bought, when it started, when it renews or ends, whether it is a trial, whether it was cancelled or refunded.
+- **An anonymous app user ID** — a random identifier RevenueCat generates so it can tell one anonymous customer from another. It is not your name, not your email, not your Apple Account, and it is not linked to anything you write in {{APP_NAME}}.
 
 **What is still never collected, and must never be:**
 
@@ -372,7 +372,7 @@ Nothing you write. No check-in, no distress rating, no thought record, no urge l
 
 ---
 
-## 16. Things Steady does not do
+## 16. Things {{APP_NAME}} does not do
 
 Stated plainly, because in this category people ask:
 
@@ -435,7 +435,7 @@ Ranked by how much exposure the falsehood creates.
    persistence to MMKV, SQLite, expo-file-system or Core Data, none of which carry this
    default. RE-VERIFY at every dependency bump.
 
-4. "Steady does not add its own encryption" — §6.
+4. "{{APP_NAME}} does not add its own encryption" — §6.
    BREAKS ON: the encryption layer landing. Good direction, still needs the sentence
    rewritten. Do not pre-write it.
 

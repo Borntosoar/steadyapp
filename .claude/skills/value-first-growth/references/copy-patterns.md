@@ -38,7 +38,7 @@ category it is the difference between a brand people recommend and one they warn
 **Testimonial → evidence.**
 Not *"Rated 4.8 by 2,400 users"* when you have neither the ratings nor the users.
 Instead cite the literature behind the method, and be exact about what was tested:
-*"These exercises come from a protocol tested in randomised trials. Steady is not therapy
+*"These exercises come from a protocol tested in randomised trials. Cairn is not therapy
 and has not itself been trialled."*
 Precision here is not a legal hedge. It is the reason the sentence is believable.
 
@@ -115,7 +115,7 @@ mean to them. State the number and let them decide whether it is only.
 
 **On the free tier boundary, said on day one:**
 > Week one is free, and grounding and crisis support are free forever. Everything else is
-> part of Steady+.
+> part of Cairn+.
 
 Stating the boundary early is the honest version of what a hard paywall does structurally —
 it makes the commercial shape unmissable from the first session — without walling anybody

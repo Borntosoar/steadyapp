@@ -15,7 +15,7 @@
  * the purchase button on the paywall. */
 
 /** ⚠ PROVISIONAL, AND UNDER THE WRONG ACCOUNT. This is a GitHub Pages URL belonging to
- *  Borntosoar — a different company. Steady is published by its own entity now, so the
+ *  Borntosoar — a different company. Cairn is published by its own entity now, so the
  *  documents a user opens from inside the app should not be served by a host that entity
  *  does not control, and `legal/cookie-policy.md` names this address in its first line.
  *
@@ -50,7 +50,7 @@ export const SUPPORT_EMAIL = 'steadyrecovery3@gmail.com';
  *  app is willing to produce. */
 export const SUPPORT_MAILTO =
   `mailto:${SUPPORT_EMAIL}` +
-  `?subject=${encodeURIComponent('Steady — feedback')}` +
+  `?subject=${encodeURIComponent('Cairn — feedback')}` +
   `&body=${encodeURIComponent(
     'What happened:\n\n\nWhat you expected instead:\n\n\n' +
       '(Please do not paste anything private you would rather not send. ' +

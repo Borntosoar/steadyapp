@@ -36,7 +36,7 @@ keyword repeated from the name or subtitle, and on the excluded eating-disorder 
 
 The vocabulary rule is the one that matters most. A listing that says *treat*, *therapy*,
 *clinically proven* or *cure* invites Guideline 1.4.1 scrutiny, and — separately and more
-importantly — it would be false. Steady is a self-help tool built on methods that have been
+importantly — it would be false. Cairn is a self-help tool built on methods that have been
 trialled; it has not itself been trialled. That distinction is load-bearing everywhere else
 in this repo, and the store listing is the one place a reviewer reads first.
 
@@ -73,9 +73,9 @@ with a comment explaining why, which is the point.
 Indexed, 30 characters each, and shown in the purchase sheet — so they have to stay honest as
 well as ranked. Set these in App Store Connect; there is no fastlane file for them:
 
-- `Steady+ Yearly`
-- `Steady+ Monthly`
-- `Steady+ One-Time` — **never "Lifetime"**. App Review rejects it, and `__tests__/safety.test.mjs`
+- `Cairn+ Yearly`
+- `Cairn+ Monthly`
+- `Cairn+ One-Time` — **never "Lifetime"**. App Review rejects it, and `__tests__/safety.test.mjs`
   keeps the word out of the app's own strings for the same reason.
 
 ## Uploading

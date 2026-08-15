@@ -61,7 +61,7 @@ export default function Mirror() {
    * This screen had no entitlement check at all, while TIER_COMPARISON in lib/entitlement.ts
    * lists mirror practice as paid. The only thing standing in front of it was the week-4
    * protocol gate, and the app's own custom scheme made it directly addressable:
-   * `steady:///mirror` from any other app on the device opened the flagship paid feature.
+   * `cairn:///mirror` from any other app on the device opened the flagship paid feature.
    *
    * It routes through `isGated` rather than reading `entitled` inline, which is what
    * lib/entitlement.ts has always claimed happens — "the single place that decides". It was
@@ -76,7 +76,7 @@ export default function Mirror() {
     return (
       <Ground>
         <View style={{ marginTop: space.xxxl }}>
-          <Caption>Part of Steady+</Caption>
+          <Caption>Part of Cairn+</Caption>
           <H1 style={{ marginTop: space.xs }}>Mirror practice</H1>
           <Body style={{ marginTop: space.md }}>
             Standing in front of a mirror on purpose, for a set time, without checking or
@@ -89,7 +89,7 @@ export default function Mirror() {
           </BodySm>
 
           <View style={{ marginTop: space.xxl }}>
-            <Button label="See Steady+" onPress={() => router.push('/paywall')} />
+            <Button label="See Cairn+" onPress={() => router.push('/paywall')} />
             <Button label="Back" variant="ghost" onPress={() => router.back()} style={{ marginTop: space.xs }} />
           </View>
         </View>

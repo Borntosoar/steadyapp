@@ -44,7 +44,7 @@ const TIMEOUT = 12_000;
 
 /** Apps whose name is the candidate, or begins with it followed by a separator — the
  *  "Brand: Keywords" shape the store listing itself uses, and the shape that actually
- *  collides. A substring match anywhere would flag "Steady" against "Unsteady Hands" and
+ *  collides. A substring match anywhere would flag "Cairn" against "Unsteady Hands" and
  *  drown the signal. */
 function collides(trackName, name) {
   const a = trackName.trim().toLowerCase();

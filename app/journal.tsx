@@ -232,7 +232,7 @@ function ThoughtRecord({ onDone }: { onDone: () => void }) {
           </BodySm>
 
           <View style={{ marginTop: space.xxl }}>
-            <Button label="See Steady+" onPress={() => router.push('/paywall')} />
+            <Button label="See Cairn+" onPress={() => router.push('/paywall')} />
             <Button label="Back" variant="ghost" onPress={onDone} style={{ marginTop: space.xs }} />
           </View>
         </View>

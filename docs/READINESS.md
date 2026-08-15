@@ -4,7 +4,7 @@ Three questions, in the order that matters: **does it work, is it allowed, will 
 stay.** Most checklists cover the first, half of the second, and none of the third — which
 is why so many apps pass review and die anyway.
 
-Every row carries Steady's real status, checked against the source rather than assumed.
+Every row carries Cairn's real status, checked against the source rather than assumed.
 Where something is missing it says so. The point of the table is the gaps, not the ticks.
 
 **Legend:** ✅ done · 🟡 partial or deliberate compromise · ❌ missing · ⬜ blocked on
@@ -19,7 +19,7 @@ contact with a real phone, real data and real failure.
 
 ## 1.1 It launches, and keeps launching
 
-| Necessity | Why | Steady |
+| Necessity | Why | Cairn |
 |---|---|---|
 | Cold start under ~2s | Past that people assume it broke | 🟡 not measured on device |
 | No crash on first run | The single highest-leverage bug class | ✅ verified |
@@ -27,13 +27,13 @@ contact with a real phone, real data and real failure.
 | Survives being killed mid-write | Task-killed apps lose the last write | ✅ flush on background |
 
 **The one nobody tests:** launching with data written by a *newer* build. It happens the
-moment you ship TestFlight and App Store side by side. Steady quarantines it rather than
+moment you ship TestFlight and App Store side by side. Cairn quarantines it rather than
 downgrading the envelope, because reading it partially and re-stamping the old version is
 how a migration silently runs twice.
 
 ## 1.2 It survives bad data
 
-| Necessity | Why | Steady |
+| Necessity | Why | Cairn |
 |---|---|---|
 | Validate at the boundary, not at the type | `JSON.parse` returns `any`; a cast is not validation | ✅ allowlist rebuild in `lib/storage.ts` |
 | Drop malformed rows rather than propagate | Otherwise the crash moves to the first screen that reads it | ✅ |
@@ -46,7 +46,7 @@ the top.
 
 ## 1.3 It survives a crash
 
-| Necessity | Why | Steady |
+| Necessity | Why | Cairn |
 |---|---|---|
 | A root error boundary | Without one, a render throw blanks the entire app | ✅ `components/CrashScreen.tsx` |
 | The crash screen does something useful | "Something went wrong" is not a feature | ✅ crisis numbers, then export, then reload |
@@ -54,7 +54,7 @@ the top.
 
 ## 1.4 Data: in, out, and gone
 
-| Necessity | Why | Steady |
+| Necessity | Why | Cairn |
 |---|---|---|
 | Persists reliably | — | ✅ |
 | **Export** in a portable format | Legally required in several regimes, and the user's insurance | ✅ text + JSON, free on every tier |
@@ -64,7 +64,7 @@ the top.
 
 ## 1.5 It tells the truth when it fails
 
-| Necessity | Why | Steady |
+| Necessity | Why | Cairn |
 |---|---|---|
 | Silent failure is the worst failure | Weeks of journalling look saved and are not | ✅ `StorageNotice` |
 | Degraded modes are disclosed | Not just handled | ✅ including the unencrypted fallback |
@@ -72,7 +72,7 @@ the top.
 
 ## 1.6 It is tested, and the tests enforce the rules
 
-| Necessity | Why | Steady |
+| Necessity | Why | Cairn |
 |---|---|---|
 | Tests for the logic | — | ✅ 424 |
 | Tests for the *constraints* | A rule in a markdown file gets deleted by someone who never read it | ✅ `safety.test.mjs` |
@@ -85,7 +85,7 @@ catches that class.
 
 ## 1.7 Platform integration
 
-| Necessity | Why | Steady |
+| Necessity | Why | Cairn |
 |---|---|---|
 | App icon, every size | Hard submission blocker | ✅ generated, was missing entirely |
 | Splash / launch screen | — | ✅ |
@@ -96,7 +96,7 @@ catches that class.
 
 ## 1.8 Performance and size
 
-| Necessity | Steady |
+| Necessity | Cairn |
 |---|---|
 | Payload size bounded | 🟡 field caps added; no record-count cap by design |
 | No unbounded growth | 🟡 measured: 5k records = 49MB, 800ms stringify |
@@ -109,7 +109,7 @@ catches that class.
 
 ## 2.1 The entity
 
-| Necessity | Why | Steady |
+| Necessity | Why | Cairn |
 |---|---|---|
 | A named legal entity | Every document needs a party | ⬜ **open** |
 | Registered address | Same | ⬜ **open** |
@@ -119,7 +119,7 @@ catches that class.
 
 ## 2.2 The documents
 
-| Document | Required? | Steady |
+| Document | Required? | Cairn |
 |---|---|---|
 | Privacy policy, **hosted at a public URL** | Hard App Store blocker | 🟡 written, build gated on the three blanks |
 | Privacy policy linked **in-app** | Guideline 5.1.1 | ✅ on the paywall |
@@ -130,7 +130,7 @@ catches that class.
 
 ## 2.3 Money
 
-| Necessity | Why | Steady |
+| Necessity | Why | Cairn |
 |---|---|---|
 | Auto-renew terms **adjacent to the button** | Guideline 3.1.2 — not behind a link | ✅ `RENEWAL_TERMS` |
 | Price, period, and renewal in one place | — | ✅ |
@@ -141,7 +141,7 @@ catches that class.
 
 ## 2.4 Data rights
 
-| Right | Regime | Steady |
+| Right | Regime | Cairn |
 |---|---|---|
 | Access | GDPR, PIPEDA, CCPA | ✅ it is all on their device |
 | Portability | GDPR 20 | ✅ JSON export |
@@ -152,7 +152,7 @@ catches that class.
 
 ## 2.5 Declarations you fill in a web form
 
-| Item | Steady |
+| Item | Cairn |
 |---|---|
 | Age rating questionnaire | ✅ answers written, 4+ expected |
 | App Privacy label | ✅ both states written (before/after RevenueCat) |
@@ -166,7 +166,7 @@ catches that class.
 The one that sinks health apps: **saying you treat something.** "Treatment", "therapy",
 "clinically proven", "cure" are all rejections *and* untrue for a self-help tool.
 
-Steady: ✅ enforced by test across the app copy **and** the store listing — including the
+Cairn: ✅ enforced by test across the app copy **and** the store listing — including the
 subtlety that a *denial* uses the same words as a *claim*, so the disclaimer must be allowed
 while the assertion is not.
 
@@ -179,7 +179,7 @@ two.
 
 ## 3.1 The first sixty seconds
 
-| Necessity | Why | Steady |
+| Necessity | Why | Cairn |
 |---|---|---|
 | It is obvious what this is | You have one screen | ✅ |
 | Value before signup | There is no signup, which is better | ✅ |
@@ -189,7 +189,7 @@ two.
 
 ## 3.2 The states nobody designs
 
-| State | Why it matters | Steady |
+| State | Why it matters | Cairn |
 |---|---|---|
 | Empty | The first thing every new user sees | 🟡 present, not systematically designed |
 | Loading | Blank screens read as broken | ✅ |
@@ -199,7 +199,7 @@ two.
 
 ## 3.3 Accessibility
 
-| Necessity | Steady |
+| Necessity | Cairn |
 |---|---|
 | Contrast ≥4.5:1, **measured** | ✅ computed and tested against the real background |
 | Touch targets ≥44pt | ✅ |
@@ -216,7 +216,7 @@ always-mounted Support pill, and the four tab labels collided into one unreadabl
 
 ## 3.4 Words
 
-| Necessity | Steady |
+| Necessity | Cairn |
 |---|---|
 | Reading level appropriate to the audience | ✅ 8th grade, tested |
 | Buttons say what will happen | ✅ |
@@ -226,7 +226,7 @@ always-mounted Support pill, and the four tab labels collided into one unreadabl
 
 ## 3.5 A way to reach a human
 
-| Necessity | Why | Steady |
+| Necessity | Why | Cairn |
 |---|---|---|
 | In-app support route | Without one, your bug report is a one-star review | ✅ bottom of the support screen |
 | Support address that is monitored | — | ✅ |
@@ -239,7 +239,7 @@ between them. Note the placement: last on the screen, below every crisis line, a
 
 ## 3.6 Leaving well
 
-| Necessity | Why | Steady |
+| Necessity | Why | Cairn |
 |---|---|---|
 | Cancelling is easy and honest | Hostile cancellation is the top driver of one-star reviews | ✅ says it takes fewer taps than signing up |
 | Data leaves with them | — | ✅ export |
@@ -248,7 +248,7 @@ between them. Note the placement: last on the screen, below every crisis line, a
 
 ## 3.7 Asking for things
 
-| Necessity | Steady |
+| Necessity | Cairn |
 |---|---|
 | Review prompt after something good, never after friction | ✅ — it was designed, gated, and **wired to nothing**: the button returned early, so tapping it did literally nothing |
 | At most one interruption at a time | ✅ budgeted in one file |
@@ -267,13 +267,13 @@ between them. Note the placement: last on the screen, below every crisis line, a
 6. **The store listing drifting from the code.** Advertised trial length vs actual — a refund, a bad review and a metadata violation in one.
 7. **A "delete my data" function nothing calls.** Written, tested, never wired.
 
-Steady had **six of the seven**, plus a review button wired to nothing. **All seven are now
+Cairn had **six of the seven**, plus a review button wired to nothing. **All seven are now
 fixed** — four of them found by writing this page, which is the argument for writing it down
 rather than keeping it in your head.
 
 ---
 
-# Steady, scored
+# Cairn, scored
 
 | Area | State |
 |---|---|

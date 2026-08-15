@@ -286,8 +286,8 @@ forever — see §4.
 ## 13. Every number shown to a customer is one we could defend to their face
 
 No fabricated ratings, no invented review or user counts, no "most popular" badge on an app
-with no users. Steady has no analytics and therefore no social proof, and it will not invent
-any. What it shows instead is **evidence about the method**, and `PROOF_QUALIFIER` — *"Steady
+with no users. Cairn has no analytics and therefore no social proof, and it will not invent
+any. What it shows instead is **evidence about the method**, and `PROOF_QUALIFIER` — *"Cairn
 is not therapy and has not itself been trialled"* — travels with it wherever it renders.
 
 The same rule governs the cost mirror in onboarding. It states arithmetic on figures the

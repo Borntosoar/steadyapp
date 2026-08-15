@@ -1,4 +1,4 @@
-/* Who publishes Steady, resolved once and substituted into the legal documents.
+/* Who publishes Cairn, resolved once and substituted into the legal documents.
  *
  * WHY THIS EXISTS. Before it did, the publisher's identity appeared as
  * `[LEGAL ENTITY NAME — TODO]` in eight places across five documents, and the registered
@@ -12,7 +12,7 @@
  * place, and the checks below make a partial fill impossible to publish.
  *
  * WHY NULL RATHER THAN A PLACEHOLDER STRING. A null is a question that has not been answered.
- * A string like "Steady Inc." is an answer, and a wrong one — it reads as filled-in to every
+ * A string like "Cairn Inc." is an answer, and a wrong one — it reads as filled-in to every
  * subsequent reader, including whichever lawyer reviews this. Nothing here invents a fact
  * about a legal entity that does not exist yet.
  *
@@ -37,6 +37,10 @@ export const TOKENS = {
   PROVINCE: 'province',
   CONTACT_EMAIL: 'contactEmail',
   SITE_ORIGIN: 'siteOrigin',
+  /* Resolved from app.json rather than entity.json — app.json is already the single source
+     for what the app is called, and two places to write a product name is the drift this
+     whole file exists to stop. `fill` merges it in. */
+  APP_NAME: 'appName',
 };
 
 /** The app's own name, read from app.json rather than repeated here. Used to catch the
@@ -64,7 +68,7 @@ const TRADE_NAME_FORMS = [
  *  known and is not in here; `quebecCounselConfirmed` is a gate rather than a field, handled
  *  separately below.
  *
- *  `siteOrigin` joined this list when Steady became its own entity. It had been
+ *  `siteOrigin` joined this list when Cairn became its own entity. It had been
  *  `borntosoar.github.io/steadyapp` in `constants/links.ts` and `steadyapp.co` here — two
  *  different answers, neither checked against the other, one of them a URL under an account
  *  belonging to a different company. It is the address printed in the cookie policy and the
@@ -103,9 +107,9 @@ export function tokensUsed(dir = LEGAL_DIR) {
 /** Whether `name` is a name a contract can actually be against.
  *
  *  THE MISTAKE THIS CATCHES. The decision "publish this under a separate entity called
- *  Steady" is a decision about a brand. `name` is not the brand — it is the party to a
+ *  Cairn" is a decision about a brand. `name` is not the brand — it is the party to a
  *  contract, and terms of use are only enforceable by, and against, a legal person that
- *  exists. "Steady" on its own is neither: until a corporation of that name is registered
+ *  exists. "Cairn" on its own is neither: until a corporation of that name is registered
  *  or a human declares they trade under it, there is nobody on the other side of §42 of the
  *  terms. A privacy policy naming a company that does not exist is not a smaller problem
  *  than one naming the wrong company; PIPEDA's accountability section needs somebody real to
@@ -228,10 +232,13 @@ export function problems(entity, dir = LEGAL_DIR) {
 /** Substitute the tokens. Throws rather than leaving a `{{...}}` in a published document —
  *  braces rendered to a reader in a privacy policy look exactly like the software failure
  *  they are. */
-export function fill(md, entity) {
+export function fill(md, entity, root = ROOT) {
+  /* The product name comes from app.json, everything else from entity.json. Merged here so
+     callers pass one object and cannot forget which fact lives where. */
+  const values = { appName: appName(root), ...entity };
   let out = md;
   for (const [token, field] of Object.entries(TOKENS)) {
-    out = out.replaceAll(`{{${token}}}`, String(entity[field]));
+    out = out.replaceAll(`{{${token}}}`, String(values[field]));
   }
   const leftover = out.match(/\{\{[A-Z_]+\}\}/);
   if (leftover) throw new Error(`unsubstituted token ${leftover[0]}`);
