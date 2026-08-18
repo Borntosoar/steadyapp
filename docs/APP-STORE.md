@@ -21,6 +21,30 @@ Both fields are 30 characters. The name carries the most ranking weight of any f
 subtitle the second most. Neither may contain prices, other apps' names, or unverifiable
 claims (Guideline 2.3.7).
 
+### ⚠ Name availability — checked 2026-08-18, and the result is a problem
+
+Apple's search API and RDAP are blocked from the environment this was checked in, so this is
+**web-search evidence, not an authoritative check**. `scripts/check-name.mjs` still needs to
+be run somewhere with outbound HTTPS, and App Store Connect is the only authority.
+
+With that caveat, the App Store already carries at least six apps named Cairn: *Cairn –
+Hiking Safety Tracker* (id964300002, established and well-rated), *Cairn Maps*, *Cairn
+Tasks*, *Cairn: Stone Balancing*, *CAIRN Strength*, and *Cairn Financial Group*.
+
+**This probably does not block submission.** Apple's uniqueness rule applies to the exact
+name string, and `Cairn: Body Image Anxiety` is very likely free. **The damage is to brand
+search**, and for this product that is the expensive kind. `docs/GROWTH.md` §1.4 establishes
+that Cairn cannot buy acquisition and §5.2–5.3 rank the channels accordingly: charities,
+clinician referral, peer recommendation. Every one of those ends with somebody typing the
+name into search. If that search returns a decade-old hiking safety tracker, the channel
+leaks at the last step — which is the same defect that disqualified the previous name, in a
+different disguise.
+
+Two alternates were checked the same way and appear clear: **Anneal** (no App Store result at
+all) and **Ballast** (nothing in this category). **Stillpoint should be ruled out** for a
+different and worse reason — *Stillpoint: Anxiety & Panic* is a private on-device anxiety
+tracker with no accounts and no analytics, which is a near-identical product and positioning.
+
 ### App name
 
 | # | Name | Chars | Notes |
