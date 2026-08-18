@@ -1,6 +1,6 @@
 # GROWTH.md
 
-Growth, monetisation and automation for Cairn. Written to be decided on, not surveyed.
+Growth, monetisation and automation for Anneal. Written to be decided on, not surveyed.
 
 **Status of the numbers.** Every figure is either (a) attributed to a source, (b) computed
 from a figure in `docs/SUBSCRIPTION-BENCHMARKS.md`, or (c) marked **[est.]** with the
@@ -38,12 +38,12 @@ the conclusion.
 | On iPhone | ~4m | **[est.]** iOS share 50–60% across these four markets |
 | Who will ever *search a term that reaches this app* | 5–10% | **[est.]** — the binding assumption. Most people with BDD have never had the condition named to them; `content/modules.ts` module 1 makes exactly this point. Concealment is a diagnostic feature. |
 | Annual searchers reachable | 200k–400k | arithmetic |
-| Share a top-ranked app captures on its winnable terms | 5–15% | **[est.]** — Cairn can plausibly rank #1–3 on `bdd`, `dysmorphia`, `dysmorphic`, `checking`, `reassurance`, `appearance` (per `docs/APP-STORE.md` §2) but not on `esteem`, `confidence`, `ocd`, `cbt` |
+| Share a top-ranked app captures on its winnable terms | 5–15% | **[est.]** — Anneal can plausibly rank #1–3 on `bdd`, `dysmorphia`, `dysmorphic`, `checking`, `reassurance`, `appearance` (per `docs/APP-STORE.md` §2) but not on `esteem`, `confidence`, `ocd`, `cbt` |
 | **Downloads per year from ASO at maturity** | **10k–60k** | arithmetic |
 
-Now revenue per download. Cairn is freemium with a soft paywall, which is the model
+Now revenue per download. Anneal is freemium with a soft paywall, which is the model
 RevenueCat 2026 measures at **2.1% install→paid by day 35** (vs 10.7% for hard paywalls —
-the model Cairn has already declined for stated reasons).
+the model Anneal has already declined for stated reasons).
 
 Per 1,000 downloads, assuming a plan mix of 65% annual / 20% monthly / 15% pay-once
 **[est. — no data exists yet; annual is pre-selected and the category takes 60.6% of revenue
@@ -66,7 +66,7 @@ retention: a cohort decaying to 17.5% over 12 months has a mean life in that ran
 
 **The near-term sanity check disagrees with the year-one figure and you should trust the
 near-term one.** Adapty's Health & Fitness revenue per install is **$0.48 at day 14** and
-**$0.66 at day 60** — the best of any category. Cairn's $1.40 is a *year-one* number that
+**$0.66 at day 60** — the best of any category. Anneal's $1.40 is a *year-one* number that
 depends on annual subscriptions actually being held for a year. Plan on $0.66 by day 60 and
 treat everything above that as unproven.
 
@@ -79,7 +79,7 @@ of this paragraph.
 
 ### 1.2 The twelve-week end caps LTV, and the arithmetic is worse than it looks
 
-A subscription app sells access to something that keeps being worth having. Cairn sells a
+A subscription app sells access to something that keeps being worth having. Anneal sells a
 programme that finishes. Module 12 tells the customer, in writing, that they are done and
 that maintenance costs far less than the initial work. That is the correct thing to say and
 it is a direct instruction to cancel.
@@ -111,7 +111,7 @@ renewal rate. **See §8, decision 2.**
 No analytics means no onboarding funnel, no paywall view→tap rate, no time-to-first-value
 measurement, no cohort behaviour, no A/B testing of in-app copy. `value-first-growth`
 identifies compressing time-to-first-value as "nearly always the highest-leverage change
-available" — and Cairn cannot measure it.
+available" — and Anneal cannot measure it.
 
 What that actually costs: the ordinary practice of shipping a change and watching a number
 move is unavailable. Every in-app change is a bet placed on judgement.
@@ -145,9 +145,9 @@ let down before, and has frequently been sold to by an industry that profits fro
 distress. The things that would normally raise conversion — urgency, social proof, before/
 after — are the exact things that destroy trust here.
 
-The commercial consequence: **Cairn cannot buy its way in.** Paid acquisition into a
+The commercial consequence: **Anneal cannot buy its way in.** Paid acquisition into a
 low-trust category converts badly, and the ad creative that performs in this vertical is
-creative Cairn is forbidden from making. The privacy posture is the compensating asset, and
+creative Anneal is forbidden from making. The privacy posture is the compensating asset, and
 it is worth more institutionally than it is to consumers (§2.1).
 
 ### 1.5 ASO is low-volume and high-intent, which is a specific kind of problem
@@ -206,14 +206,14 @@ exchange for them running a study. Feasibility study, single-arm open trial, or 
 controlled RCT depending on their appetite.
 
 **Why it ranks first despite generating no revenue.** Every other high-value line in this
-list is blocked by the same sentence: *Cairn is not therapy and has not itself been
+list is blocked by the same sentence: *Anneal is not therapy and has not itself been
 trialled* (`content/proof.ts`, `PROOF_QUALIFIER`). That sentence is currently a liability
 disclaimed on the paywall. A registered trial converts it into: *an independent trial is
 under way at [institution]* — which is the sentence that unlocks institutional procurement
 (§2.3), most grant applications (§2.2), clinician referral (§5.3) and press (§5.6).
 
 **Why an academic will say yes.** They need a well-built, ethically-designed intervention
-with a clean data story and they almost never have one. Cairn's specific selling points to
+with a clean data story and they almost never have one. Anneal's specific selling points to
 a researcher are unusual and worth stating explicitly in the approach email:
 
 - The local-only architecture means **no IRB/REC data-governance problem**. There is no
@@ -251,7 +251,7 @@ dilute.
 | Innovate UK digital mental health | Varies | UKRI has run dedicated digital mental health competitions |
 | **Mitacs Accelerate (Canada)** | ~$15k per internship unit, roughly half matched by Mitacs **[est. — verify current rates]** | **Pairs directly with §2.1.** The cheapest possible on-ramp if the entity is Canadian. |
 
-**The eligibility question decides the strategy.** The publisher is Cairn's own entity,
+**The eligibility question decides the strategy.** The publisher is Anneal's own entity,
 separate from SOAR (`legal/entity.json`), and the governing law is Canadian with the
 crisis-line ordering in `constants/` putting CA first — so a Canadian entity, though it is
 not yet incorporated and the province is still open. If so, SBIR is
@@ -276,12 +276,12 @@ rate, and the search results confirm both vendors quote bespoke.
 **The no-data-collection posture is your differentiator, and it is a bigger one than you
 think.** A university buying a mental health app runs it through IT security, data
 protection, and (in the UK) DTAC. That process kills most vendors and takes 6–18 months.
-Cairn's answer to every question on those forms is *no data is collected, there is no
+Anneal's answer to every question on those forms is *no data is collected, there is no
 server, there is no account.* You are not competing on features against SilverCloud; you are
 competing on the fact that you can clear procurement in a quarter of the time.
 
 **The mechanical problem.** A buyer will not renew a contract they cannot justify, and
-justification means utilisation data. Cairn cannot report utilisation, ever, because it
+justification means utilisation data. Anneal cannot report utilisation, ever, because it
 collects nothing.
 
 **The solution, and it preserves the promise completely:** sell **redeemable codes**, not
@@ -351,7 +351,7 @@ and that is catastrophic. Because there is no server, this is easy to guarantee 
 apps have literally no way to communicate.
 
 **Revenue model [est.].** A one-off $19.99 in-app purchase inside a small separate app, or a
-$14.99 ebook. If 5% of Cairn's paid users have a supporter who buys **[est.]**, that is
+$14.99 ebook. If 5% of Anneal's paid users have a supporter who buys **[est.]**, that is
 small; the realistic volume comes from the supporter searching independently (*"how to help
 someone with body dysmorphia"* is a real and well-populated query). **$3,000–$12,000/year.**
 
@@ -367,7 +367,7 @@ everywhere, not just in English. German, Spanish, Brazilian Portuguese and Japan
 usual first picks for mental health apps.
 
 **The objection nobody else will raise.** `__tests__/copy.test.mjs` and
-`__tests__/readability.test.mjs` enforce Cairn's tone — no shaming language, no appearance
+`__tests__/readability.test.mjs` enforce Anneal's tone — no shaming language, no appearance
 evaluation, no treatment claims, eighth-grade reading level — **using English-language
 pattern matching.** Translate the app and the entire enforcement mechanism silently stops
 covering the shipped product. SAFETY.md's central claim, that the rules are tests rather
@@ -395,7 +395,7 @@ their client uses; they have no budget line for it and the client is already pay
 client — they already have it free, and gating it would break §11b.
 
 **So do not build a paid clinician product.** Build a free one-page **clinician sheet**: what
-Cairn is, what it is not, what the export contains, how the protocol maps onto standard CBT
+Anneal is, what it is not, what the export contains, how the protocol maps onto standard CBT
 for BDD, and the disclaimer. Put it on the marketing site as a PDF. Its job is to make a
 therapist comfortable recommending the app, which is channel §5.3 — the highest-quality,
 lowest-CAC acquisition available to this product.
@@ -406,13 +406,13 @@ That is the correct answer and it is worth more than the subscription you were c
 
 **The idea.** Module 5 already states that good cosmetic surgeons screen for BDD and turn
 people down. Those clinicians have a live problem: they decline a patient, and have nothing
-to hand them. Cairn is exactly what you hand them. Sell blocks of codes to clinics.
+to hand them. Anneal is exactly what you hand them. Sell blocks of codes to clinics.
 
 **The revenue is real.** Aesthetic clinics have marketing budgets, decide fast, and have no
 procurement process. **$5,000–$25,000/year [est.]** across a handful of clinic groups is
 plausible within a year — faster than universities by an order of magnitude.
 
-**The risk is also real and it is not a data question.** Cairn's entire position is
+**The risk is also real and it is not a data question.** Anneal's entire position is
 built against the appearance industry. Any adjacency — a logo on a clinic's website, a
 mention in a press story, a screenshot of the two brands together — can be read as the app
 being funded by the industry that profits from the distress. In this population, that
@@ -448,14 +448,14 @@ but the cost is trivial.**
 
 **Screen Time / DeviceActivity / FamilyControls: reject.** The obvious idea is to
 corroborate reclaimed hours with real device usage — time in camera, time in social apps.
-It requires an Apple entitlement, and more importantly it turns Cairn into a surveillance
+It requires an Apple entitlement, and more importantly it turns Anneal into a surveillance
 tool that watches the user's appearance-related behaviour and reports it back to them. That
 is a precision instrument for self-monitoring, aimed at a population whose disorder *is*
 self-monitoring. It fails SAFETY.md §2's governing test.
 
 **HealthKit: defer, don't reject.** A write-only integration (Mindful Minutes for grounding
 and urge-surfing sessions) is technically clean, keeps data on-device, and would surface
-Cairn inside the Health app — a modest discovery benefit. But: HealthKit data syncs to
+Anneal inside the Health app — a modest discovery benefit. But: HealthKit data syncs to
 iCloud at the user's option, which sits uncomfortably against the flat promise on onboarding
 screen two, and Guideline 5.1.3 opens a review surface that APP-STORE.md §5.9 currently and
 correctly lists as *not applicable*. The discovery benefit does not pay for complicating the
@@ -831,7 +831,7 @@ median because the recommendation came from a trusted source.
 30 seconds, and — the real unlock — §2.1.
 
 **Ethical line:** no referral fees, no affiliate codes, no commissions, in either direction.
-The moment money moves between Cairn and a clinician for referrals, every recommendation
+The moment money moves between Anneal and a clinician for referrals, every recommendation
 becomes suspect, and in this category that is fatal. Free institutional access is fine;
 payment is not.
 

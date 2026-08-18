@@ -102,7 +102,7 @@ export default function Grounding() {
 
   /* Whether the hard-day screen may write a record the moment it opens.
    *
-   * True when the app navigated here, false when a link did. `cairn://grounding?mode=hard`
+   * True when the app navigated here, false when a link did. `anneal://grounding?mode=hard`
    * from any other app, or from a message, used to log a hard-day entry with no interaction
    * at all — fabricating "this person had a bad day" in a record that gets exported to a
    * clinician, and advancing the practice-day count that gates the exposure work.

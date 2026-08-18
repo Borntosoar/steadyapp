@@ -1,6 +1,6 @@
 /* Did this navigation come from inside the app, or from a link?
  *
- * The app registers the `cairn://` scheme, so every route is addressable by any other app
+ * The app registers the `anneal://` scheme, so every route is addressable by any other app
  * on the device, by Safari, and by a link in a message. Almost all of those routes are inert
  * — they render something and read nothing. `/grounding?mode=hard` was the exception: it
  * logged a hard-day practice entry on mount, with no interaction at all.
@@ -8,7 +8,7 @@
  * That is the right behaviour when the person tapped "Today is a hard day" in the app. It is
  * the single most valuable thing somebody can do on a bad day and it must not depend on them
  * finishing anything afterwards. It is the wrong behaviour when a link did it, because then
- * `cairn://grounding?mode=hard` writes into somebody's record that they had a bad day —
+ * `anneal://grounding?mode=hard` writes into somebody's record that they had a bad day —
  * a record that later gets exported to a clinician — and nudges the protocol's practice-day
  * count, which is what unlocks the exposure work. SAFETY.md §9 says that hierarchy is
  * enforced by the app rather than by the user's judgement; a link should not move it.

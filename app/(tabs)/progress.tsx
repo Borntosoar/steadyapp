@@ -187,10 +187,10 @@ export default function Progress() {
     fn().catch(() => setExportFailed(true));
   };
   const doExport = safely(async () =>
-    download(exportText(state), `cairn-summary-${stamp}.txt`, 'text/plain')
+    download(exportText(state), `anneal-summary-${stamp}.txt`, 'text/plain')
   );
   const doBackup = safely(async () =>
-    download(exportJson(state), `cairn-backup-${stamp}.json`, 'application/json')
+    download(exportJson(state), `anneal-backup-${stamp}.json`, 'application/json')
   );
 
   const exportSection = (
@@ -201,7 +201,7 @@ export default function Progress() {
         first appointment is not spent piecing it back together.
       </BodySm>
       <BodySm style={{ marginTop: space.md, color: c.cool }}>
-        Both are free and always will be. Cairn keeps nothing on a server, so this file is
+        Both are free and always will be. Anneal keeps nothing on a server, so this file is
         the only copy that survives if you lose the phone.
       </BodySm>
       <Button
@@ -291,7 +291,7 @@ export default function Progress() {
         <Section title="The rest of the picture">
           <Body style={{ marginTop: space.md }}>
             How hard your days have been, how often you check, what you skip, and how far it
-            falls during mirror practice. All of that is part of Cairn+.
+            falls during mirror practice. All of that is part of Anneal+.
           </Body>
           <Explain q={EXPLAIN.plus.q} a={EXPLAIN.plus.a} />
           <BodySm style={{ marginTop: space.md }}>
@@ -299,7 +299,7 @@ export default function Progress() {
             while you decide.
           </BodySm>
           <Button
-            label="See Cairn+"
+            label="See Anneal+"
             onPress={() => router.push('/paywall')}
             style={{ marginTop: space.lg, alignSelf: 'flex-start' }}
           />

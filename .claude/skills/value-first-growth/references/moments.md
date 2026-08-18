@@ -112,7 +112,7 @@ The dismiss control sits at the same visual weight as the action and says what i
 
 ---
 
-## Cairn's map
+## Anneal's map
 
 Six moments. One asks for money.
 

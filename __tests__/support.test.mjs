@@ -178,7 +178,7 @@ describe('picking a region from the device locale', () => {
 });
 
 describe('the app speaks English; the services keep their own names', () => {
-  /* Cairn's interface language is English (docs/LOCALISATION.md). The line between "the
+  /* Anneal's interface language is English (docs/LOCALISATION.md). The line between "the
      app speaking" and "the name of a real thing" runs through this file, and it is worth
      holding, because the natural drift is in both directions: someone tidying up translates
      Telefonseelsorge into something nobody can dial, or someone adding a region writes the

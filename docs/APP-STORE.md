@@ -21,39 +21,51 @@ Both fields are 30 characters. The name carries the most ranking weight of any f
 subtitle the second most. Neither may contain prices, other apps' names, or unverifiable
 claims (Guideline 2.3.7).
 
-### ⚠ Name availability — checked 2026-08-18, and the result is a problem
+### Name availability — checked 2026-08-18
 
-Apple's search API and RDAP are blocked from the environment this was checked in, so this is
-**web-search evidence, not an authoritative check**. `scripts/check-name.mjs` still needs to
-be run somewhere with outbound HTTPS, and App Store Connect is the only authority.
+Apple's search API and RDAP are blocked from the environment this was checked in, so what
+follows is **web-search evidence, not an authoritative check**. `scripts/check-name.mjs`
+still needs to run somewhere with outbound HTTPS, and App Store Connect is the only
+authority on whether a name can be claimed.
 
-With that caveat, the App Store already carries at least six apps named Cairn: *Cairn –
-Hiking Safety Tracker* (id964300002, established and well-rated), *Cairn Maps*, *Cairn
-Tasks*, *Cairn: Stone Balancing*, *CAIRN Strength*, and *Cairn Financial Group*.
+**Anneal returned no App Store result at all**, which is why it is the name. It is also the
+only candidate checked that came back completely clear.
 
-**This probably does not block submission.** Apple's uniqueness rule applies to the exact
-name string, and `Cairn: Body Image Anxiety` is very likely free. **The damage is to brand
-search**, and for this product that is the expensive kind. `docs/GROWTH.md` §1.4 establishes
-that Cairn cannot buy acquisition and §5.2–5.3 rank the channels accordingly: charities,
-clinician referral, peer recommendation. Every one of those ends with somebody typing the
-name into search. If that search returns a decade-old hiking safety tracker, the channel
-leaks at the last step — which is the same defect that disqualified the previous name, in a
-different disguise.
+Two earlier names were rejected on this evidence, and the reasoning is worth keeping because
+it is the same trap twice:
 
-Two alternates were checked the same way and appear clear: **Anneal** (no App Store result at
-all) and **Ballast** (nothing in this category). **Stillpoint should be ruled out** for a
-different and worse reason — *Stillpoint: Anxiety & Panic* is a private on-device anxiety
-tracker with no accounts and no analytics, which is a near-identical product and positioning.
+- **Steady** — a common word, heavily used across the store.
+- **Cairn** — at least six apps already carry it, including *Cairn – Hiking Safety Tracker*
+  (id964300002, established and well-rated), *Cairn Maps*, *Cairn Tasks*, *Cairn: Stone
+  Balancing*, *CAIRN Strength* and *Cairn Financial Group*.
+
+Neither would necessarily have blocked submission — Apple's uniqueness rule applies to the
+exact name string, and `Cairn: Body Image Anxiety` was very likely free. **The damage is to
+brand search**, and for this product that is the expensive kind. §1.4 of `docs/GROWTH.md`
+establishes that this app cannot buy acquisition, and §5.2–5.3 rank the channels
+accordingly: charities, clinician referral, peer recommendation. Every one of those ends
+with somebody typing the name into a search field. If that search returns a decade-old
+hiking tracker, the channel leaks at the last step.
+
+**Stillpoint was rejected for a worse reason** and should not be revisited: *Stillpoint:
+Anxiety & Panic* is a private on-device anxiety tracker with no accounts and no analytics —
+the same product with the same positioning.
+
+**Anneal's cost, stated plainly:** most people do not know the word. It means heating metal
+and cooling it slowly so internal stress is released and it stops being brittle — not
+softer, stronger. That is the most accurate description of the twelve-week protocol available
+in one word, and it is a genuinely good press line (§5.6), but the subtitle has to carry the
+explanation because the name will not.
 
 ### App name
 
 | # | Name | Chars | Notes |
 |---|---|---|---|
-| A | `Cairn: Body Image Anxiety` | 25 | Holds the two head terms this app can plausibly compete on and the exact phrase people type. |
-| B | `Cairn: Body Image Support` | 25 | Softer, on-voice, but "Support" is a near-zero-volume connector — it buys a feeling, not a ranking. |
-| C | `Cairn – Appearance Anxiety` | 26 | The app's own vocabulary. Precise, much lower volume, and gives up "body image" entirely. |
+| A | `Anneal: Body Image Anxiety` | 26 | Holds the two head terms this app can plausibly compete on and the exact phrase people type. |
+| B | `Anneal: Body Image Support` | 26 | Softer, on-voice, but "Support" is a near-zero-volume connector — it buys a feeling, not a ranking. |
+| C | `Anneal – Appearance Anxiety` | 27 | The app's own vocabulary. Precise, much lower volume, and gives up "body image" entirely. |
 
-**Recommendation: A — `Cairn: Body Image Anxiety`.**
+**Recommendation: A — `Anneal: Body Image Anxiety`.**
 
 "Body image" is the head term for this category. "Anxiety" is enormous and unwinnable on
 its own, but it is not on its own here — it sits next to "body image", and Apple builds
@@ -64,7 +76,7 @@ for the keyword field, where it costs ten characters instead of a title slot.
 
 Avoid putting **BDD** or **dysmorphia** in the name. Both belong in the keyword field,
 where they rank identically for search purposes but are not sitting in the app's title
-implying that Cairn treats a diagnosed disorder. That distinction matters in §5.
+implying that Anneal treats a diagnosed disorder. That distinction matters in §5.
 
 ### Subtitle
 
@@ -152,7 +164,7 @@ ever cut, replace with `looks` (5 chars) and drop the trailing space.
 
 - **In-app purchase display names** are indexed, up to 30 characters each, and you have
   three products. They are shown to the customer in the purchase sheet, so they must stay
-  honest: `Cairn+ Yearly`, `Cairn+ Monthly`, `Cairn+ One-Time`. Do not stuff them.
+  honest: `Anneal+ Yearly`, `Anneal+ Monthly`, `Anneal+ One-Time`. Do not stuff them.
 - **Screenshot captions** are read by OCR and treated as ranking signal. This is a
   third-party finding rather than something Apple documents, but the captions in §4 should
   carry the vocabulary anyway, so act on it.
@@ -167,7 +179,7 @@ earns the tap.
 
 ### Above the fold
 
-> Appearance worry takes hours out of a day. Cairn counts those hours and helps you get
+> Appearance worry takes hours out of a day. Anneal counts those hours and helps you get
 > them back. Nothing leaves your phone.
 
 124 characters. Three facts, no adjectives, and the privacy claim lands inside the visible
@@ -176,9 +188,9 @@ window rather than four scrolls down where nobody sees it.
 ### Full description
 
 ```
-Appearance worry takes hours out of a day. Cairn counts those hours and helps you get them back. Nothing leaves your phone.
+Appearance worry takes hours out of a day. Anneal counts those hours and helps you get them back. Nothing leaves your phone.
 
-Most people who worry about how they look lose between one and five hours a day to it — thinking about it, checking, getting ready, avoiding things, and recovering afterwards. Cairn is built around that one number, and around getting it down.
+Most people who worry about how they look lose between one and five hours a day to it — thinking about it, checking, getting ready, avoiding things, and recovering afterwards. Anneal is built around that one number, and around getting it down.
 
 Progress here is never "you look better." Progress is hours reclaimed, checking urges resisted, and distress falling across repeated practice. There is no photo capture, no rating, no score about your appearance, and no before-and-after. Those things are the problem, not the measure of it.
 
@@ -210,11 +222,11 @@ No account, no sign-in, no cloud, no analytics, no tracker. What you write stays
 
 STEADY+
 
-Cairn+ unlocks weeks 2 to 12, all twelve readings, unlimited thought records, mirror practice, behavioural experiments, and the full progress history.
+Anneal+ unlocks weeks 2 to 12, all twelve readings, unlimited thought records, mirror practice, behavioural experiments, and the full progress history.
 
-Cairn+ Yearly: 14-day free trial, then $79.99 per year. Renews annually until cancelled.
-Cairn+ Monthly: 14-day free trial, then $12.99 per month. Renews monthly until cancelled.
-Cairn+ One-Time: $149 once. Not a subscription.
+Anneal+ Yearly: 14-day free trial, then $79.99 per year. Renews annually until cancelled.
+Anneal+ Monthly: 14-day free trial, then $12.99 per month. Renews monthly until cancelled.
+Anneal+ One-Time: $149 once. Not a subscription.
 
 Payment is charged to your Apple Account when you confirm the purchase. A subscription renews automatically unless auto-renew is switched off at least 24 hours before the period ends. Your account is charged for renewal within 24 hours of the end of the current period. Manage or cancel in your Apple Account settings. Any unused part of a free trial is forfeited if you buy a subscription during the trial.
 
@@ -225,7 +237,7 @@ Terms of use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 BEFORE YOU START
 
-Cairn is an educational self-help tool. It is not therapy, not a diagnosis, not medical advice, and not a medical device. It does not treat or cure anything. If appearance concerns are taking hours out of most days, or you are avoiding work, school or people, that is worth a proper assessment — the Support tab has crisis lines and guidance on finding someone who works with body dysmorphic disorder or OCD-spectrum conditions specifically.
+Anneal is an educational self-help tool. It is not therapy, not a diagnosis, not medical advice, and not a medical device. It does not treat or cure anything. If appearance concerns are taking hours out of most days, or you are avoiding work, school or people, that is worth a proper assessment — the Support tab has crisis lines and guidance on finding someone who works with body dysmorphic disorder or OCD-spectrum conditions specifically.
 
 If you are having thoughts of harming yourself, that means today rather than eventually. The Support tab is one tap from every screen and it is free.
 ```
@@ -288,17 +300,17 @@ number and takes days to weeks.
 
 **What to change:** submit from an Organization developer account, with the seller name
 matching the entity — which, as of the publisher decision in `legal/entity.json`, is
-**Cairn's own entity, not SOAR's**. So the SOAR developer account is not the one to submit
+**Anneal's own entity, not SOAR's**. So the SOAR developer account is not the one to submit
 from, and the bundle identifier `com.borntosoar.steady` is wrong twice over — SOAR's
 namespace, and the app's former name; fix it
 **before the first submission**, because a bundle ID is permanent afterwards and binds the
 app to the account that first registers it (see `legal/README.md` §3.6).
 
-The Cairn entity therefore needs its own Organization enrolment, and that needs a D-U-N-S
+The Anneal entity therefore needs its own Organization enrolment, and that needs a D-U-N-S
 number, which takes days to weeks to issue. It is the longest-lead item on the list and it
 cannot start until the entity in §3.2 of `legal/README.md` actually exists.
 
-Cairn's actual posture helps the argument if it is ever contested: it provides no
+Anneal's actual posture helps the argument if it is ever contested: it provides no
 healthcare service, holds no sensitive user information off-device, and has no account.
 Put that in the review notes. But do not rely on it.
 
@@ -349,7 +361,7 @@ Two further tripwires in the same category:
 
 **What to change:** write App Review notes. Draft:
 
-> Cairn is a twelve-week self-help programme for appearance anxiety. It is educational; it
+> Anneal is a twelve-week self-help programme for appearance anxiety. It is educational; it
 > does not diagnose or treat, and it is not a medical device. Everything is stored locally —
 > no account, no server, no analytics.
 >
@@ -379,7 +391,7 @@ conspicuously, in the purchase flow, without the user having to tap a link**:
 
 | Required | Present today? |
 |---|---|
-| Title of the auto-renewing subscription | Partial — the rows say "Yearly" / "Monthly", not "Cairn+ Yearly". Use the IAP display name. |
+| Title of the auto-renewing subscription | Partial — the rows say "Yearly" / "Monthly", not "Anneal+ Yearly". Use the IAP display name. |
 | Length of subscription | **Missing as words.** `$79.99/yr` is a price string; the renewal period is never stated. |
 | Price, and price per unit | Yes — `$79.99/yr` and `$6.67 a month`. |
 | Statement that it renews automatically until cancelled | **Missing.** The paywall says "Cancel any time in your app store settings", which is not the same statement. |
@@ -401,7 +413,7 @@ conspicuously, in the purchase flow, without the user having to tap a link**:
 3. Add the same two links to the App Store Connect metadata (Privacy Policy URL field, and
    the EULA field or the description).
 4. **Rename the "Lifetime" plan.** App Review has repeatedly objected to "lifetime" on the
-   grounds that no developer can guarantee content for a customer's lifetime. `Cairn+
+   grounds that no developer can guarantee content for a customer's lifetime. `Anneal+
    One-Time`, labelled "Pay once" in the UI, carries the same meaning with none of the risk.
 5. The paywall promises "We will remind you two days before it ends." `MOMENT_COPY`
    contains a `trial-ending` moment, so the copy exists — confirm it actually fires, via a
@@ -428,7 +440,7 @@ free tier that is genuinely usable.
   category invites 1.4.1 scrutiny by default and buys nothing in return.
 - **`content/proof.ts` on the paywall.** `d = 1.22`, `12 weeks`, `2 in 100` are effect
   sizes and prevalence figures rendered next to a purchase button. In isolation that reads
-  as an efficacy claim about Cairn. It is saved by `PROOF_QUALIFIER` — *"Cairn is not
+  as an efficacy claim about Anneal. It is saved by `PROOF_QUALIFIER` — *"Anneal is not
   therapy and has not itself been trialled. These are findings about the methods the
   exercises are built from"* — which `safety.test.mjs` already asserts travels with them.
   **Keep that test. Keep the qualifier visually adjacent to the figures, not below the
@@ -465,7 +477,7 @@ be submitted or updated at all.** Answers in §6.
 The specific risk: the questionnaire's **Medical or Treatment Information** descriptor
 covers "content that provides diagnoses or guidance around the management of medical
 conditions or health and wellness (medication guidance, emergency medical care, or
-treatment information)." Cairn's twelve modules discuss body dysmorphic disorder by name,
+treatment information)." Anneal's twelve modules discuss body dysmorphic disorder by name,
 describe what CBT and ERP involve, name medication as a conversation to have with a doctor,
 define a behavioural threshold for seeking professional help, and carry crisis lines. That
 is frequent, not infrequent. **Answer honestly and take 16+.** Under-rating triggers 2.3.6,
@@ -485,7 +497,7 @@ Two related items:
 
 - **Third-party SDK privacy manifests** have been required since 2024. RevenueCat ships
   one; confirm it is present in the build.
-- **The app's own `PrivacyInfo.xcprivacy`** must declare required-reason API usage. Cairn
+- **The app's own `PrivacyInfo.xcprivacy`** must declare required-reason API usage. Anneal
   persists through AsyncStorage, which is `NSUserDefaults` underneath — reason code
   `CA92.1` (access to app group / same-app data). Expo covers some of this; verify rather
   than assume.
@@ -630,7 +642,7 @@ Blockers first.
       changing — see `docs/LOCALISATION.md` §2
 - [x] **Governing law jurisdiction chosen: Canada.** `legal/terms-of-use.md` §15, standard
       Canadian construction, non-exclusive jurisdiction, no arbitration clause
-- [x] **Publisher decided: Cairn's own entity, separate from SOAR.** Not the SOAR entity and
+- [x] **Publisher decided: Anneal's own entity, separate from SOAR.** Not the SOAR entity and
       not its Apple account. Recorded in `legal/entity.json` → `_DECIDED`
 - [ ] **`legal/entity.json` filled in** — entity name, entity kind, registered address,
       province, site origin. These five are the whole remaining legal gap, they live in
@@ -638,10 +650,10 @@ Blockers first.
       and `node site/build.mjs` refuses to publish while any is null. Filling it is a single
       edit; everything downstream is already wired and verified end to end.
       Each still needs a real answer from a person:
-      - **Entity name is not "Cairn".** The brand is not a party to a contract. It has to be
-        a registered corporation (`Cairn Technologies Inc.`, subject to a NUANS search) or
-        the human behind it (`Firstname Lastname, carrying on business as Cairn`). The build
-        rejects the bare app name. Separately: the App Store name `Cairn` must be free —
+      - **Entity name is not "Anneal".** The brand is not a party to a contract. It has to be
+        a registered corporation (`Anneal Technologies Inc.`, subject to a NUANS search) or
+        the human behind it (`Firstname Lastname, carrying on business as Anneal`). The build
+        rejects the bare app name. Separately: the App Store name `Anneal` must be free —
         names are unique store-wide and it is a common word, so check it early
       - **Province** decides the governing-law clause and which consumer and privacy regime
         applies. Spell it in full; the build rejects `ON`. **If it is Quebec** the documents
@@ -680,7 +692,7 @@ Blockers first.
 - [x] `trial-ending` reminder actually fires (5.4) — `__tests__/trial-reminder.test.mjs`
       proves it fires on each of the last three days, outranks every other moment, survives
       the distress suppression, and cannot be dismissed away. **Known gap:** it is in-app
-      only, so a user who does not open Cairn that week is not reminded. The paywall copy
+      only, so a user who does not open Anneal that week is not reminded. The paywall copy
       was corrected to say so rather than overstate it. A local notification is the real
       fix and is the one notification this app has a clean justification for — service, not
       engagement

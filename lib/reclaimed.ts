@@ -1,6 +1,6 @@
 /* The reclaimed-hours engine.
  *
- * This is the only headline metric in Cairn. It answers one question:
+ * This is the only headline metric in Anneal. It answers one question:
  *   "How many hours did you get back this week, compared to where you started?"
  *
  * Why time and not distress: distress is the clinical variable but it is abstract, and

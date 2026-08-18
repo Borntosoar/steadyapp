@@ -94,11 +94,11 @@ export default function LearnModuleScreen() {
           <BodySm style={{ marginTop: space.sm }}>{mod.kicker}</BodySm>
           <Card tone="accent" style={{ marginTop: space.lg }}>
             <RichText>
-              This one is part of Cairn+. Week one is free, and so is every calming exercise
+              This one is part of Anneal+. Week one is free, and so is every calming exercise
               and all crisis support. Those never go behind anything.
             </RichText>
           </Card>
-          <Button label="See Cairn+" onPress={() => router.push('/paywall')} />
+          <Button label="See Anneal+" onPress={() => router.push('/paywall')} />
           <Button label="Back" variant="ghost" onPress={() => router.back()} style={{ marginTop: space.sm }} />
         </View>
       </Screen>
@@ -235,7 +235,7 @@ export default function LearnModuleScreen() {
                       <Text maxFontSizeMultiplier={IN_FIXED_SHAPE} style={[t.label, { color: c.accentDeep }]}>{next.week}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Caption>{nextLocked ? 'Next · Cairn+' : 'Next'}</Caption>
+                      <Caption>{nextLocked ? 'Next · Anneal+' : 'Next'}</Caption>
                       <H3 style={{ marginTop: 2 }}>{next.title}</H3>
                       <Caption style={{ marginTop: 2 }} numberOfLines={2}>
                         {next.kicker}

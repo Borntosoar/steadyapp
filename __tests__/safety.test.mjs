@@ -178,7 +178,7 @@ describe('the source tree is what SAFETY.md says it is', () => {
        bad stretch. No network access of its own — it asks the OS to show a system sheet. */
     'expo-store-review',
     /* expo-file-system is the one package on this list that CAN reach the network:
-       `downloadAsync` and `uploadAsync` are part of its surface. Cairn uses it for exactly
+       `downloadAsync` and `uploadAsync` are part of its surface. Anneal uses it for exactly
        one thing — writing the export to the cache directory so the iOS share sheet offers
        "Save to Files" instead of leading with Messages — and the test below asserts the
        networking half is never touched. Admitted deliberately, with a guard, rather than
@@ -414,7 +414,7 @@ describe('the source tree is what SAFETY.md says it is', () => {
  * These are the lines that should cost somebody a failing build to cross. */
 
 describe('the money never touches the safety surfaces', () => {
-  /* Screens somebody reaches while distressed. No upsell, no upgrade link, no Cairn+
+  /* Screens somebody reaches while distressed. No upsell, no upgrade link, no Anneal+
      mention, in any state, including after a completed exercise. */
   /* components/Finish.tsx is on this list because the completion screens for grounding and
      urge surfing now live inside it. Without it, those two screens keep passing this grep
@@ -433,7 +433,7 @@ describe('the money never touches the safety surfaces', () => {
     test(`${path} contains no upgrade surface`, () => {
       const f = FILES.find((x) => x.path === path);
       assert.ok(f, `${path} is missing`);
-      assert.doesNotMatch(f.src, /\/paywall|Cairn\+|useEntitlement|PRICING/,
+      assert.doesNotMatch(f.src, /\/paywall|Anneal\+|useEntitlement|PRICING/,
         `${path} is a screen people reach at their worst — it must never sell anything`);
     });
   }
@@ -511,7 +511,7 @@ describe('the money never touches the safety surfaces', () => {
 
   test('no fabricated social proof', () => {
     for (const f of FILES) {
-      // Ratings, review counts, and "join N people" claims about users Cairn lacks.
+      // Ratings, review counts, and "join N people" claims about users Anneal lacks.
       assert.doesNotMatch(f.src, /rated \d|\d[\d,.]*\+? (users|reviews|ratings|members)|join \d/i,
         `${f.path} claims social proof this app cannot substantiate`);
     }

@@ -101,7 +101,7 @@ export const PAYWALL_COPY = {
     title: 'That is not a problem',
     body: 'Take three months on us. No form, no questions, nothing to explain. If it helps and you can pay later, you can. If not, that is fine too.',
     confirm: 'Give me three months',
-    granted: 'Done. Three months of Cairn+, starting now.',
+    granted: 'Done. Three months of Anneal+, starting now.',
   },
 };
 
@@ -164,7 +164,7 @@ export const MOMENT_COPY = {
   'rate-app': {
     eyebrow: 'One small thing',
     title: 'Would you say so publicly?',
-    body: 'Cairn has no ad budget. People find it by being told about it. If it has helped, a review is all of our marketing. If it has not, saying that is the honest thing.',
+    body: 'Anneal has no ad budget. People find it by being told about it. If it has helped, a review is all of our marketing. If it has not, saying that is the honest thing.',
     action: 'Write a review',
     dismiss: 'No thanks',
   },
@@ -185,11 +185,11 @@ export const MOMENT_COPY = {
 export const STORAGE_COPY = {
   unreadable: {
     title: 'Something is already saved here',
-    body: 'Cairn found data on this phone it could not read. It has left that data alone and paused saving, so nothing has been written over. Close the app all the way and open it again. If it reads next time, everything will be there.',
+    body: 'Anneal found data on this phone it could not read. It has left that data alone and paused saving, so nothing has been written over. Close the app all the way and open it again. If it reads next time, everything will be there.',
   },
   locked: {
     title: 'Saving is paused',
-    body: 'Cairn could not read this phone. It has stopped writing rather than risk covering something up. Close the app all the way and open it again.',
+    body: 'Anneal could not read this phone. It has stopped writing rather than risk covering something up. Close the app all the way and open it again.',
   },
   cannotSave: {
     title: 'This phone is not taking new writes',
@@ -205,14 +205,14 @@ export const STORAGE_COPY = {
      reading on a bad day. Nothing is lost and nothing needs doing. */
   notEncrypted: {
     title: 'Saved, but not scrambled this time',
-    body: 'Cairn normally scrambles what you write so it is unreadable to anything else on this phone. It could not reach the phone’s key store just now, so this session is being saved in plain text instead. It is still only on this device and still goes nowhere. Closing the app all the way and opening it again usually fixes it.',
+    body: 'Anneal normally scrambles what you write so it is unreadable to anything else on this phone. It could not reach the phone’s key store just now, so this session is being saved in plain text instead. It is still only on this device and still goes nowhere. Closing the app all the way and opening it again usually fixes it.',
   },
 };
 
 /* ---------- disclaimer ---------- */
 
 export const DISCLAIMER =
-  "Cairn is a self-help tool for learning. It isn't therapy, a diagnosis, or medical advice. If things are severe, or getting worse, please talk to a doctor or a therapist. The Support tab has options.";
+  "Anneal is a self-help tool for learning. It isn't therapy, a diagnosis, or medical advice. If things are severe, or getting worse, please talk to a doctor or a therapist. The Support tab has options.";
 
 export const CONTENT_FOOTER =
   'General information for learning. It does not replace care from a doctor.';

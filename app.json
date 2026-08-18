@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "Cairn",
-    "slug": "cairn",
+    "name": "Anneal",
+    "slug": "anneal",
     "icon": "./assets/icon.png",
     "version": "2.0.0",
     "orientation": "portrait",
-    "scheme": "cairn",
+    "scheme": "anneal",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "Cairn uses the camera only as a live mirror for guided practice. Nothing is ever recorded, captured, or saved."
+        "NSCameraUsageDescription": "Anneal uses the camera only as a live mirror for guided practice. Nothing is ever recorded, captured, or saved."
       },
       "config": {
         "usesNonExemptEncryption": false
@@ -60,7 +60,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Cairn uses the camera only as a live mirror for guided practice. Nothing is ever recorded, captured, or saved.",
+          "cameraPermission": "Anneal uses the camera only as a live mirror for guided practice. Nothing is ever recorded, captured, or saved.",
           "recordAudioAndroid": false,
           "microphonePermission": false,
           "barcodeScannerEnabled": false

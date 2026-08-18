@@ -1,4 +1,4 @@
-/* Who publishes Cairn, resolved once and substituted into the legal documents.
+/* Who publishes Anneal, resolved once and substituted into the legal documents.
  *
  * WHY THIS EXISTS. Before it did, the publisher's identity appeared as
  * `[LEGAL ENTITY NAME — TODO]` in eight places across five documents, and the registered
@@ -12,7 +12,7 @@
  * place, and the checks below make a partial fill impossible to publish.
  *
  * WHY NULL RATHER THAN A PLACEHOLDER STRING. A null is a question that has not been answered.
- * A string like "Cairn Inc." is an answer, and a wrong one — it reads as filled-in to every
+ * A string like "Anneal Inc." is an answer, and a wrong one — it reads as filled-in to every
  * subsequent reader, including whichever lawyer reviews this. Nothing here invents a fact
  * about a legal entity that does not exist yet.
  *
@@ -68,7 +68,7 @@ const TRADE_NAME_FORMS = [
  *  known and is not in here; `quebecCounselConfirmed` is a gate rather than a field, handled
  *  separately below.
  *
- *  `siteOrigin` joined this list when Cairn became its own entity. It had been
+ *  `siteOrigin` joined this list when Anneal became its own entity. It had been
  *  `borntosoar.github.io/steadyapp` in `constants/links.ts` and `steadyapp.co` here — two
  *  different answers, neither checked against the other, one of them a URL under an account
  *  belonging to a different company. It is the address printed in the cookie policy and the
@@ -107,9 +107,9 @@ export function tokensUsed(dir = LEGAL_DIR) {
 /** Whether `name` is a name a contract can actually be against.
  *
  *  THE MISTAKE THIS CATCHES. The decision "publish this under a separate entity called
- *  Cairn" is a decision about a brand. `name` is not the brand — it is the party to a
+ *  Anneal" is a decision about a brand. `name` is not the brand — it is the party to a
  *  contract, and terms of use are only enforceable by, and against, a legal person that
- *  exists. "Cairn" on its own is neither: until a corporation of that name is registered
+ *  exists. "Anneal" on its own is neither: until a corporation of that name is registered
  *  or a human declares they trade under it, there is nobody on the other side of §42 of the
  *  terms. A privacy policy naming a company that does not exist is not a smaller problem
  *  than one naming the wrong company; PIPEDA's accountability section needs somebody real to

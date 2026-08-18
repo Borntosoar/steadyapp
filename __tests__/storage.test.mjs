@@ -150,7 +150,7 @@ describe('import refuses things that are not backups', () => {
     assert.equal(importJson(''), null);
   });
 
-  test('a JSON file that is not a Cairn backup is rejected', () => {
+  test('a JSON file that is not a Anneal backup is rejected', () => {
     // Silently replacing somebody's journal with their shopping list would be unforgivable.
     assert.equal(importJson('{"items":["milk"]}'), null);
     assert.equal(importJson('[1,2,3]'), null);
@@ -338,7 +338,7 @@ describe('migrations are safe to re-apply', () => {
 });
 
 describe('the storage keys survive a rename of the app', () => {
-  /* THE FAILURE THIS EXISTS FOR. The app was renamed Steady → Cairn across ~300 occurrences
+  /* THE FAILURE THIS EXISTS FOR. The app was renamed Steady → Anneal across ~300 occurrences
      in 40 files. These two strings, and `steady.device.key.v1` in hooks/deviceKey.ts, were
      the only ones deliberately left alone — they are not brand, they are where real data
      already lives.

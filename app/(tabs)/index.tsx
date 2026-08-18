@@ -175,7 +175,7 @@ export default function Today() {
             <View style={{ marginTop: space.sm }}>
               <Text style={[t.display, { color: c.ink }]}>How is today going?</Text>
               <BodySm style={{ marginTop: space.md, maxWidth: 320 }}>
-                Check in and Cairn starts working out how much time this is taking.
+                Check in and Anneal starts working out how much time this is taking.
               </BodySm>
             </View>
           )}
@@ -271,7 +271,7 @@ export default function Today() {
               /* Says "a person inside this app tapped this", which the URL cannot say — the
                  same URL is reachable from any link on the device. See hooks/navIntent.ts:
                  this is what lets the hard-day path log on open here while refusing to log
-                 for a `cairn://grounding?mode=hard` arriving from outside. */
+                 for a `anneal://grounding?mode=hard` arriving from outside. */
               markHardDayIntent();
               router.push('/grounding?mode=hard');
             }}

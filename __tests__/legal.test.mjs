@@ -54,8 +54,8 @@ describe('who publishes this is answered in exactly one place', () => {
   test('no document hard-codes the app name', () => {
     /* The same drift as the entity name, one field over — and likelier, because the product
        name appears in ordinary sentences where writing it out feels natural. It was renamed
-       once already (Steady → Cairn, ~300 occurrences across 40 files); the next rename should
-       be one edit to app.json, not another sweep. */
+       twice already (Steady → Cairn → Anneal, ~300 occurrences across 40 files each
+       time); the next rename should be one edit to app.json, not another sweep. */
     const brand = appName();
     for (const { file, md } of DOCS) {
       if (file === 'README.md') continue;
@@ -236,9 +236,9 @@ describe('the factual claims the documents make about the app', () => {
 });
 
 describe('the entity name has to be a legal person', () => {
-  /* The decision "publish Cairn under its own entity called Cairn" is a decision about a
+  /* The decision "publish Anneal under its own entity called Anneal" is a decision about a
      brand. `name` is a party to a contract. Those are different objects, and the gap between
-     them is invisible on the page: "Cairn" in the publisher line of a privacy policy looks
+     them is invisible on the page: "Anneal" in the publisher line of a privacy policy looks
      exactly as finished as a registered corporate name does. It is only wrong in the place
      it matters — a term enforced by, or against, a company that does not exist. */
   const base = {
@@ -259,11 +259,11 @@ describe('the entity name has to be a legal person', () => {
 
   test('a corporation must carry a legal suffix', () => {
     assert.match(
-      legalNameProblems({ ...base, kind: 'corporation', name: 'Cairn Technologies' })[0],
+      legalNameProblems({ ...base, kind: 'corporation', name: 'Anneal Technologies' })[0],
       /does not end in a legal suffix/
     );
-    for (const ok of ['Cairn Technologies Inc.', 'Cairn Labs Ltd.', 'Cairn Corp.',
-                      '1234567 Ontario Limited', 'Cairn Technologies Ltée']) {
+    for (const ok of ['Anneal Technologies Inc.', 'Anneal Labs Ltd.', 'Anneal Corp.',
+                      '1234567 Ontario Limited', 'Anneal Technologies Ltée']) {
       assert.deepEqual(legalNameProblems({ ...base, kind: 'corporation', name: ok }), [],
         `${ok} should be an acceptable corporate name`);
     }
@@ -271,17 +271,17 @@ describe('the entity name has to be a legal person', () => {
 
   test('a sole proprietorship is a human, named as one', () => {
     /* A sole proprietorship has no legal personality of its own. Publishing as
-       "Cairn Recovery" with kind "sole proprietorship" names nobody. */
+       "Anneal Recovery" with kind "sole proprietorship" names nobody. */
     assert.match(
-      legalNameProblems({ ...base, kind: 'sole proprietorship', name: 'Cairn Recovery' })[0],
+      legalNameProblems({ ...base, kind: 'sole proprietorship', name: 'Anneal Recovery' })[0],
       /without naming the person behind it/
     );
     assert.match(
-      legalNameProblems({ ...base, kind: 'sole proprietorship', name: 'Cairn Ltd.' })[0],
+      legalNameProblems({ ...base, kind: 'sole proprietorship', name: 'Anneal Ltd.' })[0],
       /no separate legal personality/
     );
-    for (const ok of ['Jane Doe', 'Jane Doe, carrying on business as Cairn',
-                      'Jane Doe o/a Cairn']) {
+    for (const ok of ['Jane Doe', 'Jane Doe, carrying on business as Anneal',
+                      'Jane Doe o/a Anneal']) {
       assert.deepEqual(legalNameProblems({ ...base, kind: 'sole proprietorship', name: ok }), [],
         `${ok} should be an acceptable sole-proprietor name`);
     }

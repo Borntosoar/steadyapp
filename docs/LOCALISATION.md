@@ -95,7 +95,7 @@ back the first time somebody looks at the non-English App Store markets.
 `docs/GROWTH.md` §2.6 puts it precisely, and it is the single best observation in that
 document:
 
-> `__tests__/copy.test.mjs` and `__tests__/readability.test.mjs` enforce Cairn's tone — no
+> `__tests__/copy.test.mjs` and `__tests__/readability.test.mjs` enforce Anneal's tone — no
 > shaming language, no appearance evaluation, no treatment claims, eighth-grade reading level
 > — **using English-language pattern matching.** Translate the app and the entire enforcement
 > mechanism silently stops covering the shipped product.
@@ -106,8 +106,8 @@ test still green. The app would *look* as safe as it does now and would not be.
 
 ### What specifically goes wrong
 
-- **The disclaimer.** "Cairn is not therapy and has not been trialled" is a legal position.
-  A translation that softens it into "Cairn is a treatment" is a medical claim in a
+- **The disclaimer.** "Anneal is not therapy and has not been trialled" is a legal position.
+  A translation that softens it into "Anneal is a treatment" is a medical claim in a
   jurisdiction whose regulator did not read the English.
 - **The crisis copy.** The hard-day path is written to be usable by somebody in real
   distress. Tone is the entire design, and tone is what machine translation loses first.

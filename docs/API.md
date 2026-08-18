@@ -1,6 +1,6 @@
 # API.md
 
-Cairn has no server, no account, no endpoints, and no network call anywhere in the
+Anneal has no server, no account, no endpoints, and no network call anywhere in the
 codebase. That is SAFETY.md §6 and it is the product, not an implementation detail. There
 is nothing here to write an OpenAPI spec about, and if you find yourself reaching for one,
 the feature you are about to add is the thing that breaks the promise.
@@ -323,7 +323,7 @@ regex in `__tests__/streak.test.mjs`. Two drafts failed it and were rewritten: `
 
 ### 2.3 `lib/reclaimed.ts`
 
-The only headline metric in Cairn. It answers one question: how many hours did you get
+The only headline metric in Anneal. It answers one question: how many hours did you get
 back this week, compared to where you started. Hours rather than distress because hours are
 concrete, they are what appearance preoccupation actually steals, and there is no way to
 reinterpret "hours reclaimed" as a statement about how somebody looks.
@@ -930,7 +930,7 @@ a faster later one and silently roll state back.
 
 ## 3. Integration seams
 
-These are the only two points in Cairn that will ever talk to something outside the
+These are the only two points in Anneal that will ever talk to something outside the
 device, and both are currently stubs. Neither is a server: one is a payments SDK reading a
 receipt, the other is an OS-level prompt. Both stay inside SAFETY.md §6.
 
@@ -1006,7 +1006,7 @@ if (moment.id === 'rate-app') {
    having a bad day to go and praise you in public is tone-deaf and a reliable way to
    collect one stars. `__tests__/safety.test.mjs` asserts a hard day silences every
    commercial and advocacy moment.
-4. **No custom review UI, no pre-prompt asking "are you enjoying Cairn?", no routing to
+4. **No custom review UI, no pre-prompt asking "are you enjoying Anneal?", no routing to
    the store listing on a "yes".** That pattern filters ratings, which is against store
    policy, and it is a second interruption charged against the same budget.
 5. **The scheduler stays in charge.** The decision to ask lives in `lib/moments.ts`. This

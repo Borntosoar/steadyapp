@@ -60,7 +60,7 @@ export default function Paywall() {
     return (
       <Screen>
         <View style={{ marginTop: space.xxxl }}>
-          <H1>You have Cairn+</H1>
+          <H1>You have Anneal+</H1>
           <Body style={{ marginTop: space.md, color: c.inkSoft }}>
             All twelve weeks, as much writing as you want, the full picture on Progress, and
             export. All open.
@@ -96,7 +96,7 @@ export default function Paywall() {
      paywall exists not to do. The link says exactly what is behind it. */
   const plans: { key: Plan; label: string; price: string; note?: string; badge?: string }[] = [
     /* "Best value" is arithmetic — it is the lowest per-month figure on the list. A badge
-       reading "Most popular" would be a claim about users Cairn does not have. */
+       reading "Most popular" would be a claim about users Anneal does not have. */
     { key: 'yearly', label: 'Yearly', price: PRICING.yearly, note: `Works out at ${PRICING.yearlyPerMonth}`, badge: 'Best value' },
     { key: 'monthly', label: 'Monthly', price: PRICING.monthly, note: 'Leave whenever, no discount to lose' },
     ...(showLifetime
@@ -166,7 +166,7 @@ export default function Paywall() {
         <View style={{ paddingHorizontal: space.lg, marginTop: space.xl }}>
           {/* Trust content above the price, not below. In this category trust IS the
               conversion lever, and here it means evidence, privacy and refund clarity
-              rather than testimonials — Cairn has no users to quote and will not invent
+              rather than testimonials — Anneal has no users to quote and will not invent
               any. See .claude/skills/value-first-growth. */}
           <Rule />
           <H2 style={{ marginTop: space.lg }}>Why these twelve weeks</H2>
@@ -208,7 +208,7 @@ export default function Paywall() {
             <Row style={{ marginTop: space.lg, marginBottom: space.sm }}>
               <View style={{ flex: 1 }} />
               <Caption style={{ width: 66, textAlign: 'center' }}>Free</Caption>
-              <Label style={{ width: 66, textAlign: 'center', color: c.accentDeep }}>Cairn+</Label>
+              <Label style={{ width: 66, textAlign: 'center', color: c.accentDeep }}>Anneal+</Label>
             </Row>
             {TIER_COMPARISON.map((row) => (
               <Row
@@ -237,7 +237,7 @@ export default function Paywall() {
 
           <View style={{ marginTop: space.xxl }}>
             <Rule />
-            <H2 style={{ marginTop: space.lg }}>Cairn+</H2>
+            <H2 style={{ marginTop: space.lg }}>Anneal+</H2>
             {/* "on either subscription", not "then whichever of these you pick". Once the
                 one-off option is disclosed the list holds a product with no trial at all,
                 and the shorter sentence promised the free month across all three. */}
@@ -332,7 +332,7 @@ export default function Paywall() {
                 made that obvious. The reminder is an in-app card: it fires on each of the
                 last three days, outranks every other moment, and survives the distress
                 suppression that silences everything else — but somebody who does not open
-                Cairn during that week is not reminded at all. For an app deliberately built
+                Anneal during that week is not reminded at all. For an app deliberately built
                 to be missable, with no streak and no nagging, that is a realistic person
                 rather than an edge case.
                 So the sentence says where the reminder appears, and puts the mechanism that
@@ -342,7 +342,7 @@ export default function Paywall() {
             {plan !== 'lifetime' && (
               <BodySm style={{ marginTop: space.xs, textAlign: 'center', color: c.inkFaint }}>
                 Cancel any time in your app store settings, in fewer taps than it took to
-                start. Cairn will also show you a reminder here in the last two days.
+                start. Anneal will also show you a reminder here in the last two days.
               </BodySm>
             )}
             {/* Guideline 3.1.2 wants these reachable from inside the app, adjacent to the

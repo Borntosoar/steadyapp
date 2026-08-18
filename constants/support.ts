@@ -27,7 +27,7 @@ import type { SupportRegion, DirectoryLine } from '../types';
  *      never busy, and it was missing from the fallback entirely.
  *   3. THE APP IS ENGLISH, THE SERVICE NAMES ARE NOT, AND THAT IS NOT A CONTRADICTION.
  *
- *      Cairn's interface language is English and stays English — see docs/LOCALISATION.md
+ *      Anneal's interface language is English and stays English — see docs/LOCALISATION.md
  *      for the decision and the reasoning. So everything in this file that is the APP
  *      SPEAKING is in English: region labels, notes, and the word "Emergency".
  *

@@ -37,9 +37,10 @@ import { seal, open, isSealed } from './crypto.ts';
 /* The key never changes again. Versioning happens inside the envelope; the `.v2` suffix is
    a historical artefact of the first release and renaming it now would strand real data.
 
-   ⚠ THE `steady.` PREFIX IS NOT A LEFTOVER. The app was called Steady before it was called
-   Cairn, and these two keys — plus `steady.device.key.v1` in hooks/deviceKey.ts — were the
-   only strings deliberately left behind by that rename. They are not brand. They are the
+   ⚠ THE `steady.` PREFIX IS NOT A LEFTOVER. The app was called Steady, then briefly
+   Cairn, before it was called Anneal. These two keys — plus `steady.device.key.v1` in
+   hooks/deviceKey.ts — are the only strings deliberately left behind by both renames, and
+   they keep the *first* name on purpose. They are not brand. They are the
    addresses real data already lives at. Renaming them migrates nothing: it points the app
    at an empty key and silently orphans every existing user's twelve weeks of journal,
    urges and streak, with the old data still on the device and unreachable. If a rename is
@@ -753,7 +754,7 @@ export function importJson(raw: string): AppState | null {
     const version = versioned ? (enveloped.v as number) : 2;
     const data = versioned ? obj(enveloped.data) : enveloped;
     // A file with none of the expected collections is somebody's shopping list, not a
-    // Cairn backup, and silently replacing their journal with it would be unforgivable.
+    // Anneal backup, and silently replacing their journal with it would be unforgivable.
     if (!Array.isArray(data.checkIns) && !Array.isArray(data.thoughtRecords) && !data.profile) {
       return null;
     }

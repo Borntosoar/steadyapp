@@ -125,7 +125,7 @@ export function useEntitlement() {
      *  `isEntitled` returns true for forever. The comment called it a v1 stub, but the
      *  `.catch(() => null)` above collapses "the network failed" into the same `null` as
      *  "no provider is wired", so the moment RevenueCat lands this becomes live: airplane
-     *  mode, one tap on Restore, permanent Cairn+ with no receipt. In an app that is
+     *  mode, one tap on Restore, permanent Anneal+ with no receipt. In an app that is
      *  deliberately offline-capable end to end, staying offline is a normal way to use it,
      *  not a corner case.
      *

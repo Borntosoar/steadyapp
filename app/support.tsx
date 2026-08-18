@@ -173,12 +173,12 @@ export default function Support() {
 
           <Pressable
             accessibilityRole="link"
-            accessibilityLabel="What Cairn is and is not, opens in your browser"
+            accessibilityLabel="What Anneal is and is not, opens in your browser"
             onPress={() => Linking.openURL(LINKS.disclaimer).catch(() => {})}
             style={({ pressed }) => ({ paddingTop: space.lg, paddingBottom: space.md, minHeight: 44, opacity: pressed ? 0.6 : 1 })}
           >
             <BodySm style={{ color: c.inkSoft, textDecorationLine: 'underline' }}>
-              What Cairn is, and what it is not
+              What Anneal is, and what it is not
             </BodySm>
           </Pressable>
         </View>

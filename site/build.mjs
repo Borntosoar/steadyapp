@@ -112,14 +112,14 @@ const shell = (title, description, body) => `<!doctype html>
 <body>
   <div class="wrap">
     <header class="site">
-      <a class="brand" href="/">Cairn</a>
+      <a class="brand" href="/">Anneal</a>
       <nav>
       ${nav}
       </nav>
     </header>
     ${body}
     <footer class="site">
-      <p>Cairn is a self-help tool. It is not therapy, not a diagnosis, and not a substitute
+      <p>Anneal is a self-help tool. It is not therapy, not a diagnosis, and not a substitute
       for professional care. If you are in danger right now, contact your local emergency
       number or a crisis line — <a href="https://findahelpline.com">findahelpline.com</a>
       lists verified services in over 130 countries.</p>
@@ -171,7 +171,7 @@ for (const p of loaded) {
   const first = md.match(/^#\s+(.+)$/m)?.[1] ?? p.nav;
   writeFileSync(
     join(OUT, `${p.slug}.html`),
-    shell(`${first} — Cairn`, `${p.nav} for the Cairn app.`, `<main>${html}</main>`)
+    shell(`${first} — Anneal`, `${p.nav} for the Anneal app.`, `<main>${html}</main>`)
   );
 }
 
@@ -181,7 +181,7 @@ for (const p of loaded) {
    arrive by pushing that down the page. */
 const home = `
 <main>
-  <h1>Cairn</h1>
+  <h1>Anneal</h1>
   <p class="lede">A twelve-week self-help programme for appearance anxiety and body
   dysmorphia. It runs entirely on your phone.</p>
 
@@ -195,7 +195,7 @@ const home = `
   </div>
 
   <h2>What it is</h2>
-  <p>Body dysmorphia takes hours out of a day. Cairn is built around that one measurable
+  <p>Body dysmorphia takes hours out of a day. Anneal is built around that one measurable
   thing: how much time appearance worry is taking, and whether it is going down. Twelve weeks,
   one new practice a week, and a short read explaining why each one works.</p>
   <p>It is a self-help tool built on the methods used in cognitive behavioural therapy for
@@ -219,7 +219,7 @@ const home = `
   tracker. What you write is stored on your device and scrambled so that other software on
   the phone cannot read it. We do not receive it — not because we promise not to, but because
   the app contains no code that could send it anywhere.</p>
-  <p>That also means there is no backup. If you delete the app it is gone, so Cairn lets you
+  <p>That also means there is no backup. If you delete the app it is gone, so Anneal lets you
   export a plain-text copy whenever you like, including one to take to a clinician. The
   <a href="/privacy.html">privacy policy</a> explains all of this properly.</p>
 
@@ -237,7 +237,7 @@ const home = `
 writeFileSync(
   join(OUT, 'index.html'),
   shell(
-    'Cairn — a twelve-week programme for appearance anxiety',
+    'Anneal — a twelve-week programme for appearance anxiety',
     'A twelve-week self-help programme for body dysmorphia and appearance anxiety. No photos, no account, and nothing leaves your phone.',
     home
   )

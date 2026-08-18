@@ -32,7 +32,7 @@ useful reality check and is discussed in §5.
 
 ---
 
-## 1. The market Cairn is actually in
+## 1. The market Anneal is actually in
 
 | Figure | Value | Source |
 |---|---|---|
@@ -78,7 +78,7 @@ shows itself to 100% of installs; a soft one shows itself to a self-selected
 minority who are already engaged, which mechanically inflates its view-conversion
 while depressing its install-conversion.
 
-**Do not treat the 5× figure as a target Cairn is failing to hit.** It is a
+**Do not treat the 5× figure as a target Anneal is failing to hit.** It is a
 comparison between two business models, and the model on the winning side of it
 is one this product has already declined for stated reasons (SAFETY.md §4, §12).
 
@@ -122,7 +122,7 @@ fitness app by accident.
 
 Annual subscribers are roughly **3× more valuable over 24 months** than monthly
 ones. This is the strongest, least ambiguous finding in the whole dataset, and
-Cairn's yearly-default is already on the right side of it.
+Anneal's yearly-default is already on the right side of it.
 
 ---
 
@@ -140,7 +140,7 @@ The Noom figure is the one worth staring at. It is roughly **4× the median**,
 and the mechanism is not the paywall design — it is that a quiz creates
 investment before the ask, and the answers then personalise everything after it.
 
-**Calm's onboarding**, which is the closest structural analogue to Cairn:
+**Calm's onboarding**, which is the closest structural analogue to Anneal:
 four quiz steps (what brings you here — sleep/anxiety/focus/self-improvement;
 experience level; preferred session length; reminder time), then a mandatory
 sign-up, then the paywall. The declared data immediately personalises the home
@@ -189,7 +189,7 @@ obvious candidate.
 
 ---
 
-## 5. How Cairn's current pricing sits against all this
+## 5. How Anneal's current pricing sits against all this
 
 Current: **$12.99/mo · $79.99/yr · $149 once · 14-day trial.**
 
@@ -221,15 +221,15 @@ ignorance of it.
 
 ---
 
-## 6. What transfers to Cairn, split three ways
+## 6. What transfers to Anneal, split three ways
 
 ### Adopt as-is
 
 1. **Show the paywall after 3–5 screens of demonstrated value, not at launch.**
-   40–60% better. Cairn's onboarding already does this; keep it.
+   40–60% better. Anneal's onboarding already does this; keep it.
 2. **Personalise the paywall with the user's own onboarding answers.** Noom's
    >10% versus a 2.7% median is the largest single mechanic in this document.
-   Cairn now shows the user's real reclaimed-hours figure on the paywall — that
+   Anneal now shows the user's real reclaimed-hours figure on the paywall — that
    is exactly this pattern, and it should be extended to the trial-ending and
    week-one cards.
 
@@ -254,7 +254,7 @@ ignorance of it.
    > introductory free trials in fixed durations only — 3 days, 1 week, 2 weeks,
    > 1 month, 2 months, 3 months, 6 months, 1 year — and 21 days is not among
    > them, so the recommendation above is not purchasable as written. The two
-   > options either side are 2 weeks (where Cairn was) and 1 month, and 1 month
+   > options either side are 2 weeks (where Anneal was) and 1 month, and 1 month
    > is the one inside the 17–32 day band the figure comes from. Shipped as
    > `PRICING.trialDays: 30`, with a test asserting the value stays in the set
    > the store can actually grant. Cost: weeks one to four go free, including the
@@ -263,7 +263,7 @@ ignorance of it.
    > watched it arrive on schedule has better grounds for renewing than any copy
    > on the paywall.
 5. **Treat notifications as a product surface with real engineering behind it**,
-   which is Duolingo's actual lesson. Cairn has no notifications at all yet.
+   which is Duolingo's actual lesson. Anneal has no notifications at all yet.
 
 ### Reshape before adopting
 
@@ -301,7 +301,7 @@ ignorance of it.
 changes that.** BDD affects roughly 2 in 100 adults. The top of the US grossing
 chart on 3 February 2026 was ChatGPT, YouTube, TikTok, Paramount+ — general-
 purpose products with total addressable markets of "everyone with a phone."
-Cairn's addressable market is about 2% of adults, most of whom have never heard
+Anneal's addressable market is about 2% of adults, most of whom have never heard
 the diagnosis named.
 
 What is realistically available:

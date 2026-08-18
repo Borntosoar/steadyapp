@@ -1,16 +1,16 @@
-# Cairn
+# Anneal
 
 A private body-image support app. Twelve weeks, organised around one number: **hours
 reclaimed**.
 
 Body-image distress steals time — one to five hours a day for most people, in thinking,
-checking, getting ready, avoiding, and recovering. Every screen in Cairn serves one
+checking, getting ready, avoiding, and recovering. Every screen in Anneal serves one
 question: *how many hours did you get back this week, and what did you do with them?*
 
 Progress is never "you look better." Progress is hours reclaimed, checking urges
 resisted, and distress falling across repeated exposures.
 
-> Cairn is an educational self-help tool. It isn't therapy, diagnosis, or medical
+> Anneal is an educational self-help tool. It isn't therapy, diagnosis, or medical
 > advice. Read [SAFETY.md](./SAFETY.md) before changing anything — the constraints in it
 > are load-bearing.
 
@@ -70,7 +70,7 @@ elapsed time** — falling behind is not representable in the data model.
 | 3 · Widen the lens | 7–9 | Avoidance drops | Attention training, longer sessions with an avoided condition added, behavioural experiments |
 | 4 · Live in the hours | 10–12 | You leave with a plan and a number | Values work, spending the reclaimed time, relapse plan |
 
-Week 1 is free. Weeks 2–12 are Cairn+ — but grounding, breathing, the daily check-in,
+Week 1 is free. Weeks 2–12 are Anneal+ — but grounding, breathing, the daily check-in,
 the hard-day path, and all crisis support are free forever and always within two taps.
 
 ---
@@ -206,7 +206,7 @@ app reads through that hook, so wiring a real provider touches one file — look
 
 ## Not a medical device
 
-Cairn does not diagnose or treat anything. If appearance concerns are taking hours of
+Anneal does not diagnose or treat anything. If appearance concerns are taking hours of
 most days, or you are avoiding work, school, or people, that is worth a proper
 assessment. The Support tab has crisis lines and guidance on finding a clinician who
 works with body dysmorphic disorder or OCD-spectrum conditions specifically.

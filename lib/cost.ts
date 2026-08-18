@@ -1,6 +1,6 @@
 /* The cost mirror.
  *
- * The first true thing Cairn shows anybody about their own life, roughly ninety seconds
+ * The first true thing Anneal shows anybody about their own life, roughly ninety seconds
  * after first open. Four answers in, one multiplication out.
  *
  * Day-one retention in health apps runs 20–30%: most people who install this are never
@@ -57,7 +57,7 @@ export function costMirror(baseline: Baseline | null): CostMirror {
       figure: '',
       unit: '',
       headline: 'Not much, on a typical day',
-      sub: 'Which is a good place to start from. Cairn is here to keep it there, and to give you somewhere to go on the days it climbs.',
+      sub: 'Which is a good place to start from. Anneal is here to keep it there, and to give you somewhere to go on the days it climbs.',
     };
   }
 
@@ -78,7 +78,7 @@ export function costMirror(baseline: Baseline | null): CostMirror {
 
 /** The line under the mirror. Names the target without promising to hit it. */
 export const COST_MIRROR_FOOTER =
-  'Cairn measures one thing and it is this number. Not how you look, and not how you feel about how you look. Hours.';
+  'Anneal measures one thing and it is this number. Not how you look, and not how you feel about how you look. Hours.';
 
 function round1(n: number): number {
   return Math.round(n * 10) / 10;

@@ -176,7 +176,7 @@ export default function Onboarding() {
        does structurally: it makes the deal unmissable from the first session. Customers
        who know the shape from the start convert better and refund less. */
     <View key="s0">
-      <H1>Cairn</H1>
+      <H1>Anneal</H1>
       <Body style={{ marginTop: space.md }}>
         A self-help tool for appearance worry, built around one idea: this problem steals
         time, and the point is to get the time back.
@@ -194,7 +194,7 @@ export default function Onboarding() {
           Week one, the daily check-in and your hours number, every calming exercise, the
           hard-day path, and all crisis support. No card, no account, no end date.
         </BodySm>
-        <Label style={{ marginTop: space.lg, color: c.accentDeep }}>Cairn+</Label>
+        <Label style={{ marginTop: space.lg, color: c.accentDeep }}>Anneal+</Label>
         <BodySm style={{ marginTop: space.xs, color: c.ink }}>
           Weeks two to twelve, mirror practice, as much writing as you want, and the full
           history. You will not be asked about it until you have seen this work.
@@ -214,7 +214,7 @@ export default function Onboarding() {
         <H3>What it will never do</H3>
         <BodySm style={{ marginTop: space.sm, color: c.ink }}>
           There is no camera roll, no photo, no filter, no rating of how you look, and no
-          before-and-after. Nothing in Cairn measures your appearance.
+          before-and-after. Nothing in Anneal measures your appearance.
         </BodySm>
       </View>
     </View>,
@@ -323,11 +323,11 @@ export default function Onboarding() {
       />
     </View>,
 
-    /* 6 — evidence in place of social proof. Cairn has no users and will not invent any. */
+    /* 6 — evidence in place of social proof. Anneal has no users and will not invent any. */
     <View key="s5">
       <H1>Why these exercises</H1>
       <BodySm style={{ marginTop: space.sm, marginBottom: space.xl }}>
-        Cairn has no reviews to show you and no user count to quote, because it has neither.
+        Anneal has no reviews to show you and no user count to quote, because it has neither.
         What it has is the reason the exercises are the ones they are.
       </BodySm>
 
@@ -356,7 +356,7 @@ export default function Onboarding() {
         }}
       >
         <Body style={{ color: c.ink }}>
-          Cairn is a self-help tool. It is not therapy, not a medical device, and not a
+          Anneal is a self-help tool. It is not therapy, not a medical device, and not a
           substitute for professional care. It does not diagnose or treat any condition.
         </Body>
         <Body style={{ marginTop: space.md, color: c.ink }}>
