@@ -19,6 +19,8 @@
  *   node scripts/screenshots.mjs                 # default set, light + dark
  *   node scripts/screenshots.mjs --store         # App Store sizes, light only
  *   node scripts/screenshots.mjs --out ./shots   # somewhere else
+ *   node scripts/screenshots.mjs --unentitled    # paywall shows the offer, not "you have it"
+ *   node scripts/screenshots.mjs --full          # whole scroll height, for review not listing
  *
  * Requires a built web export and a static server:
  *   npx expo export -p web --output-dir dist && npx serve -s dist -l 8091
@@ -37,6 +39,27 @@ const opt = (name, dflt) => {
 const BASE = opt('base', 'http://localhost:8091');
 const OUT = opt('out', join(process.cwd(), 'screenshots'));
 const STORE = flag('store');
+
+/* The purchase screen cannot be reached with the default seed, because that seed is entitled
+   so the paid surfaces render — and an entitled user sees "You have Anneal+", not the offer.
+   That left the single highest-leverage screen in the app unscreenshottable, which is a poor
+   thing to be unable to look at. `--unentitled` seeds source 'none' instead.
+
+   Not the default: a store listing whose screenshots are mostly paywall sells nothing, and
+   Guideline 3.1.2 is happier when the listing leads with the product. */
+const UNENTITLED = flag('unentitled');
+
+/* Capture a long screen in successive frames rather than one viewport. Useless for a store
+   listing, which wants exact device frames, but it is the only way to review a screen that
+   runs past the fold — on the paywall, everything below it is the pricing and the legal
+   links, which is the part worth checking.
+
+   NOT Playwright's `fullPage`. React Native Web scrolls inside a div rather than the
+   document, so the document is exactly one viewport tall: `fullPage: true` returns a normal
+   screenshot and reports success, which is the worst way for an option to fail. This finds
+   the real scroller and steps through it. */
+const FULL = flag('full');
+const MAX_FRAMES = 8;
 
 /* App Store Connect accepts one 6.9" set and derives the rest, as of the 2024 change. The
    6.5" entry stays because a listing that predates that still has the slot, and regenerating
@@ -110,8 +133,10 @@ const seed = () => ({
   readModules: ['m1', 'm2', 'm3'],
   moments: {},
   /* Entitled, so the paid surfaces render. A store listing showing a paywall on every screen
-     sells nothing. */
-  entitlement: { source: 'purchase', plan: 'yearly', expiresAt: null, verifiedAt: iso(1) },
+     sells nothing. `--unentitled` flips this to show the purchase screen instead. */
+  entitlement: UNENTITLED
+    ? { source: 'none', plan: null, expiresAt: null, verifiedAt: null }
+    : { source: 'purchase', plan: 'yearly', expiresAt: null, verifiedAt: iso(1) },
 });
 
 /** Route, filename, and how long to let the artwork settle. */
@@ -194,6 +219,30 @@ for (const device of DEVICES) {
       await page.goto(BASE + shot.route, { waitUntil: 'networkidle' });
       await page.waitForTimeout(2200);
       const file = join(OUT, `${device.name}-${scheme}-${shot.name}.png`);
+      if (FULL) {
+        const steps = await page.evaluate((cap) => {
+          const scrollable = [...document.querySelectorAll('*')].filter((el) => {
+            const oy = getComputedStyle(el).overflowY;
+            return el.scrollHeight > el.clientHeight + 8 && (oy === 'auto' || oy === 'scroll');
+          });
+          if (!scrollable.length) return 1;
+          const el = scrollable.sort((a, b) => b.scrollHeight - a.scrollHeight)[0];
+          el.setAttribute('data-shot-scroller', '');
+          return Math.min(cap, Math.ceil(el.scrollHeight / el.clientHeight));
+        }, MAX_FRAMES);
+
+        for (let i = 0; i < steps; i += 1) {
+          await page.evaluate((n) => {
+            const el = document.querySelector('[data-shot-scroller]');
+            if (el) el.scrollTop = n * el.clientHeight;
+          }, i);
+          await page.waitForTimeout(500);
+          const part = file.replace(/\.png$/, steps > 1 ? `-${i + 1}.png` : '.png');
+          await page.screenshot({ path: part });
+        }
+        process.stdout.write(`${device.name}/${scheme}  ${shot.name} (${steps} frames)\n`);
+        continue;
+      }
       await page.screenshot({ path: file });
       process.stdout.write(`${device.name}/${scheme}  ${shot.name}\n`);
     }
