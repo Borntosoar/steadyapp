@@ -191,16 +191,16 @@ obvious candidate.
 
 ## 5. How Anneal's current pricing sits against all this
 
-Current: **$12.99/mo · $79.99/yr · $149 once · 14-day trial.**
+Current: **$12.99/mo · $79.99/yr · $149 once · 30-day trial.**
 
 | Decision | Benchmark | Verdict |
 |---|---|---|
 | $12.99 monthly | H&F median $9.70 | **Above median, and that is correct.** High-priced apps convert *better* at day 35 — 2.7% vs 1.5% for low-priced. |
-| $79.99 annual | H&F median $39.99 | **2× the median.** Defensible for a 12-week structured programme, but it is the most aggressive number in the product and the one most worth testing. |
+| $79.99 annual | H&F median $39.99 | **2× the median.** Defensible for a 12-week structured programme, but it is the most aggressive number in the product and the one most worth testing. Against the monthly plan it is $155.88 → $79.99, a **$75.89 (49%) saving** — a real number the paywall did not state until now. |
 | Yearly as the default | Annual = 60.6% of H&F revenue; 44.1% vs 17.5% retention | **Correct, and strongly supported.** |
-| 14-day trial | 3–7 day band converts 26.8%; 17–32 day band ⚠️ 45.7% | **Sitting in the gap.** Extending to 17+ days is a one-line change with a large claimed upside. Worth testing. |
+| 30-day trial | 3–7 day band converts 26.8%; 17–32 day band ⚠️ 45.7% | **Done.** Was 14 days, sitting in the gap. Now inside the band — 30 rather than 21 because App Store Connect only sells fixed trial durations and 21 days is not one of them. See §6.4. |
 | No weekly plan | Weekly converts 1.7–7.4× better; weekly+trial is the highest-LTV configuration at $49.27/12mo | **Deliberate omission — see below.** |
-| Lifetime option | — | Apple objects to the term "Lifetime" (see `APP-STORE.md`). Rename before submission. |
+| One-off option | — | **Done.** Apple objects to the term "Lifetime", so it ships labelled "Pay once" and is never called Lifetime in any user-facing string (`app/paywall.tsx`). It is also collapsed behind a link rather than shown as a third card, so it cannot dilute the annual default. |
 
 ### On the weekly plan, honestly
 
