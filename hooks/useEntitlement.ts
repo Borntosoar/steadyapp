@@ -50,7 +50,7 @@ import {
 } from '../lib/entitlement';
 
 /** The entitlement identifier configured in the RevenueCat dashboard. */
-export const ENTITLEMENT_ID = 'steady_plus';
+export const ENTITLEMENT_ID = 'anneal_plus';
 
 /** Maps a store product identifier back onto a Plan. Kept beside the seam because it is
  *  the one piece of the mapping that depends on how products were named in App Store

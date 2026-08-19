@@ -634,7 +634,7 @@ export async function wipeState(): Promise<void> {
  *  value, because none is stored. */
 export function exportText(state: AppState): string {
   const l: string[] = [];
-  l.push('STEADY — personal summary');
+  l.push('ANNEAL — personal summary');
   l.push(`Generated ${new Date().toLocaleString()}`);
   l.push('');
   l.push('This is self-tracked information from a self-help app.');

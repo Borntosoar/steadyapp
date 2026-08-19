@@ -338,7 +338,7 @@ describe('migrations are safe to re-apply', () => {
 });
 
 describe('the storage keys survive a rename of the app', () => {
-  /* THE FAILURE THIS EXISTS FOR. The app was renamed Steady → Anneal across ~300 occurrences
+  /* THE FAILURE THIS EXISTS FOR. The app was renamed twice, Steady → Cairn → Anneal, ~300 occurrences
      in 40 files. These two strings, and `steady.device.key.v1` in hooks/deviceKey.ts, were
      the only ones deliberately left alone — they are not brand, they are where real data
      already lives.

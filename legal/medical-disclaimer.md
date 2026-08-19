@@ -284,7 +284,7 @@ proven", "therapeutic", "recovery programme", or "clinically validated" as descr
 of {{APP_NAME}}. Where "treatment" appears it refers to what happened in published TRIALS OF
 THERAPY (§3), never to what {{APP_NAME}} does — which is the same distinction content/proof.ts
 draws and __tests__/copy.test.mjs enforces with:
-  /\b(cairn|this app) (treats|cures|heals|will fix)\b|\bclinically proven\b|
+  /\b(anneal|this app) (treats|cures|heals|will fix)\b|\bclinically proven\b|
    \bguaranteed to (work|help|fix)\b/i
 docs/APP-STORE.md §5.5 extends the ban to store metadata, which the copy test does NOT
 cover. If this document is ever revised, re-read that section first.

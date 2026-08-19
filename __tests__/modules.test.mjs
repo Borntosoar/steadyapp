@@ -81,7 +81,7 @@ describe('editorial safety rules', () => {
   test('no treatment or cure claims', () => {
     // The app is a self-help tool. Claiming it treats or cures anything is both false and
     // a regulatory problem, so it is asserted rather than trusted to review.
-    const claims = /\b(this app|steady) (treats|cures|will cure|will treat|heals)\b|\bguaranteed to (fix|cure|work)\b|\bclinically proven\b/i;
+    const claims = /\b(this app|anneal) (treats|cures|will cure|will treat|heals)\b|\bguaranteed to (fix|cure|work)\b|\bclinically proven\b/i;
     for (const s of all) assert.doesNotMatch(s, claims, `treatment claim: "${s.slice(0, 80)}"`);
   });
 

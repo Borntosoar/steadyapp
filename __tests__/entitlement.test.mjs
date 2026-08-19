@@ -116,11 +116,11 @@ describe('a refund, an expiry and a cancellation all have a path back', () => {
 });
 
 describe('mapping a provider response', () => {
-  const planFor = (id) => (id === 'steady_yearly' ? 'yearly' : null);
+  const planFor = (id) => (id === 'anneal_yearly' ? 'yearly' : null);
 
   test('an active trial maps to a trial', () => {
     const e = projectFromProvider(
-      { active: true, productIdentifier: 'steady_yearly', expirationDate: at(14), periodType: 'trial', willRenew: true },
+      { active: true, productIdentifier: 'anneal_yearly', expirationDate: at(14), periodType: 'trial', willRenew: true },
       planFor
     );
     assert.equal(e.source, 'trial');
@@ -131,7 +131,7 @@ describe('mapping a provider response', () => {
 
   test('an active normal period maps to a purchase', () => {
     const e = projectFromProvider(
-      { active: true, productIdentifier: 'steady_yearly', expirationDate: at(300), periodType: 'normal' },
+      { active: true, productIdentifier: 'anneal_yearly', expirationDate: at(300), periodType: 'normal' },
       planFor
     );
     assert.equal(e.source, 'purchase');

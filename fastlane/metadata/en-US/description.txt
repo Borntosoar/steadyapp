@@ -30,7 +30,7 @@ PRIVATE BY CONSTRUCTION
 
 No account, no sign-in, no cloud, no analytics, no tracker. What you write stays in this app on this phone, scrambled so other software on the device cannot read it, and there is no server it could be sent to. That also means there is no backup: if you delete the app it is gone, which is why the plain-text export and the full backup file are free on every tier.
 
-STEADY+
+ANNEAL+
 
 Anneal+ unlocks weeks 2 to 12, all twelve readings, unlimited thought records, mirror practice, behavioural experiments, and the full progress history.
 

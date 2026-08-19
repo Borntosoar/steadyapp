@@ -77,7 +77,7 @@ describe('tone rules across every user-facing string', () => {
 
   test('no treatment or cure claims', () => {
     const claims =
-      /\b(steady|this app) (treats|cures|heals|will fix)\b|\bclinically proven\b|\bguaranteed to (work|help|fix)\b/i;
+      /\b(anneal|this app) (treats|cures|heals|will fix)\b|\bclinically proven\b|\bguaranteed to (work|help|fix)\b/i;
     for (const s of ALL) assert.doesNotMatch(s, claims, `treatment claim: "${s.slice(0, 90)}"`);
   });
 
