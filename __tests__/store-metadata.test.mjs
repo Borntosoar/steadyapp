@@ -253,3 +253,24 @@ describe('the category choice', () => {
     assert.match(cat, /health/i);
   });
 });
+
+describe('the bundle identifier', () => {
+  /* A bundle ID is the one string in this repository that genuinely cannot be changed after
+     the first submission. It cannot be renamed, it binds the app to whichever Apple account
+     registers it first, and changing it later means a new App Store listing that starts at
+     zero reviews and zero downloads. It was `com.borntosoar.steady` — another company's
+     reverse-DNS namespace, carrying a name the app has since been renamed away from twice —
+     and it was fixed in the only window that existed for fixing it. */
+  const app = JSON.parse(readFileSync(new URL('../app.json', import.meta.url), 'utf8')).expo;
+
+  test('iOS and Android agree', () => {
+    assert.equal(app.ios.bundleIdentifier, app.android.package);
+  });
+
+  test('it does not reference another company or a former name', () => {
+    for (const stale of ['borntosoar', 'steady', 'cairn']) {
+      assert.doesNotMatch(app.ios.bundleIdentifier, new RegExp(stale, 'i'),
+        `the bundle ID still contains "${stale}"`);
+    }
+  });
+});

@@ -143,16 +143,21 @@ future edit writes the entity name back into a document inline.
    controls. `__tests__/legal.test.mjs` now fails if the two disagree once the field is
    answered.
 
-### 3.6 Two places SOAR is still baked in
+### 3.6 Where SOAR was baked in
 
-Neither is a legal document, and both get harder to change later:
+- **`app.json` → `bundleIdentifier` and `package` are `com.anneal.app`.** ✅ Decided. They
+  were `com.borntosoar.steady` — reverse-DNS under SOAR's domain, on an app that is neither
+  SOAR's nor called Steady. Changed **before the first submission**, which was the only
+  window: a bundle identifier is permanent afterwards. It cannot be renamed, it binds the app
+  to the Apple account that first registers it, and changing it later means a new App Store
+  listing with no reviews and no downloads.
 
-- **`app.json` → `bundleIdentifier` and `package` are `com.borntosoar.steady`.** Stale twice
-  over: reverse-DNS under SOAR's domain, on an app that is neither SOAR's nor called Steady. This is worth getting right
-  **before the first submission**, because a bundle identifier is permanent afterwards — it
-  cannot be renamed, it ties the app to the Apple account that first registers it, and
-  changing it means a new App Store listing with no reviews and no downloads. Left as-is
-  deliberately: the correct value depends on which domain the Anneal entity ends up owning.
+  Two things to know about the value. It is **not verified as unique** — bundle IDs are
+  first-come across the whole store and the check needs App Store Connect, so confirm it when
+  registering the App ID. And by reverse-DNS convention it implies control of `anneal.com`;
+  Apple does not check domain ownership, so this is cosmetic, but if the entity ends up on
+  `anneal.app` instead, the convention reads slightly off. `__tests__/store-metadata.test.mjs`
+  now fails if it drifts back to a former name.
 - **`README.md`** still clones from `Borntosoar/steadyapp`. Cosmetic, but it is where a new
   contributor forms their first idea of who owns this.
 

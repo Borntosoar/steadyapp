@@ -301,10 +301,11 @@ number and takes days to weeks.
 **What to change:** submit from an Organization developer account, with the seller name
 matching the entity — which, as of the publisher decision in `legal/entity.json`, is
 **Anneal's own entity, not SOAR's**. So the SOAR developer account is not the one to submit
-from, and the bundle identifier `com.borntosoar.steady` is wrong twice over — SOAR's
-namespace, and the app's former name; fix it
-**before the first submission**, because a bundle ID is permanent afterwards and binds the
-app to the account that first registers it (see `legal/README.md` §3.6).
+from. The bundle identifier is now `com.anneal.app`, changed from `com.borntosoar.steady`
+before the first submission — the only window there was, since a bundle ID is permanent
+afterwards and binds the app to the account that first registers it. Confirm it is actually
+free when registering the App ID; uniqueness is store-wide and cannot be checked from outside
+App Store Connect (see `legal/README.md` §3.6).
 
 The Anneal entity therefore needs its own Organization enrolment, and that needs a D-U-N-S
 number, which takes days to weeks to issue. It is the longest-lead item on the list and it

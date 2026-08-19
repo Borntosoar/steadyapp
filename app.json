@@ -35,7 +35,7 @@
           }
         ]
       },
-      "bundleIdentifier": "com.borntosoar.steady",
+      "bundleIdentifier": "com.anneal.app",
       "userInterfaceStyle": "automatic"
     },
     "android": {
@@ -47,7 +47,7 @@
         "android.permission.CAMERA"
       ],
       "predictiveBackGestureEnabled": false,
-      "package": "com.borntosoar.steady",
+      "package": "com.anneal.app",
       "userInterfaceStyle": "automatic"
     },
     "web": {
