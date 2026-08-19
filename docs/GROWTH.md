@@ -16,7 +16,9 @@ modification, the modification is stated as part of the idea rather than as a ca
 screenshot harness." It does not. `grep -ri playwright` across the repo returns hits only in
 `SAFETY.md`, `docs/APP-STORE.md`, `content/modules.ts` and two agent definitions — no
 harness, no config, no dependency in `package.json`. There is also **no `.github/workflows`
-directory and no CI of any kind**. What does exist and is genuinely useful: 344 passing
+directory**. CI now exists (`.github/workflows/ci.yml` runs typecheck, tests and a web
+export; `deploy-site.yml` publishes the legal site). What else exists and is genuinely
+useful: 541 passing
 tests under `node --test` with zero installed dependencies, a working web export in `dist/`,
 and the GitHub remote. §3 builds on what is actually there.
 
@@ -37,9 +39,36 @@ the conclusion.
 | People meeting criteria | ~7.3m | arithmetic |
 | On iPhone | ~4m | **[est.]** iOS share 50–60% across these four markets |
 | Who will ever *search a term that reaches this app* | 5–10% | **[est.]** — the binding assumption. Most people with BDD have never had the condition named to them; `content/modules.ts` module 1 makes exactly this point. Concealment is a diagnostic feature. |
-| Annual searchers reachable | 200k–400k | arithmetic |
+| Annual searchers reachable | 200k–400k | arithmetic — **⚠ but see the correction below** |
 | Share a top-ranked app captures on its winnable terms | 5–15% | **[est.]** — Anneal can plausibly rank #1–3 on `bdd`, `dysmorphia`, `dysmorphic`, `checking`, `reassurance`, `appearance` (per `docs/APP-STORE.md` §2) but not on `esteem`, `confidence`, `ocd`, `cbt` |
 | **Downloads per year from ASO at maturity** | **10k–60k** | arithmetic |
+
+> ### ⚠ Correction: this chain contains a units error, and it is load-bearing
+>
+> "Who will ever *search a term that reaches this app*: 5–10%" is a **lifetime** propensity.
+> It is then multiplied straight into an **annual** searcher count. Those are different
+> quantities. If 5–10% of the ~4m iPhone cohort ever search over, say, a ten-year window,
+> annual searchers are nearer **20k–40k than 200k–400k** — a 10x overestimate at the top of
+> the funnel, and the ceiling below would be nearer $2k–$9k than $15k–$85k.
+>
+> A second error pushes the opposite way and is at least as large. The denominator uses
+> **clinical BDD prevalence (2%)**, but the product's mechanism — checking, comparison,
+> reassurance-seeking, camera avoidance — is subclinical in a far larger population. §4.5 of
+> this document names "people with subclinical appearance anxiety" as a user-test segment and
+> then never puts them in the market model, even though the keyword set (`checking`,
+> `reassurance`, `appearance`, `ugly`) already reaches them. Call that 3–10x the other way.
+>
+> Neither error is quantified, they point in opposite directions, and seven multiplied
+> estimates give the result roughly a 30–100x band. **Do not use "$15k–$85k" as a settled
+> number, and in particular do not use it to decide whether to abandon the product.** It is
+> this document's pessimistic single-channel scenario, not its verdict — §2 lists eleven
+> further lines. The band collapses to a fact about 13 weeks after launch, free, from App
+> Store Connect search-terms and conversion data.
+>
+> A third, smaller one: the 2.1% install→paid below is RevenueCat's freemium median across
+> all categories, dominated by browse-sourced traffic. This product's traffic is ~100%
+> high-intent search. §5.7 notices this and never propagates it back here. At 5–8% the whole
+> model moves 2.5–4x.
 
 Now revenue per download. Anneal is freemium with a soft paywall, which is the model
 RevenueCat 2026 measures at **2.1% install→paid by day 35** (vs 10.7% for hard paywalls —
@@ -485,7 +514,7 @@ Naming the tool, the cost, and what it replaces. **All of it fits inside free ti
 
 | Asset | State |
 |---|---|
-| 344 tests, `node --test`, zero dependencies | Working. Runs in ~5s. |
+| 541 tests, `node --test`, zero dependencies | Working. Runs in ~4s. |
 | `npm run typecheck` | Working. |
 | Web export (`dist/`) | Working — the whole app renders in a browser. |
 | GitHub repo (`Borntosoar/steadyapp`) | Exists. |
@@ -1168,7 +1197,7 @@ All of this is additive, none touches SAFETY.md's constraints, and none needs a 
 **Read directly:** `README.md`, `SAFETY.md`, `docs/SUBSCRIPTION-BENCHMARKS.md`,
 `docs/APP-STORE.md`, `lib/entitlement.ts`, `content/modules.ts`, `content/copy.ts`,
 `content/proof.ts`, `.claude/skills/value-first-growth/SKILL.md` and `references/steady.md`,
-`package.json`, `eas.json`, `app.json`, and the test suite (344 tests, all passing at time of
+`package.json`, `eas.json`, `app.json`, and the test suite (541 tests, all passing at time of
 writing).
 
 **External, via search — the network blocked direct access to `stora.sh`, so the 2026
