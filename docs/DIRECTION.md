@@ -305,22 +305,44 @@ is. Neither says the market is. Both independently conclude that **choosing a ne
 a new market changes nothing**, and both note that the one path to $1m that has actually been
 walked by a solo founder required mechanics this founder has ruled out on principle.
 
-### 8.4 The SOAR separation is not "still free to maintain" — it is already breached
+### 8.4 The SOAR separation — checked, corrected, and resolved
 
-§4 above said this was free now and impossible to unwind later. Later has arrived, and it is
-worse than a git-history trace. **`github.com/Borntosoar/soar-brand` — the clothing-brand
-repository — currently contains an entire earlier web version of the body-dysmorphia app**,
-including `index.html` titled *"Steady — body image companion"*, the full `js/app.js` UI, and
-a `README.md` opening *"A private, local-only web app for body dysmorphia and body image
-distress."* Its history carries commits named *"Add Steady — a private body image self-help
-app"* and *"Rebuild Steady around the CBT-BDD protocol"*, plus a `bdd-expert` skill.
+**This section previously said the separation was already breached and called it the
+highest-urgency item in this document. That was half right, and the half that was wrong was
+the alarming half.** It is recorded here rather than quietly edited, because the reasoning
+error is instructive: the finding was real, the severity was inferred from an assumption
+nobody had checked, and the assumption was wrong.
 
-Both repositories sit under the same GitHub owner. If that repository is public, or ever
-becomes public, the link a journalist needs is not merely present — it is the repository's
-entire visible content. **This is the highest-urgency item in this document** and it is
-independent of every strategic question in it. It needs a human decision (move, purge, or make
-private) rather than an automated fix, because rewriting published history is destructive and
-irreversible.
+**What was true.** `Borntosoar/soar-brand`, the repository for an unrelated clothing brand,
+did contain an entire earlier web version of this app — `index.html` titled *"Steady — body
+image companion"*, the full `js/` UI, a README opening *"A private, local-only web app for
+body dysmorphia and body image distress"*, and the `bdd-expert` clinical skill.
+
+**What was assumed and was false.** That the repository might be public. It is **private** —
+zero forks, zero stars, no GitHub Pages. So there was never a live exposure, and the
+journalist-connects-the-bio scenario was not available through that route.
+
+**Resolved anyway, and the reason is not tidiness.** The prototype was copied to
+`archive/web-prototype/` here and the skill to `.claude/skills/`, then removed from
+`soar-brand`, whose README now records what must not come back and why. A separation that
+depends on a repository setting staying unchanged forever is not a separation, and the
+prototype existed in no other repository — deleting it without moving it first would have
+destroyed the only copy of the earliest form of the protocol. `soar-brand`'s history can now
+be purged without losing anything.
+
+**The exposure that IS live runs the other way, and this document had it backwards.**
+`Borntosoar/steadyapp` — this repository, the shipping app — is **public**, and its owner
+account is named after the apparel brand. That linkage is not hypothetical and not a setting:
+it is in the repository URL, in the clone instructions in `README.md`, and — most concretely —
+in `constants/links.ts`, where `SITE_ORIGIN` is still
+`https://borntosoar.github.io/steadyapp`.
+
+That last one is the sharp edge. It is the address the app's own privacy link opens, the
+address printed in the first line of `legal/cookie-policy.md`, and the URL that would be
+submitted to App Store Connect. **Shipping as-is means a body-dysmorphia app serves its
+privacy policy from a URL carrying an apparel brand's name.** It is already an open field —
+`legal/entity.json` → `siteOrigin` is null and the build refuses to publish without it — so
+the fix costs nothing beyond making the decision. Choose a domain this entity controls.
 
 ### 8.5 What the red team proposes instead
 
@@ -351,6 +373,9 @@ Three things follow that do not depend on the missing survey:
 
 - **The five administrative blockers should be done regardless.** They are market-independent,
   cost about $1,500, and every option in every council requires them.
-- **The SOAR breach in §8.4 should be handled this week**, independent of everything else.
+- **§8.4 is resolved on the repository side and unresolved on the domain side.** The app is
+  out of the clothing-brand repository. The public app repository still sits under an owner
+  named after that brand, and `SITE_ORIGIN` still points there — which is a decision, not a
+  task, and it is already blocking the build.
 - **The target needs re-examining before any more analysis is commissioned.** A third council
   against an unchanged target would produce a third memo saying the same thing.
