@@ -1,5 +1,11 @@
 # Direction: what to build, and what it can be worth
 
+> **Second council, appended at §8.** The founder set a target of $1m+/yr and asked for
+> blue-ocean mental-health markets. Two of three advisors reported; the market scout failed
+> mid-run on a session limit, so the blue-ocean market survey is **incomplete and its gap is
+> named rather than papered over**. What did report converged, from different directions, on
+> the same finding: **the market is not the binding constraint.**
+
 Four advisors were briefed independently against one question — **what should be built, in or
 near this space, that will genuinely sell?** — with two constraints supplied by the founder:
 a target of **$1m+/yr**, and a preference to **keep the engine and swap the condition**.
@@ -207,3 +213,144 @@ From the code audit, so they are priced rather than discovered:
   This rules out a whole class of protocols cheaply, and it is better known now.
 - **No i18n layer.** Every string is a TypeScript literal. Fine for one more app; a ceiling on
   a portfolio, and it interacts badly with the 31 crisis-line regions already shipped.
+
+
+---
+
+## 8. Second council — $1m+, and blue-ocean markets
+
+Briefed against the founder's stated target of **$1m+/yr**. Three advisors: market scout,
+business-model strategist, red team. **The market scout terminated early on a session limit
+and produced nothing** — so there is no systematic blue-ocean market survey here, and any
+later claim that "the markets were checked" is false. What follows is two advisors.
+
+### 8.1 The model memo: the constraint is touch-hours, not TAM
+
+$1m/yr is an identity — `customers × ACV = $1m` — and a solo founder has roughly 2,200
+working hours a year, of which at most ~1,200 can be customer-facing. That defines a narrow
+feasible band and **most mental-health business models sit outside it**: roughly **$800–$3,000
+ACV, 350–1,250 customers, sold self-serve**.
+
+Two structural kills, both arithmetic rather than opinion:
+
+- **Consumer paid acquisition is permanently dead.** iOS Health & Fitness CPI is $4.30–$5.50
+  against net revenue per download of $0.60–$1.40. That is a **4–8x loss on every install**,
+  and no optimisation closes a 5x gap. Consumer growth therefore depends entirely on free
+  distribution — which in 2026 means the founder personally producing short-form video,
+  weekly, for years. That is a second full-time job they have never done, and it is the real
+  input, not engineering.
+- **Enterprise B2B2C at $30k ACV is not a solo business.** 33 closed contracts needs ~180–220
+  qualified opportunities, ~600–700 first meetings, and **15,000–20,000 outbound touches a
+  year** — the annual output of two full-time SDRs. Won accounts alone consume ~1,300 hours;
+  the losing pipeline another ~1,000. Before any of it: SOC 2 Type II, HIPAA and BAAs, cyber
+  and E&O insurance, a named clinical lead, published outcomes, and reference customers you
+  cannot get without first having customers. Buyers also demand **utilisation reporting**,
+  which a local-only, no-analytics architecture structurally cannot produce.
+
+**Its recommendation: prosumer practitioner software — sell *to* the licence holder rather
+than practise under it.** $1m at $1,200 ACV is 833 customers, about **a third of one percent**
+of the private-practice market, against 1.7M consumer installs. First revenue in 60–150 days,
+$1m in ~4 years, P(success) ~20–25% — the highest on its board. It routes around the missing
+clinical credential permanently and needs near-zero capital. The wedge must be liability or
+lost revenue, not saved time: AI session notes is four years saturated.
+
+Its answer to the question asked directly: **$1m needs no clinical credential and no outside
+capital, but it does need employees — 1–3 contractors somewhere past $400–600k ARR.** It also
+costs the local-only architecture, since professionals need a server, a BAA and an audit
+trail, and only ~20–30% of the current code transfers.
+
+### 8.2 The red team: the market was never the constraint
+
+Three facts it checked in the repository rather than assuming:
+
+1. **The whole product was built in thirteen days** — 49 commits, 2026-08-06 to 08-19, 13,041
+   lines, 541 tests, encryption, CI, a legal site. Building is not this founder's constraint,
+   and a thing that is close to free cannot be the scarce input that produces $1m.
+2. **Three renames in thirteen days, with tooling built to support them** — while
+   `legal/entity.json` still has no name, no kind, no address, no province. *Three name
+   decisions made; zero legal decisions made.* The reversible, private, aesthetic decisions
+   get made repeatedly; the irreversible, public, administrative ones do not get made at all.
+3. **This council was convened within a day of the last one.** The target survived contact
+   with the evidence; the evidence did not survive contact with the target.
+
+Its central claim, and it is the uncomfortable one: **the binding constraint is the transition
+from private work to public judgment, not TAM.** Every remaining blocker — incorporate, name a
+province, D-U-N-S, Apple Organization, wire billing, publish a page — requires putting a real
+legal name on a public document and accepting a number that might be small. Every one recurs
+identically in any new market. Searching for a bigger market is the highest-status available
+form of not shipping.
+
+It also notes what the $1m target *does* in the system: **it makes every option fail.** Council
+one returned "$330k, here is the route" and the response was not "take $330k" but "find a
+market where $1m is possible." A target no option clears never requires an option to be
+executed.
+
+**On the base rate:** only ~3.5% of subscription apps reach $10,000/month — an eighth of the
+target — measured on apps that already shipped. $1m ARR is a few tenths of one percent. It
+found two solo-ish mental-health apps at seven figures. Rootd needed five things: an acute
+self-labelled symptom; **a hard paywall at onboarding** (which raised its revenue over 6x in
+one month); six years of compounding ASO; **a publicly identified founder-patient** as the
+growth channel; and money for contractors.
+
+**Items 2 and 4 are forbidden by the founder's own written constraints** — SAFETY.md §4/§12
+reject the hard paywall, and the SOAR separation forbids a public founder biography. So:
+*the $1m target is incompatible with the constraint set in any market.* Changing the condition
+cannot resolve it. Four doors exist — the ethics floor moves, the anonymity moves, capital
+arrives, or the target is wrong — and three should stay shut.
+
+### 8.3 Where they agree, and it is not where either was pointed
+
+The model memo says the *business model* is wrong. The red team says the *shipping behaviour*
+is. Neither says the market is. Both independently conclude that **choosing a new condition or
+a new market changes nothing**, and both note that the one path to $1m that has actually been
+walked by a solo founder required mechanics this founder has ruled out on principle.
+
+### 8.4 The SOAR separation is not "still free to maintain" — it is already breached
+
+§4 above said this was free now and impossible to unwind later. Later has arrived, and it is
+worse than a git-history trace. **`github.com/Borntosoar/soar-brand` — the clothing-brand
+repository — currently contains an entire earlier web version of the body-dysmorphia app**,
+including `index.html` titled *"Steady — body image companion"*, the full `js/app.js` UI, and
+a `README.md` opening *"A private, local-only web app for body dysmorphia and body image
+distress."* Its history carries commits named *"Add Steady — a private body image self-help
+app"* and *"Rebuild Steady around the CBT-BDD protocol"*, plus a `bdd-expert` skill.
+
+Both repositories sit under the same GitHub owner. If that repository is public, or ever
+becomes public, the link a journalist needs is not merely present — it is the repository's
+entire visible content. **This is the highest-urgency item in this document** and it is
+independent of every strategic question in it. It needs a human decision (move, purge, or make
+private) rather than an automated fix, because rewriting published history is destructive and
+irreversible.
+
+### 8.5 What the red team proposes instead
+
+Ranked, and all of them use what the repo shows this founder is actually unusual at — **encoding
+policy as executable tests** (`safety.test.mjs`, `copy.test.mjs`, `readability.test.mjs`,
+`brand.test.mjs`), which is precisely the discipline AI-generated codebases lack:
+
+1. **Ship-readiness audits for AI-built apps.** `READINESS.md` is already the product, and it
+   found six of the seven classic pre-submission defects in the founder's own app. $3–8k per
+   audit, 3–5 days each. Cash within 90 days. Ceiling: it is time-for-money.
+2. **A constraint-test harness as a developer tool** — CI-enforced product-policy testing for
+   AI-generated codebases. Software margins, plausible seat-based path, 18–36 months.
+3. **SOAR.** If $1m is genuinely non-negotiable, the highest-probability asset the founder
+   already owns is the clothing brand: $1m is 20,000 units at $50 net, a well-understood
+   number many solo operators hit, with no clinical credential, no SaMD exposure, and no
+   ethics floor forbidding the growth mechanic that works. Apparel margins mean $1m of revenue
+   is perhaps $150–250k of profit — but it clears the target with a known playbook, and no
+   mental-health app on this board does.
+
+### 8.6 The honest state of the question
+
+The blue-ocean survey did not complete, so "is there a mental-health market that supports $1m+
+for a solo founder" is **not answered here**. What is answered, twice, from two directions, is
+that the founder's constraint set and the $1m target cannot both hold — and that no amount of
+market selection reconciles them.
+
+Three things follow that do not depend on the missing survey:
+
+- **The five administrative blockers should be done regardless.** They are market-independent,
+  cost about $1,500, and every option in every council requires them.
+- **The SOAR breach in §8.4 should be handled this week**, independent of everything else.
+- **The target needs re-examining before any more analysis is commissioned.** A third council
+  against an unchanged target would produce a third memo saying the same thing.
