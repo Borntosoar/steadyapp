@@ -36,6 +36,7 @@
         ]
       },
       "bundleIdentifier": "com.anneal.app",
+      "buildNumber": "1",
       "userInterfaceStyle": "automatic"
     },
     "android": {
@@ -48,6 +49,7 @@
       ],
       "predictiveBackGestureEnabled": false,
       "package": "com.anneal.app",
+      "versionCode": 1,
       "userInterfaceStyle": "automatic"
     },
     "web": {

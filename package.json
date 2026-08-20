@@ -40,6 +40,7 @@
     "ios": "expo start --ios",
     "test": "node --experimental-strip-types --test __tests__/*.test.mjs",
     "typecheck": "tsc --noEmit",
+    "version:set": "node scripts/version.mjs",
     "site": "node site/build.mjs",
     "shots": "node scripts/screenshots.mjs",
     "shots:store": "node scripts/screenshots.mjs --store",
