@@ -3,8 +3,7 @@ import assert from 'node:assert/strict';
 import {
   isEntitled, daysUntilExpiry, emptyEntitlement, localGrant, projectFromProvider,
   trialExpiry, isGated, weekGated, ALWAYS_FREE_ROUTES, TIER_COMPARISON,
-  BILLING_GRACE_DAYS, OFFLINE_GRACE_DAYS, PRICING, RENEWAL_TERMS,
-} from '../lib/entitlement.ts';
+  BILLING_GRACE_DAYS, OFFLINE_GRACE_DAYS, PRICING, RENEWAL_TERMS, PRICE_NUMBERS, PLUS_ADDS, ALWAYS_FREE} from '../lib/entitlement.ts';
 
 /* Entitlement.
  *
@@ -244,5 +243,59 @@ describe('gating never touches safety, whatever the billing state says', () => {
     const row = TIER_COMPARISON.find((r) => /export/i.test(r.label));
     assert.ok(row, 'the export row vanished from the comparison');
     assert.notEqual(row.free, '—', 'export was moved behind the paywall');
+  });
+});
+
+describe('the prices on the paywall are arithmetic, not typed literals', () => {
+  /* The paywall now states a saving — "$155.88 if you paid monthly for a year. That is
+     $75.89 less." That is a claim about money, made to somebody deciding whether to trust
+     this product, on a screen whose whole argument is that it will not manipulate them. A
+     stale saving there is worse than a stale number anywhere else in the repo, and prose
+     does not fail a build. So every figure is derived from PRICE_NUMBERS and pinned here. */
+  test('the yearly saving is the real difference against twelve monthly payments', () => {
+    const monthlyYear = PRICE_NUMBERS.monthly * 12;
+    assert.equal(PRICING.monthlyPerYear, `$${monthlyYear.toFixed(2)}`);
+    assert.equal(PRICING.yearlySaving, `$${(monthlyYear - PRICE_NUMBERS.yearly).toFixed(2)}`);
+  });
+
+  test('the per-month figure actually multiplies back to the annual price', () => {
+    /* The one that catches a price change made in one place. $6.67 × 12 is $80.04, four
+       cents over $79.99 — rounding, not error — so the tolerance is one cent per month. */
+    const perMonth = Number(PRICING.yearlyPerMonth.replace(/[^0-9.]/g, ''));
+    assert.ok(Math.abs(perMonth * 12 - PRICE_NUMBERS.yearly) <= 0.12,
+      `${PRICING.yearlyPerMonth} × 12 is not ${PRICE_NUMBERS.yearly}`);
+  });
+
+  test('every long form agrees with its number', () => {
+    assert.ok(PRICING.monthlyLong.includes(PRICE_NUMBERS.monthly.toFixed(2)));
+    assert.ok(PRICING.yearlyLong.includes(PRICE_NUMBERS.yearly.toFixed(2)));
+    assert.ok(PRICING.lifetimeShort.includes(String(PRICE_NUMBERS.lifetime)));
+  });
+
+  test('the saving is never presented as a discount', () => {
+    /* SAFETY.md §13. A saving stated as arithmetic between two prices both on offer today
+       is honest; a percentage detached from its base, a struck-through price or a deadline
+       is the grammar of a manufactured one. */
+    const all = [PRICING.monthlyPerYear, PRICING.yearlySaving, PRICING.monthlyLong,
+                 PRICING.yearlyLong, PRICING.lifetimeShort].join(' ');
+    assert.doesNotMatch(all, /%|save|was |only |instead of|discount|off\b/i);
+  });
+
+  test('the always-free list and the paid list do not overlap', () => {
+    /* The split is the whole point: anything appearing in both is a row that belongs in
+       neither, and it is how "Forever / Forever" got back into a comparison grid. */
+    const paid = new Set(PLUS_ADDS.map((r) => r.label));
+    for (const label of ALWAYS_FREE) {
+      assert.ok(!paid.has(label), `"${label}" is in both PLUS_ADDS and ALWAYS_FREE`);
+    }
+  });
+
+  test('nothing gated is listed as free forever', () => {
+    /* ALWAYS_FREE is an unconditional promise. If a label here is ever gated in code the
+       promise on the paywall becomes false, which is the one class of error on this screen
+       that is a lie rather than a bug. */
+    assert.ok(ALWAYS_FREE.length >= 4, 'the free promise has shrunk — was that deliberate?');
+    assert.ok(ALWAYS_FREE.some((l) => /crisis/i.test(l)), 'crisis support must stay free');
+    assert.ok(ALWAYS_FREE.some((l) => /export|backup/i.test(l)), 'export must stay free');
   });
 });

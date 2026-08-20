@@ -8,7 +8,7 @@ import {
 } from '../components/ui';
 import { Atmosphere } from '../components/Atmosphere';
 import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../constants/theme';
-import { PRICING, RENEWAL_TERMS, TIER_COMPARISON, trialEndDate, type Plan } from '../lib/entitlement';
+import { PRICING, RENEWAL_TERMS, PLUS_ADDS, ALWAYS_FREE, trialEndDate, type Plan } from '../lib/entitlement';
 import { useEntitlement } from '../hooks/useEntitlement';
 import { PAYWALL_COPY } from '../content/copy.ts';
 import { LINKS } from '../constants/links';
@@ -30,7 +30,6 @@ export default function Paywall() {
   const { entitled, purchase, restore, grantHardship } = useEntitlement();
   const [plan, setPlan] = useState<Plan>('yearly');
   const [hardship, setHardship] = useState(false);
-  const [showLifetime, setShowLifetime] = useState(false);
   const [restoreFailed, setRestoreFailed] = useState(false);
 
   /* The user's own number, on the screen that asks for money.
@@ -94,19 +93,65 @@ export default function Paywall() {
      Disclosed, not buried. Some people genuinely will not take a subscription, and hiding
      the option they want in order to sell them one they do not is the sort of thing this
      paywall exists not to do. The link says exactly what is behind it. */
-  const plans: { key: Plan; label: string; price: string; note?: string; badge?: string }[] = [
+  const plans: {
+    key: Plan; label: string; headline: string; lines: string[]; badge?: string;
+  }[] = [
     /* "Best value" is arithmetic — it is the lowest per-month figure on the list. A badge
-       reading "Most popular" would be a claim about users Anneal does not have. */
-    { key: 'yearly', label: 'Yearly', price: PRICING.yearly, note: `Works out at ${PRICING.yearlyPerMonth}`, badge: 'Best value' },
-    { key: 'monthly', label: 'Monthly', price: PRICING.monthly, note: 'Leave whenever, no discount to lose' },
-    ...(showLifetime
-      ? [{
-          key: 'lifetime' as Plan,
-          label: 'Pay once',
-          price: PRICING.lifetime,
-          note: 'One payment, no subscription. Under two years of the annual plan.',
-        }]
-      : []),
+       reading "Most popular" would be a claim about users Anneal does not have.
+
+       THE CARD IS A STACK, NOT A ROW. The price used to sit at the right edge in h2 while
+       the per-month figure sat under the label as a caption, so the two numbers a reader
+       has to compare — $6.67 and $12.99 — were in different type, different sizes, on
+       opposite sides of the layout, one card apart. Most people will not do that
+       arithmetic, and the ones who do are doing the seller's work. Now each card leads
+       with its own per-month figure in the same type on the same left-hand line, and the
+       yearly card states the difference outright.
+
+       Stating it is not a discount. There is no struck-through price, no deadline, no
+       "was", and no percentage detached from its base — those are the grammar of a
+       manufactured saving. These are two prices both on offer today with the arithmetic
+       shown, which SAFETY.md §13's test ("every number shown to a customer is one we could
+       defend to their face") passes trivially. */
+    {
+      key: 'yearly',
+      label: 'Yearly',
+      headline: PRICING.yearlyPerMonth,
+      lines: [
+        `Billed ${PRICING.yearlyLong}`,
+        `${PRICING.monthlyPerYear} if you paid monthly for a year. That is ${PRICING.yearlySaving} less.`,
+      ],
+      badge: 'Best value',
+    },
+    {
+      key: 'monthly',
+      label: 'Monthly',
+      headline: PRICING.monthlyLong,
+      lines: ['Leave whenever. No discount to lose.'],
+    },
+    /* AT PARITY, NOT BEHIND A LINK, and this reverses an earlier decision on purpose.
+       It was collapsed behind "Rather pay once than subscribe?" on the reasoning that a
+       third option is a third decision for somebody already spending their day making
+       anxious decisions, and that it cannibalises annual renewals compounding past month
+       24. For a programme that finishes in twelve weeks there is very little past month 24
+       to compound, and the customer thinking "I will be done by then" is thinking
+       accurately. It also nets more per customer than an annual subscription does.
+
+       The honest version of the argument is the deciding one: selling a finite programme
+       as a recurring subscription, while hiding the one-off option, is a small dishonesty
+       that a suspicious customer in a low-trust category will smell.
+
+       Labelled "Pay once", never "Lifetime" — App Review rejects the second on the grounds
+       that nobody can guarantee content for a customer's life (docs/APP-STORE.md §5.4),
+       and the objection is fair on the merits rather than just as a rule. */
+    {
+      key: 'lifetime',
+      label: 'Pay once',
+      headline: PRICING.lifetimeShort,
+      lines: [
+        'One payment, not a subscription.',
+        'About the same as two years of the annual plan.',
+      ],
+    },
   ];
 
   return (
@@ -204,13 +249,13 @@ export default function Paywall() {
               converts worse than an honest one. */}
           <View style={{ marginTop: space.xxl }}>
             <Rule />
-            <H2 style={{ marginTop: space.lg }}>{PAYWALL_COPY.comparisonTitle}</H2>
+            <H2 style={{ marginTop: space.lg }}>{PAYWALL_COPY.plusTitle}</H2>
             <Row style={{ marginTop: space.lg, marginBottom: space.sm }}>
               <View style={{ flex: 1 }} />
               <Caption style={{ width: 66, textAlign: 'center' }}>Free</Caption>
               <Label style={{ width: 66, textAlign: 'center', color: c.accentDeep }}>Anneal+</Label>
             </Row>
-            {TIER_COMPARISON.map((row) => (
+            {PLUS_ADDS.map((row) => (
               <Row
                 key={row.label}
                 style={{
@@ -229,6 +274,31 @@ export default function Paywall() {
                 </View>
               </Row>
             ))}
+            {/* The always-free list is NOT a comparison and must not be rendered as one.
+                It used to be four rows inside the grid above reading Forever/Forever and
+                ✓/✓, which put an unconditional promise (SAFETY.md §4, §11b) inside a layout
+                whose entire visual grammar says "these two things are being compared" — so
+                the most generous thing in the product read as a shortfall, three rows deep,
+                at the top, where scanning attention is highest. Same content, different
+                form, and nothing to lose against. */}
+            <H2 style={{ marginTop: space.xxl }}>{PAYWALL_COPY.comparisonTitle}</H2>
+            {ALWAYS_FREE.map((label) => (
+              <Row
+                key={label}
+                style={{
+                  paddingVertical: space.md,
+                  borderTopWidth: StyleSheet.hairlineWidth,
+                  borderTopColor: c.line,
+                  alignItems: 'flex-start',
+                  gap: space.sm,
+                }}
+              >
+                <View style={{ width: 20, alignItems: 'center', paddingTop: 2 }}>
+                  <TierCell value plus />
+                </View>
+                <BodySm style={{ flex: 1, color: c.ink }}>{label}</BodySm>
+              </Row>
+            ))}
             <BodySm style={{ marginTop: space.lg, color: c.cool }}>
               Calming down, breathing, the hard-day path and crisis support are never paid for.
               Not now and not later, whatever happens to this business.
@@ -242,8 +312,8 @@ export default function Paywall() {
                 one-off option is disclosed the list holds a product with no trial at all,
                 and the shorter sentence promised the free month across all three. */}
             <BodySm style={{ marginTop: space.xs, marginBottom: space.lg }}>
-              {PRICING.trialDays} days free on either subscription, then the plan you picked.
-              Annual works out at {PRICING.yearlyPerMonth}.
+              {PRICING.trialDays} days free on either subscription. You pick the plan now and
+              pay nothing until it ends.
             </BodySm>
 
             {plans.map((p) => {
@@ -253,7 +323,7 @@ export default function Paywall() {
                   key={p.key}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: on }}
-                  accessibilityLabel={`${p.label}, ${p.price}`}
+                  accessibilityLabel={`${p.label}, ${p.headline}. ${p.lines.join('. ')}`}
                   onPress={() => setPlan(p.key)}
                   style={{
                     borderWidth: on ? 1.5 : StyleSheet.hairlineWidth,
@@ -264,8 +334,8 @@ export default function Paywall() {
                     marginBottom: space.sm,
                   }}
                 >
-                  <Row>
-                    <View style={{ flex: 1 }}>
+                  <View>
+                    <View>
                       <Row style={{ justifyContent: 'flex-start', gap: space.sm }}>
                         <H3>{p.label}</H3>
                         {p.badge ? (
@@ -283,31 +353,21 @@ export default function Paywall() {
                           </View>
                         ) : null}
                       </Row>
-                      {p.note ? <Caption style={{ marginTop: 2 }}>{p.note}</Caption> : null}
                     </View>
-                    <Text style={[t.h2, { color: on ? c.accentDeep : c.ink }]}>{p.price}</Text>
-                  </Row>
+                    <Text style={[t.h2, { color: on ? c.accentDeep : c.ink, marginTop: space.xs }]}>
+                      {p.headline}
+                    </Text>
+                    {p.lines.map((line) => (
+                      /* inkSoft, not inkFaint. These carry what the customer is actually
+                         agreeing to, and inkFaint clears AA by 0.09 — inside the noise once
+                         anti-aliasing on a gradient ground is accounted for. A screen that
+                         refuses urgency on principle should not whisper the refusal. */
+                      <Caption key={line} style={{ marginTop: 2, color: c.inkSoft }}>{line}</Caption>
+                    ))}
+                  </View>
                 </Pressable>
               );
             })}
-
-            {/* Disclosed rather than hidden. The link names what is behind it, so nobody
-                has to guess that a one-off option exists. */}
-            {!showLifetime && (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Show the one-off payment option"
-                onPress={() => setShowLifetime(true)}
-                style={({ pressed }) => ({
-                  paddingVertical: space.md,
-                  alignItems: 'center',
-                  minHeight: 44,
-                  opacity: pressed ? 0.6 : 1,
-                })}
-              >
-                <BodySm style={{ color: c.inkSoft }}>Rather pay once than subscribe?</BodySm>
-              </Pressable>
-            )}
 
             <Button
               label="Start my twelve weeks"

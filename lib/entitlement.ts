@@ -57,7 +57,7 @@ export const FREE_LIMITS = {
  *     paid tier at its worth costs nobody anything and funds the free tier.
  *
  * Annual works out roughly half the monthly rate, which is the usual spread and enough to
- * make annual the obviously rational pick without needing a "SAVE 47%" badge shouting it.
+ * make annual the obviously rational pick without needing a "SAVE 49%" badge shouting it.
  * The one-off option is a shade under two years of annual.
  *
  * THE WORD "LIFETIME" APPEARS IN NO USER-FACING STRING, and should not be reintroduced to
@@ -233,6 +233,16 @@ export function trialExpiry(from: Date = new Date()): string {
   return d.toISOString();
 }
 
+/* The prices as numbers, so every figure derived from them is arithmetic rather than a
+   typed literal that survives exactly one price change. The repo already learned this with
+   the contrast ratios in constants/palette.ts: a number asserted in prose drifts silently,
+   and the drift is invisible precisely because prose does not fail a build. A wrong saving
+   on a paywall is worse than a wrong ratio in a comment — it is a claim about money made to
+   somebody deciding whether to trust you. __tests__/entitlement.test.mjs pins the lot. */
+export const PRICE_NUMBERS = { monthly: 12.99, yearly: 79.99, lifetime: 149 } as const;
+
+const usd = (n: number) => `$${n.toFixed(2)}`;
+
 export const PRICING = {
   monthly: '$12.99/mo',
   yearly: '$79.99/yr',
@@ -240,6 +250,26 @@ export const PRICING = {
    *  where either number on its own reads as a trick. */
   yearlyPerMonth: '$6.67 a month',
   lifetime: '$149 once',
+
+  /** What twelve monthly payments actually cost, and what annual saves against them.
+   *
+   *  NOT a discount, and the distinction is the whole reason this is allowed here. There is
+   *  no struck-through price, no deadline, no "was", and no percentage detached from its
+   *  base — those are the grammar of a manufactured saving and SAFETY.md §13 rules them out.
+   *  These are two prices both on offer today, with the arithmetic shown. The paywall used
+   *  to print "$79.99/yr" beside "$6.67 a month" and leave the reader to compare it against
+   *  a number on a different card in different type, which most people will not do. */
+  monthlyPerYear: usd(PRICE_NUMBERS.monthly * 12),
+  yearlySaving: usd(PRICE_NUMBERS.monthly * 12 - PRICE_NUMBERS.yearly),
+
+  /* Long forms. The plan cards set the price as the card's own headline rather than as a
+     figure pinned to the right edge, so "$12.99/mo" reads as an abbreviation there where
+     "$12.99 a month" reads as a sentence — and, more to the point, it sits in the same
+     type and the same left-hand line as "$6.67 a month" one card above, which is the
+     comparison the reader was previously asked to make across two columns unaided. */
+  monthlyLong: `${usd(PRICE_NUMBERS.monthly)} a month`,
+  yearlyLong: `${usd(PRICE_NUMBERS.yearly)} a year`,
+  lifetimeShort: `$${PRICE_NUMBERS.lifetime}`,
   /** One month, and the exact number matters less than the band it sits in.
    *
    *  Published medians put 17–32 day trials at roughly 45% trial-to-paid against roughly
@@ -293,27 +323,57 @@ export function trialEndDate(from: Date = new Date()): string {
   return d.toLocaleDateString('en-US', { day: 'numeric', month: 'long' });
 }
 
-/** What each tier actually gets. Rendered as a comparison on the paywall — one of the most
- *  consistent additions across high-performing paywalls, because a large share of people
- *  standing at one still cannot say what they would be buying.
+type TierRow = { label: string; free: string | true; plus: string | true };
+
+/** What Anneal+ adds, rendered as the two-column grid.
  *
- *  The free column is written generously on purpose. A visibly crippled free column reads
- *  as hostage-taking, and it converts worse than an honest one. */
-export const TIER_COMPARISON: { label: string; free: string | true; plus: string | true }[] = [
-  { label: `${NAMES.checkin.title} and your hours number`, free: true, plus: true },
-  { label: `${NAMES.calm.title}, and the hard-day path`, free: 'Forever', plus: 'Forever' },
-  { label: 'Crisis support and help finding a therapist', free: 'Forever', plus: 'Forever' },
-  { label: 'Short reads', free: '3 of 12', plus: 'All 12' },
-  { label: 'The twelve weeks', free: 'Week 1', plus: 'Weeks 1 to 12' },
-  { label: NAMES.thought.title, free: '5 a month', plus: 'As many as you like' },
+ *  WHY THIS IS SPLIT FROM WHAT FOLLOWS. It used to be one ten-row table titled "What you
+ *  get either way", and the first three rows a reader met were ✓/✓, Forever/Forever,
+ *  Forever/Forever. The rows are ordered by declaration, the top of any scanned list gets
+ *  disproportionate attention, and so the first impression of the paid column was that it
+ *  changes nothing. The section was arguing against itself.
+ *
+ *  The identical rows were never a comparison in the first place — they are an
+ *  unconditional promise (SAFETY.md §4, §11b), and putting a promise inside a grid whose
+ *  entire visual grammar says "these two things are being compared" makes it read as a
+ *  shortfall. So they get a different FORM, not a different position: a plain ticked list
+ *  below, with no columns to lose.
+ *
+ *  Ordered largest delta first. "The twelve weeks" leads because Week 1 → All 12 is both
+ *  the biggest difference and the thing the headline already promised, so the table
+ *  confirms the headline instead of introducing a new topic. Then the three rows where the
+ *  free column is visibly empty. The two cap rows last, because "5 a month" is the most
+ *  generous free value on the list and the least persuasive thing in the block. */
+export const PLUS_ADDS: TierRow[] = [
+  { label: 'The twelve weeks', free: 'Week 1', plus: 'All 12' },
   { label: NAMES.mirror.title, free: '—', plus: true },
   { label: NAMES.experiment.title, free: '—', plus: true },
   { label: 'The full picture on Progress', free: '—', plus: true },
+  { label: NAMES.thought.title, free: '5 a month', plus: 'No limit' },
+  { label: 'Short reads', free: '3 of 12', plus: 'All 12' },
+];
+
+/** Free on both tiers, forever. Rendered as a list, not a comparison.
+ *
+ *  The free column was always written generously on purpose — a visibly crippled one reads
+ *  as hostage-taking and converts worse than an honest one. Splitting it out does not make
+ *  it less generous; it stops the generosity being displayed as a deficit. */
+export const ALWAYS_FREE: string[] = [
+  `${NAMES.checkin.title} and your hours number`,
+  `${NAMES.calm.title}, and the hard-day path`,
+  'Crisis support and help finding a therapist',
   /* Free on both sides, because onboarding promises it before any data is collected:
      "there is no backup … you can export a plain-text copy whenever you like." Selling
      somebody the only route their own writing has off the device would make that sentence
      false, and it is the one thing between them and total loss when a phone dies. */
-  { label: 'Export and full backup file', free: 'Forever', plus: 'Forever' },
+  'Export and full backup file',
+];
+
+/** Retained so existing consumers and docs/API.md keep working. The paywall renders the
+ *  two lists above; nothing should add a row here. */
+export const TIER_COMPARISON: TierRow[] = [
+  ...PLUS_ADDS,
+  ...ALWAYS_FREE.map((label) => ({ label, free: 'Forever' as const, plus: 'Forever' as const })),
 ];
 
 /** Is this route gated for a non-entitled user? */

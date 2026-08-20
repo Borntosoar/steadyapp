@@ -56,9 +56,20 @@ function SupportBar() {
             flexDirection: 'row',
             alignItems: 'center',
             gap: 7,
-            /* Solid-ish backing rather than a transparent surface tint: this bar floats
-               over the home screen's artwork, and a tint alone disappears into it. */
-            backgroundColor: c.scrim,
+            /* OPAQUE, not a scrim, and this was a real defect rather than a taste call.
+               It was `c.scrim` — rgba(…,0.74) with no blur behind it — so body text passing
+               under the pill during a normal scroll came through at 26% opacity instead of
+               being hidden. On the paywall it landed across the sentence disclosing what
+               happens after the trial, which is a Guideline 3.1.2 exposure as well as a
+               legibility one: reviewers reject on what the screenshot shows. It is also
+               strictly worse than occlusion, because a reader cannot tell whether they are
+               seeing a rendering fault or content, and it silently voided the pill label's
+               own tested contrast by making its background live body text.
+
+               Content fully hidden behind an obviously elevated opaque object reads as
+               chrome and is recovered by one scroll gesture. That is the correct behaviour
+               for a floating control. */
+            backgroundColor: c.surfaceSolid,
             borderColor: c.lineStrong,
             borderWidth: StyleSheet.hairlineWidth,
             borderRadius: radius.pill,

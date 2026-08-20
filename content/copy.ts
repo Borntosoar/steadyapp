@@ -93,7 +93,14 @@ export const PAYWALL_COPY = {
      little worse on the day and a lot better over a year, and in this category it is the
      difference between a brand people recommend and one they warn each other about. */
   noUrgency: 'This price is the price. It will not go up if you wait. There is no discount coming that you would miss.',
+  /* Heads the always-free list only. It was heading the whole comparison table, where it
+     was doing the paid tier active harm — "either way" is a statement of sameness at the
+     top of a section whose job is to show a difference. Accurate now that it heads the
+     block it describes. */
   comparisonTitle: 'What you get either way',
+  /* "Adds", deliberately. It frames the paid tier as additive rather than the free tier as
+     withheld, which is the same generosity the free column was already written with. */
+  plusTitle: 'What Anneal+ adds',
   /* Visible, not buried. Someone who cannot pay is not a lower-value user, and making
      them ask twice is a bad trade for everyone. No form, no proof, no questions. */
   hardship: {
