@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Steady — body image companion</title>
+<meta name="description" content="A private, local-only companion for body dysmorphia and body image distress: psychoeducation, perceptual retraining, exposure practice, urge tracking, and a CBT thought record. No photos, no scoring, no accounts.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">Steady</div>
+  <nav class="tabs" id="tabs">
+    <button class="tab-btn active" data-tab="today">Today</button>
+    <button class="tab-btn" data-tab="practice">Practice</button>
+    <button class="tab-btn" data-tab="journal">Journal</button>
+    <button class="tab-btn" data-tab="progress">Progress</button>
+    <button class="tab-btn" data-tab="learn">Learn</button>
+  </nav>
+  <button class="help-btn" id="openCrisis">Need help now</button>
+</header>
+
+<main id="app">
+  <section class="tab-panel active" id="panel-today"></section>
+  <section class="tab-panel" id="panel-practice"></section>
+  <section class="tab-panel" id="panel-journal"></section>
+  <section class="tab-panel" id="panel-progress"></section>
+  <section class="tab-panel" id="panel-learn"></section>
+</main>
+
+<footer class="footer">
+  <span>Steady — private, local-only, no photos and no appearance scoring. A self-help companion, not treatment.</span>
+</footer>
+
+<!-- generic modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal" id="modalBox">
+    <div class="modal-head">
+      <h3 id="modalTitle">…</h3>
+      <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script src="js/content.js"></script>
+<script src="js/store.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
