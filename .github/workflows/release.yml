@@ -1,0 +1,158 @@
+name: Release
+
+# A tag is the only thing that starts a build, and a build is the only thing that can become
+# a TestFlight or an App Store binary.
+#
+# WHY A SEPARATE WORKFLOW FROM ci.yml. CI answers "is this branch sound" and runs on every
+# push. This answers a different and more expensive question — "is this commit shippable" —
+# and most of what it checks is not about the code at all: whether there is a legal entity,
+# whether the privacy policy is actually reachable, whether the build number advances,
+# whether payments are real. Those cannot go in ci.yml, because they would fail every branch
+# for reasons that have nothing to do with the branch.
+#
+# WHAT IT DOES NOT DO, DELIBERATELY:
+#
+#   · It does not submit to App Store Connect. `eas submit` needs an App Store Connect API
+#     key, which needs an Organization developer account, which needs a D-U-N-S number.
+#     None of those exist yet (docs/READINESS.md, docs/APP-STORE.md §5.1). Wiring a
+#     submission step now would mean inventing a secret name for a key nobody can create.
+#     docs/DEPLOY.md §8 has the manual command; it is one line and it prompts for what it
+#     needs.
+#   · It does not report to anything. No Slack webhook, no status service, no error
+#     reporting. SAFETY.md's no-telemetry rule is about the app, but the same reasoning
+#     covers the pipeline: there is no third party here to leak anything, and adding one to
+#     watch builds would be the first.
+#   · It does not wait for the build to finish. `--no-wait` returns the build URL and exits.
+#     An iOS build is twenty to forty minutes of somebody else's machine, and a private
+#     repository is billed for every minute a runner spends watching it.
+
+on:
+  push:
+    tags: ['v*']
+  # A dry run: everything except the build, on whatever is checked out. Use it to see the
+  # preflight output before spending a tag on it.
+  workflow_dispatch:
+    inputs:
+      build:
+        description: 'Also start an EAS build (needs EXPO_TOKEN)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth 0 and the tags: scripts/preflight.mjs compares this build number against
+      # app.json as it stood at the PREVIOUS release tag, which is how the "TestFlight will
+      # reject a duplicate CFBundleVersion" check works without keeping state anywhere. A
+      # shallow checkout has no tags, and the check reports itself skipped rather than
+      # passing — which fails the job with exit 2 instead of quietly approving.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      # Metro resolves differently from tsc, and a JSX syntax error has shipped past a green
+      # suite in this repository before. Same step as ci.yml, kept here because a release
+      # must not depend on having noticed a red branch build.
+      - name: Web export
+        run: npx expo export -p web --output-dir dist
+
+      # The release gate. Needs outbound HTTPS: it fetches the privacy policy and the terms
+      # from the address in legal/entity.json, because "the URL is in the file" and "the URL
+      # loads" are different claims and Apple checks the second one.
+      #
+      # Exit 1 = a blocker. Exit 2 = a check could not run, which is also not a pass.
+      #
+      # No --tag argument: the script reads GITHUB_REF_NAME itself, and only when
+      # GITHUB_REF_TYPE says it is a tag. On a workflow_dispatch dry run there is no tag to
+      # check the version against, and inventing one from the branch name would fail the
+      # dry run for a reason that has nothing to do with the release.
+      - name: Preflight
+        run: node scripts/preflight.mjs
+
+  build:
+    needs: verify
+    if: ${{ github.ref_type == 'tag' || inputs.build }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # THE ONE SECRET THIS WORKFLOW NEEDS, AND IT DOES NOT EXIST YET.
+      #
+      # EXPO_TOKEN — an Expo access token, created at https://expo.dev/settings/access-tokens
+      # and added under Settings → Secrets and variables → Actions. It authenticates the CLI
+      # as the Expo account that owns the project in app.json → extra.eas.projectId. It is
+      # not an Apple credential and it grants nothing at Apple.
+      #
+      # Checked here, first, rather than letting eas-cli fail four steps later with
+      # "not logged in" — which reads like a broken workflow rather than a missing secret.
+      # There is no default and no fallback: a placeholder that let the job continue would
+      # produce a build signed by nothing, which is worse than no build.
+      - name: The credentials this job needs
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::EXPO_TOKEN is not set. Create one at https://expo.dev/settings/access-tokens and add it under Settings → Secrets and variables → Actions. docs/DEPLOY.md §7."
+            exit 1
+          fi
+
+      # WHAT IS STILL MISSING AT APPLE, and cannot be a secret because it cannot be created:
+      #
+      #   · An Organization Apple Developer account (Guideline 5.1.1(ix) — a mental-health
+      #     app cannot ship from an Individual account). Needs a D-U-N-S number: weeks.
+      #   · An App ID registered for com.anneal.app, under that account.
+      #   · A distribution certificate and a provisioning profile. EAS can create both, but
+      #     only interactively the first time, because it signs into Apple to do it. Run
+      #     `eas build --platform ios --profile production` once from a laptop and answer
+      #     the prompts; after that the credentials live on EAS's servers and this job can
+      #     use them non-interactively. docs/DEPLOY.md §7.
+      #
+      # Until that has happened once, this step fails with EAS's own message about missing
+      # credentials. That is the correct behaviour: it names a real thing that a person has
+      # to go and do, rather than inventing a team ID to get past it.
+      - name: EAS build (iOS, production)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          npx eas-cli@latest build \
+            --platform ios \
+            --profile production \
+            --non-interactive \
+            --no-wait \
+            --message "${{ github.ref_name }}" | tee build.log
+          {
+            echo "### iOS build queued"
+            echo ""
+            grep -Eo 'https://expo\.dev/[^ ]*' build.log | tail -1 || true
+            echo ""
+            echo "Submission is manual: see docs/DEPLOY.md §8."
+          } >> "$GITHUB_STEP_SUMMARY"
