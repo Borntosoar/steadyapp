@@ -47,7 +47,7 @@ is a supported path — the session runs text-guided instead. Nothing is capture
 either way.
 
 ```bash
-npm test          # 209 assertions, no test runner to install — node --test
+npm test          # 575 tests, no test runner to install — node --test
 npm run typecheck # tsc --noEmit
 ```
 
@@ -55,6 +55,17 @@ See `docs/API.md` for the module contract between `lib/`, `store/` and the scree
 and the two integration seams (RevenueCat, store review).
 
 Requires Node 22+ (the test suite uses Node's built-in TypeScript stripping).
+
+### Releasing
+
+```bash
+npm run preflight # every blocker between here and a submission, in one run
+```
+
+It checks the legal entity, the privacy URL, the version and build number, the store
+metadata limits, and whether payments are real — and prints, unticked, the things that
+live inside Apple's web forms and cannot be checked from here. `docs/DEPLOY.md` is the
+runbook, including the parts measured in weeks rather than minutes.
 
 ---
 
