@@ -379,3 +379,117 @@ Three things follow that do not depend on the missing survey:
   task, and it is already blocking the build.
 - **The target needs re-examining before any more analysis is commissioned.** A third council
   against an unchanged target would produce a third memo saying the same thing.
+
+---
+
+## 9. The games pivot — what Anneal is now
+
+**Settled by the founder on 2026-08-21, and this section is the decision record.** The two
+councils above were both convened against the question "which condition should this engine
+serve." The answer that arrived was to a different question: not which condition, but what
+kind of thing this is.
+
+> "i want you to use the name anneal this is anneal it is games in a app with different games
+> based on the disorder as well as meditation protocols"
+
+**Anneal is a games app.** One app, several games, each one tracing to a specific clinical
+mechanism, plus a meditation layer. The name carries forward; the twelve-week
+body-dysmorphia protocol does not, and §9.5 is the unresolved part of that.
+
+### 9.1 The four constraints the founder set
+
+| Question | Answer | What it forecloses, and what it opens |
+|---|---|---|
+| Time | **Full time — "this is the job"** | Kills the "no time to ship" explanation. §8.2's finding stands: building was never the constraint. |
+| Money model | **Freemium now, working toward free-forever / institutionally funded** | The free-forever end state needs an institution to fund it, and every institution asks the credibility question in §3. |
+| Clinician access | **"No, and I wouldn't know how"** | This is the binding one. See §9.4. |
+| Name | **Anneal** | Settled. `scripts/check-name.mjs` still has to confirm App Store availability, and still needs a machine with outbound HTTPS. |
+
+### 9.2 The brief's central claim, and the evidence against it
+
+The founder's build prompt states the thesis plainly: **"the games ARE the therapy"** — not
+mini-games bolted onto a meditation timer. That distinction is right and it is the reason
+this direction is worth building. The claim underneath it is not.
+
+Two research passes were run against the eight-game brief. What they returned materially
+amends it, and it is recorded here rather than quietly designed around:
+
+- **Gamification adds neither efficacy nor adherence.** Six et al. (2021), a review of 38
+  RCTs of gamified mental-health interventions, found no consistent advantage over the same
+  content delivered plainly. The active ingredient is the clinical content; the game is a
+  delivery vehicle. That does not make the vehicle worthless — a thing people open is worth
+  more than a better thing they do not — but it does mean **no efficacy claim may ever rest
+  on the game layer**, and the store listing and legal set have to hold that line.
+- **SPARX lost roughly 96% of its users before therapeutic dose**, despite being a
+  well-made CBT game distributed free at national scale. Free distribution does not solve
+  retention, and a D30 > 40% target should be read against that number rather than against
+  consumer-app benchmarks.
+- **Working-memory training has no far-transfer evidence.** Lumosity paid a $50M FTC
+  judgment (settled at $2M) for claiming otherwise. This is not a close call.
+- **DBT's TIPP, as usually written, is not safe for an app to instruct.** Cold-water face
+  immersion drives the dive reflex; in the population that would use a distress-tolerance
+  game, arrhythmia incidence during immersion has been reported far above baseline. An app
+  cannot screen for cardiac risk and must not tell an unscreened, distressed person to put
+  their face in ice water.
+- **The NSDR dopamine claim traces to an n=8 uncontrolled 2002 study that never measured
+  motor skill.** The practice is fine. The mechanism story attached to it in the popular
+  literature is not, and repeating it would be the kind of claim §5 exists to keep out.
+
+**None of this kills the direction.** It changes what the games may claim, and it kills
+three of the eight.
+
+### 9.3 The eight games, re-scoped
+
+| # | Brief | Verdict |
+|---|---|---|
+| 1 | Neuropsychology — working memory / attention | **CUT.** No far transfer. This is the single largest legal exposure in the brief and the evidence is against it, not merely thin. |
+| 2 | CBT — thought distortion detection | **SHIPPED.** Curveball — `content/curveball.ts`, `app/game/curveball.tsx`. Three phases, four scenes, about ninety seconds. |
+| 3 | ACT — values-based branching story | **KEEP, second to build.** The mechanism is well evidenced and a branching story is the one format that genuinely needs to be interactive. |
+| 4 | Somatic — breath / movement via mic + accelerometer | **REDESIGN.** Drop the sensors. Phone-mic breath detection is unreliable enough that the biofeedback would be lying to the user about their own body. Paced breathing without sensing keeps the evidence and loses nothing real. |
+| 5 | Occupational therapy — routine-building sim | **KEEP, and call it what it is.** This is behavioural activation, which has among the best evidence of anything in the brief. It is also barely a game, and pretending otherwise is how it gets built badly. |
+| 6 | Art therapy — constraint-based creation | **KEEP, last.** Weakest evidence of the survivors, but near-zero risk and the highest ceiling on "somebody wants to open this." |
+| 7 | DBT — TIPP distress tolerance | **REDESIGN.** Keep paced breathing and paired muscle relaxation. Cut temperature and intense exercise entirely — see §9.2. |
+| 8 | Positive psychology — gratitude, social | **KEEP.** Modest effects, but real, cheap and safe. |
+
+Meditation layer: NSDR/Yoga Nidra, interoceptive awareness and open monitoring all stay as
+**practices**. Every mechanism claim attached to them in the brief comes out.
+
+### 9.4 The clinician answer is the binding constraint, and it is solvable
+
+"No, and I wouldn't know how" is the most consequential of the four answers, because §3 and
+§8 both identified a named clinical advisor as tier one of the credibility ladder — six
+weeks and roughly £300 — and every institutional route in this document runs through it.
+The free-forever end state the founder wants is *specifically* the route that requires it.
+
+"Wouldn't know how" is a smaller problem than it sounds and it is the one thing here that is
+purely mechanical: it is an email to authors of the CBT self-help canon, to psychology
+departments, and to the clinical leads of the relevant charities, asking to be named as
+clinical reviewer — **not** asking anyone to run a trial. §3 records the difference in
+yes-rate between those two asks as three- to eightfold. This does not need to be solved
+before shipping. It needs to be solved before any institution is approached, and it should
+start now because it takes weeks of calendar time and almost no working time.
+
+Until it exists: **no clinical validation language anywhere**, and the freemium tier is the
+only model available.
+
+### 9.5 What is still true, and what is now unresolved
+
+Unchanged and carried forward: the name, the legal set, the crisis lines for 31 regions, the
+encrypted local-only storage, CI, the release pipeline, the copy rules, and the test suite
+that enforces all of it. That is the part of §8.2's "building is not the constraint" finding
+that pays off here — the game shipped in one pass because the app around it already existed.
+
+Newly unresolved, and all of it the founder's call:
+
+- **The twelve-week protocol.** The app still opens into a body-dysmorphia programme with a
+  week counter, a mirror practice and a phase structure. A games app does not have a week 7.
+  These two shapes cannot both be the product, and `lib/protocol.ts` radiates into the home
+  screen, `moments.ts`, the streak and a safety test (§7). Deciding this is cheap now and
+  expensive after the second game.
+- **What the store listing is for.** §2 concluded App Store discovery is condition-specific
+  and that a multi-condition app ranks for nothing well. A games app is multi-condition by
+  construction. That trade was made deliberately here; it should be made *knowingly*, and it
+  means the ASO thesis in `APP-STORE.md` §2 needs rewriting rather than adjusting.
+- **Still blocking the build, unchanged since §8.6.** `legal/entity.json` — name, kind,
+  address, province, site origin. Five fields. Nothing ships without them, and none of the
+  three items above matters if this one stays open.
