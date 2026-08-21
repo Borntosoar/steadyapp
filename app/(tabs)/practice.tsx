@@ -78,6 +78,20 @@ export default function Practice() {
     },
   ];
 
+  /* Games sit in their own group rather than among the practices, and the split is not
+     cosmetic. Everything under "What this week adds" is gated by where somebody is in the
+     protocol; a game is not, and a row that looks gated is a row that does not get tapped.
+     They are also the only thing here you would open because you felt like it. */
+  const games: Item[] = [
+    {
+      title: NAMES.curveball.title,
+      sub: NAMES.curveball.sub,
+      route: '/game/curveball',
+      glyph: 'curve',
+      kinds: ['curveball'],
+    },
+  ];
+
   const free: Item[] = [
     {
       title: NAMES.calm.title,
@@ -121,6 +135,9 @@ export default function Practice() {
 
       <Caption style={{ marginTop: space.xl, marginBottom: space.sm }}>What this week adds</Caption>
       <Frost>{work.map(row)}</Frost>
+
+      <Caption style={{ marginTop: space.xl, marginBottom: space.sm }}>Games</Caption>
+      <Frost>{games.map(row)}</Frost>
 
       <Caption style={{ marginTop: space.xl, marginBottom: space.sm }}>Always free</Caption>
       <Frost>{free.map(row)}</Frost>

@@ -564,7 +564,8 @@ export function Explain({ q, a }: { q: string; a: string }) {
  * was written under, and for the same reason. */
 
 export type GlyphKind =
-  | 'rings' | 'senses' | 'wave' | 'anchor' | 'mirror' | 'page' | 'flask' | 'plus' | 'book';
+  | 'rings' | 'senses' | 'wave' | 'anchor' | 'mirror' | 'page' | 'flask' | 'plus' | 'book'
+  | 'curve';
 
 export function Glyph({ kind, color, size = 24 }: { kind: GlyphKind; color: string; size?: number }) {
   return (
@@ -619,6 +620,16 @@ export function Glyph({ kind, color, size = 24 }: { kind: GlyphKind; color: stri
         </>
       )}
       {kind === 'plus' && <Path d="M12 5v14M5 12h14" stroke={color} strokeWidth={1.9} strokeLinecap="round" />}
+      {/* Two paths leaving the same point: one straight, one bending away from it. The whole
+          game in one mark — and the difference between them is drawn as a difference in
+          shape rather than in colour, for the same reason the game itself is. */}
+      {kind === 'curve' && (
+        <>
+          <Path d="M4 20 20 4" stroke={color} strokeWidth={1.6} strokeLinecap="round" opacity={0.4} />
+          <Path d="M4 20C10 18 12.5 12 20 4" stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+          <Circle cx={4} cy={20} r={1.7} fill={color} />
+        </>
+      )}
       {kind === 'book' && (
         <>
           <Path d="M4 5.2c2.6-1 5.3-1 8 0v14c-2.7-1-5.4-1-8 0z" stroke={color} strokeWidth={1.7} strokeLinejoin="round" />

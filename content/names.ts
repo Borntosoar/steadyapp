@@ -57,6 +57,15 @@ export const NAMES = {
     unitPlural: 'check-ins',
     sub: 'Four questions, under thirty seconds',
   },
+  /* The first game. The rule at the top of this file applies to games too — the row, the
+     screen title and the finish line all read from here — but the name itself breaks the
+     verb-and-object pattern on purpose. A practice is described; a game is named. */
+  curveball: {
+    title: 'Curveball',
+    unit: 'round of Curveball',
+    unitPlural: 'rounds of Curveball',
+    sub: 'Catch the thoughts that bend, let the fair ones past',
+  },
   /* Two destinations that are not practices but are things a module sends you to. They
      live here for one reason: every call to action in the app takes its label from this
      file, so twelve hand-written module buttons cannot drift away from what the rest of

@@ -227,8 +227,13 @@ const dated = (r: Payload): { id: string; date: string } | null => {
 const avoidance = (v: unknown): AvoidanceLevel =>
   v === 'none' || v === 'small' || v === 'significant' ? v : 'none';
 
+/* Must stay exhaustive over `PracticeKind`. A kind missing from here is not a type error —
+   the array is annotated with the union, not derived from it — it is a row that silently
+   fails `normalise` and vanishes on the next read, taking a day off somebody's streak with
+   it. __tests__/storage.test.mjs now checks this list against the union's source text. */
 const PRACTICE_KINDS: PracticeKind[] = [
   'checkin', 'thought-record', 'grounding', 'mirror', 'urge', 'experiment', 'hard-day',
+  'curveball',
 ];
 
 /** An entitlement record that survived a round trip. A missing or malformed one becomes

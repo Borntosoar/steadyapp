@@ -186,11 +186,15 @@ describe('exercise scripts are complete and correctly timed', () => {
     assert.match(ex.THOUGHT_RECORD_CLOSING, /doesn'?t have to drop to zero/i);
   });
 
-  test('there are 12 distortions, each with a real definition', () => {
-    assert.equal(ex.DISTORTIONS.length, 12);
+  test('every distortion has a distinct name and a real definition', () => {
+    /* Was pinned at exactly 12. That number is not a property worth defending — the
+       taxonomy grew by one when Curveball needed Overgeneralisation — but the floor and the
+       uniqueness are: a duplicate name makes the thought record's picker ambiguous, and a
+       thin definition makes it useless to somebody who has not met the term before. */
+    assert.ok(ex.DISTORTIONS.length >= 12, 'the taxonomy has lost entries');
     for (const d of ex.DISTORTIONS) {
       assert.ok(d.definition.length > 40, `${d.name} definition too thin`);
     }
-    assert.equal(new Set(ex.DISTORTIONS.map((d) => d.name)).size, 12);
+    assert.equal(new Set(ex.DISTORTIONS.map((d) => d.name)).size, ex.DISTORTIONS.length);
   });
 });

@@ -277,7 +277,14 @@ export const DISTORTIONS: Distortion[] = [
   },
   {
     name: 'All-or-nothing',
-    definition: 'No middle setting. A day is ruined or fine, you look acceptable or unbearable.',
+    definition: 'No middle setting. The day is ruined or it is fine, the work is perfect or worthless.',
+  },
+  {
+    /* Added when Curveball landed. Its absence is why the prototype quietly invented its
+       own list rather than use this one — and two taxonomies is how a thought record ends
+       up unable to record the pattern a game just taught somebody to spot. */
+    name: 'Overgeneralisation',
+    definition: 'One instance turned into a rule, usually with "always" or "never" welded onto it.',
   },
   {
     name: 'Mental filter',
@@ -289,7 +296,7 @@ export const DISTORTIONS: Distortion[] = [
   },
   {
     name: 'Emotional reasoning',
-    definition: 'Treating the feeling as the evidence. "I feel disgusting, so I must look it."',
+    definition: 'Treating the feeling as the evidence. "I feel like a burden, so I must be one."',
   },
   {
     name: 'Should statements',
@@ -297,7 +304,7 @@ export const DISTORTIONS: Distortion[] = [
   },
   {
     name: 'Labelling',
-    definition: 'A whole identity from one moment. Not "that was awkward" but "I\'m repulsive."',
+    definition: 'A whole identity built out of one moment. Not "that was awkward" but "I\'m a mess."',
   },
   {
     name: 'Personalisation',

@@ -93,7 +93,10 @@ describe('every thing in the app has exactly one name', () => {
     const types = readFileSync(join(ROOT, 'types/index.ts'), 'utf8');
     const block = types.slice(types.indexOf('export type PracticeKind'));
     const kinds = [...block.slice(0, block.indexOf(';')).matchAll(/'([a-z-]+)'/g)].map((m) => m[1]);
-    const covered = { checkin: 'checkin', 'thought-record': 'thought', grounding: 'calm', mirror: 'mirror', urge: 'urge', experiment: 'experiment', 'hard-day': 'calm' };
+    const covered = {
+      checkin: 'checkin', 'thought-record': 'thought', grounding: 'calm', mirror: 'mirror',
+      urge: 'urge', experiment: 'experiment', 'hard-day': 'calm', curveball: 'curveball',
+    };
     for (const k of kinds) {
       assert.ok(covered[k], `PracticeKind "${k}" has no entry in content/names.ts`);
       assert.ok(names.NAMES[covered[k]], `names.ts is missing "${covered[k]}"`);

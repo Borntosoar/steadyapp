@@ -113,7 +113,10 @@ export type PracticeKind =
   | 'mirror'
   | 'urge'
   | 'experiment'
-  | 'hard-day';
+  | 'hard-day'
+  /** Games. One kind per game, so the practice record can say what was actually played
+   *  rather than collapsing every game into a single undifferentiated tally. */
+  | 'curveball';
 
 export interface PracticeEvent {
   id: string;
@@ -199,10 +202,10 @@ export interface LearnModule {
   body: string[];
 }
 
-export interface Distortion {
-  name: string;
-  definition: string;
-}
+/* `Distortion` used to live here, alongside a second copy of the taxonomy in
+   constants/distortions.ts that nothing imported — a body-image-specific list that had
+   quietly diverged from the live one in content/exercises.ts. Both are gone. The type and
+   the data now have one home each, in content/exercises.ts, and Curveball reads that. */
 
 export interface SupportRegion {
   key: string;
