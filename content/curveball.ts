@@ -1,4 +1,6 @@
 import { DISTORTIONS } from './exercises.ts';
+import { shuffle, type Rand } from '../lib/shuffle.ts';
+import type { MotifKind, SceneMood } from '../lib/motif.ts';
 
 /* Curveball — the CBT game.
  *
@@ -50,6 +52,16 @@ export interface CurveballScene {
   id: string;
   /** The situation, in one line, before any thought about it. */
   scene: string;
+  /* THE GROUND AND THE MARK ON IT.
+     A situation is a room, and the thoughts only mean anything to somebody who is already
+     standing in it. Reading "your partner has been short with you since this morning" off
+     a neutral field asks the player to build that room themselves in the second before the
+     first thought arrives; a warm ground and a scatter of hearts does it for them. See
+     lib/motif.ts for the rules — chiefly that these key off WHICH SCENE IT IS and never off
+     how the player is doing, because a background that reacts to a score is a rating with
+     better manners. */
+  mood: SceneMood;
+  motif: MotifKind;
   thoughts: CurveballThought[];
   reframe: {
     /** Must match one of the distorted `thoughts` in this scene, verbatim. */
@@ -69,6 +81,8 @@ export const SCENES: CurveballScene[] = [
   {
     id: 'unanswered-text',
     scene: 'You texted a friend three hours ago. Still nothing back.',
+    mood: 'evening',
+    motif: 'messages',
     thoughts: [
       { text: 'They are ignoring me on purpose.', distortion: 'Mind reading' },
       { text: 'They might just be busy.', distortion: null },
@@ -101,6 +115,8 @@ export const SCENES: CurveballScene[] = [
   {
     id: 'one-piece-of-feedback',
     scene: 'You got one piece of critical feedback at work. The rest was good.',
+    mood: 'daylight',
+    motif: 'papers',
     thoughts: [
       { text: 'I am bad at this job.', distortion: 'Labelling' },
       { text: 'One thing needs work.', distortion: null },
@@ -133,6 +149,8 @@ export const SCENES: CurveballScene[] = [
   {
     id: 'cancelled-plans',
     scene: 'You cancelled plans because you were worn out.',
+    mood: 'evening',
+    motif: 'moons',
     thoughts: [
       { text: 'I am letting everyone down.', distortion: 'Labelling' },
       { text: 'I was tired and I rested.', distortion: null },
@@ -165,6 +183,8 @@ export const SCENES: CurveballScene[] = [
   {
     id: 'room-goes-quiet',
     scene: 'You walk into a room and two people stop talking.',
+    mood: 'evening',
+    motif: 'rings',
     thoughts: [
       { text: 'They were talking about me.', distortion: 'Mind reading' },
       { text: 'They finished their sentence.', distortion: null },
@@ -197,6 +217,8 @@ export const SCENES: CurveballScene[] = [
   {
     id: 'replaying-the-mistake',
     scene: 'It is midnight and you are replaying something you said on Tuesday.',
+    mood: 'smallHours',
+    motif: 'loops',
     thoughts: [
       { text: 'Everyone there is still thinking about it.', distortion: 'Spotlight effect' },
       { text: 'It was a small thing and it is over.', distortion: null },
@@ -227,8 +249,50 @@ export const SCENES: CurveballScene[] = [
     },
   },
   {
+    /* The scene the wallpaper idea came from. Worth saying why it is worth having beyond
+       the hearts: the distortions that fire hardest about a partner are the ones a person
+       is least likely to catch, because in a relationship mind reading feels like intimacy
+       and catastrophising feels like taking it seriously. Two of the balanced thoughts here
+       are deliberately unsatisfying — "they have not said anything is wrong" resolves
+       nothing, which is exactly why it is the fair one. */
+    id: 'partner-gone-quiet',
+    scene: 'Your partner has been short with you since this morning and has not said why.',
+    mood: 'tender',
+    motif: 'hearts',
+    thoughts: [
+      { text: 'They are done with me.', distortion: 'Catastrophising' },
+      { text: 'They have not said anything is wrong.', distortion: null },
+      { text: 'It is my fault. I did something.', distortion: 'Personalisation' },
+      { text: 'People have bad days that are not about me.', distortion: null },
+      { text: 'If I ask, I will make it worse.', distortion: 'Fortune telling' },
+      { text: 'I can feel they are angry, so they are.', distortion: 'Emotional reasoning' },
+    ],
+    reframe: {
+      quote: 'They are done with me.',
+      options: [
+        {
+          text: 'We are fine. We are always fine. There is nothing to worry about here.',
+          accurate: false,
+          why: 'That is a promise you cannot check, made so you do not have to ask. It is the same guess with a nicer ending.',
+        },
+        {
+          text: 'Something is off and I do not know what. Those are two separate sentences.',
+          accurate: true,
+          why: 'It keeps what you actually noticed and drops the story you put on the end of it. Only one of the two has evidence.',
+        },
+        {
+          text: 'If they have a problem they can bring it up themselves.',
+          accurate: false,
+          why: 'That swaps the worry for distance. The worry was there because they matter to you, and this does not touch it.',
+        },
+      ],
+    },
+  },
+  {
     id: 'morning-dread',
     scene: 'You wake up already dreading the day, before anything has happened.',
+    mood: 'morning',
+    motif: 'rays',
     thoughts: [
       { text: 'Today is going to be awful.', distortion: 'Fortune telling' },
       { text: 'I feel heavy, so it must be a bad day.', distortion: 'Emotional reasoning' },
@@ -266,19 +330,11 @@ export const SCENES: CurveballScene[] = [
  * under test. A shuffle that is only ever exercised with a live `Math.random` is a shuffle
  * whose bias nobody ever measures. */
 
-type Rand = () => number;
-
-/** Fisher-Yates, not `sort(() => Math.random() - 0.5)`. The sort-comparator trick is the
- *  one the prototype used and it is measurably biased — some permutations come up several
- *  times more often than others, which here means the same distractor keeps appearing. */
-export function shuffle<T>(items: readonly T[], rand: Rand = Math.random): T[] {
-  const a = items.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+/* `shuffle` moved to lib/shuffle.ts when the second game needed it, and is re-exported here
+   so this file's callers and tests keep one import. Two copies of a shuffle is how the
+   biased one comes back. */
+export { shuffle };
+export type { Rand };
 
 /** The scenes for one session. Fewer scenes than the session length is not an error — it
  *  returns what exists rather than repeating one, because playing the same scene twice in

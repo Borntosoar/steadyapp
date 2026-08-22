@@ -1,11 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, Pressable, Animated, Easing, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Animated, Easing, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, Body, BodySm, Caption, H2, Button, useTheme } from '../../components/ui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Body, BodySm, Caption, H2, Button, useTheme } from '../../components/ui';
 import { Frost, TopBar, Steps, Segmented } from '../../components/frost';
 import { Finish } from '../../components/Finish';
 import { Atmosphere } from '../../components/Atmosphere';
-import { space, radius, type as t } from '../../constants/theme';
+import { Motif } from '../../components/Motif';
+import { groundFor } from '../../lib/motif.ts';
+import type { AtmosphereKey } from '../../constants/theme';
+import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../../constants/theme';
 import { useStore } from '../../store/useStore';
 import { haptic } from '../../hooks/haptics';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
@@ -94,9 +98,33 @@ export default function Curveball() {
 
   const scene = scenes[sceneIndex];
 
+  /* The ground belongs to the SCENE, and it is drawn once here rather than inside each
+     phase, so that naming and reframing a thought happen in the same room the thought
+     arrived in. Before the intro is played it is the first scene's ground, which is why
+     starting a session already feels like somewhere.
+
+     `groundFor` picks by palette: each mood names a pale ramp and a deep one, and the light
+     palette must never be handed a deep ramp — dark ink on `emberDeep` is unreadable, and
+     that is a contrast failure rather than a taste one. lib/motif.ts holds the pairs and
+     __tests__/motif.test.mjs holds them to it. */
+  const ground = groundFor(scene.mood, c.isDark);
+
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
-      <Atmosphere variant="night" />
+      {/* `style={absoluteFill}` and `scrim={false}` are both load-bearing and both were
+          missing first time round. Atmosphere does not position itself: without the fill it
+          is an ordinary flex child at the top of this column and collapses to nothing, which
+          is why the scene grounds did not appear at all. And its scrim darkens the lower
+          half for screens that set white type straight onto the artwork — this one sets
+          palette ink on it, so the scrim would just muddy the ramp. Ground does exactly the
+          same two things for the same two reasons. */}
+      <Atmosphere
+        variant={ground}
+        rounded="none"
+        scrim={false}
+        style={StyleSheet.absoluteFill as never}
+      />
+      <Motif kind={scene.motif} seed={scene.id} color={c.ink} />
       {phase === 'intro' && (
         <Intro
           clock={clock}
@@ -156,8 +184,53 @@ export default function Curveball() {
         />
       )}
 
-      {phase === 'done' && <Done tally={tally} scenes={scenes.length} onDone={() => router.back()} />}
+      {phase === 'done' && (
+        <Done tally={tally} scenes={scenes.length} ground={ground} onDone={() => router.back()} />
+      )}
     </View>
+  );
+}
+
+/* ---------- the transparent stage every phase stands on ----------
+ *
+ * THIS EXISTS BECAUSE OF A REAL DEFECT, and it is worth naming precisely because the bug
+ * was invisible in the sense that everything looked fine. The first version of this screen
+ * drew `<Atmosphere />` at the root and then rendered each phase inside `Screen`, which
+ * paints `backgroundColor: c.bg` across the full frame. So the atmosphere was constructed,
+ * laid out, rasterised — twelve seeded ellipses and a turbulence layer — and then covered
+ * completely by an opaque rectangle on every single frame. The screenshots looked like a
+ * flat pale field because that is exactly what they were.
+ *
+ * `Screen` is right for the rest of the app, where the ground is the app's ground. It is
+ * wrong here, where the ground is the scene's. This is the same layout with nothing painted
+ * behind it, so the atmosphere and the motif show through. */
+
+function Stage({ children, scroll = false }: { children: React.ReactNode; scroll?: boolean }) {
+  const insets = useSafeAreaInsets();
+  const inner = (
+    <View
+      style={{
+        flex: scroll ? undefined : 1,
+        width: '100%',
+        maxWidth: LAYOUT_MAX_WIDTH,
+        alignSelf: 'center',
+        paddingHorizontal: space.lg,
+      }}
+    >
+      {children}
+    </View>
+  );
+
+  if (!scroll) {
+    return <View style={{ flex: 1, paddingTop: insets.top }}>{inner}</View>;
+  }
+  return (
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: insets.bottom + space.xl }}
+    >
+      {inner}
+    </ScrollView>
   );
 }
 
@@ -168,7 +241,7 @@ function Intro({
 }: { clock: boolean; onClock: (v: boolean) => void; onStart: () => void; onBack: () => void }) {
   const c = useTheme();
   return (
-    <Screen scroll={false}>
+    <Stage>
       <TopBar onBack={onBack} title="Curveball" />
       <View style={{ flex: 1, justifyContent: 'center', gap: space.xl }}>
         <View style={{ gap: space.md }}>
@@ -205,7 +278,7 @@ function Intro({
           About ninety seconds.
         </Caption>
       </View>
-    </Screen>
+    </Stage>
   );
 }
 
@@ -329,7 +402,7 @@ function Intercept({
   const remaining = live.filter((r) => r.status === 'live').length;
 
   return (
-    <Screen scroll={false}>
+    <Stage>
       {/* The step pips do NOT go in TopBar's `right` slot, and they do not go inline beside
           a caption either. Both were tried in the browser and both rendered nothing: the
           root layout floats the Support pill over the top-right corner of every screen, so
@@ -391,7 +464,7 @@ function Intercept({
           />
         </View>
       )}
-    </Screen>
+    </Stage>
   );
 }
 
@@ -524,7 +597,7 @@ function NameIt({ scene, onDone }: { scene: CurveballScene; onDone: (right: bool
   const right = picked === target.distortion;
 
   return (
-    <Screen scroll={false}>
+    <Stage>
       <View style={{ flex: 1, justifyContent: 'center', gap: space.xl }}>
         <View style={{ gap: space.sm }}>
           <Caption>One of them again</Caption>
@@ -576,7 +649,7 @@ function NameIt({ scene, onDone }: { scene: CurveballScene; onDone: (right: bool
           </View>
         )}
       </View>
-    </Screen>
+    </Stage>
   );
 }
 
@@ -589,7 +662,7 @@ function Reframe({ scene, onDone }: { scene: CurveballScene; onDone: (right: boo
   const chosen = picked === null ? null : options[picked];
 
   return (
-    <Screen scroll={picked !== null}>
+    <Stage scroll={picked !== null}>
       <View style={{ flex: 1, justifyContent: 'center', gap: space.xl, paddingVertical: space.xl }}>
         <View style={{ gap: space.sm }}>
           <Caption>Instead of</Caption>
@@ -628,13 +701,15 @@ function Reframe({ scene, onDone }: { scene: CurveballScene; onDone: (right: boo
 
         {chosen && <Button label="Next" onPress={() => onDone(chosen.accurate)} />}
       </View>
-    </Screen>
+    </Stage>
   );
 }
 
 /* ---------- the end of a session ---------- */
 
-function Done({ tally, scenes, onDone }: { tally: Tally; scenes: number; onDone: () => void }) {
+function Done({
+  tally, scenes, ground, onDone,
+}: { tally: Tally; scenes: number; ground: AtmosphereKey; onDone: () => void }) {
   const correct = tally.caught + tally.allowed;
   const total = correct + tally.missed + tally.falseAlarm;
   const pct = total ? Math.round((correct / total) * 100) : 0;
@@ -663,7 +738,9 @@ function Done({ tally, scenes, onDone }: { tally: Tally; scenes: number; onDone:
       body={body}
       onDone={onDone}
       doneLabel="Done"
-      variant="night"
+      /* The ending stays in the room the last scene was in, rather than cutting to a
+         house style. It is also the palette-correct ramp — see groundFor. */
+      variant={ground}
     />
   );
 }
