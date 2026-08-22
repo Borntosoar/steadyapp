@@ -49,7 +49,7 @@ describe('the contrast checker agrees with the specification', () => {
 });
 
 describe('every ink clears AA on the worst ground its palette can land on', () => {
-  const INKS = ['ink', 'inkSoft', 'inkFaint', 'accent', 'accentDeep', 'cool', 'warn'];
+  const INKS = ['ink', 'inkSoft', 'inkFaint', 'accent', 'accentDeep', 'cool', 'rose', 'warn'];
 
   for (const key of INKS) {
     test(`light ${key} on ${LIGHT_GROUND_FLOOR}`, () => {

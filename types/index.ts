@@ -116,7 +116,8 @@ export type PracticeKind =
   | 'hard-day'
   /** Games. One kind per game, so the practice record can say what was actually played
    *  rather than collapsing every game into a single undifferentiated tally. */
-  | 'curveball';
+  | 'curveball'
+  | 'toward';
 
 export interface PracticeEvent {
   id: string;

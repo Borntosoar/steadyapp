@@ -90,6 +90,13 @@ export default function Practice() {
       glyph: 'curve',
       kinds: ['curveball'],
     },
+    {
+      title: NAMES.toward.title,
+      sub: NAMES.toward.sub,
+      route: '/game/toward',
+      glyph: 'fork',
+      kinds: ['toward'],
+    },
   ];
 
   const free: Item[] = [

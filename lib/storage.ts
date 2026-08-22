@@ -233,7 +233,7 @@ const avoidance = (v: unknown): AvoidanceLevel =>
    it. __tests__/storage.test.mjs now checks this list against the union's source text. */
 const PRACTICE_KINDS: PracticeKind[] = [
   'checkin', 'thought-record', 'grounding', 'mirror', 'urge', 'experiment', 'hard-day',
-  'curveball',
+  'curveball', 'toward',
 ];
 
 /** An entitlement record that survived a round trip. A missing or malformed one becomes

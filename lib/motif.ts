@@ -94,7 +94,9 @@ export type MotifKind =
   /** Closed loops. The same three seconds, again. */
   | 'loops'
   /** Low rays. Morning, before anything has happened. */
-  | 'rays';
+  | 'rays'
+  /** A fork. One way and another way, which is the whole of the ACT game. */
+  | 'paths';
 
 /** The ceiling the motif's opacity may not cross, per palette.
  *
@@ -130,6 +132,7 @@ export const STROKE: Record<MotifKind, number> = {
   loops: 1.35,
   hearts: 1.4,
   rays: 1.45,
+  paths: 1.5,
   moons: 1.6,
 };
 

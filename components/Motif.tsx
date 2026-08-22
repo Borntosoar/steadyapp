@@ -84,6 +84,17 @@ function Glyph({ kind, color }: { kind: MotifKind; color: string }) {
           <Path {...p} strokeLinecap="round" d="M12 6.2v2.4M6.4 8.6l1.7 1.7M17.6 8.6l-1.7 1.7" />
         </G>
       );
+    /* A fork: one stem, two ways on. Drawn with both branches the same weight on purpose —
+       the ACT game has no wrong answer, and a fork with one bold branch and one faint one
+       would say the opposite before a word is read. */
+    case 'paths':
+      return (
+        <G>
+          <Path {...p} strokeLinecap="round" d="M12 21v-6.4" />
+          <Path {...p} strokeLinecap="round" d="M12 14.6C12 10 9.6 7.4 5.6 5.2" />
+          <Path {...p} strokeLinecap="round" d="M12 14.6C12 10 14.4 7.4 18.4 5.2" />
+        </G>
+      );
   }
 }
 

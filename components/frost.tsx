@@ -571,7 +571,7 @@ export function Explain({ q, a }: { q: string; a: string }) {
 
 export type GlyphKind =
   | 'rings' | 'senses' | 'wave' | 'anchor' | 'mirror' | 'page' | 'flask' | 'plus' | 'book'
-  | 'curve';
+  | 'curve' | 'fork';
 
 export function Glyph({ kind, color, size = 24 }: { kind: GlyphKind; color: string; size?: number }) {
   return (
@@ -634,6 +634,17 @@ export function Glyph({ kind, color, size = 24 }: { kind: GlyphKind; color: stri
           <Path d="M4 20 20 4" stroke={color} strokeWidth={1.6} strokeLinecap="round" opacity={0.4} />
           <Path d="M4 20C10 18 12.5 12 20 4" stroke={color} strokeWidth={1.8} strokeLinecap="round" />
           <Circle cx={4} cy={20} r={1.7} fill={color} />
+        </>
+      )}
+      {/* A fork, with both branches drawn at the same weight. The ACT game has no wrong
+          answer; a fork with one bold branch and one faint one would say otherwise before
+          the player has read a word. */}
+      {kind === 'fork' && (
+        <>
+          <Path d="M12 21v-6.6" stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+          <Path d="M12 14.4C12 9.6 9.4 6.8 5.2 4.4" stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+          <Path d="M12 14.4C12 9.6 14.6 6.8 18.8 4.4" stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+          <Circle cx={12} cy={14.4} r={1.9} fill={color} />
         </>
       )}
       {kind === 'book' && (

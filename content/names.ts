@@ -66,6 +66,14 @@ export const NAMES = {
     unitPlural: 'rounds of Curveball',
     sub: 'Catch the thoughts that bend, let the fair ones past',
   },
+  /* The second game. "Toward" is the clinical term — ACT calls them toward moves and away
+     moves — so the one word a player takes away is the one a therapist would use. */
+  toward: {
+    title: 'Toward',
+    unit: 'run through Toward',
+    unitPlural: 'runs through Toward',
+    sub: 'Five moments, and what each one costs to get past',
+  },
   /* Two destinations that are not practices but are things a module sends you to. They
      live here for one reason: every call to action in the app takes its label from this
      file, so twelve hand-written module buttons cannot drift away from what the rest of

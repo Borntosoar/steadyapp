@@ -50,6 +50,17 @@ export const light = {
   cool: '#8A5535',
   coolDim: 'rgba(138,85,53,0.13)',
 
+  /* Dusk rose — the fourth colour in the brief's system, and the only one this palette was
+     missing. It is not a second terracotta: `cool` is earth, this is the colour a face
+     goes. It carries EMOTION STATES, meaning the places the app reports something felt
+     rather than something achieved — the relief a person took in Toward, a mood tag, warmth
+     that is not progress.
+     It is deliberately never used for correctness. Green means a move toward what matters
+     and rose means comfort taken; the day those two start reading as right and wrong is the
+     day the ACT game stops being an ACT game. */
+  rose: '#8A4B54',
+  roseDim: 'rgba(138,75,84,0.13)',
+
   warn: '#8C4232',
   scrim: 'rgba(244,245,240,0.74)',
 };
@@ -77,6 +88,9 @@ export const dark = {
 
   cool: '#D9A277',
   coolDim: 'rgba(217,162,119,0.15)',
+
+  rose: '#DDA6AB',
+  roseDim: 'rgba(221,166,171,0.15)',
 
   warn: '#E08A72',
   scrim: 'rgba(18,23,15,0.74)',

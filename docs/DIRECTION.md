@@ -444,7 +444,7 @@ three of the eight.
 |---|---|---|
 | 1 | Neuropsychology — working memory / attention | **CUT.** No far transfer. This is the single largest legal exposure in the brief and the evidence is against it, not merely thin. |
 | 2 | CBT — thought distortion detection | **SHIPPED.** Curveball — `content/curveball.ts`, `app/game/curveball.tsx`. Three phases, four scenes, about ninety seconds. |
-| 3 | ACT — values-based branching story | **KEEP, second to build.** The mechanism is well evidenced and a branching story is the one format that genuinely needs to be interactive. |
+| 3 | ACT — values-based branching story | **SHIPPED.** Toward — `content/toward.ts`, `app/game/toward.tsx`. Two values, five moments, each offering relief or movement and never both in one option; avoidance compounds into the scene returning bigger rather than being marked wrong. |
 | 4 | Somatic — breath / movement via mic + accelerometer | **REDESIGN.** Drop the sensors. Phone-mic breath detection is unreliable enough that the biofeedback would be lying to the user about their own body. Paced breathing without sensing keeps the evidence and loses nothing real. |
 | 5 | Occupational therapy — routine-building sim | **KEEP, and call it what it is.** This is behavioural activation, which has among the best evidence of anything in the brief. It is also barely a game, and pretending otherwise is how it gets built badly. |
 | 6 | Art therapy — constraint-based creation | **KEEP, last.** Weakest evidence of the survivors, but near-zero risk and the highest ceiling on "somebody wants to open this." |
