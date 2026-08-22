@@ -493,3 +493,131 @@ Newly unresolved, and all of it the founder's call:
 - **Still blocking the build, unchanged since §8.6.** `legal/entity.json` — name, kind,
   address, province, site origin. Five fields. Nothing ships without them, and none of the
   three items above matters if this one stays open.
+
+---
+
+## 10. Third council — how to stop the games feeling clinical
+
+Convened on the founder's note that Curveball "does not make sense for the customer with this
+problem" and needs to be less clinical. Three advisors: a clinician, a game designer, and a
+research specialist. All three reported.
+
+**A caveat that applies to the whole of §10.2, and it is not a small one.** The research
+advisor's egress was blocked for every journal domain it tried, so its findings come from
+search-engine summaries of abstracts rather than from full texts. Study designs, sample sizes
+and directions of effect are reliable. **Specific effect sizes are not, and must be checked
+against the paper before any of them goes near a store listing, a grant application or an
+investor.** The four to verify first are named in §10.5.
+
+### 10.1 The defects that were live regardless, now fixed
+
+These are separated out because they were true whichever direction wins, and shipping them
+un-fixed while the direction was debated would have been indefensible.
+
+| Defect | Why it mattered |
+|---|---|
+| **The game was unplayable with Reduce Motion on.** `sway` went to zero and the rotation output range collapsed to all-`0deg`, so distorted and balanced pills were pixel-identical — while the intro promised the bent ones lean. | Not degraded. Unplayable. The comment above that code had reasoned about this exact case and concluded keeping the travel was enough; flattening the sway does not soften the tell, it deletes it, and the tell is the game. Fixed with a static lean, since a fixed angle is not animation. |
+| **No way out of a scene.** | Toward's exit rationale names a partner gone quiet and an avoided appointment as its cause. Curveball contains that same partner scene verbatim, plus midnight rumination, **on a clock** — Toward waits for you, Curveball does not. Two phases had no back button at all. |
+| **An animated accuracy score on somebody's mind.** `pct` was handed to `Finish` as the figure, which renders it largest on screen and counts it up. | The headline was careful; the number above it was not. |
+| **A defensible answer marked wrong.** "Everyone else copes fine" was Mind reading; "Everyone else gets up fine" was Comparison bias. | The same sentence with two answers. That does not read as clinical, it reads as unfair. |
+
+### 10.2 What the evidence actually says, and it is worse for Curveball than expected
+
+**Cognitive restructuring is the component with the weakest case for being additive.**
+Furukawa et al. 2021 (*Lancet Psychiatry* 8:500–511), an individual-participant-data component
+network meta-analysis of internet CBT, concludes that future iCBT packages "might include
+behavioural activation but not relaxation… **but probably not cognitive restructuring**."
+Jacobson 1996 and Dimidjian 2006 point the same way from the dismantling literature.
+
+The counterweight, and it should be stated: Ciharova/Cuijpers et al. 2021 (45 studies, 3,382
+participants) found restructuring alone, behavioural activation alone, and both together all
+beat control with **no significant differences between them**. So restructuring is not inert.
+It is **not additive** — which for a product deciding what to build next is the operative
+finding.
+
+**Distortion-labelling has never been tested.** No dismantling study isolates "name which
+distortion this is" from noticing-plus-evidence-checking. The taxonomy is not empirically
+derived — Burns 1980, on Beck's smaller set — and the NLP literature that has tried to
+operationalise it reports overlapping categories and poor inter-annotator agreement. The
+honest claim is **untested convention, not disproven**.
+
+**What has evidence is naming the FEELING, not the error.** Affect labelling produces a
+regulatory profile resembling reappraisal — and Torre & Lieberman 2018 report that people
+predict it will make them feel worse. It regulates implicitly. *The effective move does not
+announce itself*, which is the whole register problem in one sentence.
+
+**Defusion matches restructuring, and beats it in an app.** Head-to-head experiments find
+defusion, restructuring and exposure comparable; Krafft/Levin et al. 2018 delivered both by
+mobile app to people high in self-criticism and found **defusion the more consistent**. That
+is a finding in Toward's favour, not Curveball's.
+
+**Self-distancing works for rehearsal and fails for comfort.** Schertz, Orvell, Kross et al.
+2025 — two weeks of experience sampling, 208 participants, 12,966 surveys — found distanced
+self-talk worked when used to prepare for something upcoming and **did not work when used to
+feel better about something that already happened**. Every Curveball scene is second person
+and retrospective. Both are the wrong side of that finding.
+
+**Narrative does not solve dose.** SPARX in trial: 60% completed all seven modules. SPARX
+in the wild, 21,320 New Zealand adolescents: **51.1% finished module one, 7.4% reached module
+four, 3.1% finished all seven** — with effect sizes matching the trial *for those who
+engaged*. And MindLight, purpose-built with exposure and neurofeedback, performed no better
+than a commercial platformer with no therapeutic content in it at all; adding explicit CBT
+on top of MindLight added nothing.
+
+**Do not add points to compensate.** Deci, Koestner & Ryan 1999, 128 studies: performance-,
+completion- and engagement-contingent rewards all undermine free-choice intrinsic motivation.
+Six et al. 2021 already told us gamification moves neither outcome nor adherence.
+
+**And the metric that matters is not sessions.** Donkin et al. 2011: module completion
+predicted depression outcomes; logins, time online and pages opened did not.
+
+### 10.3 Where the three advisors converged
+
+Independently, and from different directions, all three said:
+
+1. **Delete the naming phase.** The clinician: recall of the noun is an exam wrapped around
+   the operation. The designer: it is the loudest clinical furniture. The researcher: no
+   evidence supports it.
+2. **Third person.** Somebody else's thoughts, not the player's own, adjudicated.
+3. **No score, no points, no correctness feedback on the tap.**
+
+### 10.4 Where they disagreed, and the disagreement is real
+
+**The clinician refuses to remove the taxonomy from the product**, and the reason is
+concrete rather than clinical: `THOUGHT_RECORD_STEPS` step 4 asks the user to tick which
+distortions applied, those selections persist, and they are written into the plain-text
+export SAFETY.md §11b makes a promise about. Delete the vocabulary from the game and step 4
+becomes an unexplained wall of jargon with nothing in the product that ever introduced it —
+the jargon does not go away, it relocates to the *least* game-like screen. This was also
+already fixed once deliberately (`content/exercises.ts`, the Overgeneralisation note).
+
+**The resolution is that these are two decisions being treated as one.** Keep the vocabulary
+in the data, the Learn module and the thought record. Remove the quiz.
+
+### 10.5 What this leaves, and the decision that is the founder's
+
+The synthesis all three support, ordered by evidential strength:
+
+1. **Move the situation from retrospective to about-to-happen, and from "you" to a named
+   person.** This is the researcher's sharpest correction and neither of the other two had
+   it. It costs a content rewrite and no engineering.
+2. **Delete the naming phase.** Keep the taxonomy everywhere else.
+3. **Replace "pick the most accurate reframe" with "pick what they do next."** Same
+   three-option screen; converts the loop from cognitive restructuring, which is not
+   additive, toward behavioural activation, which is.
+4. **Keep the let-through rule.** It is the one thing standing between this and a machine
+   that trains people to distrust every thought they have, and it is the rule with a test on
+   it.
+5. **Fix session one to session two before anything else.** SPARX lost half its population
+   there, and completion is what buys the effect.
+
+**Numbers to verify before external use:** Furukawa 2021's component estimates, Moran & Eyal
+2022's pooled distancing effect, Baumel 2019's retention figures, and the SPARX CDRS-R
+interval. Two claims are already retired: Crum & Langer 2007 failed to replicate, and every
+Duolingo retention figure in circulation traces to secondary blogs.
+
+**What is not decided here is scope**, and it is not a technical question. The designer's
+narrative rebuild is roughly a month and a real writing job. The stripped-back version —
+deletions plus the third-person prospective rewrite — is days. Both are honest. The record
+exists so the choice is made against the evidence rather than against the last thing anybody
+read.
