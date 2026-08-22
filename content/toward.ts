@@ -76,6 +76,24 @@ export interface TowardScene {
 /** How many away moves before the later scenes arrive in their bigger form. */
 export const ESCALATE_AT = 2;
 
+/* PASSING ON A SCENE IS NOT A MOVE, AND THAT IS THE POINT.
+ *
+ * Some of these land very close. "Your partner has been short with you and has not said
+ * why" is an ordinary Tuesday for one person and the worst month of somebody else's life,
+ * and the appointment scene is written for a person who has been avoiding a result. Until
+ * this existed the only way past a scene was to play it — which means an app about not
+ * avoiding things was itself leaving somebody nowhere to go.
+ *
+ * A pass counts as nothing at all: not an away move, so it never escalates the later
+ * scenes; not a toward move, so it never inflates the ending. It gets one line and no
+ * follow-up question. Anything else — asking why, offering a gentler version of the same
+ * scene, keeping a tally of passes — turns an exit into a smaller room, and somebody who
+ * needed the exit once will not reach for it again.
+ *
+ * The ending may notice, once, in plain words, that some were passed. It may not comment. */
+export const PASS_LABEL = 'Not this one';
+export const PASS_ACKNOWLEDGEMENT = 'Left where it was. That is allowed.';
+
 /** How many values the player picks at the start. Two, not one: the interesting choices in
  *  this game are between two things that both matter, not between a value and nothing. */
 export const VALUES_TO_PICK = 2;
@@ -138,7 +156,7 @@ export const SCENES: TowardScene[] = [
         move: 'toward',
         value: 'connection',
         relief: 0,
-        after: 'Nothing about that felt better. The thought was right there while you typed and you did it anyway, which is the whole move.',
+        after: 'There is no reward built into that one. The thought was still in the room while you typed, and the message went anyway. That is the whole move.',
       },
       {
         text: 'Tell them you went quiet, and do not explain why.',
@@ -176,7 +194,7 @@ export const SCENES: TowardScene[] = [
         move: 'toward',
         value: 'health',
         relief: 1,
-        after: 'A real move with an exit kept in your pocket. That is not cheating. Most people need the exit the first few times and stop needing it after.',
+        after: 'A real move, with the door left open behind you. That is not cheating. Most people need the door the first few times and stop needing it later.',
       },
     ],
   },
@@ -193,14 +211,14 @@ export const SCENES: TowardScene[] = [
         move: 'away',
         value: null,
         relief: 2,
-        after: 'The room stayed comfortable. Notice that the thought said it was not worth an argument, and you were not deciding about an argument.',
+        after: 'The room stays comfortable, and that is worth something. Worth noticing too: the thought said an argument was not worth it, and an argument was never what was on offer.',
       },
       {
         text: 'Say what you heard, and ask if that is what they meant.',
         move: 'toward',
         value: 'honesty',
         relief: 0,
-        after: 'That is not an argument, it is a question. It also does not feel any easier than one, which is why the thought could pass itself off as caution.',
+        after: 'That is a question, not an argument. It costs about the same to say, which is how the thought passed itself off as caution.',
       },
       {
         text: 'Not now. Tell them tonight, properly.',
@@ -231,7 +249,7 @@ export const SCENES: TowardScene[] = [
         move: 'toward',
         value: 'making',
         relief: 0,
-        after: 'Badly was the instruction and you followed it. The thought did not get quieter while you worked. It did not have to.',
+        after: 'Badly was the instruction, and you took it. The thought probably did not get quieter while you worked. It did not have to.',
       },
       {
         text: 'Open it, only read it, and write down one thing to fix.',
@@ -262,7 +280,7 @@ export const SCENES: TowardScene[] = [
         move: 'toward',
         value: 'health',
         relief: 0,
-        after: 'Nothing got resolved. You still do not know. You just stopped spending anything on not knowing.',
+        after: 'Nothing is resolved. You still do not know. What changed is that you stopped paying rent on not knowing.',
       },
       {
         text: 'Ask someone to sit with you while you book it.',

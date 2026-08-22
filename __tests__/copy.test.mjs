@@ -198,3 +198,53 @@ describe('exercise scripts are complete and correctly timed', () => {
     assert.equal(new Set(ex.DISTORTIONS.map((d) => d.name)).size, ex.DISTORTIONS.length);
   });
 });
+
+/* ---------- the app does not tell anybody what they felt ----------
+ *
+ * The rule this enforces is the one the games broke first, and it is worth stating exactly
+ * because it is easy to break while writing warmly. The app may describe what a CHOICE
+ * bought or cost — "the evening got easier", "the message is still there" — because those
+ * are facts about the situation. It may not narrate the person's interior: "nothing about
+ * that felt better", "none of those felt better at the time", "if you did not care it would
+ * not have hurt". Those are assertions about somebody's inner life made by software that
+ * cannot see it, and getting one wrong is the specific way an app stops sounding like a
+ * person who is listening and starts sounding like one who is explaining you to yourself.
+ *
+ * SCOPE IS THE APP'S OWN VOICE ONLY. A distorted thought is allowed to say anything — it is
+ * quoted, and half of them are catastrophes on purpose. So are the reframe options and the
+ * choices, which are written in the first person as things somebody might think or pick.
+ * What is checked is the narration: situations, consequences, explanations. */
+
+const cbGame = await import('../content/curveball.ts');
+const twGame = await import('../content/toward.ts');
+
+describe('the app never narrates somebody\'s inner life back to them', () => {
+  const TELLING = [
+    /\bnothing about (that|it) felt\b/i,
+    /\bnone of (those|them|that) felt\b/i,
+    /\bthat felt (better|worse|good|bad)\b/i,
+    /\byou (felt|feel) (better|worse|awful|fine|nothing|relieved|ashamed)\b/i,
+    /\bwould not have hurt\b/i,
+    /\bthe (evening|day|morning) (got|felt) easier for you\b/i,
+  ];
+
+  /** Only the narration. Quoted thoughts and first-person choices are exempt — see above. */
+  const NARRATION = [
+    ...cbGame.SCENES.flatMap((s) => [s.scene, ...s.reframe.options.map((o) => o.why)]),
+    ...twGame.SCENES.flatMap((s) => [s.situation, s.escalated, ...s.options.map((o) => o.after)]),
+  ];
+
+  test('there is narration to check', () => {
+    assert.ok(NARRATION.length > 40, `only ${NARRATION.length} strings scanned`);
+  });
+
+  for (const line of NARRATION) {
+    test(`"${line.slice(0, 56)}…"`, () => {
+      for (const p of TELLING) {
+        assert.doesNotMatch(line, p,
+          'this tells the reader what they felt. Describe what the choice bought or cost ' +
+          'instead — that is a fact about the situation rather than a claim about them.');
+      }
+    });
+  }
+});

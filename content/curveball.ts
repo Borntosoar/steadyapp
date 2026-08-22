@@ -107,7 +107,7 @@ export const SCENES: CurveballScene[] = [
         {
           text: 'It does not matter what they think anyway.',
           accurate: false,
-          why: 'This one pretends not to care. If you did not care, the thought would not have hurt.',
+          why: 'This one pretends not to care. Something that truly did not matter would not have needed a reframe.',
         },
       ],
     },
@@ -204,12 +204,12 @@ export const SCENES: CurveballScene[] = [
         {
           text: 'A feeling is information about me. It is not information about them.',
           accurate: true,
-          why: 'Feelings are real and they are not evidence about other people. Both things are true.',
+          why: 'A feeling can be completely real and still not be evidence about somebody else. Both of those are true at once.',
         },
         {
           text: 'I should stop being so sensitive.',
           accurate: false,
-          why: 'That is a should statement wearing a solution costume.',
+          why: 'That is a should statement dressed up as a solution. It adds a job instead of answering anything.',
         },
       ],
     },
@@ -243,7 +243,7 @@ export const SCENES: CurveballScene[] = [
         {
           text: 'It does not matter, nothing does at midnight.',
           accurate: false,
-          why: 'Shrugging is not the same as checking. The thought is still standing behind it.',
+          why: 'Shrugging is not the same as checking. The thought is still standing there behind it.',
         },
       ],
     },
@@ -317,7 +317,7 @@ export const SCENES: CurveballScene[] = [
         {
           text: 'Feelings in the morning are meaningless.',
           accurate: false,
-          why: 'Dismissing the feeling is how it comes back louder at eleven.',
+          why: 'Dismissing a feeling tends to be how it comes back louder later on.',
         },
       ],
     },

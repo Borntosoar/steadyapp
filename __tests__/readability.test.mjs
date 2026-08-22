@@ -5,6 +5,11 @@ import { gradeLevel, longestSentence, countWords } from '../lib/readability.ts';
 const copy = await import('../content/copy.ts');
 const ex = await import('../content/exercises.ts');
 const modules = await import('../content/modules.ts');
+/* The two games were never in this file, so their register was never measured against the
+   rest of the app's. They happen to pass — but "happens to" is the state this whole suite
+   exists to replace. */
+const cb = await import('../content/curveball.ts');
+const tw = await import('../content/toward.ts');
 
 /* Reading level, enforced.
  *
@@ -95,6 +100,13 @@ const GROUPS = [
 /* Each of the twelve modules is scored on its own. Averaged together, one very plain
    module hides a dense one, and a reader only ever meets them one at a time. */
 for (const m of modules.MODULES) GROUPS.push([`module: ${m.title}`, m]);
+
+/* One group per game scene, for the same reason the modules are scored one at a time: a
+   reader meets exactly one scene at a time, and averaging seven of them lets a dense one
+   hide behind six plain ones. */
+for (const s of cb.SCENES) GROUPS.push([`curveball: ${s.id}`, s]);
+for (const s of tw.SCENES) GROUPS.push([`toward: ${s.id}`, s]);
+GROUPS.push(['toward: values', tw.VALUES]);
 
 describe('every group of copy reads at eighth grade or below', () => {
   for (const [name, group] of GROUPS) {

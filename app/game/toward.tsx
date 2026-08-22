@@ -13,7 +13,8 @@ import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../../constants/them
 import { useStore } from '../../store/useStore';
 import { haptic } from '../../hooks/haptics';
 import {
-  VALUES, SCENES, VALUES_TO_PICK, situationFor, optionsFor, tallyByValue, actionFor, labelFor,
+  VALUES, SCENES, VALUES_TO_PICK, PASS_LABEL, PASS_ACKNOWLEDGEMENT,
+  situationFor, optionsFor, tallyByValue, actionFor, labelFor,
   type TowardOption, type Value,
 } from '../../content/toward.ts';
 
@@ -46,10 +47,15 @@ export default function Toward() {
   const c = useTheme();
   const logPractice = useStore((s) => s.logPractice);
 
+  const firstName = useStore((st) => st.profile.firstName);
+
   const [phase, setPhase] = useState<Phase>('values');
   const [chosen, setChosen] = useState<string[]>([]);
   const [index, setIndex] = useState(0);
   const [picks, setPicks] = useState<TowardOption[]>([]);
+  /* Passes are held separately from picks and are never folded into them, so no arithmetic
+     anywhere can accidentally start treating a pass as a choice. */
+  const [passed, setPassed] = useState(0);
 
   const scene = SCENES[Math.min(index, SCENES.length - 1)];
   const awayCount = picks.filter((p) => p.move === 'away').length;
@@ -67,6 +73,7 @@ export default function Toward() {
 
       {phase === 'values' && (
         <PickValues
+          firstName={firstName}
           chosen={chosen}
           onToggle={(k) =>
             setChosen((p) => (p.includes(k) ? p.filter((x) => x !== k) : [...p, k].slice(-VALUES_TO_PICK)))
@@ -90,6 +97,7 @@ export default function Toward() {
                Both moves tap, because both are choices somebody made. */
             haptic.select();
           }}
+          onPass={() => setPassed((n) => n + 1)}
           onNext={() => {
             if (index + 1 < SCENES.length) setIndex(index + 1);
             else {
@@ -101,7 +109,7 @@ export default function Toward() {
       )}
 
       {phase === 'done' && (
-        <Done picks={picks} chosen={chosen} ground={ground} onDone={() => router.back()} />
+        <Done picks={picks} passed={passed} chosen={chosen} ground={ground} onDone={() => router.back()} />
       )}
     </View>
   );
@@ -142,8 +150,9 @@ function Stage({ children, scroll = true }: { children: React.ReactNode; scroll?
 /* ---------- what matters ---------- */
 
 function PickValues({
-  chosen, onToggle, onStart, onBack,
+  firstName, chosen, onToggle, onStart, onBack,
 }: {
+  firstName?: string;
   chosen: string[];
   onToggle: (key: string) => void;
   onStart: () => void;
@@ -157,7 +166,11 @@ function PickValues({
       <TopBar onBack={onBack} title="Toward" />
 
       <View style={{ gap: space.md, paddingTop: space.lg, paddingBottom: space.xl }}>
-        <H2>Pick two things that matter to you.</H2>
+        {/* The app has known this person's name since onboarding and uses it on the home
+            screen and in the check-in. Both games were addressing a generic "you", which is
+            the difference between a piece of software and somebody talking to you. Once, at
+            the start — the brief is explicit that the voice is present but not needy. */}
+        <H2>{firstName ? `Pick two things that matter, ${firstName}.` : 'Pick two things that matter to you.'}</H2>
         <Body>
           Then five moments. Each one has a thought in it that you do not have to argue with,
           and a way past it that costs something.
@@ -214,7 +227,7 @@ function PickValues({
 /* ---------- one moment ---------- */
 
 function Moment({
-  scene, awayCount, index, total, onBack, onPick, onNext,
+  scene, awayCount, index, total, onBack, onPick, onPass, onNext,
 }: {
   scene: (typeof SCENES)[number];
   awayCount: number;
@@ -222,6 +235,7 @@ function Moment({
   total: number;
   onBack: () => void;
   onPick: (o: TowardOption) => void;
+  onPass: () => void;
   onNext: () => void;
 }) {
   const c = useTheme();
@@ -229,6 +243,7 @@ function Moment({
      player learns a position far faster than they learn a distinction. */
   const options = useMemo(() => optionsFor(scene), [scene.id]);
   const [picked, setPicked] = useState<TowardOption | null>(null);
+  const [passed, setPassed] = useState(false);
 
   const escalated = awayCount >= 2;
 
@@ -261,6 +276,7 @@ function Moment({
           const tone = o.move === 'toward' ? c.accent : c.rose;
           const tint = o.move === 'toward' ? c.accentDim : c.roseDim;
 
+          if (passed) return null;
           if (revealed && !isPick) return null;
 
           return (
@@ -301,7 +317,32 @@ function Moment({
         })}
       </View>
 
-      {picked && (
+      {/* THE WAY OUT.
+          Offered before a choice is made and never after, so it reads as a door rather than
+          as an undo. It is a ghost button on purpose: present, findable, and not competing
+          with the options — somebody who needs it will find it, and somebody who does not
+          should barely register it. A pass asks nothing, explains nothing and counts as
+          nothing. See content/toward.ts for why that last part is the whole point. */}
+      {!picked && !passed && (
+        <View style={{ paddingTop: space.lg, alignItems: 'center' }}>
+          <Button
+            label={PASS_LABEL}
+            variant="ghost"
+            onPress={() => {
+              setPassed(true);
+              onPass();
+            }}
+          />
+        </View>
+      )}
+
+      {passed && (
+        <View style={{ paddingTop: space.lg, gap: space.sm }}>
+          <BodySm>{PASS_ACKNOWLEDGEMENT}</BodySm>
+        </View>
+      )}
+
+      {(picked || passed) && (
         <View style={{ paddingTop: space.xl }}>
           <Button label={index + 1 < total ? 'Next' : 'Finish'} onPress={onNext} />
         </View>
@@ -313,9 +354,11 @@ function Moment({
 /* ---------- the end ---------- */
 
 function Done({
-  picks, chosen, ground, onDone,
+  picks, passed, chosen, ground, onDone,
 }: {
   picks: TowardOption[];
+  /** Scenes left alone. Never a move, never scored — see content/toward.ts. */
+  passed: number;
   chosen: string[];
   ground: AtmosphereKey;
   onDone: () => void;
@@ -340,26 +383,32 @@ function Done({
   /* Three bands, because two put a run that took relief four times out of five under a
      headline congratulating it for paying the cost. */
   const headline =
-    served === 0 && elsewhere > 0
-      ? 'Every move you made went somewhere else.'
-      : served === 0
-        ? 'You took the relief every time, and it worked every time.'
-        : served * 2 <= picks.length
-          ? 'Mostly relief, and then not.'
-          : 'That is what it costs, and you paid it.';
+    picks.length === 0
+      ? 'You looked at them. That counts.'
+      : served === 0 && elsewhere > 0
+        ? 'Your moves went somewhere you did not name.'
+        : served === 0
+          ? 'You took the easier road each time, and it worked each time.'
+          : served * 2 <= picks.length
+            ? 'Mostly the easier road, and once not.'
+            : 'None of that was free, and you did it anyway.';
 
   const body =
-    served === 0 && elsewhere > 0
-      ? 'Worth sitting with. The things you move toward when nobody asks may be truer than the two you named at the start.'
-      : served === 0
-        ? 'That is worth knowing rather than fixing. Avoidance is effective — that is the entire problem with it.'
-        : served * 2 <= picks.length
-          ? 'The ones you stepped around are still there. The one you did not is the one that changed anything.'
-          : 'None of those felt better at the time. That is the difference between a move and a mood.';
+    picks.length === 0
+      ? 'Reading them through is a real thing to have done. Some days that is the whole of it.'
+      : served === 0 && elsewhere > 0
+        ? 'Worth sitting with rather than fixing. What you move toward when nobody is asking may be truer than the two you named at the start.'
+        : served === 0
+          ? 'That is worth knowing, not fixing. Stepping around things works — that is the whole difficulty with it.'
+          : served * 2 <= picks.length
+            ? 'The ones you stepped around are still where you left them. The one you did not is the one that moved.'
+            : 'Hard, most likely, and none of it came with a reward attached. That is the difference between a move and a mood.';
 
   return (
     <Finish
-      eyebrow={`${picks.length} moments`}
+      /* Scenes seen, not scenes played. Passing all five and reading "0 moments" tells
+         somebody the time they spent did not happen. */
+      eyebrow={`${picks.length + passed} moments`}
       figure={served}
       figureUnit={served === 1 ? 'move toward what matters' : 'moves toward what matters'}
       headline={headline}
@@ -385,6 +434,14 @@ function Done({
             </Text>
           </View>
         ))}
+
+        {passed > 0 && (
+          /* Noticed once, in plain words, and never discussed. A pass that gets commented on
+             is a pass somebody will not take twice. */
+          <Text style={[t.bodySm, { color: c.inkFaint }]}>
+            {passed === 1 ? 'One you left alone.' : `${passed} you left alone.`}
+          </Text>
+        )}
 
         {elsewhere > 0 && (
           /* Moves toward something they did not name. Reported rather than corrected — in
