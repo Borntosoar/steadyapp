@@ -14,20 +14,25 @@ import { useStore } from '../../store/useStore';
 import { haptic } from '../../hooks/haptics';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import {
-  sessionScenes, nameOptions, reframeTarget,
-  type CurveballScene, type CurveballThought,
+  sessionScenes, actionsFor, cast,
+  type CurveballScene, type CurveballThought, type NextAction,
 } from '../../content/curveball.ts';
-import { DISTORTIONS } from '../../content/exercises.ts';
 import { PASS_LABEL, PASS_ACKNOWLEDGEMENT } from '../../content/toward.ts';
 
 /* Curveball — the CBT game.
  *
  * Three phases per scene, four scenes per session, roughly ninety seconds.
  *
- *   1. INTERCEPT. Thoughts rise. Tap the distorted ones; let the balanced ones go past.
- *   2. NAME IT. One of the distorted thoughts comes back. Which distortion was it?
- *   3. REFRAME. Three replacements. One is accurate; the other two are the two failure
- *      modes people actually produce — cheerfulness, and pretending not to care.
+ *   1. INTERCEPT. Somebody else's thoughts rise before a thing that has not happened yet.
+ *      Tap the ones they cannot check; let the ones that hold up go past. A caught thought
+ *      names its own pattern — shown, never asked about.
+ *   2. WHAT THEY DO NEXT. Three actions, and the one that proceeds on what they actually
+ *      know is never marked as correct. You see what happens instead.
+ *
+ * The naming quiz is gone and the reframe answer key is gone; docs/DIRECTION.md §10 has the
+ * evidence. In short: nothing has ever isolated distortion-labelling, and picking an accurate
+ * reframe trains the one CBT component that is probably not additive, while choosing an
+ * action trains the one that is.
  *
  * THE TELL IS SHAPE, NOT COLOUR — AND IT SURVIVES REDUCE MOTION. Distorted thoughts lean;
  * balanced ones sit straight. With animation allowed they also sway, and with Reduce Motion
@@ -50,7 +55,7 @@ import { PASS_LABEL, PASS_ACKNOWLEDGEMENT } from '../../content/toward.ts';
  * it says it silently. No error haptic, no red, no buzz. The only touch feedback here is on
  * a correct catch. */
 
-type Phase = 'intro' | 'intercept' | 'name' | 'reframe' | 'done';
+type Phase = 'intro' | 'intercept' | 'next' | 'done';
 
 /** How long a thought takes to cross the field. Slow enough to read a short sentence twice,
  *  fast enough that hesitating costs something. */
@@ -78,11 +83,14 @@ interface Tally {
   /** Balanced, intercepted. The false alarm — the failure mode that matters most, because a
    *  player who taps everything is rehearsing that every thought they have is suspect. */
   falseAlarm: number;
-  named: number;
-  reframed: number;
+  /** Actions chosen that proceeded on what the character actually knew. Counted for the
+   *  ending's sentence and never shown as a score. */
+  went: number;
+  /** Scenes where an action was chosen at all. */
+  decided: number;
 }
 
-const ZERO: Tally = { caught: 0, allowed: 0, missed: 0, falseAlarm: 0, named: 0, reframed: 0 };
+const ZERO: Tally = { caught: 0, allowed: 0, missed: 0, falseAlarm: 0, went: 0, decided: 0 };
 
 export default function Curveball() {
   const router = useRouter();
@@ -175,30 +183,22 @@ export default function Curveball() {
               missed: p.missed + round.missed,
               falseAlarm: p.falseAlarm + round.falseAlarm,
             }));
-            setPhase('name');
+            setPhase('next');
           }}
         />
       )}
 
-      {phase === 'name' && (
-        <NameIt
-          key={`${scene.id}-name`}
+      {phase === 'next' && (
+        <WhatNext
+          key={`${scene.id}-next`}
           scene={scene}
           onBack={() => router.back()}
-          onDone={(right) => {
-            setTally((p) => ({ ...p, named: p.named + (right ? 1 : 0) }));
-            setPhase('reframe');
-          }}
-        />
-      )}
-
-      {phase === 'reframe' && (
-        <Reframe
-          key={`${scene.id}-reframe`}
-          scene={scene}
-          onBack={() => router.back()}
-          onDone={(right) => {
-            setTally((p) => ({ ...p, reframed: p.reframed + (right ? 1 : 0) }));
+          onDone={(action) => {
+            setTally((p) => ({
+              ...p,
+              went: p.went + (action.checks ? 1 : 0),
+              decided: p.decided + 1,
+            }));
             if (sceneIndex + 1 < scenes.length) {
               setSceneIndex(sceneIndex + 1);
               setPhase('intercept');
@@ -271,14 +271,17 @@ function Intro({
       <TopBar onBack={onBack} title="Curveball" />
       <View style={{ flex: 1, justifyContent: 'center', gap: space.xl }}>
         <View style={{ gap: space.md }}>
-          <H2>Catch the ones that bend.</H2>
+          <H2>Three people, and the hour before.</H2>
           <Body>
-            Thoughts rise. The bent ones lean as they come. Tap those, and let the straight
-            ones go past.
+            Someone is about to do a hard thing, and their thoughts arrive first. Tap the
+            ones they cannot check. Let the ones that hold up go past.
           </Body>
           <BodySm>
-            Letting the fair ones through is half of it. Tapping everything is its own kind of
-            wrong.
+            Letting the fair ones through is half of it — some of what they think is simply
+            true, and telling which is which is the whole skill.
+            {'\n\n'}
+            The situations are ordinary ones: a message not sent, a room about to be walked
+            into, a partner gone quiet. Any of them can be left where it is.
           </BodySm>
         </View>
 
@@ -442,7 +445,7 @@ function Intercept({
 
       <View style={{ gap: space.xs, paddingTop: space.lg, paddingBottom: space.md }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Caption>The situation</Caption>
+          <Caption>{scene.who}, in a minute</Caption>
           {/* THE WAY OUT, AND IT SITS HERE FOR A REASON.
               Toward has had one since it shipped, and the rationale written there names two
               scenes as the cause — a partner gone quiet, and an appointment somebody has been
@@ -613,7 +616,13 @@ function RisingThought({
         opacity: mark ? 0.55 : 1,
       }}
     >
-      <ThoughtPill text={row.thought.text} mark={mark} onPress={onPress} maxWidth={pillMax} />
+      <ThoughtPill
+        text={row.thought.text}
+        pattern={row.thought.distortion}
+        mark={mark}
+        onPress={onPress}
+        maxWidth={pillMax}
+      />
     </Animated.View>
   );
 }
@@ -623,15 +632,25 @@ function StillThought({
 }: { row: Live; mark?: 'hit' | 'slip'; onPress: () => void }) {
   return (
     <View style={{ opacity: mark ? 0.62 : 1 }}>
-      <ThoughtPill text={row.thought.text} mark={mark} onPress={onPress} stretch />
+      <ThoughtPill
+        text={row.thought.text}
+        pattern={row.thought.distortion}
+        mark={mark}
+        onPress={onPress}
+        stretch
+      />
     </View>
   );
 }
 
 function ThoughtPill({
-  text, mark, onPress, stretch, maxWidth,
+  text, pattern, mark, onPress, stretch, maxWidth,
 }: {
   text: string;
+  /** The distortion this thought is an instance of, or null. Appears once it has been
+   *  caught, in small type, as a statement. This is what replaced the naming quiz: the
+   *  vocabulary is still taught, the player is just no longer examined on it. */
+  pattern?: string | null;
   mark?: 'hit' | 'slip';
   onPress: () => void;
   stretch?: boolean;
@@ -689,133 +708,92 @@ function ThoughtPill({
         {mark === 'hit' ? '✓  ' : mark === 'slip' ? '→  ' : ''}
         {text}
       </Text>
+      {mark === 'hit' && pattern && (
+        <Text
+          style={[t.caption, { color: c.inkFaint, textAlign: stretch ? 'left' : 'center', paddingTop: 2 }]}
+        >
+          {pattern}
+        </Text>
+      )}
     </Pressable>
   );
 }
 
-/* ---------- phase two: name it ---------- */
+/* ---------- phase two: what they do next ----------
+ *
+ * This replaces two screens: a naming quiz and a reframe answer key. Both are gone for
+ * reasons in docs/DIRECTION.md §10, and the short version is that neither was doing the work
+ * it looked like it was doing.
+ *
+ * The three options are ACTIONS, and exactly one of them proceeds on what the character
+ * actually knows. That one is never marked. There is no tick, no score, no "correct" — the
+ * player picks, and then reads what happens. A consequence teaches; a verdict just tells
+ * somebody they were graded on a guess about a fictional person's evening.
+ *
+ * Why actions rather than reframes at all: choosing what somebody does is behavioural
+ * activation, which the component analyses find adds something on top of the rest of a CBT
+ * package. Choosing the most accurate rewording of a thought is cognitive restructuring,
+ * which the same analyses find probably does not. Same screen, better-supported mechanism. */
 
-function NameIt({
+function WhatNext({
   scene, onBack, onDone,
-}: { scene: CurveballScene; onBack: () => void; onDone: (right: boolean) => void }) {
+}: {
+  scene: CurveballScene;
+  onBack: () => void;
+  onDone: (a: NextAction) => void;
+}) {
   const c = useTheme();
-  const target = reframeTarget(scene);
-  const options = useMemo(() => nameOptions(target.distortion as string), [scene.id]);
-  const [picked, setPicked] = useState<string | null>(null);
-
-  const right = picked === target.distortion;
-
-  return (
-    <Stage>
-      {/* Every phase needs a visible way out. This one and Reframe had no TopBar at all, so
-          the moment a scene lands hardest — a single thought alone in a card with a question
-          under it — was the moment with nothing on screen to leave by. */}
-      <TopBar onBack={onBack} />
-      <View style={{ flex: 1, justifyContent: 'center', gap: space.xl }}>
-        <View style={{ gap: space.sm }}>
-          <Caption>One of them again</Caption>
-          <Frost>
-            <Body>{target.text}</Body>
-          </Frost>
-          <BodySm>What is it doing?</BodySm>
-        </View>
-
-        <View style={{ gap: space.sm }}>
-          {options.map((name) => {
-            const chosen = picked === name;
-            const isTrue = name === target.distortion;
-            const reveal = picked !== null;
-            return (
-              <Pressable
-                key={name}
-                accessibilityRole="button"
-                accessibilityState={{ selected: chosen }}
-                disabled={reveal}
-                onPress={() => {
-                  setPicked(name);
-                  if (name === target.distortion) haptic.select();
-                }}
-                style={{
-                  backgroundColor: reveal && isTrue ? c.accentDim : c.surface,
-                  borderColor: reveal && isTrue ? c.accent : chosen ? c.cool : c.line,
-                  borderWidth: StyleSheet.hairlineWidth * 2,
-                  borderRadius: radius.md,
-                  padding: space.lg,
-                  minHeight: 52,
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={[t.body, { color: c.ink }]}>{name}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {picked !== null && (
-          <View style={{ gap: space.md }}>
-            <BodySm>
-              {right
-                ? `Yes. ${defOf(target.distortion as string)}`
-                : `It is ${target.distortion}. ${defOf(target.distortion as string)}`}
-            </BodySm>
-            <Button label="Next" onPress={() => onDone(right)} />
-          </View>
-        )}
-      </View>
-    </Stage>
-  );
-}
-
-/* ---------- phase three: reframe ---------- */
-
-function Reframe({
-  scene, onBack, onDone,
-}: { scene: CurveballScene; onBack: () => void; onDone: (right: boolean) => void }) {
-  const c = useTheme();
-  const options = scene.reframe.options;
-  const [picked, setPicked] = useState<number | null>(null);
-  const chosen = picked === null ? null : options[picked];
+  const options = useMemo(() => actionsFor(scene), [scene.id]);
+  const [picked, setPicked] = useState<NextAction | null>(null);
 
   return (
     <Stage scroll={picked !== null}>
       <TopBar onBack={onBack} />
       <View style={{ flex: 1, justifyContent: 'center', gap: space.xl, paddingVertical: space.xl }}>
         <View style={{ gap: space.sm }}>
-          <Caption>Instead of</Caption>
-          <Frost>
-            <Body>{scene.reframe.quote}</Body>
-          </Frost>
-          <BodySm>Which one is actually truer? Not kinder — truer.</BodySm>
+          <Caption>{scene.who}</Caption>
+          <H2>What does {scene.who} do?</H2>
         </View>
 
         <View style={{ gap: space.sm }}>
-          {options.map((o, i) => {
-            const reveal = picked !== null;
+          {options.map((o) => {
+            const isPick = picked?.text === o.text;
+            const revealed = picked !== null;
+            if (revealed && !isPick) return null;
             return (
               <Pressable
                 key={o.text}
                 accessibilityRole="button"
-                disabled={reveal}
+                disabled={revealed}
                 onPress={() => {
-                  setPicked(i);
-                  if (o.accurate) haptic.select();
+                  setPicked(o);
+                  /* Feedback marks that a choice was made, never which choice. Both a
+                     careful action and an avoidant one get the same tap, because both are
+                     things a person does and neither is the player being right. */
+                  haptic.select();
                 }}
                 style={{
-                  backgroundColor: reveal && o.accurate ? c.accentDim : c.surface,
-                  borderColor: reveal && o.accurate ? c.accent : picked === i ? c.cool : c.line,
+                  backgroundColor: c.surfaceSolid,
+                  borderColor: isPick ? c.accent : c.line,
                   borderWidth: StyleSheet.hairlineWidth * 2,
                   borderRadius: radius.md,
                   padding: space.lg,
+                  gap: space.sm,
                 }}
               >
-                <Text style={[t.bodySm, { color: c.ink }]}>{o.text}</Text>
-                {reveal && <Text style={[t.caption, { color: c.inkFaint, marginTop: space.sm }]}>{o.why}</Text>}
+                <Text style={[t.body, { color: c.ink }]}>{o.text}</Text>
+                {isPick && (
+                  <>
+                    <Text style={[t.label, { color: c.inkFaint }]}>What happens</Text>
+                    <Text style={[t.bodySm, { color: c.inkSoft }]}>{o.outcome}</Text>
+                  </>
+                )}
               </Pressable>
             );
           })}
         </View>
 
-        {chosen && <Button label="Next" onPress={() => onDone(chosen.accurate)} />}
+        {picked && <Button label="Next" onPress={() => onDone(picked)} />}
       </View>
     </Stage>
   );
@@ -851,6 +829,16 @@ function Done({
         ? 'Some of those thoughts held up. Telling which is the skill — not suspecting all of them, which is the thing most of us already do without practising.'
         : `${tally.allowed} fair thoughts let through, ${tally.caught} bent ones caught.`;
 
+  /* WHO IS NEXT, BY NAME, AND WHY THAT LINE IS HERE.
+     SPARX — a well-made CBT game given away free at national scale — was completed by 3.1%
+     of the adolescents who registered, and lost half of them between module one and module
+     two. Completed units, not sessions started, is what the adherence literature ties to
+     outcome. So the cheapest honest thing this screen can do is give a reason to come back
+     that is specific rather than a streak: somebody with a name, mid-week, still deciding.
+     No points, no counter, no notification. Deci 1999 is clear that a contingent reward
+     bolted on here would undermine the thing it was meant to encourage. */
+  const upNext = cast()[(scenes + passed) % cast().length];
+
   return (
     <Finish
       eyebrow={`${scenes} situations`}
@@ -869,6 +857,10 @@ function Done({
          house style. It is also the palette-correct ramp — see groundFor. */
       variant={ground}
     >
+      <BodySm style={{ paddingTop: space.lg, textAlign: 'center' }}>
+        {upNext} is next time.
+      </BodySm>
+
       {passed > 0 && (
         /* Noticed once, plainly, and never discussed. Same rule as Toward: a pass that gets
            commented on is a pass somebody will not take twice. */
@@ -878,16 +870,4 @@ function Done({
       )}
     </Finish>
   );
-}
-
-/* ---------- helper ---------- */
-
-/** The definition shown after a name is picked, read from the one live taxonomy rather than
- *  restated here. A name the game uses that the app does not define throws rather than
- *  rendering "undefined" at somebody mid-session — and `__tests__/curveball.test.mjs` makes
- *  that unreachable by checking every name in the content against the same list. */
-function defOf(name: string): string {
-  const d = DISTORTIONS.find((x) => x.name === name);
-  if (!d) throw new Error(`curveball: "${name}" is not in the distortion taxonomy`);
-  return d.definition;
 }

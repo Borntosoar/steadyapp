@@ -1,72 +1,80 @@
-import { DISTORTIONS } from './exercises.ts';
 import { shuffle, type Rand } from '../lib/shuffle.ts';
 import type { MotifKind, SceneMood } from '../lib/motif.ts';
 
-/* Curveball — the CBT game.
+/* Curveball — the CBT game, rebuilt against §10 of docs/DIRECTION.md.
  *
- * WHAT IT IS. Thoughts rise up the screen. Some are distorted, some are balanced. You
- * intercept the distorted ones and let the balanced ones through. Then you name the
- * distortion, then you pick the reframe. Three phases, one loop, about ninety seconds.
+ * WHAT CHANGED AND WHY. The first version put the player's own thinking on trial, in the
+ * second person, about something that had already happened, and then graded it. Three
+ * advisors independently said the same three things, and the evidence supported all three.
  *
- * WHY IT IS SHAPED THIS WAY, AND THE ONE RULE THAT MATTERS MOST. Every scene carries at
- * least two thoughts that must be LET THROUGH. Without them the correct strategy is "tap
- * everything", the score goes up, and the player has practised nothing — worse than
- * nothing, because they have spent ninety seconds rehearsing that every thought they have
- * is suspect. Discrimination is the entire skill being trained; the distorted thoughts are
- * only half the material. `__tests__/curveball.test.mjs` fails the build if any scene drops
- * below two balanced thoughts, and that test is the most important one in the file.
+ *   1. THIRD PERSON, NOT SECOND. You watch someone else's thoughts arrive. Self-distanced
+ *      reflection has a real literature behind it; being told "you are catastrophising" by
+ *      software has none, and it is a status move besides. People are also reliably better
+ *      at this on somebody else's material than on their own, which is why the thought
+ *      record already asks what you would tell a friend.
  *
- * THE REFRAME OPTIONS ARE NOT ONE RIGHT AND TWO RANDOM. Each scene's wrong answers are the
- * two specific failure modes people actually produce when told to "think positively":
+ *   2. BEFORE, NOT AFTER. Every situation here is about to happen. Schertz et al. 2025 —
+ *      208 people, roughly 13,000 surveys — found distanced self-talk works when somebody is
+ *      preparing for something and does NOT work when they are using it to feel better about
+ *      something already done. The old scenes were all retrospective, which is the wrong
+ *      side of that finding.
  *
- *   · TOXIC POSITIVITY — cheerfulness pasted over the thought without checking it.
- *   · DISMISSAL — pretending not to care, which is only credible if the thought never hurt.
+ *   3. WHAT THEY DO, NOT WHICH REFRAME IS CORRECT. The naming quiz is gone: no dismantling
+ *      study has ever isolated distortion-labelling, and the taxonomy is a teaching device
+ *      from 1980 with overlapping categories. And "pick the most accurate reframe" trains
+ *      cognitive restructuring, which Furukawa et al. 2021 found is probably NOT additive in
+ *      internet CBT — while behavioural activation is. Same three-option screen; the options
+ *      are now actions with consequences rather than answers with a verdict.
  *
- * Both feel like reframes. Neither is one. A reframe is smaller than the thought it
- * replaces and closer to the evidence, and that is what the `why` text on each option is
- * for: the player has to be told why the plausible wrong answer is wrong, or they leave
- * with the plausible wrong answer.
+ * WHAT DID NOT CHANGE, AND MUST NOT. Every scene still carries at least two thoughts that
+ * have to be LET THROUGH. Without them the winning move is tapping everything, the player
+ * spends ninety seconds rehearsing that every thought they have is suspect, and the game is
+ * actively harmful rather than merely useless. That is the one rule in this file, and
+ * __tests__/curveball.test.mjs fails the build over it.
  *
- * VOCABULARY. Distortion names are the live taxonomy in `content/exercises.ts` and nowhere
- * else. A name that drifts out of that list is a name the thought record cannot record.
+ * THE TAXONOMY STAYS IN THE DATA. The quiz is gone; the vocabulary is not. `distortion` is
+ * still on every bent thought and still comes from content/exercises.ts, because the thought
+ * record asks the user to tick which patterns applied and writes them into the export they
+ * keep. Delete the vocabulary here and that screen becomes an unexplained wall of jargon
+ * with nothing in the product that ever introduced it. The name is now SHOWN on a caught
+ * thought rather than asked about — teaching without an exam.
  *
- * NO REACT-NATIVE IMPORTS. The suite imports this file directly under bare Node — see the
- * rule enforced by `__tests__/safety.test.mjs`. */
+ * NO REACT-NATIVE IMPORTS. The suite loads this under bare Node. */
 
 export interface CurveballThought {
+  /** The character's own thought, in their words. */
   text: string;
-  /** The distortion this is an instance of, or `null` when the thought is balanced and
-   *  must be let through. */
+  /** The pattern it is an instance of, or `null` when the thought holds up and must be let
+   *  through. Shown after a catch, never asked about. */
   distortion: string | null;
 }
 
-export interface ReframeOption {
+export interface NextAction {
   text: string;
-  /** Exactly one option per scene is accurate. */
-  accurate: boolean;
-  /** Shown after the pick, for the wrong answers as much as the right one. */
-  why: string;
+  /** True on the one action that proceeds on what the character actually knows.
+   *  NEVER rendered as a verdict — no tick, no score, no "correct". It exists so the tests
+   *  can guarantee one such action is always on offer. What the player sees is the
+   *  consequence, and the consequence is what teaches. */
+  checks: boolean;
+  /** What happens. Plainly, without a moral, and never a claim about how anybody felt. */
+  outcome: string;
 }
 
 export interface CurveballScene {
   id: string;
-  /** The situation, in one line, before any thought about it. */
+  /** Whose evening this is. Three people recur across the seven scenes, so a second session
+   *  is somebody you have already met rather than a fresh stranger. */
+  who: string;
+  /** The situation, in one line, and always about to happen. */
   scene: string;
-  /* THE GROUND AND THE MARK ON IT.
-     A situation is a room, and the thoughts only mean anything to somebody who is already
-     standing in it. Reading "your partner has been short with you since this morning" off
-     a neutral field asks the player to build that room themselves in the second before the
-     first thought arrives; a warm ground and a scatter of hearts does it for them. See
-     lib/motif.ts for the rules — chiefly that these key off WHICH SCENE IT IS and never off
-     how the player is doing, because a background that reacts to a score is a rating with
-     better manners. */
+  /* THE GROUND AND THE MARK ON IT. See lib/motif.ts — chiefly that these key off WHICH SCENE
+     IT IS and never off how the player is doing, because a background that reacts to a score
+     is a rating with better manners. */
   mood: SceneMood;
   motif: MotifKind;
   thoughts: CurveballThought[];
-  reframe: {
-    /** Must match one of the distorted `thoughts` in this scene, verbatim. */
-    quote: string;
-    options: ReframeOption[];
+  next: {
+    options: NextAction[];
   };
 }
 
@@ -79,218 +87,213 @@ export const MIN_BALANCED_PER_SCENE = 2;
 
 export const SCENES: CurveballScene[] = [
   {
-    id: 'unanswered-text',
-    scene: 'You texted a friend three hours ago. Still nothing back.',
+    id: 'before-the-message',
+    who: 'Nadia',
+    scene: 'Nadia has typed a message to a friend she has not spoken to in weeks. Her thumb is over send.',
     mood: 'evening',
     motif: 'messages',
     thoughts: [
-      { text: 'They are ignoring me on purpose.', distortion: 'Mind reading' },
-      { text: 'They might just be busy.', distortion: null },
-      { text: 'I always say the wrong thing.', distortion: 'Overgeneralisation' },
-      { text: 'This friendship is over.', distortion: 'Catastrophising' },
-      { text: 'I do not know why yet.', distortion: null },
-      { text: 'I should not have texted first.', distortion: 'Should statements' },
+      { text: 'They will think I only want something.', distortion: 'Mind reading' },
+      { text: 'We have both been quiet, not just me.', distortion: null },
+      { text: 'It is too late to be sending this.', distortion: 'Fortune telling' },
+      { text: 'One message is one message.', distortion: null },
+      { text: 'I always leave things too long.', distortion: 'Overgeneralisation' },
+      { text: 'If they do not reply I have lost them.', distortion: 'Catastrophising' },
     ],
-    reframe: {
-      quote: 'They are ignoring me on purpose.',
+    next: {
       options: [
         {
-          text: 'Everything happens for a reason. Stay positive!',
-          accurate: false,
-          why: 'That is not a reframe, it is a mute button. It skips past the worry instead of checking it.',
+          text: 'Delete it, and write again when there is better news.',
+          checks: false,
+          outcome: 'The evening gets easier straight away. The message is still unsent on Thursday, and by then the gap is a week wider than it was.',
         },
         {
-          text: 'I do not know why they have not replied. Most reasons have nothing to do with me.',
-          accurate: true,
-          why: 'A reframe is not cheerfulness. It is accuracy. This one is smaller than the thought and truer.',
+          text: 'Send it as it is.',
+          checks: true,
+          outcome: 'She will not know how it landed for a couple of hours. What changed is that she is no longer carrying the decision around with her.',
         },
         {
-          text: 'It does not matter what they think anyway.',
-          accurate: false,
-          why: 'This one pretends not to care. Something that truly did not matter would not have needed a reframe.',
+          text: 'Send it, with three paragraphs explaining the silence.',
+          checks: false,
+          outcome: 'The explanation runs longer than the message. Most of it answers a version of her friend that she assembled herself.',
         },
       ],
     },
   },
   {
-    id: 'one-piece-of-feedback',
-    scene: 'You got one piece of critical feedback at work. The rest was good.',
+    id: 'before-the-review',
+    who: 'Theo',
+    scene: 'Theo has a review in twenty minutes. He has seen the agenda and nothing else.',
     mood: 'daylight',
     motif: 'papers',
     thoughts: [
-      { text: 'I am bad at this job.', distortion: 'Labelling' },
-      { text: 'One thing needs work.', distortion: null },
-      { text: 'They only said the good parts to be kind.', distortion: 'Discounting the positive' },
-      { text: 'I am going to get fired.', distortion: 'Catastrophising' },
-      { text: 'The rest of it went well.', distortion: null },
-      { text: 'If it is not perfect it is a failure.', distortion: 'All-or-nothing' },
+      { text: 'They have already decided something.', distortion: 'Mind reading' },
+      { text: 'A review is a review.', distortion: null },
+      { text: 'This is where they tell me I am done.', distortion: 'Catastrophising' },
+      { text: 'I have had four of these and they were fine.', distortion: null },
+      { text: 'One criticism means the rest was padding.', distortion: 'Discounting the positive' },
+      { text: 'I am not good enough for this job.', distortion: 'Labelling' },
     ],
-    reframe: {
-      quote: 'They only said the good parts to be kind.',
+    next: {
       options: [
         {
-          text: 'I am great at my job and they are lucky to have me.',
-          accurate: false,
-          why: 'This just swings the bat the other way. A thought you cannot check is still a thought you cannot check.',
+          text: 'Move it to next week and say something came up.',
+          checks: false,
+          outcome: 'The twenty minutes stop being unbearable. The agenda item is the same one next week, with seven more days behind it.',
         },
         {
-          text: 'They said several things. I kept one and threw the rest away.',
-          accurate: true,
-          why: 'It names what actually happened to the evidence. That is the move.',
+          text: 'Go in and ask what the agenda item is about.',
+          checks: true,
+          outcome: 'He has an answer inside the first minute. It is smaller than the one he brought in with him, and it is the actual one.',
         },
         {
-          text: 'Feedback is meaningless anyway.',
-          accurate: false,
-          why: 'Throwing out all of it is the same error as keeping only the bad part.',
+          text: 'Go in with an answer ready for every possible criticism.',
+          checks: false,
+          outcome: 'He spends the meeting waiting for his turn to use them. Most of what is said does not need defending, and he half-hears it.',
         },
       ],
     },
   },
   {
-    id: 'cancelled-plans',
-    scene: 'You cancelled plans because you were worn out.',
+    id: 'before-cancelling',
+    who: 'June',
+    scene: 'June is due somewhere in an hour and has not decided yet whether she is going.',
     mood: 'evening',
     motif: 'moons',
     thoughts: [
-      { text: 'I am letting everyone down.', distortion: 'Labelling' },
-      { text: 'I was tired and I rested.', distortion: null },
-      { text: 'I should be able to handle this.', distortion: 'Should statements' },
-      { text: 'Everyone else copes fine.', distortion: 'Mind reading' },
-      { text: 'I can see them another day.', distortion: null },
-      { text: 'I ruin everything.', distortion: 'Overgeneralisation' },
+      { text: 'I will be the flat one in the corner.', distortion: 'Fortune telling' },
+      { text: 'I am tired, and that is a real reason.', distortion: null },
+      { text: 'Everyone else manages this without effort.', distortion: 'Comparison bias' },
+      { text: 'People cancel. That is a normal thing.', distortion: null },
+      { text: 'Cancelling means I gave up on all of it.', distortion: 'All-or-nothing' },
+      { text: 'I ruin every plan I am part of.', distortion: 'Overgeneralisation' },
     ],
-    reframe: {
-      quote: 'Everyone else copes fine.',
+    next: {
       options: [
         {
-          text: 'Nobody copes. Everyone is faking it.',
-          accurate: false,
-          why: 'Another guess about other people, just a gloomier one. Still a guess.',
+          text: 'Cancel now, before she has to decide twice.',
+          checks: false,
+          outcome: 'The hour ahead opens up and the relief arrives at once. It was also the answer last time, and the time before that.',
         },
         {
-          text: 'I can see how other people look. I cannot see how they feel.',
-          accurate: true,
-          why: 'It puts the line back where the evidence actually stops.',
+          text: 'Go for an hour, and leave whenever she wants to.',
+          checks: true,
+          outcome: 'She finds out what an hour of it is actually like, which is the one thing she could not work out from her sofa.',
         },
         {
-          text: 'I need to try harder than they do.',
-          accurate: false,
-          why: 'This keeps the comparison and adds a job to it.',
+          text: 'Go, and stay to the end however it goes.',
+          checks: false,
+          outcome: 'She gets through it with her jaw set. Doing it that way is what makes the next invitation harder rather than easier.',
         },
       ],
     },
   },
   {
-    id: 'room-goes-quiet',
-    scene: 'You walk into a room and two people stop talking.',
+    id: 'before-the-room',
+    who: 'Theo',
+    scene: 'Theo is about to walk into a room where he knows exactly one person.',
     mood: 'evening',
     motif: 'rings',
     thoughts: [
-      { text: 'They were talking about me.', distortion: 'Mind reading' },
-      { text: 'They finished their sentence.', distortion: null },
-      { text: 'It feels like judgement, so it was.', distortion: 'Emotional reasoning' },
-      { text: 'This will happen every time now.', distortion: 'Fortune telling' },
-      { text: 'I do not have enough to go on.', distortion: null },
-      { text: 'People always notice the worst of me.', distortion: 'Overgeneralisation' },
+      { text: 'They will all watch me come in.', distortion: 'Spotlight effect' },
+      { text: 'Most people are looking at their phones.', distortion: null },
+      { text: 'If I go quiet they will think I am rude.', distortion: 'Mind reading' },
+      { text: 'I know one person, and that is a start.', distortion: null },
+      { text: 'I always run out of things to say.', distortion: 'Overgeneralisation' },
+      { text: 'One flat chat and the night is over.', distortion: 'Catastrophising' },
     ],
-    reframe: {
-      quote: 'It feels like judgement, so it was.',
+    next: {
       options: [
         {
-          text: 'My gut is usually right about people.',
-          accurate: false,
-          why: 'This makes the feeling the proof. That is the exact move that got you here.',
+          text: 'Stand outside a while longer and see how he feels.',
+          checks: false,
+          outcome: 'The pavement is calmer than the room. Ten minutes on, the room is fuller, and walking in is a bigger entrance than it would have been.',
         },
         {
-          text: 'A feeling is information about me. It is not information about them.',
-          accurate: true,
-          why: 'A feeling can be completely real and still not be evidence about somebody else. Both of those are true at once.',
+          text: 'Go in and find the one person he knows.',
+          checks: true,
+          outcome: 'It takes about forty seconds. Whether the night is any good is still open, which is the part he could not settle from outside.',
         },
         {
-          text: 'I should stop being so sensitive.',
-          accurate: false,
-          why: 'That is a should statement dressed up as a solution. It adds a job instead of answering anything.',
+          text: 'Go in with three things prepared to say.',
+          checks: false,
+          outcome: 'All three are used inside two minutes. Prepared lines are the ones he half-listens through, waiting for a gap to put them in.',
         },
       ],
     },
   },
   {
-    id: 'replaying-the-mistake',
-    scene: 'It is midnight and you are replaying something you said on Tuesday.',
+    id: 'before-saying-it',
+    who: 'Nadia',
+    scene: 'Nadia is about to bring up something that has been bothering her for a week.',
     mood: 'smallHours',
     motif: 'loops',
     thoughts: [
-      { text: 'Everyone there is still thinking about it.', distortion: 'Spotlight effect' },
-      { text: 'It was a small thing and it is over.', distortion: null },
-      { text: 'Going over it again has not changed it once.', distortion: null },
-      { text: 'I am the kind of person who ruins rooms.', distortion: 'Labelling' },
-      { text: 'They will bring it up next time.', distortion: 'Fortune telling' },
-      { text: 'I should have caught myself before I said it.', distortion: 'Should statements' },
+      { text: 'I should have said it at the time.', distortion: 'Should statements' },
+      { text: 'It has bothered me a week. That matters.', distortion: null },
+      { text: 'They will think I have been stewing.', distortion: 'Mind reading' },
+      { text: 'I do not know how they will take it.', distortion: null },
+      { text: 'This will turn into a whole thing.', distortion: 'Catastrophising' },
+      { text: 'I am too sensitive about everything.', distortion: 'Labelling' },
     ],
-    reframe: {
-      quote: 'Everyone there is still thinking about it.',
+    next: {
       options: [
         {
-          text: 'Nobody cares about me at all.',
-          accurate: false,
-          why: 'That is the same overestimate with a minus sign. It still puts you at the centre.',
+          text: 'Leave it. It has waited a week already.',
+          checks: false,
+          outcome: 'Nothing has to happen tonight. It also waits another week, and then saying it means explaining the fortnight of not saying it.',
         },
         {
-          text: 'They each went home to their own Tuesday. Mine is the only one I am still in.',
-          accurate: true,
-          why: 'It stops guessing at their attention and describes where yours actually is.',
+          text: 'Say the thing, and stop there.',
+          checks: true,
+          outcome: 'It takes about a sentence. What happens next belongs to somebody else, which is where it was always going to sit.',
         },
         {
-          text: 'It does not matter, nothing does at midnight.',
-          accurate: false,
-          why: 'Shrugging is not the same as checking. The thought is still standing there behind it.',
+          text: 'Say it, wrapped in an apology for bringing it up.',
+          checks: false,
+          outcome: 'The apology arrives first and takes up most of the room. The thing itself comes out smaller than a week of carrying it.',
         },
       ],
     },
   },
   {
-    /* The scene the wallpaper idea came from. Worth saying why it is worth having beyond
-       the hearts: the distortions that fire hardest about a partner are the ones a person
-       is least likely to catch, because in a relationship mind reading feels like intimacy
-       and catastrophising feels like taking it seriously. Two of the balanced thoughts here
-       are deliberately unsatisfying — "they have not said anything is wrong" resolves
-       nothing, which is exactly why it is the fair one. */
-    id: 'partner-gone-quiet',
-    scene: 'Your partner has been short with you since this morning and has not said why.',
+    id: 'before-asking',
+    who: 'Nadia',
+    scene: "Nadia's partner has been quiet since this morning. She is about to ask why.",
     mood: 'tender',
     motif: 'hearts',
     thoughts: [
-      { text: 'They are done with me.', distortion: 'Catastrophising' },
+      { text: 'Asking will push them further away.', distortion: 'Fortune telling' },
       { text: 'They have not said anything is wrong.', distortion: null },
-      { text: 'It is my fault. I did something.', distortion: 'Personalisation' },
-      { text: 'People have bad days that are not about me.', distortion: null },
-      { text: 'If I ask, I will make it worse.', distortion: 'Fortune telling' },
-      { text: 'I can feel they are angry, so they are.', distortion: 'Emotional reasoning' },
+      { text: 'It is something I did.', distortion: 'Personalisation' },
+      { text: 'People have quiet days. Not all of it is me.', distortion: null },
+      { text: 'I can feel that they are angry.', distortion: 'Emotional reasoning' },
+      { text: 'This is how it starts, and then it ends.', distortion: 'Catastrophising' },
     ],
-    reframe: {
-      quote: 'They are done with me.',
+    next: {
       options: [
         {
-          text: 'We are fine. We are always fine. There is nothing to worry about here.',
-          accurate: false,
-          why: 'That is a promise you cannot check, made so you do not have to ask. It is the same guess with a nicer ending.',
+          text: 'Say nothing, and watch them for the rest of the evening.',
+          checks: false,
+          outcome: 'Nothing has to be risked. The evening goes on reading a person instead of talking to one, and bedtime arrives knowing the same amount.',
         },
         {
-          text: 'Something is off and I do not know what. Those are two separate sentences.',
-          accurate: true,
-          why: 'It keeps what you actually noticed and drops the story you put on the end of it. Only one of the two has evidence.',
+          text: 'Ask what is going on, and leave room for a plain answer.',
+          checks: true,
+          outcome: 'The answer may be about her and it may not. Either way it takes a minute, and it is an answer rather than a fortnight of guessing.',
         },
         {
-          text: 'If they have a problem they can bring it up themselves.',
-          accurate: false,
-          why: 'That swaps the worry for distance. The worry was there because they matter to you, and this does not touch it.',
+          text: 'Apologise for whatever it was.',
+          checks: false,
+          outcome: 'It moves the quiet along. It also settles that something was her fault, which is the one part nobody had established.',
         },
       ],
     },
   },
   {
-    id: 'morning-dread',
-    scene: 'You wake up already dreading the day, before anything has happened.',
+    id: 'before-the-day',
+    who: 'June',
+    scene: 'June is awake before her alarm. The day has not started yet.',
     mood: 'morning',
     motif: 'rays',
     thoughts: [
@@ -298,33 +301,25 @@ export const SCENES: CurveballScene[] = [
       { text: 'I feel heavy, so it must be a bad day.', distortion: 'Emotional reasoning' },
       { text: 'Mornings are often the hardest part.', distortion: null },
       { text: 'Nothing has actually happened yet.', distortion: null },
-      { text: 'If I cannot do all of it I may as well do none.', distortion: 'All-or-nothing' },
-      /* Was "Everyone else gets up fine." — the same sentence as cancelled-plans'
-         "Everyone else copes fine.", which this file labels Mind reading. A player who
-         learned the first and answered the second consistently was told, in the app's
-         confident voice, that they were wrong. A game that marks a defensible answer wrong
-         is not experienced as clinical, it is experienced as unfair. Rewritten so it is
-         unambiguously the comparison one: what you can see of somebody against what you
-         know of yourself. */
+      { text: 'If I cannot do all of it, why start.', distortion: 'All-or-nothing' },
       { text: 'Their mornings look easier than mine.', distortion: 'Comparison bias' },
     ],
-    reframe: {
-      quote: 'I feel heavy, so it must be a bad day.',
+    next: {
       options: [
         {
-          text: 'I will decide it is a great day and it will be.',
-          accurate: false,
-          why: 'You cannot vote on the day. Declaring the opposite is the same error pointed the other way.',
+          text: 'Stay put until the feeling shifts.',
+          checks: false,
+          outcome: 'The bed is warm and nothing is required. The feeling has not usually shifted by lunchtime, and by then the day has an angle on it.',
         },
         {
-          text: 'This is how the morning feels. It is not yet how the day went.',
-          accurate: true,
-          why: 'It keeps the feeling, which is real, and takes away the prediction, which is not evidence.',
+          text: 'Get up and do the first small thing.',
+          checks: true,
+          outcome: 'The heaviness comes along with her. It is a morning that has started, which is a different thing from a morning that was predicted.',
         },
         {
-          text: 'Feelings in the morning are meaningless.',
-          accurate: false,
-          why: 'Dismissing a feeling tends to be how it comes back louder later on.',
+          text: 'Get up and do the whole list to make up for it.',
+          checks: false,
+          outcome: 'Most of it is done by two. The bar for tomorrow is now the whole list, set on the worst morning of the week.',
         },
       ],
     },
@@ -337,7 +332,7 @@ export const SCENES: CurveballScene[] = [
  * under test. A shuffle that is only ever exercised with a live `Math.random` is a shuffle
  * whose bias nobody ever measures. */
 
-/* `shuffle` moved to lib/shuffle.ts when the second game needed it, and is re-exported here
+/* `shuffle` lives in lib/shuffle.ts since the second game needed it, and is re-exported here
    so this file's callers and tests keep one import. Two copies of a shuffle is how the
    biased one comes back. */
 export { shuffle };
@@ -354,22 +349,15 @@ export function sessionScenes(
   return shuffle(from, rand).slice(0, Math.min(n, from.length));
 }
 
-/** Three names to choose from when naming a distortion: the true one and two others drawn
- *  from the live taxonomy. The distractors are drawn from distortions used elsewhere in the
- *  app so that a wrong answer is still a term the player will meet again. */
-export function nameOptions(
-  correct: string,
-  rand: Rand = Math.random,
-  taxonomy: readonly string[] = DISTORTIONS.map((d) => d.name),
-): string[] {
-  const others = shuffle(taxonomy.filter((n) => n !== correct), rand).slice(0, 2);
-  return shuffle([correct, ...others], rand);
+/** The three actions in a shuffled order. A fixed order would put the one that proceeds on
+ *  what is known in the same slot every scene, and a player learns a slot far faster than
+ *  they learn a distinction. */
+export function actionsFor(scene: CurveballScene, rand: Rand = Math.random): NextAction[] {
+  return shuffle(scene.next.options, rand);
 }
 
-/** The thought a scene's reframe phase is about. Resolved rather than stored twice, so the
- *  quote and the thought cannot drift apart. */
-export function reframeTarget(scene: CurveballScene): CurveballThought {
-  const t = scene.thoughts.find((x) => x.text === scene.reframe.quote);
-  if (!t) throw new Error(`curveball: scene "${scene.id}" quotes a thought it does not contain`);
-  return t;
+/** Everyone who appears, in first-appearance order. The ending uses it to say who is up
+ *  next by name — see the note there about the first-session-to-second drop. */
+export function cast(from: readonly CurveballScene[] = SCENES): string[] {
+  return [...new Set(from.map((s) => s.who))];
 }

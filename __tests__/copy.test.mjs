@@ -230,7 +230,7 @@ describe('the app never narrates somebody\'s inner life back to them', () => {
 
   /** Only the narration. Quoted thoughts and first-person choices are exempt — see above. */
   const NARRATION = [
-    ...cbGame.SCENES.flatMap((s) => [s.scene, ...s.reframe.options.map((o) => o.why)]),
+    ...cbGame.SCENES.flatMap((s) => [s.scene, ...s.next.options.map((o) => o.outcome)]),
     ...twGame.SCENES.flatMap((s) => [s.situation, s.escalated, ...s.options.map((o) => o.after)]),
   ];
 

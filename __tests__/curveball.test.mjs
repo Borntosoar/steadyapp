@@ -6,12 +6,17 @@ import { fileURLToPath } from 'node:url';
 
 import {
   SCENES, SCENES_PER_SESSION, MIN_BALANCED_PER_SCENE,
-  shuffle, sessionScenes, nameOptions, reframeTarget,
+  shuffle, sessionScenes, actionsFor, cast,
 } from '../content/curveball.ts';
 import { DISTORTIONS } from '../content/exercises.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const NAMES = new Set(DISTORTIONS.map((d) => d.name));
+/* Module scope on purpose. This was defined inside one `describe` and used from another,
+   which threw during collection — and node --test reported it and exited 0, so roughly
+   forty assertions stopped running while the summary read clean. scripts/test.mjs now fails
+   the build on that, and this is the bug it was written for. */
+const read = (f) => readFileSync(join(ROOT, f), 'utf8');
 
 /* The content rules that make Curveball a skill rather than a tapping exercise.
  *
@@ -61,23 +66,36 @@ describe('curveball scenes', () => {
         }
       });
 
-      test('the reframe quotes a thought this scene actually contains, and a bent one', () => {
-        const target = reframeTarget(s);
-        assert.notEqual(target.distortion, null,
-          'the reframe phase is about a distorted thought; this one is balanced');
+      test('the situation is about to happen, not already over', () => {
+        /* Distanced reflection helps somebody preparing for a thing and does not help
+           somebody reprocessing one — Schertz et al. 2025, 208 people. Every scene here is
+           therefore prospective, and the past-tense openers that used to be the whole file
+           are the shape this guards against. */
+        assert.doesNotMatch(s.scene, /^You /,
+          'the scene is addressed to the player rather than describing somebody else');
+        assert.match(s.scene, new RegExp(`\\b${s.who}\\b`),
+          'the scene never names whose situation it is');
       });
 
-      test('exactly one reframe option is accurate', () => {
-        const right = s.reframe.options.filter((o) => o.accurate);
-        assert.equal(right.length, 1, `${right.length} accurate options`);
-        assert.ok(s.reframe.options.length >= 3, 'two options is a coin flip');
+      test('exactly one action proceeds on what they actually know', () => {
+        const checks = s.next.options.filter((o) => o.checks);
+        assert.equal(checks.length, 1, `${checks.length} actions marked as checking`);
+        assert.ok(s.next.options.length >= 3, 'two options is a coin flip');
       });
 
-      test('every reframe option explains itself, wrong ones included', () => {
-        for (const o of s.reframe.options) {
-          assert.ok(o.why.length > 40,
-            `"${o.text}" has no real explanation — a plausible wrong answer left ` +
-            `unexplained is a plausible wrong answer the player takes home`);
+      test('every action says what happens, including the ones that avoid', () => {
+        for (const o of s.next.options) {
+          assert.ok(o.outcome.length > 60,
+            `"${o.text}" has no real consequence — an unexplained option is one the player ` +
+            `takes home unexamined`);
+        }
+      });
+
+      test('no outcome passes a verdict on the character', () => {
+        /* A consequence teaches; a verdict is the answer key coming back in prose. */
+        const verdict = /\b(right|wrong|correct|mistake|should have|the best (choice|option))\b/i;
+        for (const o of s.next.options) {
+          assert.doesNotMatch(o.outcome, verdict, `"${o.outcome}" grades the choice`);
         }
       });
 
@@ -101,13 +119,9 @@ describe('curveball scenes', () => {
       for (const t of s.thoughts) {
         assert.ok(!t.text.includes('!'), `"${t.text}" shouts`);
       }
-      for (const o of s.reframe.options) {
-        if (o.text.includes('!')) {
-          assert.equal(o.accurate, false,
-            'an exclamation mark on the correct reframe reads as cheerfulness, which is ' +
-            'the exact failure the wrong answers are there to demonstrate');
-        }
-        assert.ok(!o.why.includes('!'), `explanation shouts: "${o.why}"`);
+      for (const o of s.next.options) {
+        assert.ok(!o.text.includes('!'), `action shouts: "${o.text}"`);
+        assert.ok(!o.outcome.includes('!'), `outcome shouts: "${o.outcome}"`);
       }
     }
   });
@@ -122,7 +136,7 @@ describe('curveball scenes', () => {
       const strings = [
         s.scene,
         ...s.thoughts.map((t) => t.text),
-        ...s.reframe.options.flatMap((o) => [o.text, o.why]),
+        ...s.next.options.flatMap((o) => [o.text, o.outcome]),
       ];
       for (const str of strings) {
         /* One exception, and it has to be narrow: a distorted THOUGHT is allowed to shame,
@@ -168,32 +182,23 @@ describe('selection is deterministic under an injected random', () => {
     assert.equal(new Set(picked.map((s) => s.id)).size, SCENES.length);
   });
 
-  test('name options always contain the true answer and never contain it twice', () => {
-    for (const s of SCENES) {
-      const target = reframeTarget(s);
-      const opts = nameOptions(target.distortion, seq(0.3, 0.7, 0.1, 0.9));
-      assert.equal(opts.length, 3);
-      assert.equal(opts.filter((o) => o === target.distortion).length, 1);
-      assert.equal(new Set(opts).size, 3, 'a repeated distractor makes two answers look true');
-      for (const o of opts) assert.ok(NAMES.has(o), `"${o}" is not a real distortion`);
-    }
+  test('the actions are shuffled, so the checking one is not always in slot one', () => {
+    const a = actionsFor(SCENES[0], seq(0.9, 0.1, 0.5)).map((o) => o.text);
+    const b = actionsFor(SCENES[0], seq(0.1, 0.8, 0.3)).map((o) => o.text);
+    assert.deepEqual([...a].sort(), [...b].sort());
+    assert.equal(a.length, SCENES[0].next.options.length);
   });
 
-  test('reframeTarget throws rather than returning undefined on a broken scene', () => {
-    assert.throws(
-      () => reframeTarget({
-        id: 'broken',
-        scene: 'x',
-        thoughts: [{ text: 'a', distortion: null }],
-        reframe: { quote: 'not present', options: [] },
-      }),
-      /does not contain/,
-    );
+  test('the cast recurs rather than being a new stranger every scene', () => {
+    /* A second session should be somebody already met. It is also what the ending's
+       "X is next time" line reads from. */
+    const people = cast();
+    assert.ok(people.length >= 2, 'one character is a monologue');
+    assert.ok(people.length < SCENES.length, 'nobody recurs, so there is no serial');
   });
 });
 
 describe('the game is wired into the rest of the app', () => {
-  const read = (p) => readFileSync(join(ROOT, p), 'utf8');
 
   test("'curveball' is an accepted practice kind on the way back off disk", () => {
     /* The specific bug this prevents: `PracticeKind` is a union and `PRACTICE_KINDS` in
@@ -258,7 +263,7 @@ describe('the game can be left, and can be played without motion', () => {
   test('every phase has a visible way out', () => {
     /* NameIt and Reframe had no TopBar at all, so the moment a scene lands hardest was the
        moment with nothing on screen to leave by. */
-    const phases = ['function Intro', 'function Intercept', 'function NameIt', 'function Reframe'];
+    const phases = ['function Intro', 'function Intercept', 'function WhatNext'];
     for (let i = 0; i < phases.length; i++) {
       const start = src.indexOf(phases[i]);
       assert.ok(start > 0, `${phases[i]} is gone`);

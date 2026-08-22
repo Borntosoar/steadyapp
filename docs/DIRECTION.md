@@ -616,6 +616,20 @@ The synthesis all three support, ordered by evidential strength:
 interval. Two claims are already retired: Crum & Langer 2007 failed to replicate, and every
 Duolingo retention figure in circulation traces to secondary blogs.
 
+**Built, 2026-08-22.** Items 1–5 are done: the seven scenes are prospective and third
+person with three recurring characters, the naming quiz is gone with the vocabulary kept and
+now *shown* on a caught thought, "pick the most accurate reframe" is replaced by "what does
+Theo do" with consequences instead of a verdict, the let-through rule is untouched, and the
+ending names who is up next by name — no points, no streak, per Deci 1999.
+
+**One thing came out of it that was not on anybody's list.** Rebuilding the test file exposed
+that `node --test` prints `not ok` for a suite that throws while being collected and then
+**exits 0**. A helper had drifted out of scope, roughly forty assertions silently stopped
+running, and the summary still read `# fail 0`. That is the same failure this project already
+has a whole test file about — a guard that matches nothing always passes — one level up, at
+the runner. `scripts/test.mjs` now fails the build on any `not ok` at any depth rather than
+trusting the counters.
+
 **What is not decided here is scope**, and it is not a technical question. The designer's
 narrative rebuild is roughly a month and a real writing job. The stripped-back version —
 deletions plus the third-person prospective rewrite — is days. Both are honest. The record
