@@ -224,6 +224,8 @@ const dated = (r: Payload): { id: string; date: string } | null => {
   return { id: str(r.id, `restored-${r.date}-${restoredSeq++}`), date: r.date };
 };
 
+const strOrUndef = (v: unknown): string | undefined => (typeof v === 'string' && v ? v : undefined);
+
 const avoidance = (v: unknown): AvoidanceLevel =>
   v === 'none' || v === 'small' || v === 'significant' ? v : 'none';
 
@@ -333,6 +335,20 @@ export function normalise(parsed: unknown): AppState {
       onboardedAt: strOrNull(profile.onboardedAt),
       disclaimerAcceptedAt: strOrNull(profile.disclaimerAcceptedAt),
       supportRegion: str(profile.supportRegion, base.profile.supportRegion),
+      /* The survey. Every field optional and every value a plain string, because this is
+         read back from disk and nothing on disk is trusted. An unrecognised answer resolves
+         to 'looking' downstream rather than throwing — see lib/plan.ts carryingOf. */
+      ...(profile.survey && typeof profile.survey === 'object'
+        ? {
+            survey: {
+              brought: strOrUndef((profile.survey as Payload).brought),
+              tried: strOrUndef((profile.survey as Payload).tried),
+              worst: strOrUndef((profile.survey as Payload).worst),
+            },
+          }
+        : {}),
+      ...(typeof profile.carrying === 'string' ? { carrying: profile.carrying } : {}),
+      ...(typeof profile.surveyedAt === 'string' ? { surveyedAt: profile.surveyedAt } : {}),
     },
 
     /* `baseline` is nullable and was not shape-checked at all, so a stored `5` sailed

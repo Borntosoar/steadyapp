@@ -99,6 +99,7 @@ function Gate() {
   const hydrated = useStore((s) => s.hydrated);
   const hydrate = useStore((s) => s.hydrate);
   const disclaimerAcceptedAt = useStore((s) => s.profile.disclaimerAcceptedAt);
+  const surveyedAt = useStore((s) => s.profile.surveyedAt);
 
   const { refresh } = useEntitlement();
 
@@ -168,9 +169,15 @@ function Gate() {
     const inOnboarding = pathname.startsWith('/onboarding');
     const isCrisisSurface = CRISIS_ROUTES.includes(pathname);
     if (!disclaimerAcceptedAt && !inOnboarding && !isCrisisSurface) {
-      router.replace('/onboarding');
+      /* THE SURVEY COMES FIRST, AND THE DISCLAIMER STILL COMES BEFORE THE APP.
+         Three questions about what somebody is carrying, then the existing flow, which is
+         where consent is actually recorded — `disclaimerAcceptedAt` remains the only thing
+         this gate tests, so nothing legal can be skipped by finishing or skipping a survey.
+         Somebody who has already answered goes straight to the disclaimer rather than being
+         asked again. */
+      router.replace(surveyedAt ? '/onboarding' : '/onboarding/survey');
     }
-  }, [hydrated, disclaimerAcceptedAt, pathname, router]);
+  }, [hydrated, disclaimerAcceptedAt, surveyedAt, pathname, router]);
 
   if (!hydrated) {
     return (

@@ -159,6 +159,23 @@ export interface Profile {
   disclaimerAcceptedAt: string | null;
   /** Region key for support lines. */
   supportRegion: string;
+  /* THE OPENING SURVEY.
+     Three answers and the shape they resolve to. Stored on the device like everything else
+     — this is the most sensitive thing anybody hands this app, and it never leaves.
+     `carrying` is a shape of experience, not a diagnosis, and it is never rendered as a word
+     to the user: it picks a tone, a featured calm-down mode and an order. Nothing here is a
+     condition, and it must never become one. */
+  survey?: SurveyAnswers | null;
+  /** Resolved from `survey`. Cached rather than recomputed so a content change cannot
+   *  silently reassign somebody's stone months later. */
+  carrying?: string | null;
+  surveyedAt?: string | null;
+}
+
+export interface SurveyAnswers {
+  brought?: string;
+  tried?: string;
+  worst?: string;
 }
 
 export interface AppState {

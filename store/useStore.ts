@@ -7,6 +7,7 @@ import type {
   MirrorSession,
   PracticeKind,
   RelapsePlan,
+  SurveyAnswers,
   ThoughtRecord,
   UrgeLog,
 } from '../types';
@@ -29,6 +30,8 @@ interface StoreApi extends AppState {
   reset: () => Promise<void>;
 
   completeOnboarding: (baseline: Baseline, firstName?: string) => void;
+  /** The opening survey. Answers and the shape they resolve to, both on device. */
+  saveSurvey: (answers: SurveyAnswers, carrying: string) => void;
   acceptDisclaimer: () => void;
   setSupportRegion: (region: string) => void;
   /** The ONLY writer of the entitlement cache. Everything else projects it. */
@@ -168,6 +171,18 @@ export const useStore = create<StoreApi>((set, get) => ({
       saveOk: true,
       quarantinedAt: null,
     });
+  },
+
+  saveSurvey: (answers, carrying) => {
+    set((s) => ({
+      profile: {
+        ...s.profile,
+        survey: answers,
+        carrying,
+        surveyedAt: new Date().toISOString(),
+      },
+    }));
+    persist(get, set);
   },
 
   completeOnboarding: (baseline, firstName) => {
