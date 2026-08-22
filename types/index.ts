@@ -208,6 +208,10 @@ export interface AppState {
   experiments: Experiment[];
   practice: PracticeEvent[];
   commitments: Commitment[];
+  /** Guided-track progress, keyed by track id. See lib/track.ts — progress is a set of day
+   *  ids rather than an index, so inserting or reordering a day cannot silently move
+   *  everybody who is mid-track. */
+  tracks: Record<string, { startedAt: string; done: string[] }>;
   streak: StreakState;
   protocol: ProtocolState;
   readModules: string[];

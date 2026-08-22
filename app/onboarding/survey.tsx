@@ -13,6 +13,7 @@ import { useStore } from '../../store/useStore';
 import { haptic } from '../../hooks/haptics';
 import { QUESTIONS, CRISIS_TILE, type Tile } from '../../content/survey.ts';
 import { planFor, isCrisis, type Answers, type Plan } from '../../lib/plan.ts';
+import { tracksFor } from '../../content/tracks.ts';
 
 /* The opening survey.
  *
@@ -250,6 +251,12 @@ function Result({ plan, onDone }: { plan: Plan; onDone: () => void }) {
     `${plan.calm} — free, always, and never behind a week`,
   ];
 
+  /* A guided track, if one fits what they said. Named rather than opened: this screen leads
+     to onboarding, and dropping somebody straight into day one of a sequence before they
+     have agreed to anything would be the app deciding for them. It also stays a suggestion —
+     the same track is in Practice for everybody, whatever they answered here. */
+  const track = tracksFor(plan.carrying)[0] ?? null;
+
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       <Atmosphere variant={ground} rounded="none" scrim={false} style={StyleSheet.absoluteFill as never} />
@@ -266,6 +273,18 @@ function Result({ plan, onDone }: { plan: Plan; onDone: () => void }) {
               </Text>
             ))}
           </View>
+
+          {track && (
+            <View style={{ paddingTop: space.lg, gap: space.sm }}>
+              <Caption>There is a set of seven for this</Caption>
+              <Text style={[t.bodySm, { color: c.ink }]}>
+                {track.title} — {track.blurb}
+              </Text>
+              <Text style={[t.caption, { color: c.inkFaint }]}>
+                It is in Practice when you want it. Nothing starts it but you.
+              </Text>
+            </View>
+          )}
 
           {/* The stone. Given for arriving, never for completing anything — lib/plan.ts has
               the reasoning, and the short version is that a memento is not a contingent

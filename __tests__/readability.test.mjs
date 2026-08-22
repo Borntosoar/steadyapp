@@ -13,6 +13,7 @@ const tw = await import('../content/toward.ts');
 const gw = await import('../content/groundwork.ts');
 const bl = await import('../content/ballast.ts');
 const sv = await import('../content/survey.ts');
+const tr = await import('../content/tracks.ts');
 
 /* Reading level, enforced.
  *
@@ -142,6 +143,18 @@ GROUPS.push(['survey: questions', prose(
   sv.QUESTIONS.map((q) => [q.ask, q.note, ...q.tiles.map((t) => t.label)]),
   Object.values(sv.REFLECTION),
 )]);
+/* One group per track day, for the same reason as the game scenes and the modules: a day is
+   the unit somebody actually reads, and averaging seven of them lets a dense one hide. The
+   track days are the densest prose in the app outside the teaching modules — every one of
+   them explains a mechanism — so this is the group most likely to drift. */
+for (const t of tr.TRACKS) {
+  for (const d of t.days) {
+    GROUPS.push([`track ${t.id}: ${d.id}`, prose(
+      d.title, d.about, d.game.focus, d.game.label, d.practice.label, d.hold,
+    )]);
+  }
+  GROUPS.push([`track ${t.id}: framing`, prose(t.title, t.blurb, tr.TRACK_CAVEAT, tr.TRACK_CLOSE)]);
+}
 
 describe('every group of copy reads at eighth grade or below', () => {
   for (const [name, group] of GROUPS) {

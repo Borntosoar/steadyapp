@@ -131,6 +131,10 @@ const seed = () => ({
     avoidedConditions: [],
   },
   readModules: ['m1', 'm2', 'm3'],
+  /* Two of the seven done, so the track overview renders with real state: filled seedling
+     dots, a finished row, the next one outlined and the rest dimmed. Seeded by day id rather
+     than by index, because that is how lib/track.ts stores it. */
+  tracks: { breakup: { startedAt: iso(9), done: ['getting-through', 'what-narrowed'] } },
   moments: {},
   /* Entitled, so the paid surfaces render. A store listing showing a paywall on every screen
      sells nothing. `--unentitled` flips this to show the purchase screen instead. */
@@ -151,6 +155,7 @@ const SHOTS = [
   { route: '/support', name: '08-support' },
   { route: '/journal', name: '09-journal' },
   { route: '/paywall', name: '10-paywall' },
+  { route: '/track/breakup', name: '11-track' },
 ];
 
 const chromiumPath =

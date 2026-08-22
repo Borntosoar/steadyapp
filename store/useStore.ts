@@ -33,6 +33,8 @@ interface StoreApi extends AppState {
   completeOnboarding: (baseline: Baseline, firstName?: string) => void;
   /** The opening survey. Answers and the shape they resolve to, both on device. */
   saveSurvey: (answers: SurveyAnswers, carrying: string) => void;
+  /** Mark one day of a guided track finished. Idempotent — see lib/track.ts. */
+  completeTrackDay: (trackId: string, dayId: string) => void;
   /** Groundwork keeps one action for tomorrow. */
   keepCommitment: (action: string, size: string) => void;
   /** ...and answers for it the next time the game opens. */
@@ -176,6 +178,15 @@ export const useStore = create<StoreApi>((set, get) => ({
       saveOk: true,
       quarantinedAt: null,
     });
+  },
+
+  completeTrackDay: (trackId, dayId) => {
+    set((s) => {
+      const existing = s.tracks[trackId] ?? { startedAt: new Date().toISOString(), done: [] };
+      if (existing.done.includes(dayId)) return s;
+      return { tracks: { ...s.tracks, [trackId]: { ...existing, done: [...existing.done, dayId] } } };
+    });
+    persist(get, set);
   },
 
   keepCommitment: (action, size) => {

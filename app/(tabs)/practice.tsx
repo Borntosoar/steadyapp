@@ -7,6 +7,8 @@ import { useStore } from '../../store/useStore';
 import { mirrorSpecForWeek, phaseForWeek, MIRROR_UNLOCK_WEEK, WEEKS_TOTAL } from '../../lib/protocol';
 import { dayKey } from '../../lib/streak';
 import { NAMES } from '../../content/names';
+import { TRACKS } from '../../content/tracks.ts';
+import { nextDay, isComplete, emptyTrack } from '../../lib/track.ts';
 
 /* Practice.
  *
@@ -33,6 +35,7 @@ export default function Practice() {
   const router = useRouter();
   const week = useStore((s) => s.protocol.currentWeek);
   const practice = useStore((s) => s.practice);
+  const trackStates = useStore((s) => s.tracks);
   const phase = phaseForWeek(week);
   const mirrorOpen = !!mirrorSpecForWeek(week);
   const experimentsOpen = phase.id >= 3;
@@ -113,6 +116,29 @@ export default function Practice() {
     },
   ];
 
+  /* Guided tracks. Every track is listed for everybody, not only for the survey shapes it
+     names — `forCarrying` decides what gets offered on the result screen, and that is the
+     whole of its job. Hiding a track here would mean somebody who tapped quickly at 2am, or
+     skipped the survey entirely, has a smaller app forever, which is the same rule
+     __tests__/survey.test.mjs holds the game order to.
+
+     The row says what is NEXT rather than how much is left. "3 of 7" is the counter
+     content/tracks.ts refuses outright; the name of the next day is more use anyway. */
+  const guided: Item[] = TRACKS.map((t) => {
+    const state = trackStates[t.id] ?? emptyTrack('');
+    const next = nextDay(t, state);
+    return {
+      title: t.title,
+      sub: isComplete(t, state)
+        ? 'All seven done. Any of them again, whenever.'
+        : next && state.done.length > 0
+          ? `Next: ${next.title}`
+          : 'Seven, in order. Nothing on a schedule.',
+      route: `/track/${t.id}`,
+      glyph: 'book' as GlyphKind,
+    };
+  });
+
   const free: Item[] = [
     {
       title: NAMES.calm.title,
@@ -156,6 +182,9 @@ export default function Practice() {
 
       <Caption style={{ marginTop: space.xl, marginBottom: space.sm }}>What this week adds</Caption>
       <Frost>{work.map(row)}</Frost>
+
+      <Caption style={{ marginTop: space.xl, marginBottom: space.sm }}>Guided</Caption>
+      <Frost>{guided.map(row)}</Frost>
 
       <Caption style={{ marginTop: space.xl, marginBottom: space.sm }}>Games</Caption>
       <Frost>{games.map(row)}</Frost>

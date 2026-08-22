@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Pressable, Animated, Easing, StyleSheet, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Body, BodySm, Caption, H2, Button, useTheme } from '../../components/ui';
 import { Frost, TopBar, Steps, Segmented } from '../../components/frost';
@@ -102,7 +102,14 @@ export default function Curveball() {
      inside one session. */
   const scenes = useMemo<CurveballScene[]>(() => sessionScenes(), []);
 
-  const [clock, setClock] = useState(true);
+  /* `?clock=off` sets the STARTING position of the toggle, and nothing more. The guided
+     tracks use it — day one of the breakup track is the acute week, and a stopwatch is the
+     wrong instrument for that day — but the toggle is still on the intro screen and still
+     wins, because a link that silently removed the choice would be the app deciding what
+     somebody can handle. Anything other than the exact string `off` is ignored: this comes
+     off a URL, and a URL is not trusted. */
+  const params = useLocalSearchParams<{ clock?: string }>();
+  const [clock, setClock] = useState(params.clock !== 'off');
   const [phase, setPhase] = useState<Phase>('intro');
   const [sceneIndex, setSceneIndex] = useState(0);
   const [tally, setTally] = useState<Tally>(ZERO);

@@ -85,7 +85,7 @@ const CLOSING: Record<string, string> = {
 
 export default function Grounding() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ mode?: string }>();
+  const params = useLocalSearchParams<{ mode?: string; tool?: string }>();
   const logPractice = useStore((s) => s.logPractice);
 
   /* Nothing taps at anybody on this screen. The whole point of the calm-down path and the
@@ -97,7 +97,20 @@ export default function Grounding() {
     return () => setQuietZone(false);
   }, []);
 
-  const [tool, setTool] = useState<Tool>(params.mode === 'hard' ? 'hardday' : 'menu');
+  /* `?tool=breath` opens one exercise directly.
+     Added for the guided tracks: a track day that says "do the breathing" and then drops you
+     on a menu of five things has handed the choosing back at the exact moment it was trying
+     to take it away. Validated against the Tool union rather than cast, because this comes
+     off a URL and a URL is not trusted — an unknown value falls back to the menu. */
+  const DIRECT: Tool[] = ['senses', 'breath', 'widen', 'values'];
+  const asked = typeof params.tool === 'string' ? params.tool : '';
+  const [tool, setTool] = useState<Tool>(
+    params.mode === 'hard'
+      ? 'hardday'
+      : DIRECT.includes(asked as Tool)
+        ? (asked as Tool)
+        : 'menu',
+  );
   const [logged, setLogged] = useState(false);
 
   /* Whether the hard-day screen may write a record the moment it opens.

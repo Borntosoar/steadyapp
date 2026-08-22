@@ -635,3 +635,71 @@ narrative rebuild is roughly a month and a real writing job. The stripped-back v
 deletions plus the third-person prospective rewrite — is days. Both are honest. The record
 exists so the choice is made against the evidence rather than against the last thing anybody
 read.
+
+---
+
+## 11. Guided tracks, and the first one
+
+Built 2026-08-22, on the founder's brief for a "catered plan" that follows from the opening
+survey — the example given was somebody depressed after a breakup getting a protocol rather
+than a menu. `content/tracks.ts`, `lib/track.ts` and `app/track/[id].tsx`.
+
+### 11.1 What a track is
+
+Seven days. Each pairs one game (with a different focus every time it recurs), one
+deep-linked practice, and one question to hold. The sequence is the product: a track is not a
+content library with a nicer wrapper, and the reason to build it at all is Donkin 2011 —
+module completion predicts outcome, logins do not.
+
+The arc is built on mechanisms with the best support rather than on stages-of-grief, which
+was written about dying and never validated for relationship dissolution. In order: the acute
+part; the life that narrowed; memory editing toward the good parts; self-concept, which is
+the specific damage a long relationship does when it ends; the self-blame voice; what
+restarts the clock; and what the next week is for.
+
+### 11.2 The five refusals, and why each is load-bearing
+
+These are stated in the header of `content/tracks.ts` and enforced in
+`__tests__/tracks.test.mjs`, because a comment is not a constraint.
+
+| Refusal | Why |
+|---|---|
+| **No timeline, ever.** | The eleven-week figure everybody quotes comes from a survey of undergraduates about their worst breakup. It is not a prognosis. A promised date that passes converts an ordinary bad month into evidence that something is wrong with you. |
+| **No daily writing about the breakup.** | The reliable finding in the dissolution literature is that rumination maintains distress, and repeated structured reflection has been found to make things worse for people already high in it — which is exactly who downloads a breakup app. The app cannot screen for that, so it hands nobody a daily reprocessing task and hopes. Every day carries a question to hold, and there is no `TextInput` on the screen. |
+| **No advice about their actual life.** | Nothing tells anybody to block a number, delete photographs or go no-contact. Those decisions have consequences the app cannot see: shared housing, children, work, a person who is still a friend. Day six describes what tends to restart the clock and stops there. |
+| **No assumptions about the shape of it.** | Not who left, not how long, not married, not a gender, not romantic in the sense the word usually implies. Checked against the copy by regex. |
+| **Days are not dates.** | "Day three" is the third one you did. Somebody who opens this six months later is not behind, and somebody who misses four days is not either. |
+
+Two of those are structural rather than editorial and are checked at the code level:
+`lib/track.ts` stores `startedAt` and is then forbidden from reading it — every unlock
+function is asserted free of `Date`, `now()` and `startedAt` — and progress is a **set of day
+ids** rather than an index, so inserting or reordering a day cannot silently move everybody
+who is mid-track.
+
+### 11.3 What the track does not gate
+
+Every track is listed in Practice for everybody. `forCarrying` decides only what the survey
+result screen offers, and that is the whole of its job. This is the same rule the game order
+already follows: hiding something behind a survey answer means somebody who tapped quickly at
+2am has a smaller app forever.
+
+There is also no cap. Three in an evening is allowed. A cap would be the app deciding it
+knows the right pace for somebody's worst month — the same thing the skip, the pass and the
+no-clock mode all refuse.
+
+### 11.4 The closing screen is deliberately not a celebration
+
+Finishing a track is not finishing the thing the track is about, and "Congratulations, you
+have completed After It Ended" is the cruellest available version of that screen.
+`TRACK_CLOSE` says the week has a shape it did not have at the start and that none of it is
+finished, and the test asserts both halves.
+
+### 11.5 One defect this found
+
+Day one linked to `/game/curveball?clock=off` — the acute week is the wrong place for a
+stopwatch — and `app/game/curveball.tsx` read no route parameters at all. The link was
+decorative and the day opened timed. There is now a test that every query parameter a track
+passes is read by the screen it opens, because a parameter nothing reads is a lie told
+somewhere nobody looks. The parameter sets the *starting position* of the toggle and nothing
+more: the intro still offers the choice, since a link that silently removed it would be the
+app deciding what somebody can handle.

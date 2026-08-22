@@ -71,6 +71,7 @@ export const emptyState = (): AppState => ({
   experiments: [],
   practice: [],
   commitments: [],
+  tracks: {},
   streak: initialStreak(),
   protocol: {
     currentWeek: 1,
@@ -454,6 +455,23 @@ export function normalise(parsed: unknown): AppState {
       if (!PRACTICE_KINDS.includes(r.kind as PracticeKind)) return null;
       return { ...d, kind: r.kind as PracticeKind };
     }),
+
+    /* Track progress. Unknown track ids are kept rather than dropped — a track removed in
+       one release and restored in the next should not lose somebody's place, and the reader
+       in lib/track.ts already ignores ids it does not recognise. Day ids ARE filtered to
+       strings, because that array is what the unlock logic walks. */
+    tracks: Object.fromEntries(
+      Object.entries(obj(p.tracks)).map(([id, v]) => {
+        const t = obj(v);
+        return [
+          id,
+          {
+            startedAt: str(t.startedAt, new Date().toISOString()),
+            done: Array.isArray(t.done) ? t.done.filter((d): d is string => typeof d === 'string') : [],
+          },
+        ];
+      }),
+    ),
 
     /* No migration needed: a new collection with a static default is exactly what
        normalise() backfills, and the migration slots exist for values that must be DERIVED
