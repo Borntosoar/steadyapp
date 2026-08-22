@@ -237,3 +237,81 @@ describe('the game is wired into the rest of the app', () => {
       'the game paints a wrong answer in the warning colour');
   });
 });
+
+describe('the game can be left, and can be played without motion', () => {
+  const src = read('app/game/curveball.tsx');
+
+  test('the distortion tell survives Reduce Motion', () => {
+    /* THE BUG THIS EXISTS FOR. `sway` went to zero under reduced motion and every entry of
+       the rotation output range went to '0deg', so a distorted pill and a balanced one were
+       pixel-identical — while the intro carried on promising that the bent ones lean. The
+       game was not degraded for those players, it was unplayable, and the whole suite missed
+       it because every test here checks content rather than what the screen does with an
+       accessibility setting on.
+       A static angle is not motion, so the fix is a fixed lean rather than no lean. */
+    assert.match(src, /const lean = bent \? \(reduced \? '[\d.]+deg' : null\) : '0deg'/,
+      'distorted thoughts no longer hold a static lean when animation is off');
+    assert.doesNotMatch(src, /outputRange: bent && !reduced/,
+      'the tell is being switched off by the accessibility setting again');
+  });
+
+  test('every phase has a visible way out', () => {
+    /* NameIt and Reframe had no TopBar at all, so the moment a scene lands hardest was the
+       moment with nothing on screen to leave by. */
+    const phases = ['function Intro', 'function Intercept', 'function NameIt', 'function Reframe'];
+    for (let i = 0; i < phases.length; i++) {
+      const start = src.indexOf(phases[i]);
+      assert.ok(start > 0, `${phases[i]} is gone`);
+      const end = i + 1 < phases.length ? src.indexOf(phases[i + 1]) : src.length;
+      assert.match(src.slice(start, end), /<TopBar/,
+        `${phases[i]} renders no TopBar, so there is no way out of it`);
+    }
+  });
+
+  test('a scene can be passed, on the same terms as in Toward', () => {
+    /* Toward's rationale names the partner scene and the appointment scene as the reason it
+       has an exit. Curveball contains that same partner scene, on a clock. One exit
+       vocabulary across both games, imported rather than restated. */
+    assert.match(src, /PASS_LABEL/, 'there is no way past a scene');
+    assert.match(src, /from '\.\.\/\.\.\/content\/toward\.ts'/,
+      'the exit wording is being restated instead of shared');
+    assert.match(src, /onPass=\{\(\) => \{/);
+  });
+
+  test('a pass is never scored', () => {
+    /* Not a miss, not a false alarm, not in any tally. The count is held in its own state
+       for exactly this reason. */
+    assert.match(src, /const \[passed, setPassed\] = useState\(0\)/);
+    assert.doesNotMatch(src, /falseAlarm: [^,\n]*passed/);
+    assert.doesNotMatch(src, /missed: [^,\n]*passed/);
+  });
+
+  test('the ending puts no score on somebody\'s mind', () => {
+    /* `pct` was computed and handed to Finish as `figure`, which renders it as the largest
+       thing on screen and counts it up. Toward has no score; this is the two games agreeing. */
+    assert.doesNotMatch(src, /Math\.round\(\(correct \/ total\) \* 100\)/);
+    assert.doesNotMatch(src, /figureUnit="%/);
+    assert.match(src, /figure=\{null\}/);
+  });
+});
+
+describe('the naming phase is answerable', () => {
+  test('no two thoughts in the whole game share a sentence with different labels', () => {
+    /* "Everyone else copes fine." was Mind reading in one scene and "Everyone else gets up
+       fine." was Comparison bias in another — the same sentence, two answers. A player who
+       learned the first and answered the second consistently was told they were wrong. A game
+       that marks a defensible answer wrong is not experienced as clinical, it is experienced
+       as unfair, and unfairness reads as coldness. */
+    const byText = new Map();
+    for (const s of SCENES) {
+      for (const t of s.thoughts) {
+        const key = t.text.toLowerCase().replace(/[^a-z ]/g, '').trim();
+        const prev = byText.get(key);
+        if (prev && prev !== t.distortion) {
+          assert.fail(`"${t.text}" is labelled both "${prev}" and "${t.distortion}"`);
+        }
+        byText.set(key, t.distortion);
+      }
+    }
+  });
+});

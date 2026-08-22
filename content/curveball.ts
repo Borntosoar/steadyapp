@@ -299,7 +299,14 @@ export const SCENES: CurveballScene[] = [
       { text: 'Mornings are often the hardest part.', distortion: null },
       { text: 'Nothing has actually happened yet.', distortion: null },
       { text: 'If I cannot do all of it I may as well do none.', distortion: 'All-or-nothing' },
-      { text: 'Everyone else gets up fine.', distortion: 'Comparison bias' },
+      /* Was "Everyone else gets up fine." — the same sentence as cancelled-plans'
+         "Everyone else copes fine.", which this file labels Mind reading. A player who
+         learned the first and answered the second consistently was told, in the app's
+         confident voice, that they were wrong. A game that marks a defensible answer wrong
+         is not experienced as clinical, it is experienced as unfair. Rewritten so it is
+         unambiguously the comparison one: what you can see of somebody against what you
+         know of yourself. */
+      { text: 'Their mornings look easier than mine.', distortion: 'Comparison bias' },
     ],
     reframe: {
       quote: 'I feel heavy, so it must be a bad day.',

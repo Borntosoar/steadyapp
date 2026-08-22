@@ -18,6 +18,7 @@ import {
   type CurveballScene, type CurveballThought,
 } from '../../content/curveball.ts';
 import { DISTORTIONS } from '../../content/exercises.ts';
+import { PASS_LABEL, PASS_ACKNOWLEDGEMENT } from '../../content/toward.ts';
 
 /* Curveball — the CBT game.
  *
@@ -28,10 +29,12 @@ import { DISTORTIONS } from '../../content/exercises.ts';
  *   3. REFRAME. Three replacements. One is accurate; the other two are the two failure
  *      modes people actually produce — cheerfulness, and pretending not to care.
  *
- * THE MOTION IS THE TELL, NOT THE COLOUR. Distorted thoughts wobble and tilt; balanced ones
- * travel straight. Colour is never the only channel carrying that difference, which is the
- * plain WCAG 1.4.1 requirement and also just better game design — a colour tell is read
- * peripherally and teaches nothing, while a movement tell makes you look at the sentence.
+ * THE TELL IS SHAPE, NOT COLOUR — AND IT SURVIVES REDUCE MOTION. Distorted thoughts lean;
+ * balanced ones sit straight. With animation allowed they also sway, and with Reduce Motion
+ * on they hold a fixed lean instead, because a static angle is not motion. Colour never
+ * carries the difference alone, which is the plain WCAG 1.4.1 requirement and also better
+ * game design: a colour tell is read peripherally and teaches nothing, while a difference in
+ * shape makes you look at the sentence.
  *
  * WHY THERE IS A CLOCK AT ALL, AND WHY IT CAN BE TURNED OFF. Time pressure is the point:
  * distorted thoughts arrive fast and unbidden in life, and practising the catch at leisure
@@ -95,6 +98,8 @@ export default function Curveball() {
   const [phase, setPhase] = useState<Phase>('intro');
   const [sceneIndex, setSceneIndex] = useState(0);
   const [tally, setTally] = useState<Tally>(ZERO);
+  /* Held apart from the tally so no arithmetic can start treating a pass as a judgement. */
+  const [passed, setPassed] = useState(0);
 
   const scene = scenes[sceneIndex];
 
@@ -152,6 +157,16 @@ export default function Curveball() {
           index={sceneIndex}
           total={scenes.length}
           onBack={() => router.back()}
+          onPass={() => {
+            /* Straight to the next scene. No name phase, no reframe, nothing added to the
+               tally, no record that it happened beyond the count the ending reports once. */
+            setPassed((n) => n + 1);
+            if (sceneIndex + 1 < scenes.length) setSceneIndex(sceneIndex + 1);
+            else {
+              logPractice('curveball');
+              setPhase('done');
+            }
+          }}
           onDone={(round) => {
             setTally((p) => ({
               ...p,
@@ -169,6 +184,7 @@ export default function Curveball() {
         <NameIt
           key={`${scene.id}-name`}
           scene={scene}
+          onBack={() => router.back()}
           onDone={(right) => {
             setTally((p) => ({ ...p, named: p.named + (right ? 1 : 0) }));
             setPhase('reframe');
@@ -180,6 +196,7 @@ export default function Curveball() {
         <Reframe
           key={`${scene.id}-reframe`}
           scene={scene}
+          onBack={() => router.back()}
           onDone={(right) => {
             setTally((p) => ({ ...p, reframed: p.reframed + (right ? 1 : 0) }));
             if (sceneIndex + 1 < scenes.length) {
@@ -194,7 +211,7 @@ export default function Curveball() {
       )}
 
       {phase === 'done' && (
-        <Done tally={tally} scenes={scenes.length} ground={ground} onDone={() => router.back()} />
+        <Done tally={tally} passed={passed} scenes={scenes.length} ground={ground} onDone={() => router.back()} />
       )}
     </View>
   );
@@ -256,8 +273,8 @@ function Intro({
         <View style={{ gap: space.md }}>
           <H2>Catch the ones that bend.</H2>
           <Body>
-            Thoughts rise. The distorted ones wobble on the way up. Tap those, and let the
-            straight ones go past.
+            Thoughts rise. The bent ones lean as they come. Tap those, and let the straight
+            ones go past.
           </Body>
           <BodySm>
             Letting the fair ones through is half of it. Tapping everything is its own kind of
@@ -294,7 +311,7 @@ function Intro({
 /* ---------- phase one: intercept ---------- */
 
 function Intercept({
-  scene, clock, reduced, index, total, onBack, onDone,
+  scene, clock, reduced, index, total, onBack, onPass, onDone,
 }: {
   scene: CurveballScene;
   clock: boolean;
@@ -302,6 +319,7 @@ function Intercept({
   index: number;
   total: number;
   onBack: () => void;
+  onPass: () => void;
   onDone: (t: Pick<Tally, 'caught' | 'allowed' | 'missed' | 'falseAlarm'>) => void;
 }) {
   const c = useTheme();
@@ -423,7 +441,27 @@ function Intercept({
       <Steps total={total} current={index} />
 
       <View style={{ gap: space.xs, paddingTop: space.lg, paddingBottom: space.md }}>
-        <Caption>The situation</Caption>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Caption>The situation</Caption>
+          {/* THE WAY OUT, AND IT SITS HERE FOR A REASON.
+              Toward has had one since it shipped, and the rationale written there names two
+              scenes as the cause — a partner gone quiet, and an appointment somebody has been
+              avoiding. Curveball contains that same partner scene, plus the midnight one, and
+              had no exit at all. It is worse here than it would be there, because Toward
+              waits for you and this does not: once the intercept starts, sentences keep
+              rising at somebody who has frozen on the first line.
+              So the pass is offered next to the situation, before a single thought has
+              spawned, and stays reachable while they rise. A pass counts as nothing — see
+              content/toward.ts for why that is the whole point. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${PASS_LABEL}. Skip this situation.`}
+            onPress={onPass}
+            hitSlop={10}
+          >
+            <Text style={[t.label, { color: c.inkFaint }]}>{PASS_LABEL}</Text>
+          </Pressable>
+        </View>
         <Body>{scene.scene}</Body>
       </View>
 
@@ -545,12 +583,23 @@ function RisingThought({
     inputRange: [0, 0.25, 0.5, 0.75, 1],
     outputRange: [laneX, laneX + sway, laneX - sway, laneX + sway, laneX],
   });
-  const rotate = row.anim.interpolate({
-    inputRange: [0, 0.25, 0.5, 0.75, 1],
-    outputRange: bent && !reduced
-      ? ['0deg', '2.4deg', '-2.4deg', '2.4deg', '0deg']
-      : ['0deg', '0deg', '0deg', '0deg', '0deg'],
-  });
+  /* THE TELL HAS TO SURVIVE REDUCE MOTION, and it did not.
+     With the accessibility setting on, `sway` went to zero and every entry of this output
+     range went to '0deg' — so a distorted pill and a balanced one were pixel-identical
+     while the intro carried on promising that "the distorted ones wobble on the way up".
+     The game was not degraded for those players. It was unplayable, and the comment above
+     reasoned about exactly this and still got it wrong: flattening the sway does not soften
+     the tell, it removes it, and the tell is the game.
+     The fix is that a STATIC tilt is not motion. Reduce Motion asks for nothing that
+     animates; an element sitting at a fixed angle triggers nothing vestibular. So distorted
+     thoughts still lean — they just stop swaying about it. */
+  const lean = bent ? (reduced ? '2.4deg' : null) : '0deg';
+  const rotate = lean
+    ? lean
+    : row.anim.interpolate({
+        inputRange: [0, 0.25, 0.5, 0.75, 1],
+        outputRange: ['0deg', '2.4deg', '-2.4deg', '2.4deg', '0deg'],
+      });
 
   return (
     <Animated.View
@@ -646,7 +695,9 @@ function ThoughtPill({
 
 /* ---------- phase two: name it ---------- */
 
-function NameIt({ scene, onDone }: { scene: CurveballScene; onDone: (right: boolean) => void }) {
+function NameIt({
+  scene, onBack, onDone,
+}: { scene: CurveballScene; onBack: () => void; onDone: (right: boolean) => void }) {
   const c = useTheme();
   const target = reframeTarget(scene);
   const options = useMemo(() => nameOptions(target.distortion as string), [scene.id]);
@@ -656,6 +707,10 @@ function NameIt({ scene, onDone }: { scene: CurveballScene; onDone: (right: bool
 
   return (
     <Stage>
+      {/* Every phase needs a visible way out. This one and Reframe had no TopBar at all, so
+          the moment a scene lands hardest — a single thought alone in a card with a question
+          under it — was the moment with nothing on screen to leave by. */}
+      <TopBar onBack={onBack} />
       <View style={{ flex: 1, justifyContent: 'center', gap: space.xl }}>
         <View style={{ gap: space.sm }}>
           <Caption>One of them again</Caption>
@@ -713,7 +768,9 @@ function NameIt({ scene, onDone }: { scene: CurveballScene; onDone: (right: bool
 
 /* ---------- phase three: reframe ---------- */
 
-function Reframe({ scene, onDone }: { scene: CurveballScene; onDone: (right: boolean) => void }) {
+function Reframe({
+  scene, onBack, onDone,
+}: { scene: CurveballScene; onBack: () => void; onDone: (right: boolean) => void }) {
   const c = useTheme();
   const options = scene.reframe.options;
   const [picked, setPicked] = useState<number | null>(null);
@@ -721,6 +778,7 @@ function Reframe({ scene, onDone }: { scene: CurveballScene; onDone: (right: boo
 
   return (
     <Stage scroll={picked !== null}>
+      <TopBar onBack={onBack} />
       <View style={{ flex: 1, justifyContent: 'center', gap: space.xl, paddingVertical: space.xl }}>
         <View style={{ gap: space.sm }}>
           <Caption>Instead of</Caption>
@@ -766,32 +824,43 @@ function Reframe({ scene, onDone }: { scene: CurveballScene; onDone: (right: boo
 /* ---------- the end of a session ---------- */
 
 function Done({
-  tally, scenes, ground, onDone,
-}: { tally: Tally; scenes: number; ground: AtmosphereKey; onDone: () => void }) {
-  const correct = tally.caught + tally.allowed;
-  const total = correct + tally.missed + tally.falseAlarm;
-  const pct = total ? Math.round((correct / total) * 100) : 0;
+  tally, passed, scenes, ground, onDone,
+}: { tally: Tally; passed: number; scenes: number; ground: AtmosphereKey; onDone: () => void }) {
+  const played = tally.caught + tally.allowed + tally.missed + tally.falseAlarm;
 
-  /* The headline is about the discrimination, not the score — and specifically about the
-     false alarms, because a player who tapped everything ends with a high catch count and
-     has learned the wrong lesson. That case gets named rather than congratulated. */
+  /* The headline is about the discrimination, never a score — and specifically about the
+     false alarms, because somebody who tapped everything ends with a high catch count and
+     has learned the wrong lesson. That case gets named rather than congratulated, and it is
+     the one branch here that is load-bearing.
+     The wording used to open "You caught almost everything, including the fair ones", which
+     reads as a correction the moment somebody is already feeling got at. Same information,
+     no finger. */
   const headline =
-    tally.falseAlarm > tally.caught
-      ? 'You caught almost everything, including the fair ones.'
-      : tally.falseAlarm === 0 && tally.missed === 0
-        ? 'You let every fair thought through.'
-        : 'You told them apart.';
+    played === 0
+      ? 'You left them all where they were.'
+      : tally.falseAlarm > tally.caught
+        ? 'A lot of those were fair ones.'
+        : tally.falseAlarm === 0 && tally.missed === 0
+          ? 'You let every fair thought through.'
+          : 'You told them apart.';
 
   const body =
-    tally.falseAlarm > tally.caught
-      ? 'Some of those thoughts were reasonable. Being able to tell which is the skill — not suspecting all of them.'
-      : `${tally.allowed} fair thoughts let through, ${tally.caught} bent ones caught.`;
+    played === 0
+      ? 'That is a fine way to spend it. They will be here another day.'
+      : tally.falseAlarm > tally.caught
+        ? 'Some of those thoughts held up. Telling which is the skill — not suspecting all of them, which is the thing most of us already do without practising.'
+        : `${tally.allowed} fair thoughts let through, ${tally.caught} bent ones caught.`;
 
   return (
     <Finish
       eyebrow={`${scenes} situations`}
-      figure={pct}
-      figureUnit="% sorted right"
+      /* NO NUMBER. `pct` used to be handed to Finish as the figure, which renders it as the
+         largest element on the screen and counts it up — an accuracy score on somebody's
+         mind, animated. The headline was careful and the number under it was not. The count
+         that carries meaning is already in `body` as a sentence, and Toward deliberately has
+         no score at all; this is the two games agreeing. Finish renders nothing when the
+         figure is null. */
+      figure={null}
       headline={headline}
       body={body}
       onDone={onDone}
@@ -799,7 +868,15 @@ function Done({
       /* The ending stays in the room the last scene was in, rather than cutting to a
          house style. It is also the palette-correct ramp — see groundFor. */
       variant={ground}
-    />
+    >
+      {passed > 0 && (
+        /* Noticed once, plainly, and never discussed. Same rule as Toward: a pass that gets
+           commented on is a pass somebody will not take twice. */
+        <BodySm style={{ paddingTop: space.lg, textAlign: 'center' }}>
+          {passed === 1 ? 'One you left alone.' : `${passed} you left alone.`}
+        </BodySm>
+      )}
+    </Finish>
   );
 }
 
