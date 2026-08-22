@@ -117,7 +117,9 @@ export type PracticeKind =
   /** Games. One kind per game, so the practice record can say what was actually played
    *  rather than collapsing every game into a single undifferentiated tally. */
   | 'curveball'
-  | 'toward';
+  | 'toward'
+  | 'groundwork'
+  | 'ballast';
 
 export interface PracticeEvent {
   id: string;
@@ -172,6 +174,24 @@ export interface Profile {
   surveyedAt?: string | null;
 }
 
+/** One small action Groundwork kept for tomorrow, and what became of it.
+ *
+ *  Persisted because the second half of behavioural activation happens the NEXT day: the
+ *  plan is half the intervention and finding out what actually happened is the other half.
+ *  A game that forgets what it asked for is a game that only ever does the easy half. */
+export interface Commitment {
+  id: string;
+  /** Day it was made. */
+  date: string;
+  action: string;
+  /** 'small' | 'medium' | 'large' — what the plan bet on. A miss is information about this
+   *  number and never about the person. */
+  size: string;
+  /** 'happened' | 'did-not' | 'something-else', once answered. */
+  kept?: string;
+  answeredAt?: string;
+}
+
 export interface SurveyAnswers {
   brought?: string;
   tried?: string;
@@ -187,6 +207,7 @@ export interface AppState {
   mirrorSessions: MirrorSession[];
   experiments: Experiment[];
   practice: PracticeEvent[];
+  commitments: Commitment[];
   streak: StreakState;
   protocol: ProtocolState;
   readModules: string[];

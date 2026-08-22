@@ -7,6 +7,7 @@ import type {
   MirrorSession,
   PracticeKind,
   RelapsePlan,
+  Commitment,
   SurveyAnswers,
   ThoughtRecord,
   UrgeLog,
@@ -32,6 +33,10 @@ interface StoreApi extends AppState {
   completeOnboarding: (baseline: Baseline, firstName?: string) => void;
   /** The opening survey. Answers and the shape they resolve to, both on device. */
   saveSurvey: (answers: SurveyAnswers, carrying: string) => void;
+  /** Groundwork keeps one action for tomorrow. */
+  keepCommitment: (action: string, size: string) => void;
+  /** ...and answers for it the next time the game opens. */
+  answerCommitment: (id: string, kept: string) => void;
   acceptDisclaimer: () => void;
   setSupportRegion: (region: string) => void;
   /** The ONLY writer of the entitlement cache. Everything else projects it. */
@@ -171,6 +176,22 @@ export const useStore = create<StoreApi>((set, get) => ({
       saveOk: true,
       quarantinedAt: null,
     });
+  },
+
+  keepCommitment: (action, size) => {
+    set((s) => ({
+      commitments: [{ id: id(), date: dayKey(new Date()), action, size }, ...s.commitments],
+    }));
+    persist(get, set);
+  },
+
+  answerCommitment: (cid, kept) => {
+    set((s) => ({
+      commitments: s.commitments.map((c) =>
+        c.id === cid ? { ...c, kept, answeredAt: new Date().toISOString() } : c,
+      ),
+    }));
+    persist(get, set);
   },
 
   saveSurvey: (answers, carrying) => {

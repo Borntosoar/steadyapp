@@ -10,6 +10,9 @@ const modules = await import('../content/modules.ts');
    exists to replace. */
 const cb = await import('../content/curveball.ts');
 const tw = await import('../content/toward.ts');
+const gw = await import('../content/groundwork.ts');
+const bl = await import('../content/ballast.ts');
+const sv = await import('../content/survey.ts');
 
 /* Reading level, enforced.
  *
@@ -103,17 +106,55 @@ for (const m of modules.MODULES) GROUPS.push([`module: ${m.title}`, m]);
 
 /* One group per game scene, for the same reason the modules are scored one at a time: a
    reader meets exactly one scene at a time, and averaging seven of them lets a dense one
-   hide behind six plain ones. */
-for (const s of cb.SCENES) GROUPS.push([`curveball: ${s.id}`, s]);
-for (const s of tw.SCENES) GROUPS.push([`toward: ${s.id}`, s]);
-GROUPS.push(['toward: values', tw.VALUES]);
+   hide behind six plain ones.
+   PROSE ONLY, AND THAT IS A CORRECTION. These were registered as whole objects, so the
+   harvester swept up ids, moods and motif names too — `smallHours loops letdown` joined into
+   one unpunctuated 167-word run and scored grade 68. The games passed anyway, by luck: they
+   happen to carry enough real sentences to drown their own ids. That is not a measurement.
+   Only strings somebody actually reads are scored now. */
+const prose = (...xs) => xs.flat().filter(Boolean);
+
+for (const s of cb.SCENES) {
+  GROUPS.push([`curveball: ${s.id}`, prose(
+    s.scene,
+    s.thoughts.map((t) => t.text),
+    s.next.options.map((o) => [o.text, o.outcome]),
+  )]);
+}
+for (const s of tw.SCENES) {
+  GROUPS.push([`toward: ${s.id}`, prose(
+    s.situation, s.escalated, s.thought,
+    s.options.map((o) => [o.text, o.after]),
+  )]);
+}
+GROUPS.push(['toward: values', prose(tw.VALUES.map((v) => [v.label, v.committed]))]);
+GROUPS.push(['groundwork: actions', prose(gw.ACTIONS.map((a) => a.text))]);
+GROUPS.push(['groundwork: replies', prose(
+  Object.values(gw.KEPT_LABELS), Object.values(gw.KEPT_REPLY),
+)]);
+GROUPS.push(['ballast: beliefs and facts', prose(
+  bl.BELIEFS.map((b) => b.text), bl.FACTS.map((f) => f.text),
+)]);
+GROUPS.push(['ballast: discounts and replies', prose(
+  Object.values(bl.DISCOUNTS), Object.values(bl.STRUCK), bl.BALLAST_CLOSE,
+)]);
+GROUPS.push(['survey: questions', prose(
+  sv.QUESTIONS.map((q) => [q.ask, q.note, ...q.tiles.map((t) => t.label)]),
+  Object.values(sv.REFLECTION),
+)]);
 
 describe('every group of copy reads at eighth grade or below', () => {
   for (const [name, group] of GROUPS) {
     test(name, () => {
       const strings = harvest(group);
       assert.ok(strings.length > 0, `${name} produced no strings`);
-      const passage = strings.join(' ');
+      /* Each string is a thing somebody reads on its own — a tile, an option, a paragraph —
+         so each is terminated before the join. Without this a list of short unpunctuated
+         labels becomes one enormous sentence: "Open a window and stand at it for a minute
+         Make a drink and finish it sitting down Put shoes on..." scored as 108 words and
+         grade 42, which measures the join rather than the copy. Prose blocks already end in
+         a full stop, so this changes nothing for them. */
+      const passage = strings.map((x) => (/[.!?:;]$/.test(x.trim()) ? x : `${x}.`)).join(' ');
       const g = gradeLevel(passage);
       const worst = longestSentence(passage);
       assert.ok(

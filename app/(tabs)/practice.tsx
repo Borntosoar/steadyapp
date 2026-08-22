@@ -97,6 +97,20 @@ export default function Practice() {
       glyph: 'fork',
       kinds: ['toward'],
     },
+    {
+      title: NAMES.groundwork.title,
+      sub: NAMES.groundwork.sub,
+      route: '/game/groundwork',
+      glyph: 'plus',
+      kinds: ['groundwork'],
+    },
+    {
+      title: NAMES.ballast.title,
+      sub: NAMES.ballast.sub,
+      route: '/game/ballast',
+      glyph: 'anchor',
+      kinds: ['ballast'],
+    },
   ];
 
   const free: Item[] = [

@@ -74,6 +74,22 @@ export const NAMES = {
     unitPlural: 'runs through Toward',
     sub: 'Five moments, and what each one costs to get past',
   },
+  /* The third game. Behavioural activation — the component the evidence is warmest about,
+     which is why it is third rather than sixth. */
+  groundwork: {
+    title: 'Groundwork',
+    unit: 'day you laid out',
+    unitPlural: 'days you laid out',
+    sub: 'Lay out tomorrow, and keep one thing from it',
+  },
+  /* The fourth. A positive data log built around the discounting rather than the collecting,
+     because the collecting on its own is a bucket with no bottom. */
+  ballast: {
+    title: 'Ballast',
+    unit: 'sorting',
+    unitPlural: 'sortings',
+    sub: 'What actually happened, before it gets thrown out',
+  },
   /* Two destinations that are not practices but are things a module sends you to. They
      live here for one reason: every call to action in the app takes its label from this
      file, so twelve hand-written module buttons cannot drift away from what the rest of

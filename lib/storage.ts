@@ -70,6 +70,7 @@ export const emptyState = (): AppState => ({
   mirrorSessions: [],
   experiments: [],
   practice: [],
+  commitments: [],
   streak: initialStreak(),
   protocol: {
     currentWeek: 1,
@@ -235,7 +236,7 @@ const avoidance = (v: unknown): AvoidanceLevel =>
    it. __tests__/storage.test.mjs now checks this list against the union's source text. */
 const PRACTICE_KINDS: PracticeKind[] = [
   'checkin', 'thought-record', 'grounding', 'mirror', 'urge', 'experiment', 'hard-day',
-  'curveball', 'toward',
+  'curveball', 'toward', 'groundwork', 'ballast',
 ];
 
 /** An entitlement record that survived a round trip. A missing or malformed one becomes
@@ -452,6 +453,21 @@ export function normalise(parsed: unknown): AppState {
       if (!d) return null;
       if (!PRACTICE_KINDS.includes(r.kind as PracticeKind)) return null;
       return { ...d, kind: r.kind as PracticeKind };
+    }),
+
+    /* No migration needed: a new collection with a static default is exactly what
+       normalise() backfills, and the migration slots exist for values that must be DERIVED
+       from existing data. See the note at the top of the MIGRATIONS list. */
+    commitments: rows(p.commitments, (r) => {
+      const d = dated(r);
+      if (!d || typeof r.action !== 'string' || !r.action) return null;
+      return {
+        ...d,
+        action: r.action,
+        size: str(r.size, 'small'),
+        ...(typeof r.kept === 'string' ? { kept: r.kept } : {}),
+        ...(typeof r.answeredAt === 'string' ? { answeredAt: r.answeredAt } : {}),
+      };
     }),
 
     streak: {

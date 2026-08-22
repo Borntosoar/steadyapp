@@ -96,7 +96,7 @@ describe('every thing in the app has exactly one name', () => {
     const covered = {
       checkin: 'checkin', 'thought-record': 'thought', grounding: 'calm', mirror: 'mirror',
       urge: 'urge', experiment: 'experiment', 'hard-day': 'calm', curveball: 'curveball',
-      toward: 'toward',
+      toward: 'toward', groundwork: 'groundwork', ballast: 'ballast',
     };
     for (const k of kinds) {
       assert.ok(covered[k], `PracticeKind "${k}" has no entry in content/names.ts`);

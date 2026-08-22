@@ -446,10 +446,10 @@ three of the eight.
 | 2 | CBT — thought distortion detection | **SHIPPED.** Curveball — `content/curveball.ts`, `app/game/curveball.tsx`. Three phases, four scenes, about ninety seconds. |
 | 3 | ACT — values-based branching story | **SHIPPED.** Toward — `content/toward.ts`, `app/game/toward.tsx`. Two values, five moments, each offering relief or movement and never both in one option; avoidance compounds into the scene returning bigger rather than being marked wrong. |
 | 4 | Somatic — breath / movement via mic + accelerometer | **REDESIGN.** Drop the sensors. Phone-mic breath detection is unreliable enough that the biofeedback would be lying to the user about their own body. Paced breathing without sensing keeps the evidence and loses nothing real. |
-| 5 | Occupational therapy — routine-building sim | **KEEP, and call it what it is.** This is behavioural activation, which has among the best evidence of anything in the brief. It is also barely a game, and pretending otherwise is how it gets built badly. |
+| 5 | Occupational therapy — routine-building sim | **SHIPPED as Groundwork.** `content/groundwork.ts`, `app/game/groundwork.tsx`. Behavioural activation — the component §10 found *is* additive, which is why it went third rather than fifth. Lay out tomorrow against a ground that holds four; a large action plus anything gives way, in front of you, before anything is committed to. Keeps one thing, and asks about it the next time it opens. |
 | 6 | Art therapy — constraint-based creation | **KEEP, last.** Weakest evidence of the survivors, but near-zero risk and the highest ceiling on "somebody wants to open this." |
 | 7 | DBT — TIPP distress tolerance | **REDESIGN.** Keep paced breathing and paired muscle relaxation. Cut temperature and intense exercise entirely — see §9.2. |
-| 8 | Positive psychology — gratitude, social | **KEEP.** Modest effects, but real, cheap and safe. |
+| 8 | Positive psychology — gratitude, social | **SHIPPED as Ballast.** `content/ballast.ts`, `app/game/ballast.tsx`. A positive data log built around the *discounting* rather than the collecting — the belief lives in the filter that deletes the evidence, so the filter's own sentence is put on screen in print and the move is to strike it out or let it stand. Serves `harsh`, the shape the survey could previously do least for. |
 
 Meditation layer: NSDR/Yoga Nidra, interoceptive awareness and open monitoring all stay as
 **practices**. Every mechanism claim attached to them in the brief comes out.
