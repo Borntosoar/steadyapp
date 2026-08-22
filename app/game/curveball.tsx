@@ -124,7 +124,16 @@ export default function Curveball() {
         scrim={false}
         style={StyleSheet.absoluteFill as never}
       />
-      <Motif kind={scene.motif} seed={scene.id} color={c.ink} />
+      {/* `insetTop` clears the header. The back button and the step pips sit up there, and
+          the pips are the only thing on this screen reporting state — decoration running
+          through them is decoration on the one element that has a job. */}
+      <Motif
+        kind={scene.motif}
+        seed={scene.id}
+        color={c.ink}
+        isDark={c.isDark}
+        insetTop={110}
+      />
       {phase === 'intro' && (
         <Intro
           clock={clock}
@@ -442,7 +451,20 @@ function Intercept({
               />
             ))
           : (
-            <View style={{ flex: 1, justifyContent: 'center', gap: space.sm }}>
+            /* SCROLLS, AND SITS AT THE TOP.
+               Two fixes in one view. It was centred inside `flex: 1`, which on a 852pt frame
+               left about 140pt of nothing above the stack and 140 below — so the situation
+               and the thoughts about it read as two unrelated blocks when they are one, and
+               that void was the largest uninterrupted area of wallpaper on the screen, which
+               is most of why the motif read as loud. Top-aligned, they are one column.
+               And it scrolls. At iOS accessibility text sizes six pills plus a two-line
+               situation exceed the field, and the parent's `overflow: hidden` — which timed
+               mode genuinely needs — was clipping them at the top and bottom at once with no
+               indication anything was missing. */
+            <ScrollView
+              contentContainerStyle={{ gap: space.sm, paddingTop: space.sm, paddingBottom: space.lg }}
+              showsVerticalScrollIndicator={false}
+            >
               {live.map((row) => (
                 <StillThought
                   key={row.key}
@@ -451,16 +473,31 @@ function Intercept({
                   onPress={() => tap(row)}
                 />
               ))}
-            </View>
+            </ScrollView>
           )}
       </View>
 
       {!clock && (
-        <View style={{ paddingBottom: space.lg, gap: space.sm }}>
+        /* The terminal action must not look like a seventh thought.
+           It was `Button variant="secondary"` — same `surfaceStrong` fill as an untapped
+           pill, same `radius.pill`, and a fainter border than the pills have. On a screen
+           where tapping a pill means "this thought is distorted", a submit control that is
+           visually the same object invites a mis-tap that ends the round. It now sits on a
+           solid bar with a hairline above it, which reads as chrome rather than as content. */
+        <View
+          style={{
+            paddingTop: space.md,
+            paddingBottom: space.lg,
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderTopColor: c.lineStrong,
+            backgroundColor: c.surfaceSolid,
+            marginHorizontal: -space.lg,
+            paddingHorizontal: space.lg,
+          }}
+        >
           <Button
             label={remaining === live.length ? 'None of them bend' : 'That is all of them'}
             onPress={() => finish(live)}
-            variant={remaining === live.length ? 'secondary' : 'primary'}
           />
         </View>
       )}
@@ -556,7 +593,18 @@ function ThoughtPill({
      error — see the note at the top of the file. The difference is carried by the tick and
      the arrow, not by red and green. */
   const border = mark === 'hit' ? c.accent : mark === 'slip' ? c.cool : c.lineStrong;
-  const fill = mark === 'hit' ? c.accentDim : mark === 'slip' ? c.coolDim : c.surfaceStrong;
+
+  /* THE PILL IS OPAQUE, AND IT HAS TO BE. It used `c.surfaceStrong`, which is 0.90 alpha on
+     the light palette and 0.17 on the dark one — so in dark mode 83% of whatever was behind
+     it came through, and once each scene had a wallpaper that meant motif strokes running
+     across the sentences. Measured on the tender scene's brightest ramp stop, body ink over
+     that pill was 4.36:1 clean and 3.65:1 where a glyph crossed it, against a 4.5 floor for
+     15px type. This is the one element on this screen that must be readable; it should not
+     have been sharing a token with decorative frost.
+     `hit` and `slip` are both just "you tapped this" states, composited over the solid so
+     they stay opaque too. Neither is coloured as an error — see the note at the top of the
+     file. The difference is carried by the tick and the arrow, not by red and green. */
+  const fill = mark === 'hit' ? c.accentDim : mark === 'slip' ? c.coolDim : undefined;
 
   return (
     <Pressable
@@ -565,7 +613,7 @@ function ThoughtPill({
       accessibilityHint="Tap if this thought is distorted"
       onPress={onPress}
       style={({ pressed }) => ({
-        backgroundColor: fill,
+        backgroundColor: c.surfaceSolid,
         borderColor: border,
         borderWidth: StyleSheet.hairlineWidth * 2,
         borderRadius: radius.pill,
@@ -578,7 +626,17 @@ function ThoughtPill({
         justifyContent: 'center',
       })}
     >
-      <Text style={[t.bodySm, { color: c.ink, textAlign: stretch ? 'left' : 'center' }]}>
+      {/* The tapped tint, over the solid rather than instead of it. */}
+      {fill && (
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: fill, borderRadius: radius.pill }]}
+        />
+      )}
+      {/* `t.body`, not `t.bodySm`. This is the game's primary read — a sentence somebody has
+          about five seconds to parse while it moves — and it was set at the second-smallest
+          rung on the type ladder. */}
+      <Text style={[t.body, { color: c.ink, textAlign: stretch ? 'left' : 'center' }]}>
         {mark === 'hit' ? '✓  ' : mark === 'slip' ? '→  ' : ''}
         {text}
       </Text>

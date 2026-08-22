@@ -43,15 +43,20 @@ export type SceneMood =
 
 /** Each mood's pale ramp and its deep counterpart.
  *
- *  WHY MIDNIGHT IS NOT DARK ON THE LIGHT PALETTE, since that is the obvious objection. The
- *  app does have a pattern for a deep ramp under light ink — the full-frame exercise scenes
- *  use it — but the Support pill is drawn by the root layout in palette colours over every
- *  screen in the app, and on a deep ground under the light palette it would be dark ink on
- *  a dark field. Fixing that means teaching the root layout about a per-screen inversion,
- *  which is a lot of new surface for one scene. So the light palette stays on pale ramps and
- *  `smallHours` gets the coolest, dimmest one available; the hour is carried by the motif
- *  and the copy instead. If the Support pill ever learns to invert, this is the line to
- *  revisit.
+ *  WHY MIDNIGHT IS NOT DARK ON THE LIGHT PALETTE. This note previously blamed the Support
+ *  pill, which the root layout draws in palette colours over every screen and which would
+ *  indeed be dark-on-dark over a deep ramp. That is true and it is not the binding
+ *  constraint, so it was the wrong thing to record — measured, the first thing to break is
+ *  the type. `inkFaint` (#5B6552, the "The situation" caption) sits at 4.59:1 on
+ *  LIGHT_GROUND_FLOOR, about 2% of headroom over AA, and every pale ramp is bounded by that
+ *  floor for exactly this reason. Dimming `smallHours` below it breaks the caption before it
+ *  troubles the Support pill.
+ *
+ *  So the real precondition for a darker midnight is darkening `inkFaint` first — somewhere
+ *  around #4A5343 buys room down to roughly #CDD5C9, which is a materially different hour.
+ *  That is a smaller change than teaching the root layout about per-screen inversion, and
+ *  __tests__/contrast.test.mjs already computes everything needed to check it. Until then the
+ *  light palette stays on pale ramps and the hour is carried by the motif and the copy.
  *
  *  `evening` and `smallHours` were briefly the same pair, which meant two moods that looked
  *  identical on both palettes — a distinction the content declared and the screen could not
@@ -91,14 +96,42 @@ export type MotifKind =
   /** Low rays. Morning, before anything has happened. */
   | 'rays';
 
-/** The ceiling the motif's opacity may not cross.
+/** The ceiling the motif's opacity may not cross, per palette.
  *
- *  This is a number in a tested file rather than a literal in a stylesheet for one reason:
- *  it is the difference between a ground and a distraction, it will be tempting to raise it
- *  the first time somebody says the wallpaper is too subtle, and the thought pills that sit
- *  on top of it are the thing this app actually has to keep readable. Raising it is allowed;
- *  raising it past here is a decision the test makes somebody make on purpose. */
-export const MOTIF_MAX_OPACITY = 0.1;
+ *  ONE NUMBER WAS THE WRONG SHAPE, and the design review caught it. A fixed alpha over a
+ *  variable-luminance ground does not produce a fixed perceived weight: dark ink at 10% on
+ *  the pale `ember` ramp lands about 0.21 above the ground in relative luminance, while
+ *  light ink at 10% on `grove` lands about 0.32 above it. Same constant, roughly half again
+ *  the weight in dark. So it is a pair, and the component picks.
+ *
+ *  These live in a tested file rather than as literals in a stylesheet because raising them
+ *  is exactly what somebody will do the first time the wallpaper is called too subtle, and
+ *  the thought pills sitting on top are the thing this app has to keep readable. */
+export const MOTIF_MAX_OPACITY = { light: 0.1, dark: 0.065 } as const;
+
+/** Roughly square cell, in points. The caller divides its measured box by this to get the
+ *  grid, rather than passing a fixed 4×7 — which on a 393×852 frame produced 98×122 cells,
+ *  a row pitch bigger than the jitter could bridge, and therefore visible horizontal bands
+ *  of glyphs. Square cells and jitter near the full cell width is what makes a scatter look
+ *  scattered. */
+export const MOTIF_CELL = 74;
+
+/** Per-kind stroke width, normalised so every motif lands roughly the same ink on screen.
+ *
+ *  `rings` is two complete circles — about 70 units of stroke in the 24×24 box. `moons` is
+ *  a single crescent, about 34. Drawn at one width they differ by roughly 2x in weight, so
+ *  two of the seven scenes read as busy and two as bare at an identical opacity. Widths are
+ *  tuned against total stroke length rather than by eye; the ordering is the arithmetic, the
+ *  exact values are rounded to something that renders cleanly at small sizes. */
+export const STROKE: Record<MotifKind, number> = {
+  rings: 1.0,
+  papers: 1.15,
+  messages: 1.25,
+  loops: 1.35,
+  hearts: 1.4,
+  rays: 1.45,
+  moons: 1.6,
+};
 
 export interface MotifDot {
   /** 0–1 across the field. Multiply by the measured width. */
@@ -125,8 +158,22 @@ function hash(seed: string): number {
 /** A jittered grid rather than free random placement. Free placement clumps — three motifs
  *  land on top of each other and leave a bare quarter, which reads as a mistake rather than
  *  as texture. One per cell with jitter inside the cell keeps the coverage even and keeps
- *  it from looking like a grid. */
-export function scatter(seed: string, cols = 4, rows = 7): MotifDot[] {
+ *  it from looking like a grid.
+ *
+ *  `cols` and `rows` are the caller's job now, derived from its measured box over
+ *  MOTIF_CELL, because a fixed grid on a variable frame gives non-square cells and the row
+ *  banding that comes with them.
+ *
+ *  ROTATION IS ZERO AND THAT IS NOT AN OVERSIGHT. This used to spread each mark over ±25°.
+ *  Curveball's distortion tell is a 2.4° tilt, and a field of randomly tilted marks is a
+ *  rod-and-frame illusion pointed straight at the thing the player is being trained to see —
+ *  a tilted surround biases perceived vertical by several degrees, worst exactly in the
+ *  small-angle range the game works in. Upright marks give the field a true vertical instead,
+ *  which makes the tilt easier to spot rather than harder. It also fixes two glyphs that
+ *  simply stop reading when rotated: a sunrise has an implied horizon, and a sheet of paper
+ *  at 25° is a scribble. The field keeps its `rotate` so a future kind that genuinely wants
+ *  a spin can have one deliberately. */
+export function scatter(seed: string, cols: number, rows: number): MotifDot[] {
   let s = hash(seed) || 1;
   const rnd = () => {
     /* xorshift32. Small, fast, and does not have the low-bit periodicity that a bare LCG
@@ -141,10 +188,13 @@ export function scatter(seed: string, cols = 4, rows = 7): MotifDot[] {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       dots.push({
-        x: (c + 0.15 + rnd() * 0.7) / cols,
-        y: (r + 0.15 + rnd() * 0.7) / rows,
-        scale: 0.7 + rnd() * 0.6,
-        rotate: (rnd() - 0.5) * 50,
+        /* Jitter across 0.9 of the cell rather than 0.7. At 0.7 the reachable range within a
+           row was narrower than the row pitch, so no mark could ever sit level with one from
+           the row above and the grid stayed legible as bands. */
+        x: (c + 0.05 + rnd() * 0.9) / cols,
+        y: (r + 0.05 + rnd() * 0.9) / rows,
+        scale: 0.78 + rnd() * 0.44,
+        rotate: 0,
       });
     }
   }

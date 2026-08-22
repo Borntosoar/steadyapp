@@ -487,7 +487,13 @@ export function Steps({ total, current }: { total: number; current: number }) {
             flex: 1,
             height: 4,
             borderRadius: radius.pill,
-            backgroundColor: i <= current ? c.accent : c.surfaceStrong,
+            /* The unfilled track was `surfaceStrong`, which on the light palette is 0.90
+               alpha warm white — measured against the pale atmosphere ramps it sits between
+               1.10:1 and 1.27:1, so the remaining steps were effectively invisible and a
+               four-step bar read as one filled bar with nothing after it. WCAG 1.4.11 asks
+               3:1 of a component that conveys state, and this one is the only thing on some
+               screens saying how far through you are. */
+            backgroundColor: i <= current ? c.accent : c.lineStrong,
           }}
         />
       ))}

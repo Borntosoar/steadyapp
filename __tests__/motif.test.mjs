@@ -4,8 +4,9 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { MOODS, groundFor, isDeep, scatter, MOTIF_MAX_OPACITY } from '../lib/motif.ts';
+import { MOODS, groundFor, isDeep, scatter, MOTIF_MAX_OPACITY, STROKE } from '../lib/motif.ts';
 import { SCENES } from '../content/curveball.ts';
+import { palette, ATMOSPHERES } from '../constants/palette.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(join(ROOT, p), 'utf8');
@@ -100,20 +101,33 @@ describe('the ground is keyed to the scene and to nothing else', () => {
 });
 
 describe('the scatter is stable, spread and in bounds', () => {
+  const GRID = [5, 10];
+
   test('the same scene lays out identically every time', () => {
-    assert.deepEqual(scatter('partner-gone-quiet'), scatter('partner-gone-quiet'));
+    assert.deepEqual(scatter('partner-gone-quiet', ...GRID), scatter('partner-gone-quiet', ...GRID));
   });
 
   test('different scenes lay out differently', () => {
-    assert.notDeepEqual(scatter('partner-gone-quiet'), scatter('morning-dread'));
+    assert.notDeepEqual(scatter('partner-gone-quiet', ...GRID), scatter('morning-dread', ...GRID));
   });
 
   test('nothing lands outside the field', () => {
     for (const s of SCENES) {
-      for (const d of scatter(s.id)) {
+      for (const d of scatter(s.id, ...GRID)) {
         assert.ok(d.x >= 0 && d.x <= 1, `x out of bounds: ${d.x}`);
         assert.ok(d.y >= 0 && d.y <= 1, `y out of bounds: ${d.y}`);
         assert.ok(d.scale > 0.5 && d.scale < 1.5, `implausible scale: ${d.scale}`);
+      }
+    }
+  });
+
+  test('nothing is tilted, because the game\'s tell is a 2.4 degree tilt', () => {
+    /* The scatter used to spread each mark over ±25°, which is a rod-and-frame illusion
+       aimed at the exact discrimination Curveball trains. This is the guard on the fix. */
+    for (const s of SCENES) {
+      for (const d of scatter(s.id, ...GRID)) {
+        assert.equal(d.rotate, 0,
+          'a tilted wallpaper biases perceived vertical against the distortion tell');
       }
     }
   });
@@ -122,24 +136,121 @@ describe('the scatter is stable, spread and in bounds', () => {
     /* The jittered grid exists so the motif does not pile three marks in one corner and
        leave a bare quarter. Checking the quadrant counts is the cheapest way to notice if
        someone swaps it back for free placement. */
-    const dots = scatter('one-piece-of-feedback');
+    const dots = scatter('one-piece-of-feedback', ...GRID);
     const q = [0, 0, 0, 0];
     for (const d of dots) q[(d.x < 0.5 ? 0 : 1) + (d.y < 0.5 ? 0 : 2)] += 1;
     for (const n of q) {
       assert.ok(n >= dots.length / 8, `a quadrant holds only ${n} of ${dots.length} marks`);
     }
   });
+
+  test('jitter is wide enough that rows can overlap', () => {
+    /* Banding, stated as arithmetic. If a mark can only move across less than the full cell,
+       no mark in one row can ever sit level with one from the row above, and the grid stays
+       visible as horizontal stripes of glyphs. */
+    const dots = scatter('room-goes-quiet', ...GRID);
+    const rows = new Map();
+    for (const d of dots) {
+      const band = Math.floor(d.y * GRID[1]);
+      const r = rows.get(band) ?? [1, 0];
+      rows.set(band, [Math.min(r[0], d.y), Math.max(r[1], d.y)]);
+    }
+    const spans = [...rows.values()];
+    const reach = Math.max(...spans.map(([lo, hi]) => hi - lo));
+    assert.ok(reach > 0.6 / GRID[1],
+      'jitter is narrower than the row pitch, so the scatter will read as bands');
+  });
+});
+
+/* ---------- contrast, computed ----------
+ *
+ * The reason this arithmetic is here rather than in a comment is the same reason
+ * __tests__/contrast.test.mjs exists: this exact figure was wrong and looked fine. Adding a
+ * per-scene ground put the game on the `emberDeep` and `grove` ramps, which reach far
+ * brighter than the `night` ramp it used before — and the thought pill's fill was
+ * `surfaceStrong`, 0.17 alpha on the dark palette. Body ink over that pill measured 4.36:1
+ * on the brightest tender stop, and 3.65:1 where a motif stroke crossed it. */
+
+const lin = (v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; };
+const hex = (h) => [0, 2, 4].map((i) => parseInt(h.replace('#', '').slice(i, i + 2), 16));
+const lum = (rgb) => 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
+const ratio = (a, b) => { const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x); return (hi + 0.05) / (lo + 0.05); };
+const rgba = (s) => {
+  const m = s.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/);
+  return m ? [[+m[1], +m[2], +m[3]], m[4] === undefined ? 1 : +m[4]] : [hex(s), 1];
+};
+const over = (fg, a, bg) => fg.map((ch, i) => ch * a + bg[i] * (1 - a));
+
+describe('a thought is readable on every ground the game can put it on', () => {
+  /** AA for body text. `t.body` is 16px/400, so the large-text allowance does not apply. */
+  const AA = 4.5;
+
+  for (const isDark of [false, true]) {
+    const p = isDark ? palette.dark : palette.light;
+    const [pillRGB, pillA] = rgba(p.surfaceSolid);
+    const ink = hex(p.ink);
+    const ceiling = isDark ? MOTIF_MAX_OPACITY.dark : MOTIF_MAX_OPACITY.light;
+
+    for (const mood of Object.keys(MOODS)) {
+      const ramp = groundFor(mood, isDark);
+      test(`${isDark ? 'dark' : 'light'} · ${mood} · ${ramp}`, () => {
+        for (const stop of ATMOSPHERES[ramp]) {
+          const bg = hex(stop);
+          /* Worst case: a motif stroke at full ceiling directly under the pill. */
+          const painted = over(ink, ceiling, bg);
+          const pill = over(pillRGB, pillA, painted);
+          const r = ratio(ink, pill);
+          assert.ok(r >= AA,
+            `body ink on a thought pill over ${ramp} ${stop} is ${r.toFixed(2)}:1, under ${AA}`);
+        }
+      });
+    }
+  }
 });
 
 describe('the wallpaper stays wallpaper', () => {
-  test('the opacity ceiling is low enough to read a thought through', () => {
-    assert.ok(MOTIF_MAX_OPACITY <= 0.12,
-      'above about 12% the motif stops being a ground and starts competing with the pills ' +
-      'that sit on it');
+  test('the opacity ceilings are low enough to read a thought through', () => {
+    for (const [k, v] of Object.entries(MOTIF_MAX_OPACITY)) {
+      assert.ok(v <= 0.12, `${k} ceiling ${v} stops being a ground and competes with the pills`);
+      assert.ok(v > 0, `${k} ceiling is zero, so there is no wallpaper at all`);
+    }
+  });
+
+  test('dark is quieter than light, because a fixed alpha is not a fixed weight', () => {
+    /* Ink at a given alpha lands further from a dark ground than from a pale one, so the
+       same constant reads roughly half again as heavy in dark mode. */
+    assert.ok(MOTIF_MAX_OPACITY.dark < MOTIF_MAX_OPACITY.light);
+  });
+
+  test('every motif kind has a normalised stroke weight', () => {
+    const src = read('lib/motif.ts');
+    const block = src.slice(src.indexOf('export type MotifKind ='));
+    const kinds = [...block.slice(0, block.indexOf(';')).matchAll(/'(\w+)'/g)].map((m) => m[1]);
+    for (const k of kinds) {
+      assert.ok(typeof STROKE[k] === 'number', `"${k}" has no stroke weight`);
+    }
+    /* `rings` is two full circles and `moons` is one crescent — roughly twice the ink at a
+       shared width, which made two scenes visibly busier than two others at one opacity. */
+    assert.ok(STROKE.rings < STROKE.moons,
+      'the heaviest glyph is not drawn thinner than the lightest, so weights are unequal');
   });
 
   test('the component clamps rather than trusting its caller', () => {
-    assert.match(read('components/Motif.tsx'), /Math\.min\(\s*opacity,\s*MOTIF_MAX_OPACITY\s*\)/);
+    assert.match(read('components/Motif.tsx'), /Math\.min\(opacity \?\? ceiling, ceiling\)/);
+  });
+
+  test('the marks are smaller than the type they sit behind', () => {
+    /* Texture reads as ground when the mark is at or under the x-height of the type in front
+       of it. At SIZE 34 the marks were up to 44pt against a body cap height near 11 — icons
+       scattered on a screen rather than a wallpaper. */
+    const size = Number(read('components/Motif.tsx').match(/const SIZE = (\d+)/)[1]);
+    assert.ok(size <= 24, `SIZE ${size} draws marks larger than the sentences they sit behind`);
+  });
+
+  test('the motif is hidden from screen readers', () => {
+    const src = read('components/Motif.tsx');
+    assert.match(src, /accessibilityElementsHidden/);
+    assert.match(src, /importantForAccessibility="no-hide-descendants"/);
   });
 
   test('the wallpaper does not move', () => {
@@ -177,6 +288,21 @@ describe('the wallpaper stays wallpaper', () => {
     const src = read('components/Motif.tsx');
     assert.doesNotMatch(src, /<G[^>]*\bx=\{`\$\{[^}]*\}%`\}/,
       'the motif is positioning a group with percentages, which silently resolves to zero');
-    assert.match(src, /translate\(\$\{\(d\.x \* box\.w\)/);
+    assert.match(src, /translate\(\$\{\([^)]*d\.x[^)]*\)\.toFixed/,
+      'marks are no longer placed from the measured box');
+  });
+
+  test('whole marks stay inside the frame', () => {
+    /* Half a glyph sliced off by the screen edge reads as a bug; a pattern bleeding
+       deliberately off all four edges would read as a pattern. This picks the first, so the
+       placement is inset on both axes rather than spanning the raw width. */
+    const src = read('components/Motif.tsx');
+    assert.match(src, /const spanX = Math\.max\(0, box\.w - inset \* 2\)/);
+    assert.match(src, /inset \+ d\.x \* spanX/);
+  });
+
+  test('the header strip is reserved so nothing crosses the step pips', () => {
+    assert.match(read('app/game/curveball.tsx'), /<Motif[\s\S]{0,240}insetTop=\{\d+\}/,
+      'the motif runs under the back button and the pips, which are the only state on screen');
   });
 });
