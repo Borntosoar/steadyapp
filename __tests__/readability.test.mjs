@@ -153,7 +153,7 @@ for (const t of tr.TRACKS) {
       d.title, d.about, d.game.focus, d.game.label, d.practice.label, d.hold,
     )]);
   }
-  GROUPS.push([`track ${t.id}: framing`, prose(t.title, t.blurb, tr.TRACK_CAVEAT, tr.TRACK_CLOSE)]);
+  GROUPS.push([`track ${t.id}: framing`, prose(t.title, t.blurb, tr.TRACK_CAVEAT, tr.closeFor(t))]);
 }
 
 describe('every group of copy reads at eighth grade or below', () => {

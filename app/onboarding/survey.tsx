@@ -13,7 +13,7 @@ import { useStore } from '../../store/useStore';
 import { haptic } from '../../hooks/haptics';
 import { QUESTIONS, CRISIS_TILE, type Tile } from '../../content/survey.ts';
 import { planFor, isCrisis, type Answers, type Plan } from '../../lib/plan.ts';
-import { tracksFor } from '../../content/tracks.ts';
+import { tracksFor, daysWord } from '../../content/tracks.ts';
 
 /* The opening survey.
  *
@@ -276,7 +276,10 @@ function Result({ plan, onDone }: { plan: Plan; onDone: () => void }) {
 
           {track && (
             <View style={{ paddingTop: space.lg, gap: space.sm }}>
-              <Caption>There is a set of seven for this</Caption>
+              {/* The count comes from the track. It was the word "seven", which was true of
+                  both tracks that exist and is the third place in this feature where a
+                  hardcoded number would have gone quietly wrong. */}
+              <Caption>There is a set of {daysWord(track)} for this</Caption>
               <Text style={[t.bodySm, { color: c.ink }]}>
                 {track.title} — {track.blurb}
               </Text>

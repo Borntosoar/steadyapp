@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  TRACKS, BREAKUP, trackById, tracksFor, TRACK_CAVEAT, TRACK_CLOSE,
+  TRACKS, BREAKUP, FLAT, trackById, tracksFor, TRACK_CAVEAT, TRACK_CLOSE, closeFor, daysWord,
 } from '../content/tracks.ts';
 import {
   emptyTrack, isOpen, nextDay, isComplete, progressOf, markDone, openTrack,
@@ -16,14 +16,20 @@ import { REFLECTION } from '../content/survey.ts';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (f) => readFileSync(join(ROOT, f), 'utf8');
 
-/* Guided tracks, and the breakup one in particular.
+/* Guided tracks.
  *
- * content/tracks.ts states five refusals in its header. A header is a comment and a comment
- * is not a constraint, so each of them is checked here — these are the failure modes that
- * would still ship a track that runs perfectly and hurts somebody. */
+ * content/tracks.ts states five refusals in its header that apply to every track, and five
+ * more specific to the flat one. A header is a comment and a comment is not a constraint, so
+ * each of them is checked here — these are the failure modes that would still ship a track
+ * that runs perfectly and hurts somebody.
+ *
+ * Everything not in a track-specific block runs against EVERY track. That is deliberate: the
+ * refusals were written for the breakup track and every one of them turned out to be worth
+ * holding the second one to as well. */
 
 const prose = (d) => [d.title, d.about, d.game.focus, d.game.label, d.practice.label, d.hold];
-const allProse = TRACKS.flatMap((t) => [t.title, t.blurb, ...t.days.flatMap(prose)]);
+const proseOf = (t) => [t.title, t.blurb, closeFor(t), ...t.days.flatMap(prose)];
+const allProse = TRACKS.flatMap(proseOf);
 
 describe('the shape of a track', () => {
   test('every track has a stable id, days with unique ids, and a blurb', () => {
@@ -234,11 +240,63 @@ describe('refusal 4 — no assumptions about the shape of the relationship', () 
   });
 });
 
-describe('the closing screen does not congratulate somebody for finishing grief', () => {
-  test('it is not a celebration', () => {
-    assert.doesNotMatch(TRACK_CLOSE, /\b(congratulations|well done|you did it|complete|completed|graduated|success)\b/i);
-    assert.match(TRACK_CLOSE, /not finished|none of it is finished|not how this works/i,
-      'it implies the thing the track is about is over');
+describe('the closing screen does not congratulate somebody for finishing', () => {
+  const closes = [['fallback', TRACK_CLOSE], ...TRACKS.map((t) => [t.id, closeFor(t)])];
+
+  for (const [name, close] of closes) {
+    test(`${name}: it is not a celebration`, () => {
+      /* Finishing a track is not finishing the thing the track is about. "Congratulations,
+         you have completed After It Ended" is the cruellest available version of this
+         screen, and on the flat track a congratulation is also a claim that the feeling came
+         back — refusal 10, which it explicitly does not promise. */
+      assert.doesNotMatch(close, /\b(congratulations|well done|you did it|complete|completed|graduated|success)\b/i);
+      assert.match(close, /not finished|none of it is finished|not how this works/i,
+        'it implies the thing the track is about is over');
+    });
+  }
+
+  test('the fallback names no number, so a shorter track cannot inherit a wrong one', () => {
+    /* It used to open "That is the seven", true of the only track that existed and a lie the
+       first time one is five days long. */
+    assert.doesNotMatch(TRACK_CLOSE, /\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b/i);
+  });
+
+  test('a close that does name a number names the right one', () => {
+    const WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+    for (const t of TRACKS) {
+      const found = closeFor(t).toLowerCase().match(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b/g) ?? [];
+      for (const f of found) {
+        const n = WORDS[f] ?? Number(f);
+        assert.equal(n, t.days.length,
+          `${t.id} has ${t.days.length} days and its close says "${f}"`);
+      }
+    }
+  });
+
+  test('the screens count the days rather than spelling the number out', () => {
+    /* Three places said "seven" because both tracks happen to have seven days: the shared
+       close, the Practice row, and the survey result. All three would have been quietly
+       wrong the first time a track was five days long, and none of them would have failed a
+       test. The count is data; the screens ask for it. */
+    for (const f of ['app/onboarding/survey.tsx', 'app/(tabs)/practice.tsx']) {
+      assert.match(read(f), /daysWord\(/, `${f} does not get the count from the track`);
+    }
+  });
+
+  test('the count reads as a word, and still matches', () => {
+    for (const t of TRACKS) {
+      assert.equal(daysWord(t), 'seven');
+      assert.equal(t.days.length, 7);
+    }
+    assert.equal(daysWord({ days: new Array(5) }), 'five');
+    assert.equal(daysWord({ days: new Array(12) }), '12', 'spelling past ten stops helping');
+  });
+
+  test('every track either writes its own close or takes the fallback', () => {
+    for (const t of TRACKS) {
+      assert.ok(closeFor(t).length > 60, `${t.id} closes on nothing`);
+    }
+    assert.equal(closeFor({ days: [] }), TRACK_CLOSE);
   });
 });
 
@@ -278,6 +336,131 @@ describe('the breakup sequence itself', () => {
       assert.ok(tracksFor(key).some((t) => t.id === 'breakup'));
     }
     assert.deepEqual(tracksFor('not-a-shape'), []);
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────────────────
+ * The flat track's own five. Each is a way this specific track could be actively harmful
+ * rather than merely useless, which is why they are checked rather than trusted. */
+
+const flatProse = proseOf(FLAT);
+
+describe('refusal 6 — it never tells somebody flat to do things they enjoy', () => {
+  test('nothing anywhere suggests picking enjoyable activities', () => {
+    /* The presenting problem restated as the cure. Somebody here has already been told this
+       by everyone, and hearing it from an app is a reason to close the app. */
+    const enjoy = /\b(do (things|something) (you|that you) (enjoy|like|love)|things you enjoy|something fun|treat yourself|do what makes you happy|find joy|pick something you like)\b/i;
+    for (const s of flatProse) assert.doesNotMatch(s, enjoy, `tells a flat person to enjoy something: "${s}"`);
+  });
+
+  test('the track says outright that it does not ask anybody to enjoy anything', () => {
+    assert.match(FLAT.blurb, /enjoy/i, 'the promise not to is the first thing it should say');
+    assert.match(FLAT.blurb, /nothing in here asks|does not ask/i);
+  });
+
+  test('the instructions are about size and about doing it first, not about wanting to', () => {
+    const joined = FLAT.days.map((d) => d.game.focus).join(' ');
+    assert.match(joined, /smallest|small/i, 'size is the mechanism and it is not mentioned');
+    assert.match(FLAT.days[0].about, /wait until you feel like it|backwards|doing comes first/i);
+  });
+});
+
+describe('refusal 7 — no sleep, diet or exercise advice', () => {
+  test('nothing prescribes a routine everybody has already been told about', () => {
+    /* Being unable to do these is part of what flat IS. Repeating them makes the app one more
+       voice on that list. */
+    const lifestyle = /\b(get (some |more )?(sleep|rest)|eight hours|sleep hygiene|go to bed|wake up (early|earlier)|go for a (run|walk|jog)|exercise|work out|eat (better|properly|well)|drink water|get (some )?(sunlight|fresh air)|screen time)\b/i;
+    for (const s of flatProse) assert.doesNotMatch(s, lifestyle, `lifestyle advice: "${s}"`);
+  });
+});
+
+describe('refusal 8 — no gratitude and no bright side', () => {
+  test('nothing asks anybody to be grateful or to look on the bright side', () => {
+    /* A gratitude prompt handed to somebody flat reads as an accusation: the implication is
+       that the problem is insufficient noticing. */
+    const bright = /\b(grateful|gratitude|thankful|count your blessings|bright side|silver lining|look on the|positive(s| things| side)|three good things|cheer up|stay positive)\b/i;
+    for (const s of flatProse) assert.doesNotMatch(s, bright, `gratitude or brightness: "${s}"`);
+  });
+
+  test('the registering day works on discounting, not on noticing harder', () => {
+    const day = FLAT.days.find((d) => d.id === 'not-landing');
+    assert.ok(day, 'the day about things not registering is gone');
+    assert.match(`${day.about} ${day.game.focus}`, /filed|strike|striking|did not count|discount/i);
+    assert.equal(day.game.route.split('?')[0], '/game/ballast', 'it stopped using the positive data log');
+  });
+});
+
+describe('refusal 9 — a missed plan is about the size of the step', () => {
+  test('behavioural activation carries the track rather than appearing once', () => {
+    /* One exposure to the mechanism is a demonstration, not a method. */
+    const groundwork = FLAT.days.filter((d) => d.game.route.startsWith('/game/groundwork'));
+    assert.ok(groundwork.length >= 3, `Groundwork appears ${groundwork.length} times, which is a sampler`);
+    assert.equal(FLAT.days[0].game.route.split('?')[0], '/game/groundwork', 'the track does not open on the mechanism');
+  });
+
+  test('nothing in the track frames a miss as effort, discipline or willpower', () => {
+    const blame = /\b(willpower|discipline|motivation is|lazy|excuses|push through|try harder|commit to|stick with it|consistency)\b/i;
+    for (const s of flatProse) assert.doesNotMatch(s, blame, `blames the person: "${s}"`);
+  });
+
+  test('and the game it leans on still answers a miss with a size', () => {
+    /* Checked in content/groundwork.ts rather than restated here, because the track inherits
+       whatever that file does — if the reply to a miss ever becomes about the person, this
+       track is the loudest place that would be felt. */
+    const src = read('content/groundwork.ts');
+    assert.match(src, /nextSize/, 'the smaller-next-step rule is gone');
+    assert.doesNotMatch(src, /\b(try harder|willpower|discipline|you failed)\b/i);
+  });
+});
+
+describe('refusal 10 — it does not promise the feeling comes back', () => {
+  test('nothing predicts that anybody will start enjoying things again', () => {
+    const promise = /\b(you will (feel|enjoy|want|start)|it will (lift|pass|come back|get easier)|things will (feel|get)|you'?ll (feel|enjoy|be))\b/i;
+    for (const s of flatProse) assert.doesNotMatch(s, promise, `promises a feeling: "${s}"`);
+  });
+
+  test('the close says the flat part comes back and offers the method instead', () => {
+    assert.match(FLAT.close, /comes back/i);
+    assert.match(FLAT.close, /method/i);
+  });
+
+  test('and the track says which way round doing and wanting go', () => {
+    const day = FLAT.days.find((d) => d.id === 'the-wanting');
+    assert.ok(day, 'the day about wanting is gone');
+    assert.match(day.about, /looking forward|come apart|absence of/i);
+  });
+});
+
+describe('the flat sequence itself', () => {
+  test('seven days, in the order the header describes', () => {
+    assert.deepEqual(FLAT.days.map((d) => d.id), [
+      'the-first-move', 'the-wanting', 'what-fell-off', 'not-landing',
+      'the-first-hour', 'other-people', 'when-it-dips',
+    ]);
+  });
+
+  test('it is offered to the survey shapes it names, and they all exist', () => {
+    for (const key of FLAT.forCarrying) {
+      assert.ok(REFLECTION[key], `offered to "${key}", which no survey answer produces`);
+      assert.ok(tracksFor(key).some((t) => t.id === 'flat'));
+    }
+  });
+
+  test('the two tracks do not both claim the same survey shape', () => {
+    /* The survey result offers `tracksFor(carrying)[0]`, so an overlap would make which one
+       gets named depend on the order of an array. */
+    const claimed = new Set();
+    for (const t of TRACKS) {
+      for (const key of t.forCarrying) {
+        assert.ok(!claimed.has(key), `"${key}" is claimed by more than one track`);
+        claimed.add(key);
+      }
+    }
+  });
+
+  test('the worst-hour day opens without a stopwatch', () => {
+    const day = FLAT.days.find((d) => d.id === 'the-first-hour');
+    assert.match(day.game.route, /clock=off/);
   });
 });
 

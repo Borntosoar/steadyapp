@@ -703,3 +703,60 @@ passes is read by the screen it opens, because a parameter nothing reads is a li
 somewhere nobody looks. The parameter sets the *starting position* of the toggle and nothing
 more: the intro still offers the choice, since a link that silently removed it would be the
 app deciding what somebody can handle.
+
+### 11.6 The second track — flat, and the five refusals that are its own
+
+Built 2026-08-23. `FLAT` in `content/tracks.ts`, id `flat`, title "When nothing lands", offered
+to the `flat` and `spent` survey shapes.
+
+**Why this shape next.** It is the one where the mechanism with the best support and the
+mechanic already built are the same thing. §10.2 records what the component literature says —
+behavioural activation is the piece to keep, cognitive restructuring probably is not additive
+(Furukawa 2021, with Jacobson 1996 and Dimidjian 2006 from the dismantling side) — and
+Groundwork already *is* behavioural activation. It is also maximally unlike the breakup track,
+acute loss against absent reward, which is the honest way to find out whether the format
+generalises or whether track one was a good week of writing.
+
+**The fact the track turns on.** Flatness is not mainly an absence of pleasure. What goes is
+anticipation and the registering of reward afterwards, while in-the-moment liking is often far
+more intact than anybody expects. That dissociation is why "do things you enjoy" fails as
+advice and why "do it before you want to" does not, and day two is entirely about it.
+
+| Refusal | Why it is load-bearing |
+|---|---|
+| **6. It never says "do things you enjoy."** | The presenting problem restated as the cure. Somebody here has already been told this by everyone; hearing it from an app is a reason to close the app. Every instruction is about doing regardless of wanting to, and about size. |
+| **7. No sleep, diet or exercise advice.** | Not one line about eight hours, daylight or going for a run. Being unable to do those is part of what flat *is*, and repeating them makes the app one more voice on that list. Groundwork's deck already contains ordinary physical actions without any of them being prescribed as a remedy, which is the correct amount. |
+| **8. No gratitude and no bright side.** | A gratitude prompt handed to somebody flat reads as an accusation — the implication is that the problem is insufficient noticing. Day four does work on registering, but on the *discounting* of things that already happened, which is the opposite operation and is Ballast's existing mechanic. |
+| **9. A missed plan is information about the size of the step, never about the person.** | BA orthodoxy, and what decides whether the track is still openable in week two. Groundwork already encodes it; the test asserts `nextSize` survives, because this track is the loudest place a regression there would be felt. |
+| **10. It does not promise the feeling comes back.** | The honest statement is that action goes first and feeling follows unreliably and late. "You will start enjoying things again" sets up a failed prediction on day three that the person reads as being about them. The close says so outright. |
+
+**Groundwork three times, on purpose.** One exposure to the intervention is a demonstration
+rather than a method. Days one, three and seven are the same mechanic pointed at the smallest
+possible step, at a whole day, and then at the same smallest step again — day seven says that
+it is the same and that this is the point. Padding those slots with two more games would look
+more varied and teach less.
+
+### 11.7 What building the second one exposed in the first
+
+Three screens said "seven" because both tracks happen to have seven days: the shared closing
+line, the Practice row, and the survey result. Every one of them would have been quietly wrong
+the first time a track was five days long, and none of them would have failed a test — the
+sort of defect that only appears once there are two of something. `TRACK_CLOSE` is now
+number-free and is a fallback rather than the text, tracks carry their own `close`, the screens
+call `daysWord(track)`, and the suite checks any number a close names against that track's
+actual day count.
+
+The same class of coupling turned up on the survey result screen, which claims "Curveball —
+three people" and "Toward — five moments" as JSX literals. Those are the first concrete claims
+anybody reads about this app, on the screen the brief calls the moment somebody decides whether
+to trust it, and nothing tied them to the content. `__tests__/survey.test.mjs` now checks both
+against `cast()` and `SCENES`.
+
+The track overview also drew a hardcoded `evening` + `moons` ground, so every future track
+would have arrived wearing the breakup track's weather. It takes the first day's pair now.
+
+**Still uncovered by any track:** `spirals` (cannot stop thinking) and `looking`. `spirals` is
+the obvious third and it carries a trap worth naming before anybody starts: an app for people
+who cannot stop thinking that hands them more thinking to do is the failure mode, and the
+literature that matters there is worry postponement and attention training rather than
+anything Curveball currently does.

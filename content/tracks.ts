@@ -73,6 +73,10 @@ export interface Track {
   /** Which survey shapes this is offered to. */
   forCarrying: string[];
   days: TrackDay[];
+  /** Shown when every day is done. Optional — `TRACK_CLOSE` below is the fallback, and it is
+   *  deliberately number-free so a track of a different length cannot inherit a sentence
+   *  claiming the wrong count. A track that names its own number states it here. */
+  close?: string;
 }
 
 export const BREAKUP: Track = {
@@ -188,9 +192,190 @@ export const BREAKUP: Track = {
       motif: 'rays',
     },
   ],
+  close:
+    'That is the seven. None of it is finished — that is not how this works — but the week has a shape now that it did not have at the start, and you built it rather than waited for it.',
 };
 
-export const TRACKS: Track[] = [BREAKUP];
+/* ════════════════════════════════════════════════════════════════════════════════════════
+ * THE SECOND TRACK — flat, grey, nothing landing.
+ *
+ * WHY THIS ONE NEXT. It is the shape with the strongest evidence behind it in the app's own
+ * review. docs/DIRECTION.md §10.2 records what the component literature says: behavioural
+ * activation is the piece to keep, cognitive restructuring probably is not additive
+ * (Furukawa 2021, and Jacobson 1996 and Dimidjian 2006 from the dismantling side). Groundwork
+ * already IS behavioural activation, so this track is the one place where the mechanism with
+ * the best support and the mechanic already built are the same thing. It is also maximally
+ * unlike the breakup track — acute loss against absent reward — which is the honest way to
+ * find out whether the format generalises or whether it was one good week of writing.
+ *
+ * THE FACT THE WHOLE TRACK TURNS ON. Flatness is not mainly an absence of pleasure. What goes
+ * is ANTICIPATION and the registering of reward afterwards — wanting and learning — while
+ * in-the-moment liking is often much more intact than anybody expects. That dissociation is
+ * why "do things you enjoy" fails as advice and why "do it before you want to" does not, and
+ * it is the single most useful sentence this track has. Day two is entirely about it.
+ *
+ * ────────────────────────────────────────────────────────────────────────────────────────
+ * WHAT THIS TRACK REFUSES, AND THESE ARE NOT THE BREAKUP ONES
+ *
+ * The five in the header above still apply to every track. These are on top, and each one is
+ * a way this specific track could be actively harmful rather than merely useless.
+ *
+ * 6. IT NEVER SAYS "DO THINGS YOU ENJOY." That is the presenting problem restated as the
+ *    cure, and hearing it again from an app is a reason to close the app. Every instruction
+ *    here is about doing regardless of wanting to, and about SIZE.
+ *
+ * 7. NO SLEEP, DIET OR EXERCISE ADVICE. Not one line about eight hours, daylight, or going
+ *    for a run. It is what everybody has already said, being unable to do it is part of what
+ *    flat IS, and repeating it converts the app into one more voice on that list. Groundwork's
+ *    action deck already contains ordinary physical things without any of them being
+ *    prescribed as a remedy, which is the correct amount.
+ *
+ * 8. NO GRATITUDE AND NO BRIGHT SIDE. A gratitude prompt handed to somebody flat reads as an
+ *    accusation — the implication is that the problem is insufficient noticing. Day four does
+ *    work on registering, but it works on the DISCOUNTING of things that already happened,
+ *    which is the opposite operation and is Ballast's existing mechanic.
+ *
+ * 9. A MISSED PLAN IS INFORMATION ABOUT THE SIZE OF THE STEP, NEVER ABOUT THE PERSON. This is
+ *    behavioural activation orthodoxy and it is what decides whether the track is still
+ *    openable in week two. Groundwork already encodes it in KEPT_REPLY and in the fact that a
+ *    miss is answered with a smaller next size rather than with anything at all about effort.
+ *
+ * 10. IT DOES NOT PROMISE THE FEELING COMES BACK. The honest statement is that action goes
+ *     first and feeling follows unreliably and late, and any version of "you will start
+ *     enjoying things again by day five" sets up a failed prediction on day three that the
+ *     person will read as being about them. The close says so outright.
+ *
+ * WHY GROUNDWORK THREE TIMES. Because behavioural activation is the intervention and one
+ * exposure to it is a demonstration rather than a method. Days one, three and seven are the
+ * same mechanic pointed at the smallest possible step, at a whole day, and then at the same
+ * smallest step again on purpose. Padding those slots with two more games would look more
+ * varied and teach less. */
+
+export const FLAT: Track = {
+  id: 'flat',
+  title: 'When nothing lands',
+  blurb:
+    'Seven of them, built on the one thing that holds up best: the doing comes first and the wanting turns up afterwards. Nothing in here asks you to enjoy anything.',
+  /* Offered to `spent` as well as `flat`. Running on empty and going grey are not the same
+     thing, and the copy is written for the second — but the method is right for both, and
+     `spent` currently has nothing else pointed at it. Better an honest fit than an empty
+     shelf; the survey result offers it rather than assigning it. */
+  forCarrying: ['flat', 'spent'],
+  days: [
+    {
+      id: 'the-first-move',
+      title: 'The first move',
+      about:
+        'Almost everything tells you to wait until you feel like it. That order is backwards: the doing comes first, and the wanting turns up later, or late, or not at all.',
+      game: {
+        route: '/game/groundwork',
+        label: 'Groundwork',
+        focus: 'Keep the smallest one on the list. Small is not a compromise here, it is the method.',
+      },
+      practice: { route: '/grounding?tool=breath', label: 'Breathing, about eighty seconds' },
+      hold: 'What is the smallest possible version of something you have stopped doing?',
+      mood: 'morning',
+      motif: 'rays',
+    },
+    {
+      id: 'the-wanting',
+      title: 'Wanting comes later',
+      about:
+        'Flat is usually not an absence of pleasure. It is an absence of looking forward, and the two come apart: a thing can land perfectly well once you are in it and still have looked like nothing from outside.',
+      game: {
+        route: '/game/curveball',
+        label: 'Curveball',
+        focus: 'Watch for the ones that are certain how something is going to feel. None of those has happened yet.',
+      },
+      practice: { route: '/grounding?tool=senses', label: 'Five senses, about two minutes' },
+      hold: 'What did you decide was pointless before you had tried it?',
+      mood: 'daylight',
+      motif: 'loops',
+    },
+    {
+      id: 'what-fell-off',
+      title: 'What fell off',
+      about:
+        'This does not take the big things first. It takes the shower, the reply, the meal that is not eaten standing up, and it is the small missing ones that make a day feel like nothing happened.',
+      game: {
+        route: '/game/groundwork',
+        label: 'Groundwork',
+        focus: 'Lay out a whole day this time. Notice which sizes you reach for and which you leave alone.',
+      },
+      practice: { route: '/grounding?tool=widen', label: 'Widening attention, one minute' },
+      hold: 'What went quietly, without you ever deciding to stop?',
+      mood: 'evening',
+      motif: 'papers',
+    },
+    {
+      id: 'not-landing',
+      title: 'Not landing',
+      about:
+        'Things do happen and then fail to register. An hour later it is gone, or it gets filed as luck, or as not counting, and that filing is doing more of the work here than the flatness is.',
+      game: {
+        route: '/game/ballast',
+        label: 'Ballast',
+        focus: 'The striking out is the part to watch. Each one you strike is a thing that happened and did not count.',
+      },
+      practice: { route: '/grounding?tool=senses', label: 'Five senses, about two minutes' },
+      hold: 'What got filed as luck?',
+      mood: 'evening',
+      motif: 'rings',
+    },
+    {
+      id: 'the-first-hour',
+      title: 'The first hour',
+      about:
+        'The hour after waking decides more of the day than it has any right to, and it is the hour with the least in it. It is also when the forecast for the rest gets made, usually out of nothing.',
+      /* No clock. This is the hour the day is worst in for a lot of people who are here, and
+         a stopwatch is the wrong instrument for it — same reason as day one of the breakup
+         track. The toggle on the intro still wins. */
+      game: {
+        route: '/game/curveball?clock=off',
+        label: 'Curveball',
+        focus: 'The forecast for the whole day is the one to catch. It gets made before anything has happened.',
+      },
+      practice: { route: '/grounding?tool=breath', label: 'Breathing, about eighty seconds' },
+      hold: 'What does the first hour usually decide about the rest of it?',
+      mood: 'morning',
+      motif: 'messages',
+    },
+    {
+      id: 'other-people',
+      title: 'Other people',
+      about:
+        'Company is the most reliable source of anything on this list. It is also the first thing to go, because it costs the most at the point where there is nothing spare — and what to do about that is yours.',
+      game: {
+        route: '/game/toward',
+        label: 'Toward',
+        focus: 'Watch what relief costs here. Most of what shrinks a week got picked because it was cheap.',
+      },
+      practice: { route: '/grounding?tool=values', label: 'Values anchor, two minutes' },
+      hold: 'What is the smallest amount of company you could stand?',
+      mood: 'tender',
+      motif: 'hearts',
+    },
+    {
+      id: 'when-it-dips',
+      title: 'When it dips',
+      about:
+        'This comes back. Not as a setback and not as evidence about you — it comes back the way weather does, and the thing that carries across is the method rather than the mood.',
+      game: {
+        route: '/game/groundwork',
+        label: 'Groundwork',
+        focus: 'One small thing, the same as the very first one. That it is the same is the point.',
+      },
+      practice: { route: '/grounding?tool=widen', label: 'Widening attention, one minute' },
+      hold: 'Which one would you keep if everything else went?',
+      mood: 'smallHours',
+      motif: 'moons',
+    },
+  ],
+  close:
+    'That is the seven. None of it is finished — the flat part comes back, and solving it was never the plan. What you have instead is a method that runs without wanting to, which is the only kind that is any use on a week like this.',
+};
+
+export const TRACKS: Track[] = [BREAKUP, FLAT];
 
 export const trackById = (id: string): Track | null => TRACKS.find((t) => t.id === id) ?? null;
 
@@ -202,8 +387,28 @@ export const tracksFor = (carrying: string): Track[] =>
 export const TRACK_CAVEAT =
   'This is not a treatment and it is not on a timetable. Some of it will land and some of it will not, and going slowly through it is not falling behind.';
 
-/** Shown when all seven are done. Deliberately not a celebration: finishing a track is not
- *  finishing the thing the track is about, and implying otherwise is the cruellest available
- *  version of this screen. */
+/** The fallback close, for a track that has not written its own.
+ *
+ *  Deliberately not a celebration: finishing a track is not finishing the thing the track is
+ *  about, and implying otherwise is the cruellest available version of this screen.
+ *
+ *  Also deliberately NUMBER-FREE. It used to open "That is the seven", which was true of the
+ *  only track that existed and would have quietly become a lie the first time a track was
+ *  five days long or nine. A track that wants to name its own count sets `close` — both of
+ *  them currently do — and __tests__/tracks.test.mjs checks any number named against the
+ *  actual day count. */
 export const TRACK_CLOSE =
-  'That is the seven. None of it is finished — that is not how this works — but the week has a shape now that it did not have at the start, and you built it rather than waited for it.';
+  'That is all of them. None of it is finished — that is not how this works — but the week has a shape now that it did not have at the start, and you built it rather than waited for it.';
+
+/** What the overview shows when a track is done: its own close, or the fallback. */
+export const closeFor = (track: Track): string => track.close ?? TRACK_CLOSE;
+
+const NUMBERS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+
+/** How many days, as a word. Derived, not a literal — three screens said "seven" because
+ *  both tracks happen to have seven days, and all three would have been quietly wrong the
+ *  first time one was five days long. Spelled out because "a set of 7 for this" reads like a
+ *  quantity and the rest of the app spells its small numbers. Falls back to the digit past
+ *  ten, where spelling stops helping. */
+export const daysWord = (track: Track): string =>
+  NUMBERS[track.days.length] ?? String(track.days.length);

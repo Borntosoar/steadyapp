@@ -7,7 +7,7 @@ import { useStore } from '../../store/useStore';
 import { mirrorSpecForWeek, phaseForWeek, MIRROR_UNLOCK_WEEK, WEEKS_TOTAL } from '../../lib/protocol';
 import { dayKey } from '../../lib/streak';
 import { NAMES } from '../../content/names';
-import { TRACKS } from '../../content/tracks.ts';
+import { TRACKS, daysWord } from '../../content/tracks.ts';
 import { nextDay, isComplete, emptyTrack } from '../../lib/track.ts';
 
 /* Practice.
@@ -129,11 +129,14 @@ export default function Practice() {
     const next = nextDay(t, state);
     return {
       title: t.title,
+      /* The count comes from the track rather than from a literal. Two tracks of seven made
+         "All seven done" look safe; it is the same hardcoded number that made the shared
+         closing line quietly wrong, one screen over. */
       sub: isComplete(t, state)
-        ? 'All seven done. Any of them again, whenever.'
+        ? 'All of them done. Any one again, whenever.'
         : next && state.done.length > 0
           ? `Next: ${next.title}`
-          : 'Seven, in order. Nothing on a schedule.',
+          : `${daysWord(t)} of them, in order. Nothing on a schedule.`,
       route: `/track/${t.id}`,
       glyph: 'book' as GlyphKind,
     };

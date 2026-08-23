@@ -8,6 +8,8 @@ import { QUESTIONS, MAX_QUESTIONS, CRISIS_TILE, REFLECTION, FEATURED_CALM } from
 import {
   planFor, isCrisis, carryingOf, toneOf, orderOf, stageOf, progress, STONES, STAGES, STAGE_AT,
 } from '../lib/plan.ts';
+import { cast } from '../content/curveball.ts';
+import { SCENES as TOWARD_SCENES } from '../content/toward.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (f) => readFileSync(join(ROOT, f), 'utf8');
@@ -149,6 +151,23 @@ describe('the result reflects rather than labels', () => {
     assert.match(src, /not therapy/i);
     assert.match(src, /does not diagnose/i);
     assert.match(src, /stays on this phone|stays on the phone/i);
+  });
+
+  test('the counts the result screen quotes are the counts the games actually have', () => {
+    /* "Curveball — three people" and "Toward — five moments" are the first concrete claims
+       anybody reads about this app, on the screen the brief calls the moment somebody decides
+       whether to trust it. They are literals in the JSX with nothing tying them to the
+       content, so a sixth Toward scene or a fourth recurring character would make the first
+       honest screen in the product wrong, silently. */
+    const src = read('app/onboarding/survey.tsx').replace(/\s+/g, ' ');
+    const WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8 };
+    const claim = (re, actual, what) => {
+      const m = src.match(re);
+      assert.ok(m, `the result screen no longer says how many ${what} there are`);
+      assert.equal(WORDS[m[1].toLowerCase()], actual, `it claims ${m[1]} ${what}; there are ${actual}`);
+    };
+    claim(/Curveball — (\w+) people/i, cast().length, 'people in Curveball');
+    claim(/Toward — (\w+) moments/i, TOWARD_SCENES.length, 'moments in Toward');
   });
 
   test('there is an escape hatch on every question', () => {

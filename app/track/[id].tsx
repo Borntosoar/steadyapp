@@ -11,7 +11,7 @@ import { groundFor } from '../../lib/motif.ts';
 import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../../constants/theme';
 import { useStore } from '../../store/useStore';
 import { haptic } from '../../hooks/haptics';
-import { TRACK_CAVEAT, TRACK_CLOSE, type Track, type TrackDay } from '../../content/tracks.ts';
+import { TRACK_CAVEAT, closeFor, type Track, type TrackDay } from '../../content/tracks.ts';
 import { openTrack, nextDay, isOpen, isComplete, progressOf } from '../../lib/track.ts';
 
 /* A guided track. One route serves all of them — the breakup one is simply the first.
@@ -57,14 +57,19 @@ export default function TrackScreen() {
   }
 
   const { track, state } = resolved;
-  const ground = groundFor(openDay?.mood ?? 'evening', c.isDark);
+  /* The overview borrows the FIRST DAY's ground rather than a literal, so each track opens
+     somewhere of its own — the breakup one into moons at evening, the flat one into rays at
+     morning. It was a hardcoded pair, which meant every future track would have arrived
+     wearing the first one's weather. */
+  const scene = openDay ?? track.days[0];
+  const ground = groundFor(scene?.mood ?? 'evening', c.isDark);
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       <Atmosphere variant={ground} rounded="none" scrim={false} style={StyleSheet.absoluteFill as never} />
       <Motif
-        kind={openDay?.motif ?? 'moons'}
-        seed={openDay?.id ?? track.id}
+        kind={scene?.motif ?? 'moons'}
+        seed={scene?.id ?? track.id}
         color={c.ink}
         isDark={c.isDark}
         insetTop={110}
@@ -169,7 +174,7 @@ function Overview({
       {finished && (
         <View style={{ paddingBottom: space.xl }}>
           <Frost>
-            <Body>{TRACK_CLOSE}</Body>
+            <Body>{closeFor(track)}</Body>
           </Frost>
         </View>
       )}
