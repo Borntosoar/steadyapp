@@ -5,7 +5,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  TRACKS, BREAKUP, FLAT, trackById, tracksFor, TRACK_CAVEAT, TRACK_CLOSE, closeFor, daysWord,
+  TRACKS, BREAKUP, FLAT, SPIRALS,
+  trackById, tracksFor, TRACK_CAVEAT, TRACK_CLOSE, closeFor, daysWord,
 } from '../content/tracks.ts';
 import {
   emptyTrack, isOpen, nextDay, isComplete, progressOf, markDone, openTrack,
@@ -26,6 +27,8 @@ const read = (f) => readFileSync(join(ROOT, f), 'utf8');
  * Everything not in a track-specific block runs against EVERY track. That is deliberate: the
  * refusals were written for the breakup track and every one of them turned out to be worth
  * holding the second one to as well. */
+
+const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 
 const prose = (d) => [d.title, d.about, d.game.focus, d.game.label, d.practice.label, d.hold];
 const proseOf = (t) => [t.title, t.blurb, closeFor(t), ...t.days.flatMap(prose)];
@@ -238,6 +241,17 @@ describe('refusal 4 — no assumptions about the shape of the relationship', () 
       assert.ok(!s.includes('!'), `shouts: "${s}"`);
     }
   });
+
+  test('and no track predicts how anybody is going to feel', () => {
+    /* Written for the flat track, where promising the feeling back sets up a failed
+       prediction the person reads as being about them. It generalises: no track knows how
+       any week is going to go, and every one of them is talking to somebody who has already
+       been promised this by something else. */
+    const promise = /\b(you will (feel|enjoy|want|start)|it will (lift|pass|come back|get easier|stop)|things will (feel|get)|you'?ll (feel|enjoy|be))\b/i;
+    for (const s of allProse.concat([TRACK_CAVEAT, TRACK_CLOSE])) {
+      assert.doesNotMatch(s, promise, `promises a feeling: "${s}"`);
+    }
+  });
 });
 
 describe('the closing screen does not congratulate somebody for finishing', () => {
@@ -284,10 +298,7 @@ describe('the closing screen does not congratulate somebody for finishing', () =
   });
 
   test('the count reads as a word, and still matches', () => {
-    for (const t of TRACKS) {
-      assert.equal(daysWord(t), 'seven');
-      assert.equal(t.days.length, 7);
-    }
+    for (const t of TRACKS) assert.equal(daysWord(t), NUMBER_WORDS[t.days.length]);
     assert.equal(daysWord({ days: new Array(5) }), 'five');
     assert.equal(daysWord({ days: new Array(12) }), '12', 'spelling past ten stops helping');
   });
@@ -414,10 +425,8 @@ describe('refusal 9 — a missed plan is about the size of the step', () => {
 });
 
 describe('refusal 10 — it does not promise the feeling comes back', () => {
-  test('nothing predicts that anybody will start enjoying things again', () => {
-    const promise = /\b(you will (feel|enjoy|want|start)|it will (lift|pass|come back|get easier)|things will (feel|get)|you'?ll (feel|enjoy|be))\b/i;
-    for (const s of flatProse) assert.doesNotMatch(s, promise, `promises a feeling: "${s}"`);
-  });
+  /* The "no predicted feeling" guard that started here now runs over every track, in the
+     shared block above. What is left is the part specific to this one. */
 
   test('the close says the flat part comes back and offers the method instead', () => {
     assert.match(FLAT.close, /comes back/i);
@@ -460,6 +469,147 @@ describe('the flat sequence itself', () => {
 
   test('the worst-hour day opens without a stopwatch', () => {
     const day = FLAT.days.find((d) => d.id === 'the-first-hour');
+    assert.match(day.game.route, /clock=off/);
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────────────────
+ * The spirals track's own five. This is the shape where a well-meaning app does the most
+ * damage, because every obvious feature for it — the worry diary, the thought record, the
+ * reassuring line — is the maintaining behaviour with a nicer interface. */
+
+const spiralProse = proseOf(SPIRALS);
+
+describe('refusal 11 — no thought-challenging and no evidence-for-and-against', () => {
+  test('nothing asks anybody to examine, rate or rebut the content', () => {
+    /* Somebody here will do a thought record for an hour and call it progress, because it
+       feels exactly like what they were already doing. An app cannot supervise the
+       difference between examining a thought once and examining it all evening. */
+    const examine = /\b(evidence (for|against)|challenge (the|that|your|a) thought|is (the|that|it) (thought )?(true|realistic|accurate)|how likely|reframe|thought record|balanced thought|dispute|weigh (it|the evidence)|rate how)\b/i;
+    for (const s of spiralProse) assert.doesNotMatch(s, examine, `hands them more thinking: "${s}"`);
+  });
+
+  test('the track says outright that the topic is not the target', () => {
+    assert.match(SPIRALS.blurb, /not one asks what you were thinking about|topic was never the problem/i);
+    assert.match(SPIRALS.days[0].about, /topic changes|shape never does|answering is the habit/i);
+  });
+
+  test('the game that does check thoughts is used for the discrimination, not for a rebuttal', () => {
+    /* Curveball is a thought-checking game in a track that refuses thought-checking, so its
+       appearances have to earn it: the useful learning here is that the uncheckable ones are
+       the ones somebody has been trying to check, and that one let past is still one got
+       through. Neither focus asks for an argument with the thought. */
+    const cb = SPIRALS.days.filter((d) => d.game.route.startsWith('/game/curveball'));
+    assert.equal(cb.length, 2, 'the deliberate two became something else');
+    assert.match(cb[0].game.focus, /cannot be checked/i);
+    assert.match(cb[1].game.focus, /letting past|did not settle/i);
+  });
+
+  test('Toward carries the track, because its mechanic is the move', () => {
+    /* Its own header: the thought is pinned above the choices, never argued with, never
+       disproved, and still there when the scene ends. */
+    const toward = SPIRALS.days.filter((d) => d.game.route.startsWith('/game/toward'));
+    assert.ok(toward.length >= 3, `Toward appears ${toward.length} times, which is a sampler`);
+    assert.equal(SPIRALS.days[0].game.route, '/game/toward', 'the track does not open on the mechanism');
+  });
+});
+
+describe('refusal 12 — no suppression, and it says so out loud', () => {
+  test('nothing tells anybody to stop, clear, block or push the thought away', () => {
+    const suppress = /\b(stop thinking|don'?t think about|clear your (mind|head)|empty your (mind|head)|push (it|them|the thought) (away|out)|block (it|them|the thought)|think about something else|distract yourself|just relax)\b/i;
+    for (const s of spiralProse) assert.doesNotMatch(s, suppress, `prescribes suppression: "${s}"`);
+  });
+
+  test('and it names suppression as the thing that does not hold', () => {
+    /* Naming it matters. Somebody who has been failing at suppression for years has been
+       reading that as a fact about themselves. */
+    const day = SPIRALS.days.find((d) => d.id === 'trying-not-to');
+    assert.ok(day, 'the day about suppression is gone');
+    assert.match(day.about, /already tried not having|makes more of it/i);
+    assert.match(day.about, /checking whether it worked|more attention/i);
+  });
+});
+
+describe('refusal 13 — no reassurance, and it never answers the question', () => {
+  test('nothing anywhere tells somebody it will probably be fine', () => {
+    /* Worry is a search for certainty and reassurance is the behaviour that maintains it.
+       This is the easiest sentence for a mental health app to produce by accident. */
+    const reassure = /\b(it will be (fine|okay|ok|alright)|everything will be|probably (fine|nothing|won'?t|will not)|most likely (fine|nothing)|nothing bad (will|is going)|you'?re safe|it'?s not that bad|try not to worry|no need to worry|there is nothing to worry)\b/i;
+    for (const s of spiralProse) assert.doesNotMatch(s, reassure, `reassures: "${s}"`);
+  });
+
+  test('every question the track asks is left open', () => {
+    /* The holds are questions to carry. On this track in particular, a question the app then
+       answers is the app doing the checking on somebody's behalf. */
+    for (const d of SPIRALS.days) {
+      assert.match(d.hold, /\?$/, `${d.id} states rather than asks: "${d.hold}"`);
+    }
+  });
+});
+
+describe('refusal 14 — no worry diary and no scheduled worry period', () => {
+  test('postponement is a move here, never an appointment', () => {
+    /* A standing daily appointment to worry is still a standing daily appointment to worry,
+       and that is the version that survives contact with an unsupervised app. */
+    const diary = /\b(worry (log|diary|journal|period|time|window|slot)|scheduled worry|set (aside )?(a )?time to worry|write (down )?(your|the|any) worr|list your worr)\b/i;
+    for (const s of spiralProse) assert.doesNotMatch(s, diary, `schedules worry: "${s}"`);
+  });
+
+  test('the postponement day describes putting it down rather than booking it in', () => {
+    const day = SPIRALS.days.find((d) => d.id === 'putting-it-down');
+    assert.ok(day, 'the day about postponement is gone');
+    assert.match(day.about, /putting it down|until later/i);
+    assert.match(day.about, /does not survive the trip|worth the time/i);
+  });
+});
+
+describe('refusal 15 — it does not promise quiet', () => {
+  test('nothing offers a quiet mind, a clear head or an off switch', () => {
+    const quiet = /\b(quiet mind|calm mind|peaceful mind|peace of mind|clear head|inner peace|stop the thoughts|make it stop|switch (it|your (brain|mind)) off|turn it off|silence the)\b/i;
+    for (const s of spiralProse) assert.doesNotMatch(s, quiet, `promises quiet: "${s}"`);
+  });
+
+  test('the close says what changes instead, and it is not the volume', () => {
+    assert.match(SPIRALS.close, /quiet was never the target|does not go quiet/i);
+    assert.match(SPIRALS.close, /how long/i, 'it stopped naming the thing that actually moves');
+  });
+});
+
+describe('the spirals sequence itself', () => {
+  test('seven days, in the order the header describes', () => {
+    assert.deepEqual(SPIRALS.days.map((d) => d.id), [
+      'the-shape', 'what-it-is-for', 'why-and-what', 'putting-it-down',
+      'the-empty-room', 'trying-not-to', 'when-it-starts',
+    ]);
+  });
+
+  test('it opens on the process rather than on any topic', () => {
+    assert.match(SPIRALS.days[0].about, /shape never does|the answering is/i);
+  });
+
+  test('the day about what the worrying is for is actually about that', () => {
+    /* The least-known and most useful thing in the track: nobody keeps doing something that
+       does nothing, and the belief that it is preparing you is why it does not stop. */
+    const day = SPIRALS.days.find((d) => d.id === 'what-it-is-for');
+    assert.match(day.about, /preparing|responsible|caught out/i);
+    assert.match(day.hold, /doing for you/i);
+  });
+
+  test('the concreteness day contrasts why with what', () => {
+    const day = SPIRALS.days.find((d) => d.id === 'why-and-what');
+    assert.match(day.about, /start with why|no bottom/i);
+    assert.match(day.about, /what exactly|what specifically/i);
+  });
+
+  test('Ballast is deliberately absent, and no day pretends otherwise', () => {
+    /* Its beliefs are all about self-worth and none of them is a belief about thinking.
+       Three games used properly beats four used decoratively. */
+    assert.ok(!SPIRALS.days.some((d) => d.game.route.startsWith('/game/ballast')));
+    assert.equal(new Set(SPIRALS.days.map((d) => d.game.route.split('?')[0])).size, 3);
+  });
+
+  test('the day about the empty hours opens without a stopwatch', () => {
+    const day = SPIRALS.days.find((d) => d.id === 'the-empty-room');
     assert.match(day.game.route, /clock=off/);
   });
 });

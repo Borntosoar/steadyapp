@@ -760,3 +760,74 @@ the obvious third and it carries a trap worth naming before anybody starts: an a
 who cannot stop thinking that hands them more thinking to do is the failure mode, and the
 literature that matters there is worry postponement and attention training rather than
 anything Curveball currently does.
+
+### 11.8 The third track — spirals, and the trap it is built around
+
+Built 2026-08-23. `SPIRALS` in `content/tracks.ts`, id `spirals`, title "The thinking part",
+offered to the `spirals` shape only.
+
+**The trap, named before anything else.** An app for people who cannot stop thinking that
+hands them more thinking to do is the failure mode, and it is the ordinary outcome. The worry
+diary, the thought record, the evidence-for-and-against, the "is this thought realistic" —
+somebody here will do every one of them for an hour and call it progress, because it feels
+exactly like the thing they were already doing. The whole track is arranged around not doing
+that.
+
+**Why the content is not the target.** The reliable observation is that the topic is
+interchangeable and the process is stable: worry running forward and rumination running back
+behave like one repetitive process wearing different subjects. Answering tonight's question
+therefore does nothing, because the answering is the habit and it will find another subject by
+tomorrow. Day one says that and the rest follows.
+
+The days, in order: the process rather than the topic; the belief that worrying is doing
+something useful, which is why nobody stops and is the least-known thing in here; abstract
+"why" questions against concrete "what exactly" ones; putting it down rather than settling or
+suppressing it; attention outward, because this is worst when there is nothing else in the
+room; suppression, which everybody has already tried; and what to do when it starts again.
+
+| Refusal | Why it is load-bearing |
+|---|---|
+| **11. No thought-challenging, no evidence-for-and-against.** | For this one shape, examining the content is fuel, and an app cannot supervise the difference between examining a thought once and examining it all evening. |
+| **12. No suppression — and it says so out loud.** | "Just stop thinking about it" is what everyone here has already been told and already tried. It does not hold, and checking whether it worked is more attention on the thing. The track names this rather than merely avoiding it, because somebody who has been failing at suppression for years has been reading that as a fact about themselves. |
+| **13. No reassurance, and it never answers the question.** | Worry is a search for certainty and reassurance is the maintaining behaviour — this app already says so about asking other people. "It will probably be fine" is the easiest sentence for a mental health app to produce by accident and the one that does the damage here. Every `hold` on this track is checked to end in a question mark. |
+| **14. No worry diary and no scheduled worry period.** | Postponement is in as a move, not an appointment. The evidence for postponing is decent; a standing daily appointment to worry is still a standing daily appointment to worry, and that is the version that survives contact with an unsupervised app. |
+| **15. It does not promise quiet.** | The target is not an empty head. What changes is how long somebody stays in it once it starts, and the close says only that. |
+
+**Why Toward leads, and why Curveball is here at all.** Toward appears three times because its
+mechanic *is* the move: its own header says the thought is pinned above the choices, never
+argued with, never disproved, and still there when the scene ends — and the away move it offers
+is relief, which for somebody here is precisely "think it through once more and it will
+settle". Curveball is a thought-checking game in a track that refuses thought-checking, so its
+two appearances have to survive daylight. Its actual rule is a *discrimination* — tap the ones
+that cannot be checked — and the useful learning for a worrier is that the uncheckable ones are
+the ones they have been trying to check; the naming quiz and the reframe answer key were both
+removed in §10 and this track depends on their absence. Second, the clock makes dwelling
+structurally impossible. A game you cannot ruminate inside is worth more here than a calmer one
+you can.
+
+**Ballast is deliberately absent.** Its beliefs are all about self-worth and none of them is a
+belief about thinking. Bending it to fit would have bought a fourth game and a false day. The
+test asserts the absence so a later edit has to argue with it.
+
+### 11.9 The contradiction this one exposed, and the one it did not
+
+`orderOf` in `lib/plan.ts` led `spirals` with **Curveball**, on the reasoning that "Curveball
+leads where the trouble is the thinking itself". That is backwards for this shape, and building
+the track is what made it visible: it put the thought-adjudicating game in front of the person
+who cannot stop adjudicating thoughts. The home screen was arguing with the protocol. Toward
+leads that shape now, Curveball is second, and both are one tap away in Practice as always.
+
+The first version of the test written to pin that down asserted the general rule — *every
+track's first game equals the game the survey leads that shape with* — and immediately failed
+on the breakup track, which opens on Curveball while `orderOf` leads `loss` with Toward. That
+one is **not** a contradiction and the content was not changed to satisfy the rule: a
+sequence's opening move and a home screen's ordering answer different questions, and the
+acute-breakup day is about forecasts, which is exactly Curveball's discrimination. The test was
+narrowed to the invariant that is actually load-bearing — a track must not be led by a game its
+own header refuses — with the reasoning recorded in the test itself.
+
+**Now covered by a track:** `loss`, `unmoored`, `harsh` (breakup); `flat`, `spent` (flat);
+`spirals`. The only shape without one is `looking` — "just looking around" — and it should stay
+that way: handing somebody a seven-day protocol for having no particular reason to be here is
+the opposite of what that answer means. Verified in the browser that the result screen offers
+them nothing.

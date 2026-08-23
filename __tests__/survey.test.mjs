@@ -10,6 +10,7 @@ import {
 } from '../lib/plan.ts';
 import { cast } from '../content/curveball.ts';
 import { SCENES as TOWARD_SCENES } from '../content/toward.ts';
+import { TRACKS } from '../content/tracks.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (f) => readFileSync(join(ROOT, f), 'utf8');
@@ -214,6 +215,27 @@ describe('what the answers configure, and what they must not', () => {
       o.forEach((r) => routes.add(r));
     }
     assert.deepEqual([...routes].sort(), ['/game/curveball', '/game/toward']);
+  });
+
+  test('the thought-checking game never leads for the shape whose trouble is checking', () => {
+    /* `orderOf` used to lead `spirals` with Curveball, on the reasoning that Curveball suits
+       "the thinking itself". Building the spirals track exposed that as backwards: for
+       repetitive worry the content is interchangeable and the checking is the habit, so
+       putting the thought-adjudicating game in front of somebody who cannot stop adjudicating
+       thoughts hands them more of what they arrived with. The home screen was arguing with
+       the protocol. Toward leads that shape now; Curveball is second and one tap away.
+
+       DELIBERATELY NOT GENERALISED to "every track's first game equals its shape's lead
+       game". The first draft of this test asserted that and immediately failed on the breakup
+       track, which opens on Curveball while `orderOf` leads `loss` with Toward — and that one
+       is not a contradiction. A sequence's opening move and a home screen's ordering answer
+       different questions, and the acute-breakup day is about forecasts, which is precisely
+       Curveball's discrimination. What is load-bearing is narrower: a track must not be led
+       by a game its own header refuses, and spirals is the only track that refuses one. */
+    const spirals = TRACKS.find((t) => t.id === 'spirals');
+    assert.ok(spirals, 'the spirals track is gone and this guard now checks nothing');
+    assert.equal(orderOf({ brought: 'spirals' })[0], '/game/toward');
+    assert.equal(spirals.days[0].game.route.split('?')[0], '/game/toward');
   });
 
   test('every "when is it worst" answer picks a real calm-down mode', () => {

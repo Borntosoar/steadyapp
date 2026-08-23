@@ -375,7 +375,202 @@ export const FLAT: Track = {
     'That is the seven. None of it is finished — the flat part comes back, and solving it was never the plan. What you have instead is a method that runs without wanting to, which is the only kind that is any use on a week like this.',
 };
 
-export const TRACKS: Track[] = [BREAKUP, FLAT];
+/* ════════════════════════════════════════════════════════════════════════════════════════
+ * THE THIRD TRACK — cannot stop thinking.
+ *
+ * THE TRAP, NAMED BEFORE ANYTHING ELSE. An app for people who cannot stop thinking that
+ * hands them more thinking to do is the failure mode, and it is the ordinary outcome. The
+ * worry diary, the thought record, the evidence-for-and-against, the "is this thought
+ * realistic" — somebody here will do every one of them for an hour and call it progress,
+ * because it feels exactly like the thing they were already doing. This whole track is
+ * arranged around not doing that.
+ *
+ * SO THE CONTENT IS NOT THE TARGET. The reliable observation in this literature is that the
+ * topic is interchangeable and the process is stable: worry (forward) and rumination (back)
+ * behave like one repetitive process wearing different subjects. Answering tonight's question
+ * therefore does nothing, because the answering is the habit and it will find another subject
+ * by tomorrow. Day one says exactly that and the rest follows from it.
+ *
+ * WHAT THE DAYS ARE BUILT ON, in order: the process rather than the topic; the belief that the
+ * worrying is doing something useful, which is why nobody stops (this is the least known and
+ * most useful thing in here); abstract "why" questions against concrete "what exactly" ones,
+ * which is the distinction rumination-focused work turns on; putting it down rather than
+ * settling or suppressing it; attention outward, because this is worst when there is nothing
+ * else in the room; suppression, which everybody has already tried; and what to do when it
+ * starts again, since it does.
+ *
+ * ────────────────────────────────────────────────────────────────────────────────────────
+ * WHY TOWARD LEADS AND WHY CURVEBALL IS HERE AT ALL
+ *
+ * Toward appears three times because its mechanic IS the move this shape needs. Its own
+ * header says it: the thought is pinned above the choices, never argued with, never
+ * disproved, and still there when the scene ends. That is the whole instruction for a
+ * spiral, made playable — and the away move it offers is relief, which for somebody here is
+ * precisely "think it through one more time and it will settle". The compounding cost is the
+ * claim, and it is the right claim.
+ *
+ * Curveball is a thought-checking game in a track that refuses thought-checking, so its two
+ * appearances are deliberate rather than convenient, and the reasoning has to survive
+ * daylight. Two things make it honest. First, its actual rule is a DISCRIMINATION — tap the
+ * ones that cannot be checked — and the useful learning for a worrier is that the uncheckable
+ * ones are the ones they have been trying to check. It never asks for a rebuttal; the naming
+ * quiz and the reframe answer key were both removed in §10 and this track depends on their
+ * absence. Second, the clock makes dwelling structurally impossible. A game you cannot
+ * ruminate inside is worth more here than a calmer one you can.
+ *
+ * BALLAST IS NOT IN THIS TRACK, and that is a decision rather than an oversight. Its beliefs
+ * are all about self-worth — "I am useless", "I let people down" — and none of them is a
+ * belief about thinking. Bending it to fit would have given the track a fourth game and a
+ * false day. Three games used properly beats four used decoratively.
+ *
+ * ────────────────────────────────────────────────────────────────────────────────────────
+ * WHAT THIS TRACK REFUSES, ON TOP OF THE FIVE EVERY TRACK CARRIES
+ *
+ * 11. NO THOUGHT-CHALLENGING AND NO EVIDENCE-FOR-AND-AGAINST. See the trap above. For this
+ *     one shape, examining the content is fuel, and an app cannot supervise the difference
+ *     between examining a thought once and examining it for an hour.
+ *
+ * 12. NO SUPPRESSION, AND IT SAYS SO OUT LOUD. "Just stop thinking about it" is what everyone
+ *     here has already been told and has already tried. Deliberate suppression does not hold,
+ *     and the checking of whether it worked is itself more attention on the thing. The track
+ *     names this rather than merely avoiding it, because somebody who has been failing at
+ *     suppression for years has been reading that as a fact about themselves.
+ *
+ * 13. NO REASSURANCE, AND IT NEVER ANSWERS THE QUESTION. Worry is a search for certainty, and
+ *     reassurance is the behaviour that maintains it — this app already says so about asking
+ *     other people. "It will probably be fine" is the easiest sentence for a mental health app
+ *     to produce by accident and it is the one that does the damage here.
+ *
+ * 14. NO WORRY DIARY AND NO SCHEDULED WORRY PERIOD. Postponement is in here as a move rather
+ *     than as an appointment. The evidence for postponing is decent; a standing daily
+ *     appointment to worry is still a standing daily appointment to worry, and the version
+ *     that survives contact with an unsupervised app is the second one.
+ *
+ * 15. IT DOES NOT PROMISE QUIET. The target is not an empty head, and saying otherwise sets up
+ *     the exact failure this person has already had with everything else. What changes is how
+ *     long somebody stays in it once it starts. The close says only that. */
+
+export const SPIRALS: Track = {
+  id: 'spirals',
+  title: 'The thinking part',
+  blurb:
+    'Seven of them, and not one asks what you were thinking about. The topic was never the problem, and answering it is not the way out. That is most of what makes this one different.',
+  forCarrying: ['spirals'],
+  days: [
+    {
+      id: 'the-shape',
+      title: 'The shape of it',
+      about:
+        'The topic changes most nights and the shape never does. That is why answering one of them does not end it: the answering is the habit, and it will have found something else by tomorrow.',
+      game: {
+        route: '/game/toward',
+        label: 'Toward',
+        focus: 'The thought stays pinned above the choices for the whole scene. Nobody asks you to settle it first.',
+      },
+      practice: { route: '/grounding?tool=widen', label: 'Widening attention, one minute' },
+      hold: 'What was it about last night, and the night before that?',
+      mood: 'smallHours',
+      motif: 'loops',
+    },
+    {
+      id: 'what-it-is-for',
+      title: 'What it is for',
+      about:
+        'Nobody keeps doing something that does nothing at all. Somewhere in this is a sense that the thinking is preparing you, or being responsible, or the thing that stops you getting caught out.',
+      game: {
+        route: '/game/curveball',
+        label: 'Curveball',
+        focus: 'It lands on whatever cannot be checked. Notice how many of those you have been trying to check anyway.',
+      },
+      practice: { route: '/grounding?tool=breath', label: 'Breathing, about eighty seconds' },
+      hold: 'What do you think the thinking is doing for you?',
+      mood: 'daylight',
+      motif: 'papers',
+    },
+    {
+      id: 'why-and-what',
+      title: 'Why and what',
+      about:
+        'Questions that start with why have no bottom and they make more of themselves. Questions about what exactly happened, and what specifically comes next, run out — and that is the only useful difference between the two.',
+      game: {
+        route: '/game/groundwork',
+        label: 'Groundwork',
+        focus: 'Everything in the hand is a specific thing at a specific size. That is the whole of the difference.',
+      },
+      practice: { route: '/grounding?tool=senses', label: 'Five senses, about two minutes' },
+      hold: 'Which of your questions has no answer?',
+      mood: 'morning',
+      motif: 'rays',
+    },
+    {
+      id: 'putting-it-down',
+      title: 'Putting it down',
+      about:
+        'There is a move between settling it and forcing it out, and it is putting it down until later. Most of it does not survive the trip, and the few that do were the ones worth the time.',
+      game: {
+        route: '/game/toward',
+        label: 'Toward',
+        focus: 'Every relief on offer is available now and charged later. Most of what keeps this running got picked for how fast it worked.',
+      },
+      practice: { route: '/grounding?tool=widen', label: 'Widening attention, one minute' },
+      hold: 'What of this would still matter in the morning?',
+      mood: 'evening',
+      motif: 'moons',
+    },
+    {
+      id: 'the-empty-room',
+      title: 'The empty room',
+      about:
+        'This is loudest when there is nothing else going on, and that is not a coincidence: attention with nowhere to go turns inward and stays. Something outside to look at is a move, not a way of dodging the real work.',
+      /* No clock. This is the day about the hours when there is nothing else in the room, and
+         those hours are usually the small ones. Same instrument argument as the other two
+         tracks; the toggle on the intro still wins. */
+      game: {
+        route: '/game/curveball?clock=off',
+        label: 'Curveball',
+        focus: 'This time it is the letting past. One you did not settle is still one you got through.',
+      },
+      practice: { route: '/grounding?tool=senses', label: 'Five senses, about two minutes' },
+      hold: 'What gets loud when there is nothing else in the room?',
+      mood: 'smallHours',
+      motif: 'rings',
+    },
+    {
+      id: 'trying-not-to',
+      title: 'Trying not to',
+      about:
+        'Everybody here has already tried not having the thought, and it is the one approach that reliably makes more of it. Checking whether it worked is more attention on it, which is the trap sitting inside the trap.',
+      game: {
+        route: '/game/toward',
+        label: 'Toward',
+        focus: 'Nothing gets removed in this one. It is in the room for the whole scene and you pick anyway.',
+      },
+      practice: { route: '/grounding?tool=breath', label: 'Breathing, about eighty seconds' },
+      hold: 'How much of a day goes on trying not to?',
+      mood: 'evening',
+      motif: 'hearts',
+    },
+    {
+      id: 'when-it-starts',
+      title: 'When it starts again',
+      about:
+        'It starts again, and that is not a sign that anything failed. What changes is not whether it turns up. It is how long you are still in it an hour later.',
+      game: {
+        route: '/game/groundwork',
+        label: 'Groundwork',
+        focus: 'One specific thing at a size you would actually begin. Specific is the exit, and it is the same move as earlier in the week.',
+      },
+      practice: { route: '/grounding?tool=widen', label: 'Widening attention, one minute' },
+      hold: 'What is the smallest specific thing you could do instead?',
+      mood: 'morning',
+      motif: 'paths',
+    },
+  ],
+  close:
+    'That is the seven. None of it is finished — the thinking does not go quiet, and quiet was never the target. What can change is how long you are still in it once it has started, and that was the part doing the damage.',
+};
+
+export const TRACKS: Track[] = [BREAKUP, FLAT, SPIRALS];
 
 export const trackById = (id: string): Track | null => TRACKS.find((t) => t.id === id) ?? null;
 

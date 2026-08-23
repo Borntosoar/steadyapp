@@ -161,9 +161,19 @@ export function orderOf(a: Answers): string[] {
   const carrying = carryingOf(a);
   const curveball = '/game/curveball';
   const toward = '/game/toward';
-  /* Curveball leads where the trouble is the thinking itself; Toward leads where the trouble
-     is that life has narrowed around it. Both are always present. */
-  const towardFirst = carrying === 'spent' || carrying === 'unmoored' || carrying === 'loss';
+  /* Curveball leads where a thought is worth checking; Toward leads where the checking is
+     itself the trouble, or where life has narrowed around it. Both are always present.
+
+     SPIRALS MOVED, AND IT IS THE ONE THAT LOOKED MOST OBVIOUS. This used to read "Curveball
+     leads where the trouble is the thinking itself", which put the thought-checking game in
+     front of the person who cannot stop checking thoughts. Building the spirals track is what
+     exposed it: for repetitive worry the content is interchangeable and the checking is the
+     habit, so leading with a game about adjudicating thoughts hands somebody more of exactly
+     what they came in with. Toward's thought is pinned above the choices and never argued
+     with, which is the move this shape needs. See content/tracks.ts and docs/DIRECTION.md
+     §11.8. Curveball is still second, and still one tap away in Practice. */
+  const towardFirst =
+    carrying === 'spirals' || carrying === 'spent' || carrying === 'unmoored' || carrying === 'loss';
   return towardFirst ? [toward, curveball] : [curveball, toward];
 }
 
