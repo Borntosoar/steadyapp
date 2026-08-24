@@ -91,7 +91,17 @@ export const BREAKUP: Track = {
   oneLine: 'For after a relationship ends.',
   blurb:
     'Seven of them, in an order that follows what usually happens rather than a calendar. Nothing here is on a schedule, nothing expires, and you can stop at any one of them.',
-  forCarrying: ['loss', 'unmoored', 'harsh'],
+  /* `harsh` used to be here and should not have been. Six of these seven days assume a
+     relationship ended; only "The voice" is about self-criticism at all, and offering "After
+     it ended" to somebody whose answer was "I am hard on myself" is wrong on the title alone.
+     It has its own track now — see HARSH below and docs/DIRECTION.md §11.12.
+
+     `unmoored` stays, and it is the same defect one degree milder: "everything changed at
+     once" is often a breakup and is just as often a move, a diagnosis, a job going, or
+     leaving a country, and this track assumes a person. It is a stretch rather than a
+     mistake, and it is recorded as one — an honest stretch beats an empty shelf, and it goes
+     the moment `unmoored` has somewhere better. */
+  forCarrying: ['loss', 'unmoored'],
   days: [
     {
       id: 'getting-through',
@@ -767,7 +777,204 @@ export const SPENT: Track = {
     'That is the seven. None of it is finished, and none of it changed how much you are carrying — that was always the honest limit here. What can change is whether the exhaustion keeps counting as evidence about you, and that one is worth having on its own.',
 };
 
-export const TRACKS: Track[] = [BREAKUP, FLAT, SPIRALS, SPENT];
+/* ════════════════════════════════════════════════════════════════════════════════════════
+ * THE FIFTH TRACK — hard on yourself.
+ *
+ * THE HOME GAME WAS BUILT FOR THIS SHAPE FIRST. content/ballast.ts opens by saying so: "I am
+ * hard on myself" is the shape the survey could do least for, the audience is 18–30, and low
+ * self-esteem is a large market with very little good in it. Ballast is the positive data log
+ * and its mechanic — the DISCOUNT, not the collecting — is the mechanism of this shape made
+ * playable. It appears three times here, which is the same argument the flat track makes for
+ * Groundwork: one exposure to the intervention is a demonstration rather than a method.
+ *
+ * ────────────────────────────────────────────────────────────────────────────────────────
+ * THE DESIGN PROBLEM, WHICH IS THE SAME SHAPE AS THE OTHER TRACKS' AND HAS A DIFFERENT ANSWER
+ *
+ * The obvious intervention here is self-compassion, and it has decent support. The thing that
+ * sinks it in practice is that people who are highly self-critical are often frightened of it:
+ * being easier on yourself reads as dishonest, or as the thing that will make you slide. That
+ * fear predicts a poor response, and it is why so much of this category bounces straight off
+ * the audience it was written for. Opening with "be kind to yourself" is this track's version
+ * of telling a flat person to do things they enjoy.
+ *
+ * There is a second, sharper reason to refuse the obvious version. Positive self-statements —
+ * affirmations, "I am enough", repeat-after-me — have been found to leave people with LOW
+ * self-esteem feeling worse than before, while helping people who already felt fine. That is
+ * precisely this audience and precisely the wrong direction, so affirmations are not softened
+ * here, they are banned.
+ *
+ * SO THE FRAME IS ACCURACY, NOT KINDNESS. Day six is called "Fair, not kind" for that reason:
+ * the same standard of evidence anybody else would get, and no more generous than that. It is
+ * a lower bar than kindness and much harder to argue with, which is the point — the whole
+ * failure mode of this shape is an argument the person always wins.
+ *
+ * AND THE ORDER MATTERS MORE HERE THAN ANYWHERE. Nothing kind is offered until the function of
+ * the criticism has been looked at (day two) and the double standard has been felt (day three).
+ * Those two are what make day six survivable.
+ *
+ * WHERE THE DAYS COME FROM: naming the sentence; what it is for, which is the belief that it
+ * keeps standards up and gets there before other people do; the double standard, which the
+ * survey's own reflection already states — the voice "would never speak to anybody else that
+ * way"; the sentence being older than the thing it is commenting on; what it actually costs,
+ * which is not starting rather than higher standards; accuracy instead of kindness; and the
+ * gap between hearing it and doing what it says.
+ *
+ * DAY THREE RUNS ON THE CLOCK ON PURPOSE, while day seven does not. Speed is the instrument on
+ * day three: the automatic allowance you extend to somebody else, before you have had time to
+ * be fair about it, is the data. Day seven is about the gap between hearing and acting, which
+ * needs the opposite.
+ *
+ * ────────────────────────────────────────────────────────────────────────────────────────
+ * WHAT THIS TRACK REFUSES, ON TOP OF THE FIVE EVERY TRACK CARRIES
+ *
+ * 21. NO AFFIRMATIONS, AND NOTHING KIND OFFERED UP FRONT. See above. No "you are enough", no
+ *     repeat-after-me, no self-love. The kind register is not the opening move and the
+ *     affirmation register is not used at all.
+ *
+ * 22. IT DOES NOT ARGUE THAT THE CRITICISM IS FALSE. "That is not true, you are great" is
+ *     reassurance, it triggers the discount on the way past, and it loses — the sentence
+ *     usually has a grain in it, which is why it sticks. The moves here are the double
+ *     standard and the function, never adjudication of the content.
+ *
+ * 23. NO COMPARISON, EVEN FAVOURABLE. Not "you are doing better than you think", not "everyone
+ *     feels like this". The first is reassurance and the second erases the person. Comparison
+ *     is also part of the machinery of this shape, so using it as the remedy feeds it.
+ *
+ * 24. NO FAMILY HISTORY AND NO ORIGIN HUNTING. Day four says the sentence is older than the
+ *     situation. It does not ask anybody to work out where it came from. An unsupervised app
+ *     inviting somebody to open their childhood at 1am is the clearest harm case in this
+ *     track, and there is nobody there when it goes wrong.
+ *
+ * 25. IT NEVER PROMISES THE VOICE GOES. It usually does not. What changes is the gap between
+ *     hearing it and taking dictation from it, and the close says only that.
+ *
+ * AND IT IS NEVER A SCOREBOARD. Nothing here rates anybody, out of ten or otherwise. An app
+ * that asks somebody hard on themselves to score themselves has handed the voice a metric. */
+
+export const HARSH: Track = {
+  id: 'harsh',
+  title: 'The running commentary',
+  oneLine: 'For when the voice in your head is the problem.',
+  blurb:
+    'Seven of them, and not one is an exercise in thinking better of yourself. That request is where most of this falls over. The move here is accuracy instead, which is a lower bar and much harder to argue with.',
+  forCarrying: ['harsh'],
+  days: [
+    {
+      id: 'the-sentence',
+      title: 'The sentence',
+      about:
+        'There is usually one sentence underneath all of it, and it is short, absolute and old. It runs so constantly that it has stopped sounding like a sentence and started sounding like a description.',
+      game: {
+        route: '/game/ballast',
+        label: 'Ballast',
+        focus: 'Pick the one closest to yours. The lines that come back to throw things out are the voice, already in print.',
+      },
+      practice: { route: '/grounding?tool=breath', label: 'Breathing, about eighty seconds' },
+      hold: 'What is the sentence, in the fewest words it takes?',
+      mood: 'evening',
+      motif: 'rings',
+    },
+    {
+      id: 'what-it-keeps-up',
+      title: 'What it keeps up',
+      about:
+        'It feels like the thing holding the standards up, and like getting there before anybody else can. That belief is the one worth looking at: harsh commentary tracks with giving up and steering clear, not with trying harder.',
+      game: {
+        route: '/game/toward',
+        label: 'Toward',
+        focus: 'The thought is never removed and never disproved here. You choose with it still in the room, which is most of the answer to what it is for.',
+      },
+      practice: { route: '/grounding?tool=values', label: 'Values anchor, two minutes' },
+      hold: 'What do you think it is protecting you from?',
+      mood: 'daylight',
+      motif: 'papers',
+    },
+    {
+      id: 'somebody-else',
+      title: 'Somebody else',
+      about:
+        'The one reliable test is what you would say to somebody else in exactly the same position. The gap between the two answers is the clearest evidence going that this is not a fair reading.',
+      /* Clock ON, and that is the opposite call from most days in most tracks. The automatic
+         allowance you extend to somebody else, before there is time to be fair about it, is
+         the data here. Speed is the instrument rather than the obstacle. */
+      game: {
+        route: '/game/curveball',
+        label: 'Curveball',
+        focus: 'The hour belongs to somebody else here. Notice what you let them off that you would not let yourself.',
+      },
+      practice: { route: '/grounding?tool=widen', label: 'Widening attention, one minute' },
+      hold: 'What would you say to somebody else in this exact position?',
+      mood: 'daylight',
+      motif: 'messages',
+    },
+    {
+      id: 'older-than-this',
+      title: 'Older than this',
+      about:
+        'The sentence almost always predates the thing it is commenting on. It is not a verdict somebody reached about today, whatever it sounds like at two in the morning.',
+      game: {
+        route: '/game/ballast',
+        label: 'Ballast',
+        focus: 'The lines that throw things out are written in advance, because everybody has the same handful. Worth noticing about a sentence that feels bespoke.',
+      },
+      practice: { route: '/grounding?tool=senses', label: 'Five senses, about two minutes' },
+      hold: 'How long have you had it?',
+      mood: 'smallHours',
+      motif: 'loops',
+    },
+    {
+      id: 'what-it-costs',
+      title: 'What it costs',
+      about:
+        'The output of all this is not higher standards. It is not starting, leaving things late, and keeping away from anywhere it might show — and none of that reads as harshness from outside.',
+      game: {
+        route: '/game/groundwork',
+        label: 'Groundwork',
+        focus: 'What gets laid out is a fact about the day. The commentary running over the top of it is not part of the count.',
+      },
+      practice: { route: '/grounding?tool=senses', label: 'Five senses, about two minutes' },
+      hold: 'What have you not started because of it?',
+      mood: 'morning',
+      motif: 'rays',
+    },
+    {
+      id: 'fair-not-kind',
+      title: 'Fair, not kind',
+      about:
+        'Being warmer about it is a big ask, and it is usually the point where people put this sort of thing down. Accurate is a lower bar: the same standard of evidence anybody else would get, and no more generous than that.',
+      game: {
+        route: '/game/ballast',
+        label: 'Ballast',
+        focus: 'Whatever survives the strikes goes in. That is not flattery, it is the part that held up.',
+      },
+      practice: { route: '/grounding?tool=breath', label: 'Breathing, about eighty seconds' },
+      hold: 'What would the accurate version of the sentence be?',
+      mood: 'evening',
+      motif: 'hearts',
+    },
+    {
+      id: 'taking-dictation',
+      title: 'Taking dictation',
+      about:
+        'It does not go quiet, and that was never what any of this was for. What changes is the gap between hearing it and doing what it says.',
+      /* No clock. Day three needed speed; this one needs the space between hearing something
+         and acting on it, which is the thing being practised. */
+      game: {
+        route: '/game/curveball?clock=off',
+        label: 'Curveball',
+        focus: 'The ones you let past are the point here. Hearing one and not acting on it is the whole skill, and it is quieter than it sounds.',
+      },
+      practice: { route: '/grounding?tool=widen', label: 'Widening attention, one minute' },
+      hold: 'What did it say today that you did not act on?',
+      mood: 'morning',
+      motif: 'paths',
+    },
+  ],
+  close:
+    'That is the seven. None of it is finished — the voice is still there, and removing it was never on offer. What can change is whether you take dictation from it, and that turns out to be most of the difference.',
+};
+
+export const TRACKS: Track[] = [BREAKUP, FLAT, SPIRALS, SPENT, HARSH];
 
 export const trackById = (id: string): Track | null => TRACKS.find((t) => t.id === id) ?? null;
 

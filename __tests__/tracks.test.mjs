@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  TRACKS, BREAKUP, FLAT, SPIRALS, SPENT,
+  TRACKS, BREAKUP, FLAT, SPIRALS, SPENT, HARSH,
   trackById, tracksFor, TRACK_CAVEAT, TRACK_CLOSE, closeFor, daysWord,
 } from '../content/tracks.ts';
 import {
@@ -788,6 +788,165 @@ describe('the flat track gave `spent` back', () => {
        it has not, so that track read as an instruction to do more. */
     assert.deepEqual(FLAT.forCarrying, ['flat']);
     assert.deepEqual(tracksFor('spent').map((t) => t.id), ['spent']);
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────────────────
+ * The harsh track's own five. The obvious intervention for this shape is the one most
+ * likely to be refused by the person it is aimed at, so the order of the days is itself a
+ * refusal and is checked as one. */
+
+const harshProse = proseOf(HARSH);
+
+describe('refusal 21 — no affirmations, and nothing kind offered up front', () => {
+  test('the affirmation register appears nowhere at all', () => {
+    /* Positive self-statements have been found to leave people with LOW self-esteem feeling
+       worse, while helping the people who already felt fine. That is exactly this audience
+       and exactly the wrong direction, so this is a ban rather than a softening. */
+    const affirm = /\b(be (kind|nice|gentle|compassionate) to yourself|you are enough|you'?re enough|you deserve|affirmation|repeat after|say it to yourself|love yourself|self.?love|self.?compassion|treat yourself the way|worthy of)\b/i;
+    for (const s of harshProse) assert.doesNotMatch(s, affirm, `affirmation register: "${s}"`);
+  });
+
+  test('and the track says up front that it is not going to ask for it', () => {
+    assert.match(HARSH.blurb, /not one is an exercise in thinking better of yourself/i);
+    assert.match(HARSH.blurb, /accuracy/i, 'it stopped naming what it does instead');
+  });
+
+  test('nothing warm is offered before the function and the double standard', () => {
+    /* The order is the intervention. Fear of being easier on yourself predicts a poor
+       response, so day six is only survivable because days two and three came first. */
+    const ids = HARSH.days.map((d) => d.id);
+    assert.ok(ids.indexOf('fair-not-kind') > ids.indexOf('what-it-keeps-up'),
+      'the warm day now arrives before the one about what the criticism is for');
+    assert.ok(ids.indexOf('fair-not-kind') > ids.indexOf('somebody-else'),
+      'the warm day now arrives before the double standard has been felt');
+  });
+
+  test('the warm day is framed as accuracy rather than as kindness', () => {
+    const day = HARSH.days.find((d) => d.id === 'fair-not-kind');
+    assert.ok(day, 'the day that reframes kindness as accuracy is gone');
+    assert.match(day.title, /fair, not kind/i);
+    assert.match(day.about, /accurate is a lower bar|same standard of evidence/i);
+    assert.match(day.about, /no more generous than that/i, 'it stopped capping the generosity');
+  });
+});
+
+describe('refusal 22 — it does not argue that the criticism is false', () => {
+  test('nothing contradicts the sentence or tells anybody they are great', () => {
+    /* Reassurance triggers the discount on the way past, and it loses: the sentence usually
+       has a grain in it, which is why it stuck. */
+    const rebut = /\b(that'?s not true|it'?s not true|none of (that|it) is true|you'?re not (useless|a failure|bad|broken)|you are (great|amazing|wonderful|doing great)|nothing is wrong with you|it'?s all in your head|stop being so hard)\b/i;
+    for (const s of harshProse) assert.doesNotMatch(s, rebut, `argues with the content: "${s}"`);
+  });
+
+  test('the moves are the double standard and the function', () => {
+    const dbl = HARSH.days.find((d) => d.id === 'somebody-else');
+    assert.ok(dbl, 'the double-standard day is gone');
+    assert.match(dbl.about, /what you would say to somebody else/i);
+    assert.match(dbl.hold, /somebody else/i);
+    const fn = HARSH.days.find((d) => d.id === 'what-it-keeps-up');
+    assert.match(fn.about, /holding the standards up|belief/i);
+    assert.match(fn.hold, /protecting you from/i);
+  });
+});
+
+describe('refusal 23 — no comparison, even favourable', () => {
+  test('nothing measures anybody against other people', () => {
+    /* Comparison is part of the machinery of this shape, so using it as the remedy feeds it.
+       "Everybody has the same handful" on day four is about the DISCOUNT SENTENCES rather
+       than about the person, which is why the guard is written to reassurance forms. */
+    const compare = /\b(better than you think|everyone (feels|is) (like )?(this|that way)|everybody (feels|is) (like )?(this|that way)|you'?re not the only|at least you|others? have it worse|compared to (other|everybody|everyone))\b/i;
+    for (const s of harshProse) assert.doesNotMatch(s, compare, `compares: "${s}"`);
+  });
+
+  test('and nothing asks anybody to score themselves', () => {
+    /* An app that asks somebody hard on themselves to rate themselves has handed the voice a
+       metric. */
+    const score = /\b(rate (yourself|your|how)|out of ten|score yourself|self.?esteem score|confidence level|how much do you believe)\b/i;
+    for (const s of harshProse) assert.doesNotMatch(s, score, `scores the person: "${s}"`);
+  });
+});
+
+describe('refusal 24 — no family history and no origin hunting', () => {
+  test('nothing invites anybody to work out where it came from', () => {
+    /* An unsupervised app opening somebody's childhood at 1am is the clearest harm case in
+       this track, and there is nobody there when it goes wrong. Day four states that the
+       sentence is older than the situation and stops. */
+    const origin = /\b(your (parents?|mother|father|mum|dad|family|childhood|upbringing)|growing up|when you were (a child|little|young|small)|where it came from|who taught you|inner child|first heard it)\b/i;
+    for (const s of harshProse) assert.doesNotMatch(s, origin, `sends them digging: "${s}"`);
+  });
+
+  test('the age of the sentence is stated, not excavated', () => {
+    const day = HARSH.days.find((d) => d.id === 'older-than-this');
+    assert.ok(day, 'the day about the age of the sentence is gone');
+    assert.match(day.about, /predates the thing it is commenting on/i);
+    assert.match(day.hold, /how long have you had it/i);
+  });
+});
+
+describe('refusal 25 — it never promises the voice goes', () => {
+  test('nothing offers to remove, silence or free anybody from it', () => {
+    const gone = /\b(silence (it|the voice)|make it stop|get rid of it|it will go|the voice (will|goes) (away|quiet)|never hear it again|free (yourself )?from it|banish|quieten)\b/i;
+    for (const s of harshProse) assert.doesNotMatch(s, gone, `promises it goes: "${s}"`);
+  });
+
+  test('the close says it stays, and names what moves instead', () => {
+    assert.match(HARSH.close, /the voice is still there/i);
+    assert.match(HARSH.close, /take dictation/i, 'it stopped naming the thing that changes');
+  });
+});
+
+describe('the harsh sequence itself', () => {
+  test('seven days, in the order the header describes', () => {
+    assert.deepEqual(HARSH.days.map((d) => d.id), [
+      'the-sentence', 'what-it-keeps-up', 'somebody-else', 'older-than-this',
+      'what-it-costs', 'fair-not-kind', 'taking-dictation',
+    ]);
+  });
+
+  test('the game written for this shape carries it', () => {
+    /* content/ballast.ts opens by saying it was built for "I am hard on myself". One
+       exposure to the intervention is a demonstration rather than a method. */
+    const ballast = HARSH.days.filter((d) => d.game.route.startsWith('/game/ballast'));
+    assert.ok(ballast.length >= 3, `Ballast appears ${ballast.length} times in the track it was written for`);
+    assert.equal(HARSH.days[0].game.route, '/game/ballast', 'the track does not open on its own mechanism');
+    assert.match(read('content/ballast.ts'), /hard on myself/i,
+      'the game no longer says which shape it was written for');
+  });
+
+  test('the cost day names avoidance rather than standards', () => {
+    const day = HARSH.days.find((d) => d.id === 'what-it-costs');
+    assert.match(day.about, /not higher standards/i);
+    assert.match(day.about, /not starting/i);
+  });
+
+  test('the double-standard day runs on the clock, and the last day does not', () => {
+    /* Opposite calls, and both deliberate: speed is the instrument on day three, because the
+       automatic allowance is the data. Day seven is about the gap between hearing and
+       acting. */
+    const dbl = HARSH.days.find((d) => d.id === 'somebody-else');
+    assert.doesNotMatch(dbl.game.route, /clock=off/, 'the automatic answer stopped being the data');
+    const last = HARSH.days.find((d) => d.id === 'taking-dictation');
+    assert.match(last.game.route, /clock=off/);
+  });
+});
+
+describe('the breakup track gave `harsh` back', () => {
+  test('it no longer claims a shape six of its days do not address', () => {
+    /* Only "The voice" was about self-criticism. Offering "After it ended" to somebody whose
+       answer was "I am hard on myself" is wrong on the title alone. */
+    assert.ok(!BREAKUP.forCarrying.includes('harsh'));
+    assert.deepEqual(tracksFor('harsh').map((t) => t.id), ['harsh']);
+  });
+
+  test('and `unmoored` is still a stretch, which is recorded rather than hidden', () => {
+    /* "Everything changed at once" is often a breakup and just as often a move, a diagnosis,
+       a job going, or leaving a country — and this track assumes a person. It stays because
+       an honest stretch beats an empty shelf, and it goes when `unmoored` has somewhere
+       better. This test exists so that decision cannot quietly become invisible. */
+    assert.ok(BREAKUP.forCarrying.includes('unmoored'));
+    assert.match(read('content/tracks.ts'), /`unmoored` stays, and it is the same defect/,
+      'the reasoning for the stretch was deleted while the stretch stayed');
   });
 });
 

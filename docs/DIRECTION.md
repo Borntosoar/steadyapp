@@ -895,3 +895,62 @@ it against both the string it must catch and the string it must not.
 `flat` (flat), `spirals` (spirals), `spent` (spent). `looking` — "just looking around" — keeps
 none, and should: handing a seven-day protocol to somebody with no particular reason to be here
 is the opposite of what that answer means.
+
+### 11.12 The fifth track — harsh, and the intervention it has to refuse first
+
+Built 2026-08-23. `HARSH` in `content/tracks.ts`, id `harsh`, title "The running commentary".
+**This corrects the breakup track's coverage**, which had claimed `harsh` since §11.2.
+
+**Why that was a worse mismatch than flat/spent.** Six of the breakup track's seven days assume
+a relationship ended; only "The voice" is about self-criticism at all. Offering "After it ended"
+to somebody whose survey answer was "I am hard on myself" is wrong on the title alone, before
+any content loads. `forCarrying` is now `['loss', 'unmoored']`.
+
+**`unmoored` stays and is the same defect one degree milder**, recorded rather than hidden.
+"Everything changed at once" is often a breakup and just as often a move, a diagnosis, a job
+going, or leaving a country — and the breakup track assumes a person. It is a stretch rather
+than a mistake; an honest stretch beats an empty shelf, and it goes the moment `unmoored` has
+somewhere better. There is a test asserting the reasoning stays in the file alongside the
+stretch, so the decision cannot quietly become invisible.
+
+**The design problem, and it has a different answer from the other tracks'.** The obvious
+intervention here is self-compassion, which has decent support. What sinks it in practice is
+that highly self-critical people are often frightened of it — being easier on yourself reads as
+dishonest, or as the thing that will make you slide — and that fear predicts a poor response.
+Opening with "be kind to yourself" is this track's version of telling a flat person to do things
+they enjoy. There is a sharper second reason: positive self-statements have been found to leave
+people with *low* self-esteem feeling worse while helping those who already felt fine, which is
+precisely this audience and precisely the wrong direction.
+
+**So the frame is accuracy, not kindness.** Day six is called "Fair, not kind": the same
+standard of evidence anybody else would get, and no more generous than that. A lower bar than
+kindness and much harder to argue with — which matters, because the failure mode of this shape
+is an argument the person always wins.
+
+**The order is itself the intervention, and it is tested as one.** Nothing warm is offered until
+the function of the criticism has been looked at (day two) and the double standard has been felt
+(day three). A test asserts `fair-not-kind` falls after both.
+
+| Refusal | Why it is load-bearing |
+|---|---|
+| **21. No affirmations, nothing kind offered up front.** | See above. Banned rather than softened. |
+| **22. It does not argue that the criticism is false.** | "That is not true, you are great" is reassurance, triggers the discount on the way past, and loses — the sentence usually has a grain in it, which is why it stuck. The moves are the double standard and the function, never adjudication of content. |
+| **23. No comparison, even favourable.** | "Better than you think" is reassurance; "everyone feels like this" erases. Comparison is also part of this shape's machinery, so using it as the remedy feeds it. |
+| **24. No family history and no origin hunting.** | Day four says the sentence is older than the situation and stops. An unsupervised app inviting somebody to open their childhood at 1am is the clearest harm case in this track, and nobody is there when it goes wrong. |
+| **25. It never promises the voice goes.** | It usually does not. What changes is the gap between hearing it and taking dictation from it. |
+
+**And it is never a scoreboard.** An app that asks somebody hard on themselves to rate
+themselves has handed the voice a metric.
+
+**Ballast carries it, three times, in the track it was written for.** `content/ballast.ts` opens
+by naming this shape as the one the survey could do least for. Its mechanic — the *discount*,
+not the collecting — is this shape's mechanism made playable. A test pins the game file's own
+statement of purpose so the two cannot drift apart.
+
+**Day three runs on the clock and day seven does not**, which are opposite calls from every
+other track and both deliberate: speed is the instrument on day three, because the automatic
+allowance extended to somebody else — before there is time to be fair about it — is the data.
+Day seven is about the gap between hearing and acting, which needs the opposite.
+
+**Every survey shape except `looking` now has a track of its own** except `unmoored`, which
+shares the breakup one on the stretch recorded above. `looking` keeps none, on purpose.
