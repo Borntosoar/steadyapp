@@ -813,6 +813,13 @@ export function importJson(raw: string): AppState | null {
     if (!Array.isArray(data.checkIns) && !Array.isArray(data.thoughtRecords) && !data.profile) {
       return null;
     }
+    /* The same refusal `loadState` makes above, for the same reason, and it was missing here.
+       A backup written by a NEWER build carries fields this version's allowlist has never
+       heard of, and reading it does not merely ignore them — `normalise` strips them, so
+       importing and then saving is a lossy rewrite of somebody's journal. A TestFlight build
+       followed by an App Store build with a lower SCHEMA_VERSION, then "restore my backup",
+       is the exact route. Refusing is recoverable; a silent strip is not. */
+    if (isFromNewerBuild(version)) return null;
     return normalise(migrate(data, version));
   } catch {
     return null;

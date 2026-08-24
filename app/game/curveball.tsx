@@ -379,6 +379,40 @@ function Intercept({
     }));
     setLive(rows);
 
+    /* THE ROUND ENDS WHEN EVERY THOUGHT HAS SETTLED, NOT WHEN THE LAST ONE FINISHES RISING.
+       That distinction is the whole of a bug that made the timed game unwinnable.
+
+       It used to end inside `if (i === rows.length - 1)`, guarded by `if (!finished) return`.
+       But `tap()` calls `row.anim.stopAnimation()`, and React Native's TimingAnimation.stop()
+       ends with `__notifyAnimationEnd({ finished: false })` — so catching a thought delivers
+       `finished: false` to that row's callback, which returned before ever reaching the
+       completion branch. In timed mode there is no other exit: the "That is all of them"
+       button is inside `{!clock && …}`.
+
+       And it was not an edge case. Every scene in content/curveball.ts ends on a DISTORTED
+       thought, and the order is fixed rather than shuffled — so the last thing to rise is
+       always one the intro tells you to tap. Doing the thing the game teaches froze it: the
+       field emptied and nothing happened, no ending, no practice logged, and the only ways
+       out were the back button or a pass, both of which discard the scene.
+
+       Counting settled rows fixes it because it does not care WHY a row stopped. `settled` is
+       a Set of keys rather than a counter so the cleanup's stopAnimation() — which fires the
+       same callback on unmount — cannot double-count; `finish` is idempotent through
+       `done.current` regardless. */
+    const settled = new Set<string>();
+    /* `torn` exists because the cleanup below ALSO stops every animation, which fires this
+       same callback on the way out. Without it, leaving mid-scene settles the remaining rows,
+       reaches the full count, and schedules a `finish` — onDone on an unmounted tree, which is
+       precisely the leak the timers ref was introduced to prevent. */
+    let torn = false;
+    const settle = (row: Live) => {
+      if (torn) return;
+      settled.add(row.key);
+      if (settled.size === rows.length) {
+        timers.current.push(setTimeout(() => finish(rows), 260));
+      }
+    };
+
     rows.forEach((row, i) => {
       timers.current.push(
         setTimeout(() => {
@@ -388,20 +422,18 @@ function Intercept({
             easing: Easing.linear,
             useNativeDriver: true,
           }).start(({ finished }) => {
-            if (!finished) return;
             /* Reached the top untouched. Mutating `status` on the row object rather than
                through setState is deliberate: `finish` reads these rows directly, and a
                state update racing six animation callbacks would score the last one twice. */
-            if (row.status === 'live') row.status = 'through';
-            if (i === rows.length - 1) {
-              timers.current.push(setTimeout(() => finish(rows), 260));
-            }
+            if (finished && row.status === 'live') row.status = 'through';
+            settle(row);
           });
         }, i * SPAWN_MS),
       );
     });
 
     return () => {
+      torn = true;
       timers.current.forEach(clearTimeout);
       timers.current = [];
       rows.forEach((r) => r.anim.stopAnimation());

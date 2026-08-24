@@ -1020,3 +1020,43 @@ enforced by a test rather than left in a comment — and each new guard checked 
 it must catch as well as the copy it must pass, because a guard that matches nothing always
 passes. That habit has now caught three real defects in this feature alone: the dead
 `?clock=off` parameter, the `orderOf` contradiction, and the identical Practice subtitles.
+
+### 11.15 The seventh track — looking, which reverses §11.14
+
+Built 2026-08-23. `LOOKING` in `content/tracks.ts`, id `looking`, title "How any of this
+works". **This reverses the decision recorded in §11.14**, and the reasoning for the reversal
+matters more than the reversal.
+
+Every earlier version of this file said `looking` should have no track, because handing a
+seven-day protocol to somebody with no particular reason to be here is the opposite of what
+that answer means. **That argument is still correct.** It is an argument against a seven-day
+protocol, not against anything at all, and the difference is the whole design.
+
+**Who actually taps that tile.** The survey's own note says it: *"No particular reason to be
+here, or none you want to write down yet."* Three people land there — somebody genuinely
+browsing, somebody who has a reason and is not ready to say it, and somebody who has never
+been given a word for what is happening and should not have to pick one to get in, which is
+the stated design principle of the whole survey. The skip button lands here too:
+`app/onboarding/survey.tsx` records "Just let me look around" as `looking`. The old refusal was
+written for the first of those three and quietly failed the other two.
+
+So it is a different kind of thing: **four days, not seven, one per game**, so nothing is
+padded. A tour of the METHOD rather than of the app — each day is one real idea about how minds
+work, true regardless of what brought anybody here, usable by somebody who never says a word
+about themselves.
+
+| Refusal | Why it is load-bearing |
+|---|---|
+| **31. It is not a funnel.** | It does not work toward a disclosure, another track, or a payment. If somebody does all four and leaves, that worked. The refusal most likely to erode later — a four-day intro is exactly the shape a growth team would turn into onboarding, one sentence at a time. |
+| **32. It does not try to find out what is wrong.** | No second survey, no narrowing questions, no inference from what somebody plays. They declined to name it. |
+| **33. It assumes no distress and no absence of it.** | Every line works for somebody idly curious and for somebody in real trouble who is not saying so, because both are here and the app cannot tell them apart. |
+| **34. A tour of the method, not of the app.** | A product tour is marketing wearing a track's clothes. |
+| **35. Nothing is withheld behind it.** | Finishing unlocks nothing, because nothing was locked. A test asserts it is not wired into the onboarding flow, which is what would make it a gate. |
+
+This is also the first non-seven-day track, so it is the first real exercise of the number
+guards from §11.11: `daysWord` says four, the close claims four, and the counting-position
+guard checks the claim against the actual day count.
+
+**All seven survey shapes now have exactly one track, `looking` included**, and the test that
+used to carve out the exception now asserts the rule — inverted rather than deleted, because
+the reasoning is the part worth keeping.

@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  TRACKS, BREAKUP, FLAT, SPIRALS, SPENT, HARSH, UNMOORED,
+  TRACKS, BREAKUP, FLAT, SPIRALS, SPENT, HARSH, UNMOORED, LOOKING,
   trackById, tracksFor, TRACK_CAVEAT, TRACK_CLOSE, closeFor, daysWord,
 } from '../content/tracks.ts';
 import {
@@ -29,6 +29,22 @@ const read = (f) => readFileSync(join(ROOT, f), 'utf8');
  * holding the second one to as well. */
 
 const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+
+/* A number word only counts as a CLAIM about the day count when it is in counting position —
+   "the seven", "all seven", "seven of them". Matching every number word anywhere fired on
+   "and that one is worth having on its own", where "one" is a pronoun, and the fix for that
+   was a better guard rather than worse copy. "One" is excluded from the counting forms
+   entirely: English uses it as a pronoun constantly, and a one-day track is already
+   impossible under the shape test below.
+
+   Module scope rather than inside its describe, because the looking track needs it too and a
+   helper that has drifted out of scope is exactly the failure scripts/test.mjs exists for. */
+const COUNT_WORDS = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+const COUNTS = /\b(?:the|all|those)\s+(\d+|two|three|four|five|six|seven|eight|nine|ten)\b|\b(\d+|two|three|four|five|six|seven|eight|nine|ten)\s+of them\b/gi;
+const claimedIn = (s) => [...s.matchAll(COUNTS)].map((m) => {
+  const w = (m[1] ?? m[2]).toLowerCase();
+  return COUNT_WORDS[w] ?? Number(w);
+});
 
 const prose = (d) => [d.title, d.about, d.game.focus, d.game.label, d.practice.label, d.hold];
 const proseOf = (t) => [t.title, t.blurb, t.oneLine, closeFor(t), ...t.days.flatMap(prose)];
@@ -291,19 +307,6 @@ describe('the closing screen does not congratulate somebody for finishing', () =
         'it implies the thing the track is about is over');
     });
   }
-
-  /* A number word only counts as a CLAIM about the day count when it is in counting
-     position — "the seven", "all seven", "seven of them". Matching every number word
-     anywhere fired on "and that one is worth having on its own", where "one" is a pronoun,
-     and the fix for that is a better guard rather than worse copy. "One" is excluded from
-     the counting forms entirely: English uses it as a pronoun constantly, and a one-day
-     track is already impossible under the shape test above. */
-  const COUNT_WORDS = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
-  const COUNTS = /\b(?:the|all|those)\s+(\d+|two|three|four|five|six|seven|eight|nine|ten)\b|\b(\d+|two|three|four|five|six|seven|eight|nine|ten)\s+of them\b/gi;
-  const claimedIn = (s) => [...s.matchAll(COUNTS)].map((m) => {
-    const w = (m[1] ?? m[2]).toLowerCase();
-    return COUNT_WORDS[w] ?? Number(w);
-  });
 
   test('the guard reads a claim and ignores an ordinary "one"', () => {
     /* A guard that matches nothing always passes, and this one was rewritten — so it is
@@ -1099,17 +1102,14 @@ describe('the unmoored sequence itself', () => {
 });
 
 describe('every survey shape is now accounted for', () => {
-  test('each shape has exactly one track, except the one that should have none', () => {
-    /* Six tracks, six shapes, and `looking` deliberately empty: handing a seven-day protocol
-       to somebody with no particular reason to be here is the opposite of what that answer
-       means. This test is the reason a seventh track cannot quietly leave a shape behind. */
+  test('each shape has exactly one track, `looking` included', () => {
+    /* This test used to carve `looking` out as deliberately trackless, on the grounds that a
+       seven-day protocol for having no particular reason to be here is the opposite of what
+       that answer means. That argument stands and is the reason LOOKING is four days rather
+       than seven — see the header in content/tracks.ts. The carve-out is inverted rather than
+       deleted, because the reasoning is the part worth keeping. */
     for (const shape of Object.keys(REFLECTION)) {
-      const found = tracksFor(shape);
-      if (shape === 'looking') {
-        assert.equal(found.length, 0, '"just looking around" was handed a protocol');
-        continue;
-      }
-      assert.equal(found.length, 1, `"${shape}" has ${found.length} tracks`);
+      assert.equal(tracksFor(shape).length, 1, `"${shape}" has ${tracksFor(shape).length} tracks`);
     }
   });
 
@@ -1119,6 +1119,108 @@ describe('every survey shape is now accounted for', () => {
         assert.ok(REFLECTION[shape], `${t.id} is offered to "${shape}", which no answer produces`);
       }
     }
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────────────────
+ * The looking track's own five. This is the track most at risk of quietly becoming
+ * something else — a four-day intro is exactly the shape a growth team would turn into
+ * onboarding — so its refusals are guarded harder than its content is. */
+
+const lookingProse = proseOf(LOOKING);
+
+describe('the looking track is a different kind of thing, not a shorter protocol', () => {
+  test('it is four days, one per game, with nothing padded', () => {
+    assert.equal(LOOKING.days.length, 4, 'it drifted toward being a protocol');
+    const routes = LOOKING.days.map((d) => d.game.route.split('?')[0]);
+    assert.equal(new Set(routes).size, 4, 'a game repeats, which means a day is padding');
+    assert.deepEqual([...routes].sort(), [
+      '/game/ballast', '/game/curveball', '/game/groundwork', '/game/toward',
+    ], 'it stopped being one day per game');
+  });
+
+  test('the count that follows from that is derived everywhere, not written down', () => {
+    /* The first non-seven track. This is the case the number guards were built for: the
+       close names four, `daysWord` says four, and nothing says seven. */
+    assert.equal(daysWord(LOOKING), 'four');
+    for (const n of claimedIn(closeFor(LOOKING))) assert.equal(n, 4);
+    assert.doesNotMatch(closeFor(LOOKING), /\bseven\b/i);
+  });
+});
+
+describe('refusal 31 — it is not a funnel', () => {
+  test('nothing sells, upgrades, or points at a next step', () => {
+    /* If somebody does all four and leaves, that worked. */
+    const funnel = /\b(upgrade|subscribe|premium|free trial|when you'?re ready to|the next step is|move on to|then try the|sign up|get started with|continue your journey|recommended for you)\b/i;
+    for (const s of lookingProse) assert.doesNotMatch(s, funnel, `sells: "${s}"`);
+  });
+
+  test('and the close says outright that nothing is owed', () => {
+    assert.match(LOOKING.close, /owe this app nothing/i);
+    assert.match(LOOKING.close, /or not\.?$/i, 'it stopped leaving the door open in both directions');
+  });
+});
+
+describe('refusal 32 — it does not try to find out what is wrong', () => {
+  test('nothing asks a further question about the person', () => {
+    /* They declined to name it. content/survey.ts already refuses classification from play
+       patterns; this refuses it from copy. */
+    const extract = /\b(tell us|let us know|what brought you|narrow (it|this) down|find out what|work out what is (wrong|going on)|a few more questions|help us (match|understand)|which of these best describes)\b/i;
+    for (const s of lookingProse) assert.doesNotMatch(s, extract, `extracts: "${s}"`);
+  });
+
+  test('and every question it does ask is about the method, not about them', () => {
+    /* The holds are about what somebody noticed while playing, not about their history or
+       their situation. */
+    for (const d of LOOKING.days) {
+      assert.match(d.hold, /\?$/, `${d.id} states rather than asks`);
+      assert.doesNotMatch(d.hold, /\b(why (are|do) you|what happened to you|how long have you|what is going on)\b/i,
+        `${d.id} asks about them: "${d.hold}"`);
+    }
+  });
+});
+
+describe('refusal 33 — it assumes no distress, and no absence of it either', () => {
+  test('nothing presumes somebody is fine, and nothing presumes they are not', () => {
+    /* Both people are here and the app cannot tell them apart. */
+    const presumes = /\b(since you'?re (fine|okay|ok|doing well|not struggling)|nothing is wrong|if you'?re struggling|we know (you|this)|you'?re clearly|whatever you'?re going through|whatever brought you here)\b/i;
+    for (const s of lookingProse) assert.doesNotMatch(s, presumes, `presumes a state: "${s}"`);
+  });
+
+  test('the blurb states the no-reason-needed rule rather than implying it', () => {
+    assert.match(LOOKING.blurb, /not one needs a reason/i);
+  });
+});
+
+describe('refusal 34 — a tour of the method, not of the app', () => {
+  test('nothing walks anybody around the interface', () => {
+    const tour = /\b(over here|you'?ll find|this tab|the (home|progress|learn) (tab|screen)|swipe|tap the menu|navigate to|welcome to|take a tour|down the bottom)\b/i;
+    for (const s of lookingProse) assert.doesNotMatch(s, tour, `feature tour: "${s}"`);
+  });
+
+  test('each day teaches one idea that stands without the app', () => {
+    /* Each `about` states a mechanism rather than describing a screen. */
+    const ideas = LOOKING.days.map((d) => d.about);
+    assert.match(ideas[0], /can be checked|cannot/i);
+    assert.match(ideas[1], /size rather than effort|scale of a better week/i);
+    assert.match(ideas[2], /thrown out|evidence for it/i);
+    assert.match(ideas[3], /never asks whether a thought is accurate|still in the room/i);
+  });
+});
+
+describe('refusal 35 — nothing is withheld behind it', () => {
+  test('finishing unlocks nothing, because nothing was locked', () => {
+    const gated = /\b(unlock|once you (finish|complete)|after you finish|earns? you|you'?ll get access|available after|comes next)\b/i;
+    for (const s of lookingProse) assert.doesNotMatch(s, gated, `gates something: "${s}"`);
+    assert.match(LOOKING.blurb, /nothing here is held back until you finish/i);
+  });
+
+  test('and it is not wired in as an onboarding gate', () => {
+    /* It is a row in Practice and a suggestion on the survey result, the same as the other
+       six. If it ever appears in the onboarding flow itself, it has become a gate. */
+    const onboarding = read('app/onboarding/index.tsx');
+    assert.doesNotMatch(onboarding, /track\/looking|LOOKING/,
+      'the looking track was wired into the onboarding flow, which makes it a gate');
   });
 });
 

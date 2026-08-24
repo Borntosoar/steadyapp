@@ -1157,7 +1157,127 @@ export const UNMOORED: Track = {
     'That is the seven. None of it is finished — the ground is still new, and nobody can tell you when it stops being. What is different is that some of it is worn in now, and that only ever happens by walking on it.',
 };
 
-export const TRACKS: Track[] = [BREAKUP, FLAT, SPIRALS, SPENT, HARSH, UNMOORED];
+/* ════════════════════════════════════════════════════════════════════════════════════════
+ * THE SEVENTH TRACK — just looking around.
+ *
+ * THIS ONE REVERSES A DECISION, AND THE REASONING FOR THE REVERSAL MATTERS MORE THAN THE
+ * REVERSAL. Every previous version of this file said `looking` should have no track at all,
+ * on the grounds that handing a seven-day protocol to somebody with no particular reason to
+ * be here is the opposite of what that answer means. That argument is still correct. It is
+ * an argument against a SEVEN-DAY PROTOCOL, not against anything at all, and the difference
+ * is the whole design of what follows.
+ *
+ * WHO ACTUALLY TAPS THAT TILE. The survey's own note says it: "No particular reason to be
+ * here, or none you want to write down yet." Three different people land on it — somebody
+ * genuinely browsing, somebody who has a reason and is not ready to say it, and somebody who
+ * has never been given a word for what is happening and should not have to pick one to get
+ * in (which is the stated design principle of the whole survey). The skip button lands here
+ * too: app/onboarding/survey.tsx records "Just let me look around" as `looking`. The old
+ * refusal was written for the first of those three and quietly failed the other two.
+ *
+ * SO THIS IS A DIFFERENT KIND OF THING. Four days, not seven. One per game, so it is not
+ * padded. It is a tour of the METHOD rather than of the app: each day is one real idea about
+ * how minds work, each true regardless of what brought anybody here, and each usable by
+ * somebody who never says a word about themselves.
+ *
+ * ────────────────────────────────────────────────────────────────────────────────────────
+ * WHAT THIS TRACK REFUSES, ON TOP OF THE FIVE EVERY TRACK CARRIES
+ *
+ * 31. IT IS NOT A FUNNEL. It does not work toward a disclosure, another track, or a payment.
+ *     If somebody does all four and leaves, that worked. This is the refusal most likely to
+ *     erode later, because a four-day intro is exactly the shape a growth team would want to
+ *     turn into onboarding, and the erosion would be invisible one sentence at a time.
+ *
+ * 32. IT DOES NOT TRY TO FIND OUT WHAT IS WRONG. No second survey, no narrowing questions,
+ *     no inference from what somebody plays. They declined to name it; the app does not get
+ *     to extract it. content/survey.ts already says why classification from play patterns is
+ *     not something this app will do.
+ *
+ * 33. IT ASSUMES NO DISTRESS AND NO ABSENCE OF IT. Every line has to work for somebody idly
+ *     curious and for somebody in real trouble who is not saying so, because both are here
+ *     and the app cannot tell them apart. Nothing says "since you are doing fine" and nothing
+ *     says "whatever you are going through".
+ *
+ * 34. IT IS A TOUR OF THE METHOD, NOT OF THE APP. No feature walkthrough, no "over here you
+ *     will find". A product tour is marketing wearing a track's clothes.
+ *
+ * 35. NOTHING IS WITHHELD BEHIND IT. Finishing unlocks nothing, because nothing was locked.
+ *     It is not an onboarding gate and it is not a prerequisite for the other six. */
+
+export const LOOKING: Track = {
+  id: 'looking',
+  title: 'How any of this works',
+  oneLine: 'For looking around, with no reason needed.',
+  blurb:
+    'Four of them, one for each game, and not one needs a reason. It is a look at how the method works rather than a tour of the app, and nothing here is held back until you finish it.',
+  forCarrying: ['looking'],
+  days: [
+    {
+      id: 'checkable-or-not',
+      title: 'Checkable or not',
+      about:
+        'A useful line runs through the things a mind says: some can be checked against something, and some cannot. The second kind arrives with exactly the same confidence as the first, and that is most of the difficulty.',
+      game: {
+        route: '/game/curveball',
+        label: 'Curveball',
+        focus: 'Tap the ones that cannot be checked and let the rest go past. Letting the fair ones through is half of it.',
+      },
+      practice: { route: '/grounding?tool=breath', label: 'Breathing, about eighty seconds' },
+      hold: 'Which of today would have held up?',
+      mood: 'daylight',
+      motif: 'messages',
+    },
+    {
+      id: 'small-on-purpose',
+      title: 'Small on purpose',
+      about:
+        'The reliable error in planning anything is size rather than effort. A day gets laid out at the scale of a better week, none of it happens, and the miss gets read as a fact about the person instead of about the plan.',
+      game: {
+        route: '/game/groundwork',
+        label: 'Groundwork',
+        focus: 'The ground holds three small things and gives way under one large one. Nobody tells you that — you watch it happen.',
+      },
+      practice: { route: '/grounding?tool=senses', label: 'Five senses, about two minutes' },
+      hold: 'What would you actually start today?',
+      mood: 'morning',
+      motif: 'rays',
+    },
+    {
+      id: 'what-gets-thrown-out',
+      title: 'What gets thrown out',
+      about:
+        'A belief about yourself is not held up by the evidence for it. It is held up by what gets thrown out on the way past, which is why collecting good news does nothing much on its own.',
+      game: {
+        route: '/game/ballast',
+        label: 'Ballast',
+        focus: 'Pick whichever sentence is nearest, or the least wrong. The lines that come back to discard things are the part to watch.',
+      },
+      practice: { route: '/grounding?tool=widen', label: 'Widening attention, one minute' },
+      hold: 'What did you talk yourself out of counting?',
+      mood: 'evening',
+      motif: 'rings',
+    },
+    {
+      id: 'with-it-still-there',
+      title: 'With it still there',
+      about:
+        'This one is the odd one out. It never asks whether a thought is accurate, and the thought is still in the room when the scene ends — the only question is what you do while it is.',
+      game: {
+        route: '/game/toward',
+        label: 'Toward',
+        focus: 'Nothing gets removed or disproved here. Every option is relief or movement, and never both at once.',
+      },
+      practice: { route: '/grounding?tool=values', label: 'Values anchor, two minutes' },
+      hold: 'What would you do if you were not waiting for it to pass?',
+      mood: 'tender',
+      motif: 'paths',
+    },
+  ],
+  close:
+    'That is the four. None of it is finished, because none of it was a course — you have seen how the four of them work and you owe this app nothing for it. The rest is in Practice whenever, or not.',
+};
+
+export const TRACKS: Track[] = [BREAKUP, FLAT, SPIRALS, SPENT, HARSH, UNMOORED, LOOKING];
 
 export const trackById = (id: string): Track | null => TRACKS.find((t) => t.id === id) ?? null;
 

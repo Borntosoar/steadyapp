@@ -177,12 +177,26 @@ export function orderOf(a: Answers): string[] {
   return towardFirst ? [toward, curveball] : [curveball, toward];
 }
 
+/** The featured calm-down mode for a "when is it worst" answer, defaulting for anything the
+ *  survey did not produce. Own-property only — see the note at the call site. */
+export function calmFor(worst: string | undefined | null): string {
+  const k = worst ?? '';
+  return Object.prototype.hasOwnProperty.call(FEATURED_CALM, k) ? FEATURED_CALM[k] : 'Breathe';
+}
+
 export function planFor(a: Answers): Plan {
   const carrying = carryingOf(a);
   return {
     carrying,
     tone: toneOf(a),
-    calm: FEATURED_CALM[a.worst ?? ''] ?? 'Breathe',
+    /* Own-property guard, not `??`. This indexes a plain object with a string that came off
+       disk, where `strOrUndef` in lib/storage.ts will accept any string at all — so
+       `worst: 'constructor'` returned the Object CONSTRUCTOR as the featured calm mode, and
+       `'__proto__'` returned Object.prototype. `??` cannot catch either, because neither is
+       nullish. Only reachable through a corrupt payload or an imported backup, but it was the
+       one untrusted object index in the codebase without this guard: lib/storage.ts uses
+       hasOwnProperty for exactly this reason and carryingOf below uses a Set. */
+    calm: calmFor(a.worst),
     order: orderOf(a),
     reflection: REFLECTION[carrying],
     stone: STONES[carrying],

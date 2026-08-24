@@ -66,7 +66,23 @@ export function registerPractice(state: StreakState, today = dayKey(new Date()))
 
   const gap = daysBetween(state.lastPracticeDate, today);
 
-  if (gap <= 0) return state;
+  if (gap === 0) return state;
+
+  /* A STORED DATE AHEAD OF TODAY CAN ONLY BE CLOCK SKEW, AND IT USED TO BE ABSORBING.
+     This was `if (gap <= 0) return state`, which returns the state UNTOUCHED — so
+     `lastPracticeDate` never repaired itself and every later day was negative too. One
+     practice logged while the device clock read a future date froze the streak for good: 440
+     honest consecutive days afterwards still displayed "1 days in a row", `longest` never
+     moved again, the 7/30/100-day milestones were dead, and the winback moment could never
+     fire because its gap stayed negative. Note the asymmetry — a garbage date self-heals
+     through the restart branch below; only a future one was permanent.
+     A real timezone move can only put the key one day ahead, and that recovers on its own.
+     The permanent case needs a genuinely wrong clock: a manual change, an Android device
+     booting with a bad RTC and no network, a backup restored from one. Uncommon, silent,
+     irreversible — in an app whose streak is explicitly designed never to punish anybody.
+     lib/moments.ts already guards the hard-day dates against exactly this. Re-anchor on today
+     and keep the run, silently, like every other repair in this module. */
+  if (gap < 0) return bumpLongest({ ...state, lastPracticeDate: today });
 
   if (gap === 1) {
     const current = state.current + 1;

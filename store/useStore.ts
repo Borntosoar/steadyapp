@@ -348,7 +348,18 @@ export const useStore = create<StoreApi>((set, get) => ({
     set({
       practice: alreadyThisKind ? s.practice : [{ id: id(), date: today, kind }, ...s.practice],
       streak: nextStreak,
-      protocol: recordPracticeDay(s.protocol, today),
+      /* GATED ON THE DAY BEING NEW, and the guard is load-bearing rather than an
+         optimisation. `recordPracticeDay` defends against a repeat with
+         `weekPracticeDates.includes(dayKey)` — but when a week completes it CLEARS that
+         array, so a second call on the same day finds it empty and enrols the same day again
+         as day one of the next week.
+         This runs on every engagement event rather than once per day, and a check-in plus one
+         game is the ordinary case. The effect: the twelve-week protocol completed in 37
+         distinct days instead of 48, and on the day that completed a week the home screen
+         flipped from "week complete" back to "1 of 4 this week" mid-session.
+         __tests__/protocol.test.mjs did exercise a same-day repeat, but only on day one —
+         before any reset — so the reset path was never re-entered on the same key. */
+      protocol: alreadyToday ? s.protocol : recordPracticeDay(s.protocol, today),
       pendingMilestone: milestone ?? s.pendingMilestone,
     });
     persist(get, set);

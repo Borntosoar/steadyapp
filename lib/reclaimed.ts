@@ -14,7 +14,7 @@
  * is unit-testable without mounting React. */
 
 import type { CheckIn, Baseline } from '../types';
-import { daysBetween } from './streak.ts';
+import { daysBetween, dayKey } from './streak.ts';
 import { RECLAIMED_COPY } from '../content/copy.ts';
 
 export interface ReclaimedResult {
@@ -112,28 +112,45 @@ export function computeReclaimed(
   };
 }
 
+/* THESE TWO COMPARE DAY KEYS, NOT DATES, AND THAT IS THE WHOLE POINT.
+ *
+ * They were the only two places in the app that built a boundary with `setHours(0,0,0,0)`
+ * and then compared `Date` objects — everywhere else compares `dayKey` strings. On a day
+ * whose LOCAL MIDNIGHT DOES NOT EXIST, `setHours(0,0,0,0)` resolves forward to 01:00, and
+ * that hour survives the following `setDate()`. The boundary then sits an hour after the
+ * oldest day's midnight and that day is silently dropped from the window.
+ *
+ * Most of the world moves its clocks at 02:00 or 03:00, which is why this hid: Chile, Cuba,
+ * Lebanon, Egypt and Paraguay move theirs at midnight. __tests__/timezone.test.mjs covers
+ * seven zones and every one of them transitions at 02:00 or later, so it could not see it.
+ *
+ * The cost was not cosmetic. It landed on `currentAvgDailyMinutes`, the hero number on the
+ * home screen: on 2026-09-06 a Santiago user saw 21 hours where a New York user with
+ * identical data saw 18.7 — and an account with exactly three check-ins dropped below the
+ * "enough data" threshold and was told "Still adding this up" after doing the work.
+ *
+ * Reordering setHours and setDate is NOT a fix. It repairs the case where today is the
+ * transition day and leaves the case where the far end of the window is. Comparing
+ * YYYY-MM-DD strings is lexicographic and immune to the whole class. */
+
 /** Check-ins for the seven days immediately BEFORE the current window. */
 export function previousWeekCheckIns(checkIns: CheckIn[], now = new Date()): CheckIn[] {
   const end = new Date(now);
-  end.setHours(0, 0, 0, 0);
   end.setDate(end.getDate() - 7);
   const start = new Date(end);
   start.setDate(start.getDate() - 6);
-  return checkIns.filter((c) => {
-    const d = new Date(c.date + 'T00:00:00');
-    return d >= start && d <= end;
-  });
+  const lo = dayKey(start);
+  const hi = dayKey(end);
+  return checkIns.filter((c) => c.date >= lo && c.date <= hi);
 }
 
 /** Filter check-ins to the N days ending today (inclusive). */
 export function checkInsInLastDays(checkIns: CheckIn[], days: number, now = new Date()): CheckIn[] {
-  const cutoff = new Date(now);
-  cutoff.setHours(0, 0, 0, 0);
-  cutoff.setDate(cutoff.getDate() - (days - 1));
-  return checkIns.filter((c) => {
-    const d = new Date(c.date + 'T00:00:00');
-    return d >= cutoff && d <= now;
-  });
+  const from = new Date(now);
+  from.setDate(from.getDate() - (days - 1));
+  const lo = dayKey(from);
+  const hi = dayKey(now);
+  return checkIns.filter((c) => c.date >= lo && c.date <= hi);
 }
 
 /** Cumulative hours reclaimed across the whole history, week by week.
