@@ -831,3 +831,67 @@ own header refuses — with the reasoning recorded in the test itself.
 that way: handing somebody a seven-day protocol for having no particular reason to be here is
 the opposite of what that answer means. Verified in the browser that the result screen offers
 them nothing.
+
+### 11.10 The fourth track — spent, and taking it back off the flat one
+
+Built 2026-08-23. `SPENT` in `content/tracks.ts`, id `spent`, title "Running on empty".
+**This also corrects §11.6**, which recorded the flat track as covering `flat` and `spent`.
+It no longer does.
+
+**Why the borrowed fit was worse than it looked.** The survey's own reflection for this shape
+names the distinguishing feature: *"You are still doing all of it. That is usually what makes
+this one so hard to say out loud."* Function is intact and capacity is gone. The flat track
+assumes the opposite — that the doing has stopped and the job is to start it — so handing it to
+somebody who is still doing everything reads as an instruction to do more, which is the exact
+wrong prescription. `forCarrying` is now `['flat']` and the test asserts no two tracks claim the
+same survey shape.
+
+**The honest ground, stated on day two.** Interventions aimed at the individual move this less
+than changes to the load itself do. That makes an app — a purely individual instrument — a
+small thing pointed at a largely structural problem. Saying so plainly is what buys the right
+to offer anything: the cruellest thing a wellness product does to somebody in this state is
+imply they would be fine if they coped better. The test asserts the admission lands on day one
+or two, because an admission that arrives on day six is a disclaimer.
+
+| Refusal | Why it is load-bearing |
+|---|---|
+| **16. Never implies a failure of coping.** | No resilience, no stress management, no "handle it better". The evidence points at load; the app cannot move load. |
+| **17. No self-care vocabulary.** | No me-time, treat yourself, filling your cup, "you deserve". It is the register that made workplace wellness read as an insult to the people it was aimed at, and this audience has the sharpest ear for it in the survey. |
+| **18. No time management or productivity advice.** | Somebody here is usually extremely good at prioritising — it is *why* they are still doing all of it. Offering it implies they got here by being disorganised. |
+| **19. No advice about the job, and no assumption there is one.** | Not quit, not cut hours, not talk to a manager. And the load is as often a parent being cared for, a child, an illness, or a second shift nobody calls a job — this is the shape most likely to be misread as work stress. Both halves are checked by regex. |
+| **20. Does not promise a weekend will do it.** | Implying it sets up exactly the conclusion the track exists to prevent: the rest did not fix it, so the problem must be the person. |
+
+**And it never names the condition.** The word for this has a definition, a scale and a live
+argument about whether it is a medical diagnosis at all. None of that helps anybody at 11pm,
+the survey has never handed somebody a label, and the test bans the vocabulary. "Exhaustion" is
+plain English and stays.
+
+**All four games, which is not balance for its own sake.** This shape spans capacity
+(Groundwork, whose ground visibly gives way under one large thing), prediction (Curveball — "if
+I stop, it all falls over" is a forecast), cost against value (Toward), and the deletion of
+your own effort (Ballast, whose discount sentences are exactly how somebody here files a week's
+work as not counting). Ballast fits this track better than the one it was written for. Both
+Curveball days run without the clock, which follows from refusal 16 rather than from the usual
+one-exposed-day convention: a stopwatch is load.
+
+### 11.11 What the fourth track exposed, and one guard that was too blunt
+
+**Four tracks broke the Practice list.** Every unstarted row read "seven of them, in order.
+Nothing on a schedule" — fine with one track, and with four it was four identical subtitles
+under four deliberately evocative titles, so the list told the reader nothing about which one
+was theirs. It also put a lowercase "seven" at the start of a sentence, which is what made me
+look. Tracks now carry a `oneLine` — "For when you are still doing all of it." — and the row
+shows that. The length still appears on the overview seedling and on the survey result.
+
+**The close's number guard was too blunt and had to be rewritten rather than obeyed.** It
+flagged every number word anywhere in a close, and fired on "and that one is worth having on its
+own", where "one" is a pronoun. The fix was a better guard, not worse copy: a number now counts
+as a claim only in counting position — "the seven", "all seven", "seven of them" — and "one" is
+excluded entirely, since English uses it as a pronoun constantly and a one-day track is already
+impossible. Because the guard was rewritten, there is now a test of the guard itself, checking
+it against both the string it must catch and the string it must not.
+
+**Every survey shape except `looking` now has a track**: `loss`/`unmoored`/`harsh` (breakup),
+`flat` (flat), `spirals` (spirals), `spent` (spent). `looking` — "just looking around" — keeps
+none, and should: handing a seven-day protocol to somebody with no particular reason to be here
+is the opposite of what that answer means.

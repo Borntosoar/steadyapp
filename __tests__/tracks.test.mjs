@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  TRACKS, BREAKUP, FLAT, SPIRALS,
+  TRACKS, BREAKUP, FLAT, SPIRALS, SPENT,
   trackById, tracksFor, TRACK_CAVEAT, TRACK_CLOSE, closeFor, daysWord,
 } from '../content/tracks.ts';
 import {
@@ -31,7 +31,7 @@ const read = (f) => readFileSync(join(ROOT, f), 'utf8');
 const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 
 const prose = (d) => [d.title, d.about, d.game.focus, d.game.label, d.practice.label, d.hold];
-const proseOf = (t) => [t.title, t.blurb, closeFor(t), ...t.days.flatMap(prose)];
+const proseOf = (t) => [t.title, t.blurb, t.oneLine, closeFor(t), ...t.days.flatMap(prose)];
 const allProse = TRACKS.flatMap(proseOf);
 
 describe('the shape of a track', () => {
@@ -43,6 +43,29 @@ describe('the shape of a track', () => {
         `${t.id} has duplicate day ids — progress would be ambiguous`);
       assert.ok(t.blurb.length > 60, `${t.id} does not say what it is`);
     }
+  });
+
+  test('every track has a one-line label, and no two are the same', () => {
+    /* With four tracks the list rows all read "seven of them, in order" under four evocative
+       titles, which told the reader nothing about which one was theirs. The titles are names,
+       not labels; this is the label. */
+    const lines = TRACKS.map((t) => t.oneLine);
+    assert.equal(new Set(lines).size, lines.length, 'two tracks share a one-line label');
+    for (const t of TRACKS) {
+      assert.ok(t.oneLine.length > 20 && t.oneLine.length <= 60,
+        `${t.id}'s label is ${t.oneLine.length} characters and has to fit a list row`);
+      assert.match(t.oneLine, /^For /, `${t.id}'s label does not say who it is for`);
+      assert.match(t.oneLine, /\.$/, `${t.id}'s label is not a sentence`);
+      /* It is a label, not a diagnosis. The survey never hands anybody a word for this and
+         neither does the row that follows from it. */
+      assert.doesNotMatch(t.oneLine, /\b(depress\w*|anxiety|burn.?out|grief|disorder|trauma)\b/i,
+        `${t.id}'s label names a condition: "${t.oneLine}"`);
+    }
+  });
+
+  test('the Practice row shows the label rather than a count', () => {
+    assert.match(read('app/(tabs)/practice.tsx'), /t\.oneLine/,
+      'the list went back to four identical subtitles');
   });
 
   test('no day id is a number, so days can be reordered without stranding anybody', () => {
@@ -269,20 +292,36 @@ describe('the closing screen does not congratulate somebody for finishing', () =
     });
   }
 
+  /* A number word only counts as a CLAIM about the day count when it is in counting
+     position — "the seven", "all seven", "seven of them". Matching every number word
+     anywhere fired on "and that one is worth having on its own", where "one" is a pronoun,
+     and the fix for that is a better guard rather than worse copy. "One" is excluded from
+     the counting forms entirely: English uses it as a pronoun constantly, and a one-day
+     track is already impossible under the shape test above. */
+  const COUNT_WORDS = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+  const COUNTS = /\b(?:the|all|those)\s+(\d+|two|three|four|five|six|seven|eight|nine|ten)\b|\b(\d+|two|three|four|five|six|seven|eight|nine|ten)\s+of them\b/gi;
+  const claimedIn = (s) => [...s.matchAll(COUNTS)].map((m) => {
+    const w = (m[1] ?? m[2]).toLowerCase();
+    return COUNT_WORDS[w] ?? Number(w);
+  });
+
+  test('the guard reads a claim and ignores an ordinary "one"', () => {
+    /* A guard that matches nothing always passes, and this one was rewritten — so it is
+       checked against both the thing it must catch and the thing it must not. */
+    assert.deepEqual(claimedIn('That is the seven. Five of them held.'), [7, 5]);
+    assert.deepEqual(claimedIn('and that one is worth having on its own'), []);
+  });
+
   test('the fallback names no number, so a shorter track cannot inherit a wrong one', () => {
     /* It used to open "That is the seven", true of the only track that existed and a lie the
        first time one is five days long. */
-    assert.doesNotMatch(TRACK_CLOSE, /\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b/i);
+    assert.deepEqual(claimedIn(TRACK_CLOSE), []);
   });
 
   test('a close that does name a number names the right one', () => {
-    const WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
     for (const t of TRACKS) {
-      const found = closeFor(t).toLowerCase().match(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b/g) ?? [];
-      for (const f of found) {
-        const n = WORDS[f] ?? Number(f);
-        assert.equal(n, t.days.length,
-          `${t.id} has ${t.days.length} days and its close says "${f}"`);
+      for (const n of claimedIn(closeFor(t))) {
+        assert.equal(n, t.days.length, `${t.id} has ${t.days.length} days and its close claims ${n}`);
       }
     }
   });
@@ -292,9 +331,13 @@ describe('the closing screen does not congratulate somebody for finishing', () =
        close, the Practice row, and the survey result. All three would have been quietly
        wrong the first time a track was five days long, and none of them would have failed a
        test. The count is data; the screens ask for it. */
-    for (const f of ['app/onboarding/survey.tsx', 'app/(tabs)/practice.tsx']) {
-      assert.match(read(f), /daysWord\(/, `${f} does not get the count from the track`);
-    }
+    assert.match(read('app/onboarding/survey.tsx'), /daysWord\(/,
+      'the survey result does not get the count from the track');
+    /* The Practice row no longer states a count at all — see the oneLine tests below — so
+       what is checked there is that it did not go back to a literal. */
+    const practice = read('app/(tabs)/practice.tsx').replace(/\/\*[\s\S]*?\*\//g, '');
+    assert.doesNotMatch(practice, /\b(seven|six|five|four|three)\s+of them\b/i,
+      'the Practice row spelled a count back out');
   });
 
   test('the count reads as a word, and still matches', () => {
@@ -611,6 +654,140 @@ describe('the spirals sequence itself', () => {
   test('the day about the empty hours opens without a stopwatch', () => {
     const day = SPIRALS.days.find((d) => d.id === 'the-empty-room');
     assert.match(day.game.route, /clock=off/);
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────────────────
+ * The spent track's own five. This is the shape where the app is least able to help and
+ * most able to insult, because every stock wellness gesture for it lands as an accusation. */
+
+const spentProse = proseOf(SPENT);
+
+describe('refusal 16 — it never implies this is a failure of coping', () => {
+  test('no resilience, no stress management, no handling it better', () => {
+    /* The evidence points at load, the app cannot move load, and pretending otherwise turns
+       this into one more thing telling somebody the problem is them. */
+    const blame = /\b(resilien\w+|cope better|coping (skills|strategies)|toughen|manage your stress|stress management|handle it better|bounce.?back|grit|mindset)\b/i;
+    for (const s of spentProse) assert.doesNotMatch(s, blame, `blames the coping: "${s}"`);
+  });
+
+  test('and it states the limit out loud, early, before anything is offered', () => {
+    assert.match(SPENT.blurb, /an app cannot change|cannot change how much/i);
+    const day = SPENT.days.find((d) => d.id === 'the-arithmetic');
+    assert.ok(day, 'the day that states the limit is gone');
+    assert.match(day.about, /not something an app can change/i);
+    assert.match(day.about, /not a character trait/i);
+    /* Second day at the latest. An admission that arrives on day six is a disclaimer. */
+    assert.ok(SPENT.days.indexOf(day) <= 1, 'the honest limit moved too far back to be honest');
+  });
+});
+
+describe('refusal 17 — no self-care vocabulary', () => {
+  test('nothing offers me-time, a treat, or a cup to fill', () => {
+    /* The register that made workplace wellness read as an insult to the people it was aimed
+       at. This audience has the sharpest ear for it of any shape in the survey. */
+    const selfcare = /\b(self.?care|me.?time|treat yourself|pamper|bubble bath|fill your (own )?cup|put yourself first|you deserve|recharge|listen to your body|be kind to yourself)\b/i;
+    for (const s of spentProse) assert.doesNotMatch(s, selfcare, `self-care register: "${s}"`);
+  });
+});
+
+describe('refusal 18 — no time management and no productivity advice', () => {
+  test('nothing suggests prioritising, delegating or working smarter', () => {
+    /* Somebody in this state is usually extremely good at this already — it is why they are
+       still doing all of it. Offering it implies they got here by being disorganised. */
+    const productivity = /\b(time.?block|prioriti[sz]\w+|delegate|to.?do list|manage your time|be more efficient|work smarter|batch (your|them)|life.?hack|optimi[sz]e your)\b/i;
+    for (const s of spentProse) assert.doesNotMatch(s, productivity, `productivity advice: "${s}"`);
+  });
+});
+
+describe('refusal 19 — no advice about the job, and no assumption there is one', () => {
+  test('nothing tells anybody to quit, cut hours or speak to a manager', () => {
+    const jobAdvice = /\b(quit|resign|hand in your notice|cut (your |back on )?hours|talk to your (boss|manager|hr)|take (a )?(leave|sabbatical|break from work)|ask for time off|set (a |some )?boundar)\b/i;
+    for (const s of spentProse) assert.doesNotMatch(s, jobAdvice, `advises about the job: "${s}"`);
+  });
+
+  test('and nothing assumes the load is a job at all', () => {
+    /* This is the shape most likely to be misread as work stress. It is as often a parent
+       being cared for, a child, an illness, or a second shift nobody calls a job. */
+    const assumesJob = /\b(your (job|boss|manager|work|office|career|employer|shift)|at work|in the office|colleagues?|co.?workers?|workplace|working day|nine to five)\b/i;
+    for (const s of spentProse) assert.doesNotMatch(s, assumesJob, `assumes a job: "${s}"`);
+  });
+});
+
+describe('refusal 20 — it does not promise that a weekend will do it', () => {
+  test('nothing offers a rest that fixes it', () => {
+    /* Implying it sets up exactly the conclusion this track exists to prevent: the rest did
+       not fix it, so the problem must be the person. */
+    const quickFix = /\b(a (good |proper )?(weekend|night'?s sleep|holiday|break|lie.?in) will|after a (weekend|holiday|break)|catch up on (sleep|rest)|all you need is|just need a (rest|break|holiday))\b/i;
+    for (const s of spentProse) assert.doesNotMatch(s, quickFix, `promises a quick fix: "${s}"`);
+  });
+
+  test('the close admits the load did not move, and says what did', () => {
+    assert.match(SPENT.close, /none of it changed how much you are carrying|honest limit/i);
+    assert.match(SPENT.close, /evidence about you/i, 'it stopped naming the thing that can change');
+  });
+});
+
+describe('the spent track never names the condition', () => {
+  test('the word for this, and its vocabulary, appear nowhere', () => {
+    /* It has a definition, a scale, and a live argument about whether it is a medical
+       diagnosis at all. None of that helps anybody at 11pm, and the survey has never handed
+       somebody a label. "Exhaustion" is plain English and is allowed; the label is not. */
+    const label = /\b(burn.?out|burned out|burnt out|adrenal|chronic fatigue|compassion fatigue|maslach)\b/i;
+    for (const s of spentProse) assert.doesNotMatch(s, label, `names the condition: "${s}"`);
+  });
+});
+
+describe('the spent sequence itself', () => {
+  test('seven days, in the order the header describes', () => {
+    assert.deepEqual(SPENT.days.map((d) => d.id), [
+      'still-doing-all-of-it', 'the-arithmetic', 'what-off-means', 'what-actually-costs',
+      'first-to-go', 'the-not-caring', 'what-is-left',
+    ]);
+  });
+
+  test('it opens on the thing that makes this one go unnamed', () => {
+    assert.match(SPENT.days[0].about, /still doing all of it/i);
+    assert.match(SPENT.days[0].about, /reads to everybody|as coping/i);
+  });
+
+  test('recovery is defined by detachment rather than by hours off', () => {
+    const day = SPENT.days.find((d) => d.id === 'what-off-means');
+    assert.match(day.about, /not to be measured in hours|still running in your head/i);
+  });
+
+  test('what costs is located in control, fairness and values, not in hours', () => {
+    const day = SPENT.days.find((d) => d.id === 'what-actually-costs');
+    assert.match(day.about, /rarely the hours/i);
+    assert.match(day.about, /no say|unfairly|at odds with what you think/i);
+  });
+
+  test('the not-caring day frames it as protection rather than character', () => {
+    const day = SPENT.days.find((d) => d.id === 'the-not-caring');
+    assert.match(day.about, /worse person/i, 'it stopped naming the thing people conclude');
+    assert.match(day.about, /fuse|so the rest can keep running/i);
+  });
+
+  test('all four games appear, because the shape spans all four', () => {
+    /* Capacity, prediction, cost against value, and the deletion of your own effort. */
+    const routes = new Set(SPENT.days.map((d) => d.game.route.split('?')[0]));
+    assert.equal(routes.size, 4, `only ${routes.size} games, so one of those went unserved`);
+    assert.equal(SPENT.days[0].game.route, '/game/ballast', 'the recognition day left the discount mechanic');
+  });
+
+  test('both Curveball days run without the clock, because a stopwatch is load', () => {
+    const cb = SPENT.days.filter((d) => d.game.route.startsWith('/game/curveball'));
+    assert.equal(cb.length, 2);
+    for (const d of cb) assert.match(d.game.route, /clock=off/, `${d.id} put a timer on somebody with nothing spare`);
+  });
+});
+
+describe('the flat track gave `spent` back', () => {
+  test('it no longer claims a shape whose defining feature it contradicts', () => {
+    /* The flat track assumes the doing has stopped. The defining feature of `spent` is that
+       it has not, so that track read as an instruction to do more. */
+    assert.deepEqual(FLAT.forCarrying, ['flat']);
+    assert.deepEqual(tracksFor('spent').map((t) => t.id), ['spent']);
   });
 });
 

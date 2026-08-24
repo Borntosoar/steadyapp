@@ -7,7 +7,7 @@ import { useStore } from '../../store/useStore';
 import { mirrorSpecForWeek, phaseForWeek, MIRROR_UNLOCK_WEEK, WEEKS_TOTAL } from '../../lib/protocol';
 import { dayKey } from '../../lib/streak';
 import { NAMES } from '../../content/names';
-import { TRACKS, daysWord } from '../../content/tracks.ts';
+import { TRACKS } from '../../content/tracks.ts';
 import { nextDay, isComplete, emptyTrack } from '../../lib/track.ts';
 
 /* Practice.
@@ -129,14 +129,17 @@ export default function Practice() {
     const next = nextDay(t, state);
     return {
       title: t.title,
-      /* The count comes from the track rather than from a literal. Two tracks of seven made
-         "All seven done" look safe; it is the same hardcoded number that made the shared
-         closing line quietly wrong, one screen over. */
+      /* An unstarted row says what the track is FOR, not how long it is. It used to say
+         "seven of them, in order" — which was fine with one track, and with four became four
+         identical subtitles under four evocative titles, so the list told the reader nothing
+         about which one was theirs. (It also put a lowercase "seven" at the start of a
+         sentence, which is what made me look.) The length is still on the overview, in the
+         seedling, and on the survey result. */
       sub: isComplete(t, state)
         ? 'All of them done. Any one again, whenever.'
         : next && state.done.length > 0
           ? `Next: ${next.title}`
-          : `${daysWord(t)} of them, in order. Nothing on a schedule.`,
+          : t.oneLine,
       route: `/track/${t.id}`,
       glyph: 'book' as GlyphKind,
     };

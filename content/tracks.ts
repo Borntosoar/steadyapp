@@ -70,6 +70,12 @@ export interface Track {
   title: string;
   /** Shown before starting. Says what it is and what it is not. */
   blurb: string;
+  /** One short line for list rows, where the title is doing evocation rather than
+   *  description. "The thinking part" and "Running on empty" are good names and terrible
+   *  labels, and with four tracks in a list the reader needs to know which one is theirs
+   *  without opening each. Phrased from the survey answer they would have picked, and never
+   *  as a condition. */
+  oneLine: string;
   /** Which survey shapes this is offered to. */
   forCarrying: string[];
   days: TrackDay[];
@@ -82,6 +88,7 @@ export interface Track {
 export const BREAKUP: Track = {
   id: 'breakup',
   title: 'After it ended',
+  oneLine: 'For after a relationship ends.',
   blurb:
     'Seven of them, in an order that follows what usually happens rather than a calendar. Nothing here is on a schedule, nothing expires, and you can stop at any one of them.',
   forCarrying: ['loss', 'unmoored', 'harsh'],
@@ -254,13 +261,15 @@ export const BREAKUP: Track = {
 export const FLAT: Track = {
   id: 'flat',
   title: 'When nothing lands',
+  oneLine: 'For when getting started is the hard part.',
   blurb:
     'Seven of them, built on the one thing that holds up best: the doing comes first and the wanting turns up afterwards. Nothing in here asks you to enjoy anything.',
-  /* Offered to `spent` as well as `flat`. Running on empty and going grey are not the same
-     thing, and the copy is written for the second — but the method is right for both, and
-     `spent` currently has nothing else pointed at it. Better an honest fit than an empty
-     shelf; the survey result offers it rather than assigning it. */
-  forCarrying: ['flat', 'spent'],
+  /* `spent` used to be here too, on the reasoning that running on empty and going grey are
+     not the same thing but the method suits both, and that `spent` had nothing else pointed
+     at it. It has its own track now, and the borrowed fit was worse than it looked: the whole
+     of this track assumes the doing has stopped, and the defining feature of `spent` is that
+     it has not. See SPENT below and docs/DIRECTION.md §11.10. */
+  forCarrying: ['flat'],
   days: [
     {
       id: 'the-first-move',
@@ -453,6 +462,7 @@ export const FLAT: Track = {
 export const SPIRALS: Track = {
   id: 'spirals',
   title: 'The thinking part',
+  oneLine: 'For when the thinking does not stop.',
   blurb:
     'Seven of them, and not one asks what you were thinking about. The topic was never the problem, and answering it is not the way out. That is most of what makes this one different.',
   forCarrying: ['spirals'],
@@ -570,7 +580,194 @@ export const SPIRALS: Track = {
     'That is the seven. None of it is finished — the thinking does not go quiet, and quiet was never the target. What can change is how long you are still in it once it has started, and that was the part doing the damage.',
 };
 
-export const TRACKS: Track[] = [BREAKUP, FLAT, SPIRALS];
+/* ════════════════════════════════════════════════════════════════════════════════════════
+ * THE FOURTH TRACK — running on empty.
+ *
+ * WHY IT NEEDED ITS OWN, HAVING BORROWED THE FLAT ONE. The survey's own reflection for this
+ * shape names the distinguishing feature: "You are still doing all of it. That is usually
+ * what makes this one so hard to say out loud." Function is intact and capacity is gone. The
+ * flat track assumes the opposite — that the doing has stopped and the job is to start it —
+ * so handing it to somebody who is still doing everything reads as an instruction to do more,
+ * which is the exact wrong prescription. The borrowed fit was worse than it looked.
+ *
+ * THE HONEST GROUND, AND THE TRACK SAYS IT ON DAY TWO. Interventions aimed at the individual
+ * move this less than changes to the load itself do. That is the consistent finding, and it
+ * makes an app — which is a purely individual intervention — a small instrument pointed at a
+ * largely structural problem. Saying so plainly is what buys the right to offer anything at
+ * all: the single cruellest thing a wellness product does to somebody in this state is imply
+ * they would be fine if they coped better. What is left after that admission is the recovery
+ * half of the arithmetic, which is smaller than anybody would like and is genuinely not
+ * nothing — it is also the half nobody else was going to look after.
+ *
+ * WHERE THE DAYS COME FROM. Recognition, since this one goes unnamed longest; the arithmetic,
+ * which is load minus recovery accumulated rather than a character trait; what "off" actually
+ * means, because recovery tracks whether the thing is still running in your head rather than
+ * hours away from it; what actually costs, which is rarely the hours and usually having no
+ * say, being dealt with unfairly, and working against what you think; the restorative things
+ * being triaged away first precisely because they look optional; the caring switching off,
+ * which people read as having become a worse person and which is closer to a fuse; and what
+ * is left to decide.
+ *
+ * ALL FOUR GAMES, AND THAT IS NOT BALANCE FOR ITS OWN SAKE. This shape spans capacity
+ * (Groundwork, whose ground visibly gives way under one large thing), prediction (Curveball —
+ * "if I stop, it all falls over" is a forecast), cost against value (Toward), and the
+ * deletion of your own effort (Ballast, whose discount sentences are exactly how somebody
+ * here files a week's work as not counting). Ballast fits this track better than any other in
+ * the app, including the one it was written for.
+ *
+ * BOTH CURVEBALL DAYS RUN WITHOUT THE CLOCK, which is a track-specific call rather than the
+ * usual one-exposed-day. Refusal 16 is that nothing here may add load. A stopwatch is load.
+ *
+ * ────────────────────────────────────────────────────────────────────────────────────────
+ * WHAT THIS TRACK REFUSES, ON TOP OF THE FIVE EVERY TRACK CARRIES
+ *
+ * 16. IT NEVER IMPLIES THIS IS A FAILURE OF COPING. No resilience, no stress management, no
+ *     "handle it better". The evidence points at load, the app cannot move load, and pretending
+ *     otherwise turns an app into one more thing telling somebody the problem is them.
+ *
+ * 17. NO SELF-CARE VOCABULARY. No me-time, no treat yourself, no filling your own cup, no "you
+ *     deserve". It is the register that made workplace wellness read as an insult to the people
+ *     it was aimed at, and this audience has the sharpest ear for it of any shape in the survey.
+ *
+ * 18. NO TIME MANAGEMENT AND NO PRODUCTIVITY ADVICE. Somebody in this state is usually
+ *     extremely good at prioritising — that is *why* they are still doing all of it. Offering
+ *     it implies they got here through disorganisation.
+ *
+ * 19. NO ADVICE ABOUT THE JOB, AND NO ASSUMPTION THAT THERE IS ONE. Not quit, not cut your
+ *     hours, not talk to your manager — those have consequences the app cannot see, and many
+ *     people have no such option. And this is the shape most likely to be misread as work
+ *     stress: the load is as often a parent being cared for, a child, an illness, or a second
+ *     shift that nobody calls a job. The copy names none of it.
+ *
+ * 20. IT DOES NOT PROMISE THAT A WEEKEND WILL DO IT. Recovery from accumulated load is slow
+ *     and uneven, and implying otherwise sets up exactly the conclusion this track exists to
+ *     prevent — that a rest did not fix it, so the problem must be the person.
+ *
+ * AND IT NEVER NAMES THE CONDITION. The word for this has a definition, a scale and an
+ * argument about whether it is a medical diagnosis at all. None of that helps somebody at
+ * 11pm, the survey has never handed anybody a label, and this track does not start. */
+
+export const SPENT: Track = {
+  id: 'spent',
+  title: 'Running on empty',
+  oneLine: 'For when you are still doing all of it.',
+  blurb:
+    'Seven of them. The first thing they say is that this is mostly about load, and that an app cannot change how much you are carrying. What is left after that is smaller than anybody would like, and it is not nothing.',
+  forCarrying: ['spent'],
+  days: [
+    {
+      id: 'still-doing-all-of-it',
+      title: 'Still doing all of it',
+      about:
+        'What makes this one hard to say out loud is that you are still doing all of it. Nothing has visibly fallen over, so it reads to everybody, including you, as coping.',
+      game: {
+        route: '/game/ballast',
+        label: 'Ballast',
+        focus: 'Watch the sentences that throw things out. Most of what you did this week is about to get filed as not counting.',
+      },
+      practice: { route: '/grounding?tool=breath', label: 'Breathing, about eighty seconds' },
+      hold: 'What have you done this week that you have already written off?',
+      mood: 'daylight',
+      motif: 'papers',
+    },
+    {
+      id: 'the-arithmetic',
+      title: 'The arithmetic',
+      about:
+        'This is load minus recovery, added up over a long stretch. That is arithmetic and not a character trait. The first half of it is not something an app can change, which is worth saying before anything else here gets offered.',
+      game: {
+        route: '/game/groundwork',
+        label: 'Groundwork',
+        focus: 'The ground gives way under one large thing. That is a fact about the day, not about the person laying it out.',
+      },
+      practice: { route: '/grounding?tool=senses', label: 'Five senses, about two minutes' },
+      hold: 'Which half of that has actually been moving?',
+      mood: 'morning',
+      motif: 'rays',
+    },
+    {
+      id: 'what-off-means',
+      title: 'What off means',
+      about:
+        'Recovery turns out not to be measured in hours away from it. What matters is whether the thing is still running in your head while you are away, which is why a whole evening can leave nothing behind.',
+      /* No clock, here and on day six. Refusal 16 says nothing in this track may add load, and
+         a stopwatch is load. The toggle on the intro still wins, as everywhere. */
+      game: {
+        route: '/game/curveball?clock=off',
+        label: 'Curveball',
+        focus: 'These are the ones that follow you into the evening. Notice how many are still running with nothing to act on.',
+      },
+      practice: { route: '/grounding?tool=widen', label: 'Widening attention, one minute' },
+      hold: 'What is still running when you are not there?',
+      mood: 'evening',
+      motif: 'loops',
+    },
+    {
+      id: 'what-actually-costs',
+      title: 'What actually costs',
+      about:
+        'It is rarely the hours. What builds up is having no say in it, being dealt with unfairly, and doing things at odds with what you think. A short stretch full of those costs more than a long one without them.',
+      game: {
+        route: '/game/toward',
+        label: 'Toward',
+        focus: 'The cost here is never the time a thing takes. Watch which ones go against something and which merely take a while.',
+      },
+      practice: { route: '/grounding?tool=values', label: 'Values anchor, two minutes' },
+      hold: 'Which part of it costs the most for the time it takes?',
+      mood: 'daylight',
+      motif: 'messages',
+    },
+    {
+      id: 'first-to-go',
+      title: 'First to go',
+      about:
+        'Under load the first things dropped are the ones that look optional, and those are usually the ones doing the restoring. It is sensible triage that happens to remove the supply.',
+      game: {
+        route: '/game/groundwork',
+        label: 'Groundwork',
+        focus: 'Almost nothing spare is the normal starting position here. Put in the smallest one and watch it hold.',
+      },
+      practice: { route: '/grounding?tool=senses', label: 'Five senses, about two minutes' },
+      hold: 'What did you drop first, and what had it been doing?',
+      mood: 'evening',
+      motif: 'moons',
+    },
+    {
+      id: 'the-not-caring',
+      title: 'The not caring',
+      about:
+        'At some point the caring switches off, and it is easy to read that as having become a worse person. It is closer to a fuse: sustained load with no let-up, and something goes so the rest can keep running.',
+      game: {
+        route: '/game/curveball?clock=off',
+        label: 'Curveball',
+        focus: 'Watch for the ones about what kind of person this makes you. None of those is checkable and all of them arrive certain.',
+      },
+      practice: { route: '/grounding?tool=breath', label: 'Breathing, about eighty seconds' },
+      hold: 'When did it stop mattering, and what was going on then?',
+      mood: 'smallHours',
+      motif: 'rings',
+    },
+    {
+      id: 'what-is-left',
+      title: 'What is left to you',
+      about:
+        'What is left is small and it is worth being plain about that. It is the recovery half of the arithmetic, and it is the half nobody else was ever going to look after.',
+      game: {
+        route: '/game/toward',
+        label: 'Toward',
+        focus: 'One thing that goes toward something, chosen rather than handed to you. That distinction is most of what is left here.',
+      },
+      practice: { route: '/grounding?tool=widen', label: 'Widening attention, one minute' },
+      hold: 'What is the one part of this that is actually yours to decide?',
+      mood: 'morning',
+      motif: 'paths',
+    },
+  ],
+  close:
+    'That is the seven. None of it is finished, and none of it changed how much you are carrying — that was always the honest limit here. What can change is whether the exhaustion keeps counting as evidence about you, and that one is worth having on its own.',
+};
+
+export const TRACKS: Track[] = [BREAKUP, FLAT, SPIRALS, SPENT];
 
 export const trackById = (id: string): Track | null => TRACKS.find((t) => t.id === id) ?? null;
 
