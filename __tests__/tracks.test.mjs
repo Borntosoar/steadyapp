@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  TRACKS, BREAKUP, FLAT, SPIRALS, SPENT, HARSH,
+  TRACKS, BREAKUP, FLAT, SPIRALS, SPENT, HARSH, UNMOORED,
   trackById, tracksFor, TRACK_CAVEAT, TRACK_CLOSE, closeFor, daysWord,
 } from '../content/tracks.ts';
 import {
@@ -939,14 +939,186 @@ describe('the breakup track gave `harsh` back', () => {
     assert.deepEqual(tracksFor('harsh').map((t) => t.id), ['harsh']);
   });
 
-  test('and `unmoored` is still a stretch, which is recorded rather than hidden', () => {
-    /* "Everything changed at once" is often a breakup and just as often a move, a diagnosis,
-       a job going, or leaving a country — and this track assumes a person. It stays because
-       an honest stretch beats an empty shelf, and it goes when `unmoored` has somewhere
-       better. This test exists so that decision cannot quietly become invisible. */
-    assert.ok(BREAKUP.forCarrying.includes('unmoored'));
-    assert.match(read('content/tracks.ts'), /`unmoored` stays, and it is the same defect/,
-      'the reasoning for the stretch was deleted while the stretch stayed');
+  test('and the `unmoored` stretch is gone rather than grandfathered', () => {
+    /* This test used to assert the opposite: that `unmoored` was still borrowing this track,
+       and that the reasoning for the stretch stayed in the file beside it so the decision
+       could not become invisible. It has its own track now, so the stretch is resolved and
+       the assertion is inverted rather than deleted — the record of what happened is worth
+       more than a tidy file. */
+    assert.ok(!BREAKUP.forCarrying.includes('unmoored'));
+    assert.deepEqual(BREAKUP.forCarrying, ['loss'], 'the breakup track claims something it is not about');
+    assert.deepEqual(tracksFor('unmoored').map((t) => t.id), ['unmoored']);
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────────────────
+ * The unmoored track's own five. This is the widest shape in the survey — a country, a job,
+ * an illness, a birth, a death, an institution left behind — so most of its refusals are
+ * about what the copy is not allowed to assume. */
+
+const unmooredProse = proseOf(UNMOORED);
+
+describe('refusal 26 — no assumption about what changed, or whether it was chosen', () => {
+  test('nothing names a particular change as theirs', () => {
+    /* Mentioning is allowed, assuming is not — same design as the spent track's job guard.
+       "A country, a job, an illness" is a list of examples; "your move" is a claim. */
+    const assumes = /\b(your (move|new (job|city|country|home|life)|baby|breakup|divorce)|when you moved|since you (moved|left|started))\b/i;
+    for (const s of unmooredProse) assert.doesNotMatch(s, assumes, `assumes what changed: "${s}"`);
+  });
+
+  test('and nothing asserts that they chose it', () => {
+    /* The axis the app must not guess. Somebody who chose it very often feels they have
+       forfeited the right to find it hard, which makes them exactly the person reading this
+       at midnight. */
+    const chose = /\b(since you (chose|decided)|now that you'?ve (moved|left|started)|you wanted this|you did choose|because you chose|this is what you wanted)\b/i;
+    for (const s of unmooredProse) assert.doesNotMatch(s, chose, `assumes it was chosen: "${s}"`);
+  });
+
+  test('the blurb says outright that it asks neither, and its list does not read as closed', () => {
+    assert.match(UNMOORED.blurb, /not one asks what changed or whether you chose it/i);
+    assert.match(UNMOORED.blurb, /something with no obvious name/i,
+      'the list of examples now reads as exhaustive, which excludes everybody it missed');
+    /* Deliberately unlike each other, so it reads as "any of these" rather than "one of
+       these". Three of the four is enough to prove the spread survived an edit. */
+    const spread = ['country', 'job', 'illness', 'person'].filter((w) => UNMOORED.blurb.includes(w));
+    assert.ok(spread.length >= 3, `the examples narrowed to ${JSON.stringify(spread)}`);
+  });
+});
+
+describe('refusal 27 — no silver lining and no growth framing', () => {
+  test('nothing tells anybody this will make them stronger', () => {
+    /* Unfalsifiable, reflexive, and offered early it tells somebody their difficulty is a
+       lesson. Growth may well happen; the app does not get to promise it or ask for it. */
+    const lining = /\b(everything happens for a reason|silver lining|blessing in disguise|make you stronger|what does not kill|growth|grow from (it|this)|meant to be|one door|new chapter|fresh start|exciting opportunity|see it as a chance)\b/i;
+    for (const s of unmooredProse) assert.doesNotMatch(s, lining, `silver lining: "${s}"`);
+  });
+});
+
+describe('refusal 28 — no advice about rebuilding', () => {
+  test('nothing tells anybody to join, meet, or put themselves out there', () => {
+    /* It is what everybody says, it presumes capacity and context the app cannot see, and it
+       lands as "you are not trying". */
+    const rebuild = /\b(join a (club|group|class|gym)|make new friends|put yourself out there|get (into|out of) (a routine|the house)|meet people|reach out to|build a routine|start a hobby|sign up for|say yes to|try something new)\b/i;
+    for (const s of unmooredProse) assert.doesNotMatch(s, rebuild, `rebuilding advice: "${s}"`);
+  });
+
+  test('it names the mechanism instead, and leaves the locating to the person', () => {
+    const day = UNMOORED.days.find((d) => d.id === 'how-it-comes-back');
+    assert.ok(day, 'the day about how a self re-forms is gone');
+    assert.match(day.about, /re-forms behind you/i);
+    assert.match(day.about, /stop needing a decision/i);
+    assert.match(day.game.focus, /repetition is the mechanism/i);
+  });
+});
+
+describe('refusal 29 — it does not ask anybody to decide who they are now', () => {
+  test('nothing sets identity as a task', () => {
+    /* The middle of a transition is precisely when that faculty is offline, so asking is the
+       app demanding output from the one thing not currently working. The guard is written to
+       PRESCRIPTIONS — day three names the question in order to say it has no answer, and a
+       guard that caught the naming would be catching the refusal itself. */
+    const identity = /\b(decide who you are|work out who you are|figure out who you are|define (yourself|who you)|reinvent yourself|find yourself|discover who|the new you|build a new identity)\b/i;
+    for (const s of unmooredProse) assert.doesNotMatch(s, identity, `sets identity as homework: "${s}"`);
+  });
+
+  test('and day three says the question has no answer, then offers the answerable one', () => {
+    const day = UNMOORED.days.find((d) => d.id === 'what-came-with-you');
+    assert.ok(day, 'the continuity day is gone');
+    assert.match(day.about, /who you are now has no answer/i);
+    assert.match(day.about, /both sides of the change/i);
+    assert.match(day.hold, /both sides of it/i);
+  });
+
+  test('Toward is used for continuity rather than for authoring a self', () => {
+    /* Its values are recognised from a list rather than written, so picking two that predate
+       the change is continuity-spotting. That is what makes a values game honest in a track
+       that refuses to ask who somebody is. */
+    const day = UNMOORED.days.find((d) => d.id === 'what-came-with-you');
+    assert.equal(day.game.route.split('?')[0], '/game/toward');
+    assert.match(day.game.focus, /already true before any of this|came with you/i);
+  });
+});
+
+describe('refusal 30 — no timeline for feeling normal', () => {
+  test('nothing predicts when it settles', () => {
+    const when = /\b(within (a|the) (year|month)|by this time next|takes about a year|give it (a|six|twelve) (year|months?)|in time you'?ll|eventually you will|after the first year)\b/i;
+    for (const s of unmooredProse) assert.doesNotMatch(s, when, `predicts when: "${s}"`);
+  });
+
+  test('the last day states the absence of an answer rather than dodging it', () => {
+    /* This is the shape that asks the question hardest, so withholding silently is not
+       enough — the honest answer has to be said. */
+    const day = UNMOORED.days.find((d) => d.id === 'when-it-settles');
+    assert.ok(day, 'the day about when it settles is gone');
+    assert.match(day.about, /there is no answer to it/i);
+    assert.match(day.about, /not having one is not a bad sign/i);
+    assert.match(UNMOORED.close, /nobody can tell you when/i);
+  });
+});
+
+describe('the unmoored sequence itself', () => {
+  test('seven days, in the order the header describes', () => {
+    assert.deepEqual(UNMOORED.days.map((d) => d.id), [
+      'the-middle', 'what-used-to-be-free', 'what-came-with-you', 'the-old-one',
+      'behind', 'how-it-comes-back', 'when-it-settles',
+    ]);
+  });
+
+  test('it opens on the middle being the transition rather than a failure inside it', () => {
+    assert.match(UNMOORED.days[0].about, /no shape yet/i);
+    assert.match(UNMOORED.days[0].about, /rather than proof you are failing/i);
+  });
+
+  test('the automatic-becoming-effortful day names the misreading', () => {
+    const day = UNMOORED.days.find((d) => d.id === 'what-used-to-be-free');
+    assert.match(day.about, /automatic|effortful/i);
+    assert.match(day.about, /read as not coping|looks like work/i);
+  });
+
+  test('the old life is framed as still existing, which is the harder case', () => {
+    /* Losing something that is not gone has no ritual attached to it and no obvious
+       permission to mind. */
+    const day = UNMOORED.days.find((d) => d.id === 'the-old-one');
+    assert.match(day.about, /may still be there/i);
+    assert.match(day.about, /nothing marks it as gone|permission to miss it/i);
+  });
+
+  test('repetition carries the rebuilding half, so Groundwork appears more than once', () => {
+    const gw = UNMOORED.days.filter((d) => d.game.route.startsWith('/game/groundwork'));
+    assert.ok(gw.length >= 2, `Groundwork appears ${gw.length} times and repetition is the mechanism`);
+  });
+
+  test('all four games appear, because the shape spans all four', () => {
+    const routes = new Set(UNMOORED.days.map((d) => d.game.route.split('?')[0]));
+    assert.equal(routes.size, 4, `only ${routes.size} games, so one of those went unserved`);
+  });
+
+  test('the disorienting first day opens without a stopwatch', () => {
+    assert.match(UNMOORED.days[0].game.route, /clock=off/);
+  });
+});
+
+describe('every survey shape is now accounted for', () => {
+  test('each shape has exactly one track, except the one that should have none', () => {
+    /* Six tracks, six shapes, and `looking` deliberately empty: handing a seven-day protocol
+       to somebody with no particular reason to be here is the opposite of what that answer
+       means. This test is the reason a seventh track cannot quietly leave a shape behind. */
+    for (const shape of Object.keys(REFLECTION)) {
+      const found = tracksFor(shape);
+      if (shape === 'looking') {
+        assert.equal(found.length, 0, '"just looking around" was handed a protocol');
+        continue;
+      }
+      assert.equal(found.length, 1, `"${shape}" has ${found.length} tracks`);
+    }
+  });
+
+  test('and no track claims a shape the survey cannot produce', () => {
+    for (const t of TRACKS) {
+      for (const shape of t.forCarrying) {
+        assert.ok(REFLECTION[shape], `${t.id} is offered to "${shape}", which no answer produces`);
+      }
+    }
   });
 });
 

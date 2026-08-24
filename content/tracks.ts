@@ -91,17 +91,15 @@ export const BREAKUP: Track = {
   oneLine: 'For after a relationship ends.',
   blurb:
     'Seven of them, in an order that follows what usually happens rather than a calendar. Nothing here is on a schedule, nothing expires, and you can stop at any one of them.',
-  /* `harsh` used to be here and should not have been. Six of these seven days assume a
-     relationship ended; only "The voice" is about self-criticism at all, and offering "After
-     it ended" to somebody whose answer was "I am hard on myself" is wrong on the title alone.
-     It has its own track now — see HARSH below and docs/DIRECTION.md §11.12.
-
-     `unmoored` stays, and it is the same defect one degree milder: "everything changed at
-     once" is often a breakup and is just as often a move, a diagnosis, a job going, or
-     leaving a country, and this track assumes a person. It is a stretch rather than a
-     mistake, and it is recorded as one — an honest stretch beats an empty shelf, and it goes
-     the moment `unmoored` has somewhere better. */
-  forCarrying: ['loss', 'unmoored'],
+  /* This track now claims exactly the shape it was written for, which took three goes.
+     `harsh` was here and should not have been — six of these seven days assume a relationship
+     ended, and offering "After it ended" to somebody who said "I am hard on myself" is wrong
+     on the title alone (§11.12). `unmoored` was here too, recorded at the time as an honest
+     stretch that would go the moment it had somewhere better: "everything changed at once" is
+     often a breakup and just as often a move, an illness, a job going, or leaving a country,
+     and this track assumes a person. It has UNMOORED now, so the stretch is gone rather than
+     grandfathered. See docs/DIRECTION.md §11.13. */
+  forCarrying: ['loss'],
   days: [
     {
       id: 'getting-through',
@@ -974,7 +972,192 @@ export const HARSH: Track = {
     'That is the seven. None of it is finished — the voice is still there, and removing it was never on offer. What can change is whether you take dictation from it, and that turns out to be most of the difference.',
 };
 
-export const TRACKS: Track[] = [BREAKUP, FLAT, SPIRALS, SPENT, HARSH];
+/* ════════════════════════════════════════════════════════════════════════════════════════
+ * THE SIXTH TRACK — everything changed at once.
+ *
+ * THE WIDEST SHAPE IN THE SURVEY, AND THAT IS THE DESIGN PROBLEM. A country, a job, an
+ * illness, a birth, a death, leaving an institution, leaving a religion, a house move, a
+ * relationship — all of them land on this tile, and any copy that names one excludes the
+ * rest. The survey's own reflection is the thing they share and is the whole brief for this
+ * track: "The ground moved, and the version of you that knew what to do lived on the old
+ * ground." What unifies them is not the event. It is the discontinuity, and the loss of the
+ * automatic that comes with it.
+ *
+ * THE AXIS THE APP MUST NOT GUESS IS WHETHER IT WAS CHOSEN. A move somebody wanted and a move
+ * forced on them feel nothing alike, and the person who chose it very often feels they have
+ * forfeited the right to find it hard — which makes them exactly the person reading this at
+ * midnight. Every line here works for both, or it does not ship. It is the same structure as
+ * the spent track's "you are still doing all of it, so it reads as coping".
+ *
+ * WHAT THE DAYS ARE BUILT ON. The middle, which is the part with no shape and is the
+ * transition itself rather than a failure inside it; the automatic becoming effortful, which
+ * is a genuine cost people misread as not coping; continuity, which is the answerable version
+ * of the identity question; the old life still existing somewhere, which is harder than a
+ * clean loss because nothing marks it as gone; being behind, which is a comparison against a
+ * schedule nobody set; how a sense of yourself actually re-forms, which is behind you out of
+ * repetition rather than in front of you out of a decision; and the question of when it
+ * settles, which has no answer.
+ *
+ * ALL FOUR GAMES, and the reason is the same as the spent track's rather than a preference
+ * for symmetry: the shape spans forecasts about a future with no shape (Curveball), capacity
+ * and repetition in a new context (Groundwork, twice, because repetition is the mechanism),
+ * what survived the change (Toward), and being behind everybody — which is one of Ballast's
+ * five sentences already.
+ *
+ * ────────────────────────────────────────────────────────────────────────────────────────
+ * WHAT THIS TRACK REFUSES, ON TOP OF THE FIVE EVERY TRACK CARRIES
+ *
+ * 26. NO ASSUMPTION ABOUT WHAT CHANGED, OR WHETHER IT WAS CHOSEN. The strongest refusal in
+ *     this track and the reason it is written the way it is. Nothing here says "your move" or
+ *     "since you decided". The blurb lists a few deliberately unlike each other and then says
+ *     "or something with no obvious name", because a list that reads as exhaustive excludes
+ *     everybody it missed.
+ *
+ * 27. NO SILVER LINING AND NO GROWTH FRAMING. Not "everything happens for a reason", not
+ *     "this will make you stronger", not a new chapter and not a fresh start. It is the
+ *     reflexive thing said to people in transition, it cannot be falsified, and offered early
+ *     it tells somebody their difficulty is a lesson. Growth may well happen. The app does
+ *     not get to promise it, and it certainly does not get to ask for it.
+ *
+ * 28. NO ADVICE ABOUT REBUILDING. Not join a club, not make new friends, not put yourself out
+ *     there, not get into a routine. It is what everybody says, it presumes capacity and
+ *     context the app cannot see, and it lands as "you are not trying". What the app can do
+ *     is name what actually re-forms a self — repetition in the new context — and leave the
+ *     locating of it to the person doing it.
+ *
+ * 29. IT DOES NOT ASK ANYBODY TO DECIDE WHO THEY ARE NOW. The middle of a transition is
+ *     precisely when that faculty is offline, so asking is the app demanding output from the
+ *     one thing currently not working. Day three says so and then offers the answerable
+ *     version instead: not who you are now, but what was true on both sides of it. That is
+ *     also what makes Toward honest here — its values are recognised from a list rather than
+ *     authored, and picking two that predate the change is continuity-spotting rather than
+ *     identity construction.
+ *
+ * 30. NO TIMELINE FOR FEELING NORMAL. Refusal 1 bans timelines everywhere, but this is the
+ *     shape that asks the question hardest, so the honest answer is stated rather than merely
+ *     withheld: there is not one, and not having one is not a bad sign. */
+
+export const UNMOORED: Track = {
+  id: 'unmoored',
+  title: 'The ground moved',
+  oneLine: 'For after a big change, chosen or not.',
+  blurb:
+    'Seven of them, and not one asks what changed or whether you chose it. A country, a job, an illness, a person, or something with no obvious name — from the inside the middle of it looks much the same. That middle is the transition rather than proof you are failing at it.',
+  forCarrying: ['unmoored'],
+  days: [
+    {
+      id: 'the-middle',
+      title: 'The middle',
+      about:
+        'The old arrangement has gone and the new one has no shape yet. That gap is the transition rather than proof you are failing at it, and it is where nearly everybody is standing when they go looking for something like this.',
+      /* No clock. The disorienting week is the wrong place for a stopwatch, same call as day
+         one of the breakup track. The toggle on the intro still wins. */
+      game: {
+        route: '/game/curveball?clock=off',
+        label: 'Curveball',
+        focus: 'Almost all of this is a forecast about a shape that has not formed yet. Very little of it is about anything that already happened.',
+      },
+      practice: { route: '/grounding?tool=breath', label: 'Breathing, about eighty seconds' },
+      hold: 'What has not taken shape yet?',
+      mood: 'tender',
+      motif: 'paths',
+    },
+    {
+      id: 'what-used-to-be-free',
+      title: 'What used to be free',
+      about:
+        'A lot of what was automatic has gone back to being effortful — the route, the shop, the paperwork, the small talk. That is a real cost, and it gets read as not coping because none of it looks like work.',
+      game: {
+        route: '/game/groundwork',
+        label: 'Groundwork',
+        focus: 'Notice what a day holds now against what you would once have put in it. The gap is the load, not the person.',
+      },
+      practice: { route: '/grounding?tool=senses', label: 'Five senses, about two minutes' },
+      hold: 'What costs attention now that used to cost none?',
+      mood: 'daylight',
+      motif: 'papers',
+    },
+    {
+      id: 'what-came-with-you',
+      title: 'What came with you',
+      about:
+        'The question of who you are now has no answer in the middle of this, and asking it does not help. There is a narrower one that does: what was true on both sides of the change.',
+      game: {
+        route: '/game/toward',
+        label: 'Toward',
+        focus: 'Pick two that were already true before any of this. Those are the ones that came with you.',
+      },
+      practice: { route: '/grounding?tool=values', label: 'Values anchor, two minutes' },
+      hold: 'What was true about you on both sides of it?',
+      mood: 'morning',
+      motif: 'rays',
+    },
+    {
+      id: 'the-old-one',
+      title: 'The old one',
+      about:
+        'What you left may still be there, carrying on without you, and that is harder rather than easier. Nothing marks it as gone, so there is no obvious permission to miss it.',
+      game: {
+        route: '/game/curveball',
+        label: 'Curveball',
+        focus: 'Watch for the certainties about the old life and about how everybody else managed theirs. None of those is checkable from here.',
+      },
+      practice: { route: '/grounding?tool=widen', label: 'Widening attention, one minute' },
+      hold: 'What are you missing that nobody would call a loss?',
+      mood: 'evening',
+      motif: 'moons',
+    },
+    {
+      id: 'behind',
+      title: 'Behind',
+      about:
+        'The usual sentence at this point is that everybody else is further along. It is a comparison against a schedule nobody set, run at the moment when you are doing the most work and have the least to show for it.',
+      game: {
+        route: '/game/ballast',
+        label: 'Ballast',
+        focus: 'One of the sentences on offer is this one exactly. The lines that come back to throw things out are the interesting part.',
+      },
+      practice: { route: '/grounding?tool=breath', label: 'Breathing, about eighty seconds' },
+      hold: 'Further along than what, exactly?',
+      mood: 'smallHours',
+      motif: 'rings',
+    },
+    {
+      id: 'how-it-comes-back',
+      title: 'How it comes back',
+      about:
+        'A sense of yourself re-forms behind you rather than in front of you. It comes from doing the same small things often enough in the new place that they stop needing a decision. That is slower and duller than deciding, and it is the part that works.',
+      game: {
+        route: '/game/groundwork',
+        label: 'Groundwork',
+        focus: 'Keep the same one you kept last time. Repetition is the mechanism here and it is meant to look unremarkable.',
+      },
+      practice: { route: '/grounding?tool=senses', label: 'Five senses, about two minutes' },
+      hold: 'What have you now done twice here?',
+      mood: 'morning',
+      motif: 'loops',
+    },
+    {
+      id: 'when-it-settles',
+      title: 'When it settles',
+      about:
+        'The question is when this stops feeling like this, and there is no answer to it. What can be said is that not having one is not a bad sign, and that the middle is not a place anybody stays.',
+      game: {
+        route: '/game/toward',
+        label: 'Toward',
+        focus: 'One thing, picked here rather than carried over. Small is fine, and picked is the part that counts.',
+      },
+      practice: { route: '/grounding?tool=widen', label: 'Widening attention, one minute' },
+      hold: 'What is the first thing that is yours in the new place?',
+      mood: 'daylight',
+      motif: 'hearts',
+    },
+  ],
+  close:
+    'That is the seven. None of it is finished — the ground is still new, and nobody can tell you when it stops being. What is different is that some of it is worn in now, and that only ever happens by walking on it.',
+};
+
+export const TRACKS: Track[] = [BREAKUP, FLAT, SPIRALS, SPENT, HARSH, UNMOORED];
 
 export const trackById = (id: string): Track | null => TRACKS.find((t) => t.id === id) ?? null;
 

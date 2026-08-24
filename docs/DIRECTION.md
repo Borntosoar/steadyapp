@@ -954,3 +954,69 @@ Day seven is about the gap between hearing and acting, which needs the opposite.
 
 **Every survey shape except `looking` now has a track of its own** except `unmoored`, which
 shares the breakup one on the stretch recorded above. `looking` keeps none, on purpose.
+
+### 11.13 The sixth track — unmoored, and the shape sheet is now closed
+
+Built 2026-08-23. `UNMOORED` in `content/tracks.ts`, id `unmoored`, title "The ground moved".
+This resolves the stretch recorded in §11.12: the breakup track now claims `['loss']` and
+nothing else, which took three passes to arrive at.
+
+**The widest shape in the survey, and that is the design problem.** A country, a job, an
+illness, a birth, a death, an institution left behind, a religion left behind, a house move, a
+relationship — all of them land on this tile, and any copy that names one excludes the rest.
+The survey's own reflection is what they share and is the entire brief: *"The ground moved, and
+the version of you that knew what to do lived on the old ground."* What unifies them is not the
+event. It is the discontinuity, and the loss of the automatic that comes with it.
+
+**The axis the app must not guess is whether it was chosen.** A move somebody wanted and a move
+forced on them feel nothing alike, and the person who chose it very often feels they have
+forfeited the right to find it hard — which makes them exactly the person reading this at
+midnight. Every line works for both or it does not ship. Structurally this is the spent track's
+"you are still doing all of it, so it reads as coping".
+
+| Refusal | Why it is load-bearing |
+|---|---|
+| **26. No assumption about what changed, or whether it was chosen.** | The strongest refusal here. The blurb lists four deliberately unlike each other and then says "or something with no obvious name", because a list that reads as exhaustive excludes everybody it missed. Both halves are checked, and the test asserts the spread survives an edit. |
+| **27. No silver lining and no growth framing.** | Not "everything happens for a reason", not a new chapter, not a fresh start. Unfalsifiable, reflexive, and offered early it tells somebody their difficulty is a lesson. Growth may well happen; the app does not get to promise it or ask for it. |
+| **28. No advice about rebuilding.** | Not join a club, not meet people, not get into a routine. It presumes capacity and context the app cannot see and lands as "you are not trying". What it does instead is name the mechanism — repetition in the new context — and leave the locating to the person. |
+| **29. It does not ask anybody to decide who they are now.** | The middle of a transition is precisely when that faculty is offline, so asking is the app demanding output from the one thing not working. Day three names the question in order to say it has no answer, then offers the answerable one: what was true on both sides. |
+| **30. No timeline for feeling normal.** | Refusal 1 bans timelines everywhere, but this shape asks hardest, so the honest answer is stated rather than merely withheld — there is not one, and not having one is not a bad sign. |
+
+**What makes a values game honest in a track that refuses the identity question.** Toward's
+values are recognised from a list rather than authored, so picking two that predate the change
+is continuity-spotting rather than identity construction. That distinction is the whole reason
+day three can use it, and there is a test pinning the focus to it.
+
+**All four games, and Groundwork twice**, because repetition in the new context is the actual
+mechanism by which a sense of yourself re-forms — behind you, out of things that stop needing a
+decision, rather than in front of you out of a decision.
+
+**One divergence left deliberately in place.** `orderOf` leads `unmoored` with Toward while the
+track opens on Curveball. Per §11.9 that is not a contradiction — a sequence's opening move and
+a home screen's ordering answer different questions — and it is the same pattern as the breakup
+track, which opens on Curveball while `loss` leads with Toward. The narrowed test from §11.9
+pins only the case that was load-bearing.
+
+### 11.14 The shape sheet, closed
+
+Six tracks, six shapes, one deliberate gap:
+
+| Survey answer | Shape | Track |
+|---|---|---|
+| I lost someone, or something | `loss` | After it ended |
+| Everything feels flat | `flat` | When nothing lands |
+| I cannot stop thinking | `spirals` | The thinking part |
+| I am running on empty | `spent` | Running on empty |
+| I am hard on myself | `harsh` | The running commentary |
+| Everything changed at once | `unmoored` | The ground moved |
+| Just looking around | `looking` | *(none, on purpose)* |
+
+There is now a test asserting every shape has exactly one track and that `looking` has none, so
+a seventh track cannot quietly leave a shape behind, and nothing can quietly hand a protocol to
+somebody who said they had no particular reason to be here.
+
+**Thirty refusals across six tracks**, five shared and five per track, every one of them
+enforced by a test rather than left in a comment — and each new guard checked against a string
+it must catch as well as the copy it must pass, because a guard that matches nothing always
+passes. That habit has now caught three real defects in this feature alone: the dead
+`?clock=off` parameter, the `orderOf` contradiction, and the identical Practice subtitles.
