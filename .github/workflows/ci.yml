@@ -15,6 +15,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Least privilege. This repository is public, so the default token's blast radius on a
+# compromised action is a public repo's write surface. release.yml already sets this; ci.yml
+# inherited the repo default and did not.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -43,6 +49,29 @@ jobs:
       # differently from tsc, and this is the cheapest place to find that out.
       - name: Web export
         run: npx expo export -p web --output-dir dist
+
+      # PREFLIGHT RUNS HERE, not only in release.yml.
+      #
+      # scripts/preflight.mjs is 600 lines and nine gates, and it is the thing standing
+      # between this repo and an App Review rejection — but its only wiring was release.yml,
+      # a workflow that has never executed (no tags). So the orchestration, the disarm
+      # detection and the exit-code arithmetic had no automated coverage at all, which is
+      # precisely how a check that printed a clean tick for a comparison it never made
+      # survived.
+      #
+      # Exit 1 is EXPECTED on this branch — the entity is unanswered and RevenueCat is
+      # stubbed, both known and both tracked in docs/READINESS.md. What must not happen is
+      # exit 2, which is preflight's own "this run was incomplete" code. Asserting that we
+      # reach a real verdict proves the machinery ran without failing the branch on blockers
+      # that are somebody's paperwork rather than somebody's commit.
+      - name: Preflight runs and reaches a verdict
+        run: |
+          node scripts/preflight.mjs --offline || status=$?
+          if [ "${status:-0}" = "2" ]; then
+            echo "::error::preflight exited 2 — the run was incomplete, so nothing it printed can be trusted"
+            exit 1
+          fi
+          echo "preflight completed with status ${status:-0}"
 
   legal-site:
     runs-on: ubuntu-latest

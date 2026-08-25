@@ -92,7 +92,14 @@ function TabBar({ state, navigation }: any) {
       <View
         style={{
           flexDirection: 'row',
-          height: TAB_BAR_HEIGHT,
+          /* minHeight, NOT height. At 2.2x text the labels were pushed below a hard 64pt box
+             and clipped at the screen edge; at 3.1x the row rendered as
+             "TodayPra…Pro… Learn" — adjacent labels touching with no gutter, two ellipsised.
+             Note the cap above is a no-op on the web build, which is a shipping target:
+             react-native-web does not implement maxFontSizeMultiplier, so the caps in this
+             app exist on one of two platforms. The container has to survive the uncapped
+             case rather than trust a cap that is only sometimes there. */
+          minHeight: TAB_BAR_HEIGHT,
           width: '100%',
           maxWidth: LAYOUT_MAX_WIDTH,
           alignSelf: 'center',
@@ -116,7 +123,16 @@ function TabBar({ state, navigation }: any) {
                 const e = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
                 if (!focused && !e.defaultPrevented) navigation.navigate(route.name);
               }}
-              style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingTop: 6 }}
+              /* A gutter per tab, so two labels can never abut even when both are at their
+                 widest. */
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 3,
+                paddingTop: 6,
+                paddingHorizontal: space.xs,
+              }}
             >
               <Icon color={color} active={focused} />
               {/* Capped and single-line. The tab bar is fixed chrome sharing one row between

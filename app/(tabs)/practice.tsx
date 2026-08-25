@@ -9,6 +9,7 @@ import { dayKey } from '../../lib/streak';
 import { NAMES } from '../../content/names';
 import { TRACKS } from '../../content/tracks.ts';
 import { nextDay, isComplete, emptyTrack } from '../../lib/track.ts';
+import { SUPPORT_PILL_CLEARANCE } from '../_layout';
 
 /* Practice.
  *
@@ -181,7 +182,7 @@ export default function Practice() {
 
   return (
     <Ground tabBarSpace>
-      <H1 style={{ marginTop: space.xl }}>Practice</H1>
+      <H1 style={{ marginTop: space.xl, paddingRight: SUPPORT_PILL_CLEARANCE }}>Practice</H1>
       <BodySm style={{ marginTop: space.sm }}>
         Week {week} of {WEEKS_TOTAL}. {phase.focus}
       </BodySm>

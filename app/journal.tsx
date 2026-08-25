@@ -21,6 +21,7 @@ import {
 import { phaseForWeek } from '../lib/protocol';
 import { formatLogDate } from '../lib/dates';
 import { NAMES, EXPLAIN } from '../content/names';
+import { SUPPORT_PILL_CLEARANCE } from './_layout';
 
 type View_ = 'home' | 'record' | 'experiment';
 
@@ -47,7 +48,7 @@ export default function Journal() {
     <Ground>
       <TopBar onBack={() => router.back()} />
 
-      <H1 style={{ marginTop: space.lg }}>Writing</H1>
+      <H1 style={{ marginTop: space.lg, paddingRight: SUPPORT_PILL_CLEARANCE }}>Writing</H1>
       <BodySm style={{ marginTop: space.sm }}>
         One of these takes a single thought apart. The other tests what you think will
         happen against what actually does. Both are writing, and the writing is the part

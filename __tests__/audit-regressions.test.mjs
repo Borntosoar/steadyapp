@@ -264,3 +264,47 @@ describe('Curveball ends a timed round when every thought has settled', () => {
   });
 });
 
+
+describe('the Support pill never covers a screen\'s own first line', () => {
+  /* The pill is absolutely positioned over every screen and is opaque on purpose — it must
+     occlude, so that it is legible over anything. The consequence is that whatever a screen
+     puts in its top-right corner disappears underneath it, and at large text sizes that is
+     not a clipped descender, it is whole words: "Hours back, last 7 days" lost "7 days"
+     entirely at 2.2x, and Practice's H1 ran under the pill's left edge.
+     `SUPPORT_PILL_CLEARANCE` existed, was correct, and was applied on exactly one screen out
+     of five. This is what makes the safe path the default rather than the remembered one. */
+  const SCREENS = [
+    'app/(tabs)/index.tsx',
+    'app/(tabs)/practice.tsx',
+    'app/(tabs)/progress.tsx',
+    'app/(tabs)/learn.tsx',
+    'app/journal.tsx',
+  ];
+
+  for (const file of SCREENS) {
+    test(`${file} reserves the corner`, () => {
+      const src = readSrc(file);
+      assert.match(
+        src, /paddingRight: SUPPORT_PILL_CLEARANCE/,
+        'this screen\'s topmost text runs under the always-mounted Support pill at large '
+        + 'text sizes. Add paddingRight: SUPPORT_PILL_CLEARANCE to its first element.',
+      );
+    });
+  }
+
+  test('the constant is still exported from the layout that draws the pill', () => {
+    assert.match(readSrc('app/_layout.tsx'), /export const SUPPORT_PILL_CLEARANCE = \d+/);
+  });
+});
+
+describe('fixed-height chrome survives large text', () => {
+  test('the tab bar can grow rather than clipping its labels', () => {
+    /* At 3.1x the row rendered as "TodayPra…Pro… Learn" — labels touching, two ellipsised,
+       and the whole row pushed below a hard 64pt box. Note that the maxFontSizeMultiplier
+       caps in this app are a no-op on react-native-web, which is a shipping target, so the
+       container has to survive the uncapped case on its own. */
+    const src = readSrc('app/(tabs)/_layout.tsx');
+    assert.match(src, /minHeight: TAB_BAR_HEIGHT/, 'the tab bar is a fixed height again');
+    assert.doesNotMatch(src, /^\s+height: TAB_BAR_HEIGHT,$/m, 'the fixed height is back');
+  });
+});

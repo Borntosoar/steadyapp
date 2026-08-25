@@ -9,6 +9,7 @@ import { MODULES, CONTENT_DISCLAIMER } from '../../content/modules';
 import { PHASES } from '../../lib/protocol';
 import { useStore } from '../../store/useStore';
 import { useEntitlement } from '../../hooks/useEntitlement';
+import { SUPPORT_PILL_CLEARANCE } from '../_layout';
 
 /* Learn.
  *
@@ -38,7 +39,7 @@ export default function LearnIndex() {
 
   return (
     <Ground tabBarSpace>
-      <H1 style={{ marginTop: space.xl }}>Learn</H1>
+      <H1 style={{ marginTop: space.xl, paddingRight: SUPPORT_PILL_CLEARANCE }}>Learn</H1>
       <BodySm style={{ marginTop: space.sm }}>
         Twelve short reads, one a week. Each one explains why that week&apos;s practice works,
         so you understand it instead of just following it.

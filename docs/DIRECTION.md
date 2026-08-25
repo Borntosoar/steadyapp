@@ -1164,3 +1164,40 @@ Recorded rather than quietly dropped:
 - `maxFontSizeMultiplier` is a no-op on react-native-web, so every text-size cap in the app
   exists on one of two shipping targets. The tab bar overflows at 2.2x and the Support pill
   occludes content on four screens that do not use `SUPPORT_PILL_CLEARANCE`.
+
+### 12.5 Second pass — the rest of the audit list
+
+**A written field was being dropped on restart.** `MirrorSession.condition` — the avoided
+condition somebody chose to face in a phase-3 session — was declared in `types/index.ts`,
+written by `app/mirror.tsx`, and omitted from `normalise()`. It vanished at the next cold
+start. This is precisely the failure `lib/storage.ts` warns about in its own header ("adding a
+field to AppState without adding it here means it does not survive a restart"), landing on the
+most meaningful thing in the row.
+
+**Two screens subscribed to the whole store.** `useStore()` with no selector snapshots the
+entire state, and Zustand's `setState` is an `Object.assign` producing a new object on every
+mutation — so Today and Progress re-rendered on every write anywhere in the app, and Expo
+Router keeps all four tabs mounted. One `logPractice` from a game re-ran `computeReclaimed`,
+three sorts, a Map build, four reduces and five charts on a screen nobody was looking at.
+Progress reads `state` only inside two tap handlers, so it fetches at the point of use;
+Today's is composed from the eight slices it already subscribes to individually.
+
+**Large text.** `SUPPORT_PILL_CLEARANCE` existed, was correct, and was applied on one screen
+out of five — so at 2.2x "Hours back, last 7 days" lost the words "7 days" entirely behind an
+opaque pill that occludes by design. Now on all five, with a test, because the safe path
+should not be the remembered one. The tab bar was `height: TAB_BAR_HEIGHT` with no gutter
+between labels, which at 3.1x rendered as "TodayPra…Pro… Learn" — labels touching, two
+ellipsised, the row clipped below the box; it is `minHeight` with per-tab padding now. And the
+hero row on Progress clipped its unit to "hou…", which wraps instead.
+
+Worth recording plainly: **`maxFontSizeMultiplier` is not implemented by react-native-web**, so
+every text-size cap in this app exists on one of two shipping targets. Containers have to
+survive the uncapped case on their own rather than trusting a cap that is only sometimes
+there.
+
+**CI now runs preflight**, asserting it reaches a verdict rather than exiting 2 — its "this run
+was incomplete" code. Exit 1 is expected on this branch and does not fail the build, because
+the blockers are paperwork rather than commits. `ci.yml` also gained `permissions: contents:
+read` (the repo is public, and `release.yml` already had it), and there is a `dependabot.yml`
+— the import allowlist in `safety.test.mjs` is the only thing watching for a transitive
+dependency that starts phoning home, and it can only see what is already in the tree.

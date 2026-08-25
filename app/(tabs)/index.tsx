@@ -51,7 +51,8 @@ export default function Today() {
   const pendingMilestone = useStore((s) => s.pendingMilestone);
   const clearMilestone = useStore((s) => s.clearMilestone);
   const checkedInToday = useStore((s) => s.checkedInToday)();
-  const state = useStore();
+  const moments = useStore((s) => s.moments);
+  const entitlement = useStore((s) => s.entitlement);
 
   const week = protocol.currentWeek;
   const wp = weekProgress(protocol);
@@ -85,8 +86,21 @@ export default function Today() {
     nextUnreadModule,
   });
 
+  /* COMPOSED FROM THE SLICES ABOVE rather than `useStore()`.
+     Subscribing to the whole store re-rendered this screen on every write anywhere in the
+     app, which matters because Expo Router keeps all four tabs mounted — and `momentShown`
+     fires from MomentCard's own mount effect, so the screen re-rendered itself. Every field
+     here is already individually subscribed, so this object changes exactly when one of the
+     things nextMoment reads changes, and not before.
+     Kept in a useMemo so the object identity is stable between renders that did not touch
+     any of them. lib/moments.ts reads these eight and nothing else. */
+  const momentState = React.useMemo(
+    () => ({ checkIns, entitlement, mirrorSessions, moments, practice, protocol, streak, urgeLogs }),
+    [checkIns, entitlement, mirrorSessions, moments, practice, protocol, streak, urgeLogs],
+  );
+
   const moment = nextMoment({
-    state,
+    state: momentState as never,
     reclaimedSampleSize: reclaimed.sampleSize,
     weekComplete: wp.complete,
   });

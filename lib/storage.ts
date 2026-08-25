@@ -427,6 +427,12 @@ export function normalise(parsed: unknown): AppState {
         sudsBefore: num(r.sudsBefore, 0),
         sudsAfter: num(r.sudsAfter, 0),
         completed: bool(r.completed, false),
+        /* `condition` was declared in types/index.ts, written by app/mirror.tsx, and dropped
+           here — so the phase-3 entry recording the avoided condition somebody chose to face
+           vanished at the next cold start. Exactly the failure the header of this file warns
+           about ("adding a field to AppState without adding it here means it does not survive
+           a restart"), landing on the single most meaningful thing in the row. */
+        ...(strOrUndef(r.condition) === undefined ? {} : { condition: strOrUndef(r.condition) }),
       };
     }),
 

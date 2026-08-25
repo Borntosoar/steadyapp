@@ -1,0 +1,34 @@
+# Dependency updates.
+#
+# WHY THIS MATTERS MORE HERE THAN IN MOST REPOS. The entire safety story of this app is that
+# nothing leaves the device, and the only thing enforcing it is the import allowlist in
+# __tests__/safety.test.mjs. That test fails the build on any network primitive or
+# non-allowlisted import — but it can only see what is in the tree. A transitive dependency
+# that starts phoning home is the one failure mode with consequences this product cannot
+# absorb, and nothing was watching for it.
+#
+# Weekly rather than daily: this is a small app with a committed lockfile, and a PR a day is
+# a PR nobody reads.
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Expo pins its own SDK packages together; bumping them one at a time produces PRs that
+      # cannot pass CI on their own.
+      expo:
+        patterns:
+          - 'expo'
+          - 'expo-*'
+          - '@expo/*'
+          - 'react-native'
+          - 'react-native-*'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

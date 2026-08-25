@@ -18,6 +18,7 @@ import { exportText, exportJson } from '../../lib/storage';
 import { insightsSummary } from '../../content/copy.ts';
 import { weekProgress, WEEKS_TOTAL } from '../../lib/protocol';
 import { NAMES, EXPLAIN } from '../../content/names';
+import { SUPPORT_PILL_CLEARANCE } from '../_layout';
 
 /* Every chart on this screen plots something that should go DOWN, or a count of times the
  * user did the hard thing. Nothing here measures appearance, and nothing ever will —
@@ -83,12 +84,25 @@ export default function Progress() {
   const c = useTheme();
   const router = useRouter();
   const { entitled } = useEntitlement();
-  const state = useStore();
+  /* NOT `useStore()`. Subscribing to the whole store means this screen re-renders on every
+     write anywhere in the app — and Expo Router keeps all four tabs mounted, so one
+     `logPractice` from a game re-ran computeReclaimed, three array sorts, a Map build, four
+     reduces and five charts on a screen nobody was looking at.
+     `state` here is read by exactly two things, both of them tap handlers, so it is fetched
+     at the point of use instead. */
+  const snapshot = () => useStore.getState() as never;
+
+  /* Narrow selectors for everything this screen actually renders. Each is `s.field`, so a
+     write to a field not listed here does not re-render the charts. */
+  const baseline = useStore((st) => st.baseline);
+  const checkIns = useStore((st) => st.checkIns);
+  const urgeLogs = useStore((st) => st.urgeLogs);
+  const mirrorSessions = useStore((st) => st.mirrorSessions);
+  const protocol = useStore((st) => st.protocol);
   const [exportFailed, setExportFailed] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const reset = useStore((st) => st.reset);
 
-  const { baseline, checkIns, urgeLogs, mirrorSessions } = state;
 
   const reclaimed = computeReclaimed(
     baseline,
@@ -98,12 +112,16 @@ export default function Progress() {
   );
   const showNumber = reclaimed.hasData && reclaimed.sampleSize >= 3;
 
-  const wp = weekProgress(state.protocol);
+  const wp = weekProgress(protocol);
 
   const hero = (
     <>
-      <Caption style={{ marginTop: space.xl }}>Hours back, last 7 days</Caption>
-      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: space.sm }}>
+      <Caption style={{ marginTop: space.xl, paddingRight: SUPPORT_PILL_CLEARANCE }}>Hours back, last 7 days</Caption>
+      {/* Wraps rather than clipping. At large text the unit ran off the right edge as
+          "hou…", because a row of two Texts with a hero-sized number in it has nowhere to go.
+          `flexWrap` puts "hours" on the next line instead, which is ugly at 3x and legible,
+          and the alternative was legible at 1x and truncated at 2x. */}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: space.sm }}>
         <Text style={[t.hero, { color: c.ink }]}>{showNumber ? Math.abs(reclaimed.hours) : '—'}</Text>
         <Text style={[t.h2, { color: c.inkSoft }]}>hours</Text>
       </View>
@@ -118,12 +136,12 @@ export default function Progress() {
         <Row>
           <H3>The twelve weeks</H3>
           <Caption>
-            Week {state.protocol.currentWeek} of {WEEKS_TOTAL}
+            Week {protocol.currentWeek} of {WEEKS_TOTAL}
           </Caption>
         </Row>
         <WeekPips
-          done={state.protocol.completedWeeks}
-          current={state.protocol.currentWeek}
+          done={protocol.completedWeeks}
+          current={protocol.currentWeek}
           progress={wp.done / Math.max(1, wp.required)}
         />
         <Explain q={EXPLAIN.week.q} a={EXPLAIN.week.a} />
@@ -213,10 +231,10 @@ export default function Progress() {
     fn().catch(() => setExportFailed(true));
   };
   const doExport = safely(async () =>
-    download(exportText(state), `anneal-summary-${stamp}.txt`, 'text/plain')
+    download(exportText(snapshot()), `anneal-summary-${stamp}.txt`, 'text/plain')
   );
   const doBackup = safely(async () =>
-    download(exportJson(state), `anneal-backup-${stamp}.json`, 'application/json')
+    download(exportJson(snapshot()), `anneal-backup-${stamp}.json`, 'application/json')
   );
 
   const exportSection = (
