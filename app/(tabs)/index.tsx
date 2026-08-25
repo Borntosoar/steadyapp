@@ -22,6 +22,8 @@ import { MODULES } from '../../content/modules';
 import { NAMES, EXPLAIN } from '../../content/names';
 import { markHardDayIntent } from '../../hooks/navIntent';
 import { SUPPORT_PILL_CLEARANCE } from '../_layout';
+import { effectiveWeek } from '../../lib/entitlement';
+import { useEntitlement } from '../../hooks/useEntitlement';
 
 /* Today.
  *
@@ -37,6 +39,7 @@ export default function Today() {
   const c = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { entitled } = useEntitlement();
 
   const profile = useStore((s) => s.profile);
   const baseline = useStore((s) => s.baseline);
@@ -54,7 +57,12 @@ export default function Today() {
   const moments = useStore((s) => s.moments);
   const entitlement = useStore((s) => s.entitlement);
 
-  const week = protocol.currentWeek;
+  /* THE WEEK SHOWN, NOT NECESSARILY THE WEEK REACHED. A free user keeps earning — the
+     counter in storage advances exactly as before and resumes at the real week the moment
+     they subscribe — but the guided programme they are shown stops at week one, because
+     that is what the paywall sells. lib/entitlement.ts has the reasoning and the two safety
+     rules that fix its scope. */
+  const week = effectiveWeek(protocol.currentWeek, entitled);
   const wp = weekProgress(protocol);
   const sky = atmosphereForScheme(c.isDark);
 

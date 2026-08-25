@@ -9,6 +9,7 @@ import { MODULES, CONTENT_DISCLAIMER } from '../../content/modules';
 import { PHASES } from '../../lib/protocol';
 import { useStore } from '../../store/useStore';
 import { useEntitlement } from '../../hooks/useEntitlement';
+import { effectiveWeek } from '../../lib/entitlement';
 import { SUPPORT_PILL_CLEARANCE } from '../_layout';
 
 /* Learn.
@@ -22,8 +23,11 @@ export default function LearnIndex() {
   const c = useTheme();
   const router = useRouter();
   const readModules = useStore((s) => s.readModules);
-  const currentWeek = useStore((s) => s.protocol.currentWeek);
+  /* Clamped for a free user, the same as Today and Practice — otherwise "ahead" below would
+     grey out modules by a week number they are not being shown. */
+  const reachedWeek = useStore((s) => s.protocol.currentWeek);
   const { entitled } = useEntitlement();
+  const currentWeek = effectiveWeek(reachedWeek, entitled);
 
   const readCount = MODULES.filter((m) => readModules.includes(m.slug)).length;
 

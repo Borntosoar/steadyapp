@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRouter } from 'expo-router';
-import { H1, BodySm, Caption } from '../../components/ui';
+import { H1, BodySm, Caption, Button } from '../../components/ui';
 import { Frost, Ground, ListRow, type GlyphKind } from '../../components/frost';
 import { space } from '../../constants/theme';
 import { useStore } from '../../store/useStore';
@@ -10,6 +10,8 @@ import { NAMES } from '../../content/names';
 import { TRACKS } from '../../content/tracks.ts';
 import { nextDay, isComplete, emptyTrack } from '../../lib/track.ts';
 import { SUPPORT_PILL_CLEARANCE } from '../_layout';
+import { effectiveWeek, weekGated } from '../../lib/entitlement';
+import { useEntitlement } from '../../hooks/useEntitlement';
 
 /* Practice.
  *
@@ -34,12 +36,25 @@ interface Item {
 
 export default function Practice() {
   const router = useRouter();
-  const week = useStore((s) => s.protocol.currentWeek);
+  const { entitled } = useEntitlement();
+  const reached = useStore((s) => s.protocol.currentWeek);
+  /* See lib/entitlement.ts. The counter keeps advancing underneath; this is what is shown. */
+  const week = effectiveWeek(reached, entitled);
+  const weekLocked = weekGated(reached, entitled);
   const practice = useStore((s) => s.practice);
   const trackStates = useStore((s) => s.tracks);
   const phase = phaseForWeek(week);
   const mirrorOpen = !!mirrorSpecForWeek(week);
   const experimentsOpen = phase.id >= 3;
+
+  /* WHY A ROW IS SHUT, SAID ACCURATELY.
+     `mirrorOpen` and `experimentsOpen` read the CLAMPED week, so once the gate went in, a
+     free user who had reached week 9 was shown "Week 4" on mirror practice — a pacing reason
+     they passed a month ago, and a plainly false one. There are two different boundaries
+     here and the chip has to name whichever they are actually behind: still working up to it,
+     or done working up to it and this part is paid. */
+  const EXPERIMENT_UNLOCK_WEEK = 7;
+  const shut = (unlockWeek: number) => (reached >= unlockWeek ? 'Anneal+' : `Week ${unlockWeek}`);
 
   /* Last seven days, by local day key. Never UTC — see lib/streak.ts. */
   const cutoff = new Date();
@@ -63,7 +78,7 @@ export default function Practice() {
       route: '/mirror',
       glyph: 'mirror',
       kinds: ['mirror'],
-      locked: mirrorOpen ? undefined : `Week ${MIRROR_UNLOCK_WEEK}`,
+      locked: mirrorOpen ? undefined : shut(MIRROR_UNLOCK_WEEK),
     },
     {
       title: NAMES.thought.title,
@@ -78,7 +93,7 @@ export default function Practice() {
       route: '/journal',
       glyph: 'flask',
       kinds: ['experiment'],
-      locked: experimentsOpen ? undefined : 'Week 7',
+      locked: experimentsOpen ? undefined : shut(EXPERIMENT_UNLOCK_WEEK),
     },
   ];
 
@@ -183,9 +198,40 @@ export default function Practice() {
   return (
     <Ground tabBarSpace>
       <H1 style={{ marginTop: space.xl, paddingRight: SUPPORT_PILL_CLEARANCE }}>Practice</H1>
+      {/* The clamp makes the NUMBER honest; this line is where it could still lie. `phase.focus`
+          for week one reads "Check in each day. Nothing hard yet. First we find out where you
+          are." — true for a beginner, and faintly insulting three lines above "You finished
+          week 8." A clamped week is not a description of where somebody is, so it does not get
+          to keep the sentence that describes where somebody is. It says what it is instead,
+          and hands the reason to the notice directly below. */}
       <BodySm style={{ marginTop: space.sm }}>
-        Week {week} of {WEEKS_TOTAL}. {phase.focus}
+        {weekLocked
+          ? `Week ${week} of ${WEEKS_TOTAL} is what the free plan covers.`
+          : `Week ${week} of ${WEEKS_TOTAL}. ${phase.focus}`}
       </BodySm>
+
+      {/* SAID OUT LOUD, ONCE, AND ONLY AFTER THEY HAVE EARNED IT.
+          Somebody who finishes week one on the free tier would otherwise just stop advancing
+          with no explanation, which is the version of this that reads as a bug and feels like
+          a trick. It appears only when `reached > 1` — so it is never shown to somebody who
+          has not got there, and it is a statement of fact rather than a prompt: no urgency,
+          no countdown, no "unlock now". SAFETY.md §5.
+          Everything below it stays exactly where it was. Games, the guided tracks, calming
+          down and the daily check-in are not part of this and never become part of it. */}
+      {weekLocked && (
+        <Frost style={{ marginTop: space.lg }}>
+          <BodySm>
+            You finished week {reached - 1}. Weeks 2 to {WEEKS_TOTAL} are part of Anneal+ — your
+            practice still counts while you decide, and it picks up where you left it.
+          </BodySm>
+          <Button
+            label="What Anneal+ adds"
+            variant="secondary"
+            onPress={() => router.push('/paywall')}
+            style={{ marginTop: space.md }}
+          />
+        </Frost>
+      )}
 
       <Caption style={{ marginTop: space.xl, marginBottom: space.sm }}>What this week adds</Caption>
       <Frost>{work.map(row)}</Frost>

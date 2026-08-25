@@ -314,14 +314,29 @@ describe('every row of the paywall table is enforced somewhere in the app', () =
      `weekGated()` had zero call sites, so the entire protocol was free; and "Test a
      prediction" claimed experiments were paid when they are gated by `phase.id >= 3`, a
      protocol gate every free user passes at week 7.
+     The week row is now true: the gate is wired, so the row and its three sentences of copy
+     came back with it. "Test a prediction" did not, and should not — the experiment gate is
+     still the protocol phase, and listing it would double-count the week row.
      These assertions pin each surviving row to the call site that enforces it. They are
      source greps because the enforcement lives inside React components, and the alternative
      — trusting the table — is what produced the defect. */
 
   const src = (rel) => readFileSync(join(ROOT, rel), 'utf8');
+  /* Comments say what the code MEANT to do. Only stripped source says what it does. */
+  const code = (rel) => src(rel).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+  /* Every screen that shows somebody a week number, and the clamp it must read through.
+     Three, because the programme's week is displayed in three places and a clamp missing
+     from any one of them is a free user shown week 9 of a programme they are on week 1 of. */
+  const WEEK_SCREENS = [
+    ['app/(tabs)/index.tsx', /effectiveWeek\(protocol\.currentWeek, entitled\)/],
+    ['app/(tabs)/practice.tsx', /effectiveWeek\(reached, entitled\)/],
+    ['app/(tabs)/learn.tsx', /effectiveWeek\(reachedWeek, entitled\)/],
+  ];
 
   /* label fragment -> [file, pattern that must appear in it] */
   const ENFORCED = [
+    ['weeks', ...WEEK_SCREENS[0]],
     ['mirror', 'app/mirror.tsx', /isGated\('\/mirror', entitled\)/],
     ['Progress', 'app/(tabs)/progress.tsx', /if \(!entitled\)/],
     ['reads', 'app/(tabs)/learn.tsx', /m\.free \|\| entitled/],
@@ -345,41 +360,139 @@ describe('every row of the paywall table is enforced somewhere in the app', () =
     });
   }
 
-  test('nothing in the table claims a gate by protocol week', () => {
-    /* `weekGated` may exist; what must not exist is a claim that it is live. */
-    const claims = PLUS_ADDS.map((r) => `${r.label} ${r.free} ${r.plus}`).join(' ');
-    assert.doesNotMatch(
-      claims, /week/i,
-      'a row claims a week gate. Nothing calls weekGated(), so the protocol is free in full.',
-    );
-  });
-
-  test('and neither does the copy above it, or the store listing', () => {
-    /* The claim was in four places and was enforced in none. Fixing the table alone would
-       have left the line directly above it contradicting the table. */
-    assert.doesNotMatch(PAYWALL_COPY.sub, /week/i, 'the paywall subheadline claims a week gate again');
-    for (const f of ['fastlane/metadata/en-US/description.txt', 'fastlane/metadata/en-US/promotional_text.txt']) {
-      assert.doesNotMatch(
-        src(f), /week one is free|week one of the programme/i,
-        `${f} sells a free tier of "week one", which the app does not implement`,
+  test('the week claim is backed on every screen that shows a week', () => {
+    /* One clamp is not the feature. The row says "Week 1 / All 12" to everybody, so any
+       screen that prints a week has to agree with it or the table is false again — this
+       time in a way only a free user at week 9 ever sees. */
+    for (const [file, pattern] of WEEK_SCREENS) {
+      assert.match(
+        code(file), pattern,
+        `${file} shows a week number without clamping it through effectiveWeek()`,
       );
     }
   });
 
-  test('weekGated stays unused, or the claim comes back with it', () => {
-    /* If somebody wires a week gate up, this fails — and the failure message is the list of
-       places that have to say so. That is the whole reason the function was kept rather than
-       deleted. */
+  test('and none of them reads the raw week past the clamp', () => {
+    /* The clamp is only worth having if it is the ONLY route to a displayed week.
+       `protocol.currentWeek` — the qualified read, straight off the store — may appear in a
+       selector and may be passed to effectiveWeek. Anywhere else on those three screens it
+       is the unclamped number reaching the render, which is the exact bug the clamp exists
+       to prevent. The local each screen assigns the RESULT to is a different matter and is
+       deliberately not matched here: learn.tsx calls its clamped local `currentWeek`, which
+       is legitimate and which an unqualified grep flags. */
+    for (const [file] of WEEK_SCREENS) {
+      for (const line of code(file).split('\n')) {
+        if (!/\bprotocol\.currentWeek\b/.test(line)) continue;
+        assert.match(
+          line.trim(), /useStore\(|effectiveWeek\(/,
+          `${file} reads protocol.currentWeek outside the store selector and the clamp:\n  ${line.trim()}`,
+        );
+      }
+    }
+  });
+
+  test('a locked row names the boundary it is actually behind', () => {
+    /* Found in the browser, not here. The clamp made `mirrorOpen` and `experimentsOpen` read
+       week 1, so a free user who had genuinely reached week 9 saw "Week 4" on mirror practice
+       — a pacing reason they passed a month ago. The chip has to distinguish "you are still
+       working up to this" from "you are done working up to it and this part is paid", which
+       means deciding on the REACHED week, never the clamped one. */
+    const practice = code('app/(tabs)/practice.tsx');
+    assert.match(
+      practice, /reached >= unlockWeek \? 'Anneal\+' : `Week \$\{unlockWeek\}`/,
+      'the lock chip no longer picks its reason from the reached week',
+    );
+    for (const m of practice.match(/locked: \w+ \? undefined : [^,]+,/g) ?? []) {
+      assert.match(
+        m, /shut\(/,
+        `a locked row states its reason without consulting the reached week:\n  ${m}`,
+      );
+    }
+  });
+
+  test('a clamped week does not describe where somebody is', () => {
+    /* Also found in the browser. `phase.focus` for week one is "Check in each day. Nothing
+       hard yet. First we find out where you are." — read by somebody eight weeks in, three
+       lines above a notice saying they finished week 8. The number is clamped; the sentence
+       about a person cannot be, so the locked branch does not get one. */
+    const practice = code('app/(tabs)/practice.tsx');
+    assert.match(
+      practice, /weekLocked\s*\n?\s*\?[^:]*free plan covers/,
+      'the clamped week header no longer has a branch of its own',
+    );
+    const focus = practice.match(/\$\{phase\.focus\}/g) ?? [];
+    assert.equal(
+      focus.length, 1,
+      'phase.focus is rendered somewhere new — check it is not on the locked branch, where it '
+      + 'describes a beginner to somebody who is not one',
+    );
+  });
+
+  test('the table says so, and so does the copy above it and the store listing', () => {
+    /* The claim used to live in four places and be enforced in none; the inverse is just as
+       wrong, and less likely to be noticed. If the gate is wired and the copy is silent,
+       somebody hits a wall the app never told them about — which reads as a bug and feels
+       like a trick. All four have to move together, in both directions. */
+    const claims = PLUS_ADDS.map((r) => `${r.label} ${r.free} ${r.plus}`).join(' ');
+    assert.match(claims, /week/i, 'no row states the week gate that lib/entitlement.ts enforces');
+    assert.match(PAYWALL_COPY.sub, /week/i, 'the paywall subheadline no longer states the week gate');
+    for (const f of ['fastlane/metadata/en-US/description.txt', 'fastlane/metadata/en-US/promotional_text.txt']) {
+      assert.match(
+        src(f), /week one is free|week one of the programme/i,
+        `${f} no longer says week one is the free tier, which the app now implements`,
+      );
+    }
+  });
+
+  test('weekGated is wired, or the claim goes when it does', () => {
+    /* The other direction of the same rule. This function was kept unused for a while with a
+       test that fired the moment it gained a call site; that test has done its job and this
+       is its inverse — unwire the gate and the four claims above become false again. */
     const callSites = ['app', 'components', 'store', 'hooks']
       .flatMap((dir) => walk(join(ROOT, dir)))
       .filter((f) => /\.tsx?$/.test(f))
-      .filter((f) => /\bweekGated\s*\(/.test(readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')));
-    assert.deepEqual(
-      callSites, [],
-      'weekGated() now has a call site. The protocol is gated again, so PLUS_ADDS needs its '
-      + 'row back and PAYWALL_COPY.sub, description.txt and promotional_text.txt need the '
-      + 'claim restored.',
+      .filter((f) => /\bweekGated\s*\(/.test(code(f.slice(ROOT.length + 1))))
+      .map((f) => f.slice(ROOT.length + 1));
+    assert.ok(
+      callSites.length > 0,
+      'weekGated() has no call sites again. The protocol is free in full, so PLUS_ADDS must '
+      + 'drop its week row and PAYWALL_COPY.sub, description.txt and promotional_text.txt '
+      + 'must drop the claim.',
     );
+    assert.ok(
+      callSites.includes('app/(tabs)/practice.tsx'),
+      'the week-locked notice on Practice is gone. A free user who finishes week one would '
+      + 'stop advancing with nothing on screen saying why.',
+    );
+  });
+
+  test('the gate does not reach the storage layer', () => {
+    /* SAFETY.md §12b: entitlement fails TOWARD the user. A read-time clamp does that by
+       construction — the worst it can do is show week one to somebody who has paid, and the
+       next render with a refreshed entitlement corrects it. A gate inside recordPracticeDay
+       would instead stop writing down practice somebody actually did, and no later render
+       gets that back. So the store never learns about billing beyond caching the receipt. */
+    const files = [...walk(join(ROOT, 'store')), join(ROOT, 'lib/protocol.ts')]
+      .filter((f) => /\.tsx?$/.test(f));
+    for (const f of files) {
+      const rel = f.slice(ROOT.length + 1);
+      assert.doesNotMatch(
+        code(rel), /\b(weekGated|effectiveWeek|isGated|FREE_LIMITS)\s*[(.]/,
+        `${rel} calls an entitlement policy function. The clamp belongs at read time.`,
+      );
+    }
+  });
+
+  test('and it does not reach anything promised free forever', () => {
+    /* SAFETY.md §4. Grounding, the daily check-in, riding out an urge and crisis support sit
+       outside every billing state. `__tests__/safety.test.mjs` greps these for any paywall
+       reference at all; this is the narrower question of whether the week clamp crept in. */
+    for (const rel of ['app/grounding.tsx', 'app/checkin.tsx', 'app/urges.tsx', 'app/support.tsx']) {
+      assert.doesNotMatch(
+        code(rel), /\b(weekGated|effectiveWeek)\s*\(/,
+        `${rel} is free forever and must not consult the week gate`,
+      );
+    }
   });
 });
 

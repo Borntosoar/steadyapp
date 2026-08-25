@@ -1243,3 +1243,62 @@ than the paywall previously described: the entire twelve-week protocol, all four
 seven tracks. That is now stated honestly rather than quietly. Whether it is the intended
 business is a decision, not a bug — and the choice is between wiring `weekGated` up and
 accepting the tier as it stands.
+
+## 13. Wiring the week gate up
+
+§12 ended on a choice: wire `weekGated` up, or accept a free tier far more generous than the
+paywall described. The decision was to wire it up. That reverses the copy half of §12 — the
+week row, the paywall subheadline and both store-listing lines are back — and this section is
+the record of what the gate actually is, because "gate the protocol" has several possible
+meanings and most of them are wrong.
+
+**It stops the WEEK, not the practices.** Two rules narrowed it to that before any code was
+written. SAFETY.md §4 puts grounding, breathing, the hard-day path, the daily check-in and all
+crisis support beyond every billing state, forever. `__tests__/safety.test.mjs` greps
+`app/urges.tsx` for any paywall reference at all, so riding out an urge cannot be gated either,
+at any week. What is left that a week genuinely unlocks is mirror practice — already fully
+gated by `isGated` — behavioural experiments, and the relapse plan. Half-locking the practice
+list to reach those would leave a free user staring at "Week 7 of 12" with most of it dark. So
+the gate stops the week itself and the practice list underneath it stays whole.
+
+**The mechanism is a read-time clamp, not a write-time one.** `effectiveWeek(week, entitled)`
+returns `Math.min(week, 1)` for a free user, and the three screens that display a week number —
+Today, Practice, Learn — read through it. `recordPracticeDay` was deliberately not touched.
+`protocol.currentWeek` keeps advancing in storage exactly as before; practice days, streak and
+check-ins are untouched; and somebody who subscribes resumes at the week they actually reached
+rather than being sent back to the start. This is SAFETY.md §12b — entitlement fails toward the
+user — satisfied by construction rather than by care: the worst a read-time clamp can do is show
+week one to somebody who has paid, and the next render with a refreshed entitlement corrects it.
+A gate inside the store would instead stop writing down practice somebody really did, and no
+later render gets that back. A test now fails if any policy function is called from `store/` or
+`lib/protocol.ts`.
+
+**Three things the browser found that the tests could not have.** Each is now pinned by a test
+of its own, but none of them was predictable from reading the diff:
+
+1. *The lock chips started lying.* `mirrorOpen` and `experimentsOpen` derive from the clamped
+   week, so a free user who had genuinely reached week 9 saw "Week 4" on mirror practice — a
+   pacing reason they passed a month ago. There are two different boundaries and the chip has
+   to name whichever one somebody is actually behind. It now decides on the reached week:
+   "Week 4" while they are still working up to it, "Anneal+" once they are not.
+2. *The week blurb started lying.* `phase.focus` for week one reads "Check in each day. Nothing
+   hard yet. First we find out where you are." — fine for a beginner, and faintly insulting
+   three lines above a notice saying "You finished week 8." A clamped number is not a
+   description of a person, so the locked branch no longer carries the sentence that describes
+   one. It says what it is: "Week 1 of 12 is what the free plan covers."
+3. *Nothing said why.* Without a notice, somebody who finished week one would simply stop
+   advancing with no explanation, which reads as a bug and feels like a trick. Practice now
+   carries one — but only once `reached > 1`, so it is never shown to somebody who has not got
+   there, and it is a statement of fact with no urgency, no countdown and no "unlock now", per
+   SAFETY.md §5.
+
+**The tests from §12 were inverted, not deleted.** Three guards existed specifically to fire the
+moment the gate was wired, with failure messages listing the four places that would have to
+change. They fired, they were right, and each has been turned around to hold the new direction:
+a claim with no call site fails, and now a call site with no claim fails too. Nine assertions in
+this area were each verified against a mutation they must catch — a guard that matches nothing
+passes forever, and this file has been caught by that before.
+
+**"Test a prediction" did not come back to the table.** Experiments are gated by `phase.id >= 3`,
+which is a protocol position, not a billing one. With the week row restored it would be counted
+twice, and a free user who subscribes at week 1 does not get experiments — they get week 2.

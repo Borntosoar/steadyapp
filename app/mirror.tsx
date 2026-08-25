@@ -67,11 +67,14 @@ export default function Mirror() {
    * lib/entitlement.ts has always claimed happens — "the single place that decides". It was
    * not true: `isGated` and `weekGated` had zero production call sites, so the one consumer
    * of that module was the ALWAYS_FREE_ROUTES half. A policy function nobody calls is how
-   * the free-route half silently rots later, and that half is the safety guarantee.
+   * the free-route half silently rots later, and that half is the safety guarantee. Both
+   * halves are live now — `weekGated` and its read-time clamp landed on Today, Practice
+   * and Learn, so the module's policy surface is called rather than merely documented.
    *
    * Ordered before the week gate deliberately. "You have not reached this yet" is the more
-   * useful sentence when both are true, but a free user cannot reach week 4 in the first
-   * place, so anybody seeing this screen has genuinely hit the paid boundary. */
+   * useful sentence when both are true, and a free user genuinely cannot reach week 4 now
+   * that `effectiveWeek` holds them at one — so anybody who gets past this line has paid,
+   * and anybody stopped by it has hit the paid boundary rather than a pacing one. */
   if (isGated('/mirror', entitled)) {
     return (
       <Ground>

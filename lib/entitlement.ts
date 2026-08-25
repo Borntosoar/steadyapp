@@ -345,17 +345,19 @@ type TierRow = { label: string; free: string | true; plus: string | true };
  *  backs is not a copy slip — it is a false statement of what is being sold, on the screen
  *  where it costs the most. Two were false:
  *
- *  1. "The twelve weeks — Week 1 / All 12" LED the table, and nothing gates by week.
- *     `weekGated()` and `FREE_LIMITS.maxWeek` below have zero production call sites: a
- *     non-paying user has always had the entire twelve-week protocol. The same claim was in
+ *  1. "The twelve weeks — Week 1 / All 12" led the table while `weekGated()` had ZERO call
+ *     sites, so a non-paying user had the entire protocol. The same claim sat in
  *     PAYWALL_COPY.sub, in the App Store description and in the promotional text — made four
- *     times, enforced none.
+ *     times and enforced none. The gate is wired up now (see `effectiveWeek`), so the row is
+ *     back and true.
  *  2. "Test a prediction — — / ✓" claimed behavioural experiments were paid. They are gated
  *     by `phase.id >= 3` in app/journal.tsx, which is a PROTOCOL gate rather than an
- *     entitlement one. Every free user gets them at week 7.
+ *     entitlement one. That row stayed out: a free user reaches week 7 only by subscribing
+ *     now, so the week row already covers it and listing it twice would be double-counting.
  *
- *  What is left is what `isGated`, `!entitled` and `FREE_LIMITS` actually enforce, each
+ *  Every row is what `weekGated`, `isGated`, `!entitled` and `FREE_LIMITS` enforce, each
  *  verified at its call site:
+ *    · weeks    — app/(tabs)/{index,practice,learn}.tsx, `effectiveWeek(week, entitled)`
  *    · mirror   — app/mirror.tsx, `isGated('/mirror', entitled)`
  *    · Progress — app/(tabs)/progress.tsx, `if (!entitled)` on everything below the hero
  *    · reads    — app/(tabs)/learn.tsx, `m.free || entitled`, and 3 of the 12 are free
@@ -370,6 +372,7 @@ type TierRow = { label: string; free: string | true; plus: string | true };
  *  promise and nobody has decided to make one about them yet. Absent is accurate; promised
  *  would be a business decision this file should not make on its own. */
 export const PLUS_ADDS: TierRow[] = [
+  { label: 'The twelve weeks', free: 'Week 1', plus: 'All 12' },
   { label: NAMES.mirror.title, free: '—', plus: true },
   { label: 'The full picture on Progress', free: '—', plus: true },
   { label: 'Short reads', free: '3 of 12', plus: 'All 12' },
@@ -406,16 +409,38 @@ export function isGated(route: string, entitled: boolean): boolean {
   return true;
 }
 
-/** UNUSED IN PRODUCTION, AND THAT IS THE POINT OF THIS NOTE.
+/** True when somebody has EARNED a week the free tier does not include.
  *
- *  Nothing calls this and nothing reads `FREE_LIMITS.maxWeek`. The twelve-week protocol is
- *  free in full. It is kept because the intent behind it may still be wanted — but the
- *  paywall no longer claims a week gate exists, so the two agree for the first time.
+ *  Wired up 2026-08-23, after a spell during which this had no call sites and the paywall
+ *  claimed a gate that did not exist. It gates the PROGRAMME'S WEEK ADVANCE and nothing else,
+ *  and that scope is not a matter of taste — two rules fix it:
  *
- *  If a week gate is ever wired up, PLUS_ADDS gets its row back and PAYWALL_COPY.sub,
- *  fastlane/metadata/en-US/description.txt and promotional_text.txt all need the claim
- *  restored with it. `__tests__/entitlement.test.mjs` fails the moment this gains a call site
- *  without that happening, and the failure message is that list. */
+ *  · SAFETY.md §4 puts grounding, breathing, the hard-day path, the daily check-in and all
+ *    crisis support beyond any billing state, forever.
+ *  · `__tests__/safety.test.mjs` greps `app/urges.tsx` for ANY paywall reference, so riding
+ *    out an urge cannot be gated either, at any week.
+ *
+ *  What is left that a week actually unlocks is mirror practice (already fully gated by
+ *  `isGated`), behavioural experiments and the relapse plan. So rather than half-locking a
+ *  practice list and leaving a free user staring at "Week 7 of 12" with most of it dark, the
+ *  gate stops the WEEK ITSELF: see `effectiveWeek` below. */
 export function weekGated(week: number, entitled: boolean): boolean {
   return !entitled && week > FREE_LIMITS.maxWeek;
+}
+
+/** The week to SHOW somebody, which is not always the week they have reached.
+ *
+ *  A free user who finishes week one keeps earning: `protocol.currentWeek` advances in
+ *  storage exactly as before, their practice days, streak and check-ins are untouched, and
+ *  the moment they subscribe they resume at the week they actually reached rather than being
+ *  sent back to the start. What stops is the guided programme they are being shown.
+ *
+ *  Clamping here rather than in `recordPracticeDay` is deliberate. That function is pure, is
+ *  used by the store, and must not learn about billing — and SAFETY.md §12b says entitlement
+ *  fails toward the user, which a storage-layer gate makes very hard to honour when a
+ *  subscription lapses mid-protocol. A read-time clamp fails toward the user by construction:
+ *  the worst it can do is show week one to somebody who has paid, which the next render of a
+ *  refreshed entitlement corrects. */
+export function effectiveWeek(week: number, entitled: boolean): number {
+  return entitled ? week : Math.min(week, FREE_LIMITS.maxWeek);
 }
