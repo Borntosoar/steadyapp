@@ -87,7 +87,15 @@ export const insightsSummary = (v: {
 
 export const PAYWALL_COPY = {
   headline: 'You have seen your number.',
-  sub: 'Weeks 2 to 12 are how you change it.',
+  /* NOT "Weeks 2 to 12 are how you change it."
+     That was the second line on the purchase screen and it was false: nothing in the app
+     gates by week — `weekGated()` and `FREE_LIMITS.maxWeek` have no call sites, so the whole
+     twelve-week protocol has always been free. The same claim was in the table below it, in
+     the App Store description and in the promotional text. It is gone from all four.
+     Mirror practice is named instead because it is the thing that is genuinely behind the
+     wall (`isGated('/mirror')`) and it is the core mechanism of the protocol, so the sentence
+     is both true and still the strongest thing to say here. */
+  sub: 'Mirror practice is the part that moves it.',
   freeLine: 'Calming down, check-ins and support stay free, always.',
   /* Said out loud rather than left to be discovered. Removing time pressure converts a
      little worse on the day and a lot better over a year, and in this category it is the

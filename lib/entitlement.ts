@@ -339,18 +339,41 @@ type TierRow = { label: string; free: string | true; plus: string | true };
  *  shortfall. So they get a different FORM, not a different position: a plain ticked list
  *  below, with no columns to lose.
  *
- *  Ordered largest delta first. "The twelve weeks" leads because Week 1 → All 12 is both
- *  the biggest difference and the thing the headline already promised, so the table
- *  confirms the headline instead of introducing a new topic. Then the three rows where the
- *  free column is visibly empty. The two cap rows last, because "5 a month" is the most
- *  generous free value on the list and the least persuasive thing in the block. */
+ *  EVERY ROW HERE IS ENFORCED SOMEWHERE, AND TWO USED NOT TO BE.
+ *
+ *  This table is a promise made to somebody about to hand over money, so a row that no code
+ *  backs is not a copy slip — it is a false statement of what is being sold, on the screen
+ *  where it costs the most. Two were false:
+ *
+ *  1. "The twelve weeks — Week 1 / All 12" LED the table, and nothing gates by week.
+ *     `weekGated()` and `FREE_LIMITS.maxWeek` below have zero production call sites: a
+ *     non-paying user has always had the entire twelve-week protocol. The same claim was in
+ *     PAYWALL_COPY.sub, in the App Store description and in the promotional text — made four
+ *     times, enforced none.
+ *  2. "Test a prediction — — / ✓" claimed behavioural experiments were paid. They are gated
+ *     by `phase.id >= 3` in app/journal.tsx, which is a PROTOCOL gate rather than an
+ *     entitlement one. Every free user gets them at week 7.
+ *
+ *  What is left is what `isGated`, `!entitled` and `FREE_LIMITS` actually enforce, each
+ *  verified at its call site:
+ *    · mirror   — app/mirror.tsx, `isGated('/mirror', entitled)`
+ *    · Progress — app/(tabs)/progress.tsx, `if (!entitled)` on everything below the hero
+ *    · reads    — app/(tabs)/learn.tsx, `m.free || entitled`, and 3 of the 12 are free
+ *    · records  — app/journal.tsx, `FREE_LIMITS.thoughtRecordsPerMonth`
+ *
+ *  Ordered largest delta first: the two rows where the free column is empty, then the two cap
+ *  rows — "5 a month" last, because it is the most generous free value on the list and the
+ *  least persuasive thing in the block.
+ *
+ *  NOT LISTED, AND DELIBERATELY: the four games and the seven guided tracks are ungated. They
+ *  are absent here rather than added to ALWAYS_FREE, because that list is an unconditional
+ *  promise and nobody has decided to make one about them yet. Absent is accurate; promised
+ *  would be a business decision this file should not make on its own. */
 export const PLUS_ADDS: TierRow[] = [
-  { label: 'The twelve weeks', free: 'Week 1', plus: 'All 12' },
   { label: NAMES.mirror.title, free: '—', plus: true },
-  { label: NAMES.experiment.title, free: '—', plus: true },
   { label: 'The full picture on Progress', free: '—', plus: true },
-  { label: NAMES.thought.title, free: '5 a month', plus: 'No limit' },
   { label: 'Short reads', free: '3 of 12', plus: 'All 12' },
+  { label: NAMES.thought.title, free: '5 a month', plus: 'No limit' },
 ];
 
 /** Free on both tiers, forever. Rendered as a list, not a comparison.
@@ -383,6 +406,16 @@ export function isGated(route: string, entitled: boolean): boolean {
   return true;
 }
 
+/** UNUSED IN PRODUCTION, AND THAT IS THE POINT OF THIS NOTE.
+ *
+ *  Nothing calls this and nothing reads `FREE_LIMITS.maxWeek`. The twelve-week protocol is
+ *  free in full. It is kept because the intent behind it may still be wanted — but the
+ *  paywall no longer claims a week gate exists, so the two agree for the first time.
+ *
+ *  If a week gate is ever wired up, PLUS_ADDS gets its row back and PAYWALL_COPY.sub,
+ *  fastlane/metadata/en-US/description.txt and promotional_text.txt all need the claim
+ *  restored with it. `__tests__/entitlement.test.mjs` fails the moment this gains a call site
+ *  without that happening, and the failure message is that list. */
 export function weekGated(week: number, entitled: boolean): boolean {
   return !entitled && week > FREE_LIMITS.maxWeek;
 }

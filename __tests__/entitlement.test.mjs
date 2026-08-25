@@ -1,9 +1,15 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { PAYWALL_COPY } from '../content/copy.ts';
 import {
   isEntitled, daysUntilExpiry, emptyEntitlement, localGrant, projectFromProvider,
   trialExpiry, isGated, weekGated, ALWAYS_FREE_ROUTES, TIER_COMPARISON,
   BILLING_GRACE_DAYS, OFFLINE_GRACE_DAYS, PRICING, RENEWAL_TERMS, PRICE_NUMBERS, PLUS_ADDS, ALWAYS_FREE} from '../lib/entitlement.ts';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /* Entitlement.
  *
@@ -299,3 +305,91 @@ describe('the prices on the paywall are arithmetic, not typed literals', () => {
     assert.ok(ALWAYS_FREE.some((l) => /export|backup/i.test(l)), 'export must stay free');
   });
 });
+
+describe('every row of the paywall table is enforced somewhere in the app', () => {
+  /* This table is a promise made to somebody about to hand over money, so a row no code
+     backs is not a copy slip — it is a false statement of what is being sold, on the screen
+     where it costs the most.
+     Two rows were false. "The twelve weeks — Week 1 / All 12" led the table while
+     `weekGated()` had zero call sites, so the entire protocol was free; and "Test a
+     prediction" claimed experiments were paid when they are gated by `phase.id >= 3`, a
+     protocol gate every free user passes at week 7.
+     These assertions pin each surviving row to the call site that enforces it. They are
+     source greps because the enforcement lives inside React components, and the alternative
+     — trusting the table — is what produced the defect. */
+
+  const src = (rel) => readFileSync(join(ROOT, rel), 'utf8');
+
+  /* label fragment -> [file, pattern that must appear in it] */
+  const ENFORCED = [
+    ['mirror', 'app/mirror.tsx', /isGated\('\/mirror', entitled\)/],
+    ['Progress', 'app/(tabs)/progress.tsx', /if \(!entitled\)/],
+    ['reads', 'app/(tabs)/learn.tsx', /m\.free \|\| entitled/],
+    ['records', 'app/journal.tsx', /FREE_LIMITS\.thoughtRecordsPerMonth/],
+  ];
+
+  test('there is one enforcement point per row, and no orphan rows', () => {
+    assert.equal(
+      PLUS_ADDS.length, ENFORCED.length,
+      `the table has ${PLUS_ADDS.length} rows and ${ENFORCED.length} are pinned to code below. `
+      + 'A new row needs a call site and an entry here; a removed one needs both taken out.',
+    );
+  });
+
+  for (const [what, file, pattern] of ENFORCED) {
+    test(`the ${what} row is backed by ${file}`, () => {
+      assert.match(
+        src(file), pattern,
+        `the paywall sells this and ${file} no longer enforces it`,
+      );
+    });
+  }
+
+  test('nothing in the table claims a gate by protocol week', () => {
+    /* `weekGated` may exist; what must not exist is a claim that it is live. */
+    const claims = PLUS_ADDS.map((r) => `${r.label} ${r.free} ${r.plus}`).join(' ');
+    assert.doesNotMatch(
+      claims, /week/i,
+      'a row claims a week gate. Nothing calls weekGated(), so the protocol is free in full.',
+    );
+  });
+
+  test('and neither does the copy above it, or the store listing', () => {
+    /* The claim was in four places and was enforced in none. Fixing the table alone would
+       have left the line directly above it contradicting the table. */
+    assert.doesNotMatch(PAYWALL_COPY.sub, /week/i, 'the paywall subheadline claims a week gate again');
+    for (const f of ['fastlane/metadata/en-US/description.txt', 'fastlane/metadata/en-US/promotional_text.txt']) {
+      assert.doesNotMatch(
+        src(f), /week one is free|week one of the programme/i,
+        `${f} sells a free tier of "week one", which the app does not implement`,
+      );
+    }
+  });
+
+  test('weekGated stays unused, or the claim comes back with it', () => {
+    /* If somebody wires a week gate up, this fails — and the failure message is the list of
+       places that have to say so. That is the whole reason the function was kept rather than
+       deleted. */
+    const callSites = ['app', 'components', 'store', 'hooks']
+      .flatMap((dir) => walk(join(ROOT, dir)))
+      .filter((f) => /\.tsx?$/.test(f))
+      .filter((f) => /\bweekGated\s*\(/.test(readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')));
+    assert.deepEqual(
+      callSites, [],
+      'weekGated() now has a call site. The protocol is gated again, so PLUS_ADDS needs its '
+      + 'row back and PAYWALL_COPY.sub, description.txt and promotional_text.txt need the '
+      + 'claim restored.',
+    );
+  });
+});
+
+/** Recursive file list, so the call-site check cannot be defeated by a new subdirectory. */
+function walk(dir) {
+  const out = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, e.name);
+    if (e.isDirectory()) out.push(...walk(full));
+    else out.push(full);
+  }
+  return out;
+}

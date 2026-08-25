@@ -1201,3 +1201,45 @@ the blockers are paperwork rather than commits. `ci.yml` also gained `permission
 read` (the repo is public, and `release.yml` already had it), and there is a `dependabot.yml`
 — the import allowlist in `safety.test.mjs` is the only thing watching for a transitive
 dependency that starts phoning home, and it can only see what is already in the tree.
+
+### 12.6 The paywall table was selling two things the code does not gate
+
+Found by the App Store audit (§12.4), fixed 2026-08-23. The table on `app/paywall.tsx` is a
+promise made to somebody about to hand over money, so a row no code backs is not a copy slip —
+it is a false statement of what is being sold, on the screen where it costs the most.
+
+| Row | Claimed | Reality |
+|---|---|---|
+| **The twelve weeks — Week 1 / All 12** | weeks 2–12 are paid | `weekGated()` and `FREE_LIMITS.maxWeek` have **zero call sites**. The whole protocol has always been free. |
+| **Test a prediction — — / ✓** | experiments are paid | Gated by `phase.id >= 3` in `app/journal.tsx` — a *protocol* gate. Every free user gets them at week 7. |
+| Mirror practice — — / ✓ | paid | True: `isGated('/mirror', entitled)`. |
+| The full picture on Progress — — / ✓ | paid | True: `if (!entitled)` on everything below the hero. |
+| Short reads — 3 of 12 / All 12 | 3 free | True: `m.free \|\| entitled`, and 3 of 12 modules carry `free`. |
+| Take a thought apart — 5 a month / No limit | capped | True: `FREE_LIMITS.thoughtRecordsPerMonth`. |
+
+**The week claim was in four places and enforced in none**: the table row, `PAYWALL_COPY.sub`
+("Weeks 2 to 12 are how you change it" — the second line on the purchase screen),
+`fastlane/metadata/en-US/description.txt`, and `promotional_text.txt`. Fixing only the table
+would have left the line directly above it contradicting it, and the App Store listing
+asserting it to Apple. All four are corrected. The sub now names mirror practice, which is
+both genuinely behind the wall and the core mechanism of the protocol, so it is the strongest
+true thing available.
+
+**`weekGated()` is kept and documented as unused** rather than deleted, because the intent
+behind it may still be wanted. `__tests__/entitlement.test.mjs` now fails the moment it gains
+a call site, and the failure message lists the four places that have to say so again.
+
+**The games and tracks are absent from the table on purpose.** Four games and seven guided
+tracks are ungated. They are not added to `ALWAYS_FREE` either, because that list is an
+unconditional promise and nobody has decided to make one about them. Absent is accurate;
+promised is a business decision this file should not make on its own.
+
+**Every surviving row is now pinned to its call site by a test**, and each guard was verified
+to fail when the claim is put back — re-adding the week row, giving `weekGated` a call site,
+and restoring "Week one is free" to the store listing each turn the suite red.
+
+**The founder should know what this means commercially.** The free tier is far more generous
+than the paywall previously described: the entire twelve-week protocol, all four games and all
+seven tracks. That is now stated honestly rather than quietly. Whether it is the intended
+business is a decision, not a bug — and the choice is between wiring `weekGated` up and
+accepting the tier as it stands.
