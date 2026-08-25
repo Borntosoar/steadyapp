@@ -152,21 +152,39 @@ export default function Progress() {
    * §11b — but it is the highest-probability route by which this data ever leaves a phone,
    * and the UI was not treating it like one.
    *
-   * Written to the cache directory on purpose: the OS reclaims it under storage pressure, so
-   * a plaintext copy of the journal does not accumulate in the container forever just because
-   * somebody once tapped export. */
+   * Written to the cache directory, AND DELETED AGAIN AS SOON AS THE SHEET CLOSES.
+   *
+   * "The OS reclaims the cache under storage pressure" was the original reasoning, and it is
+   * not good enough. lib/crypto.ts names the threat model this app encrypts against —
+   * forensic extraction, a jailbroken device, anyone with file-level access to the container
+   * — and this file is the whole journal in the clear, sitting in that container until the OS
+   * happens to feel short of space. `wipeState()` does not reach it either, so after a single
+   * export the "Delete everything" button further down this screen stops being true.
+   *
+   * By the time `Share.share` resolves the destination has already taken its copy, so
+   * removing ours costs the person nothing. */
   const download = async (body: string, name: string, mime: string) => {
     if (Platform.OS === 'web') {
       const blob = new Blob([body], { type: mime });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
+      a.href = url;
       a.download = name;
+      /* Appended and removed rather than clicked while detached, and the object URL revoked
+         on the next tick rather than the same one. Chromium tolerates both shortcuts; Firefox
+         will not dispatch a click on an element outside the document, and Safari can abort a
+         download whose blob URL is revoked synchronously. This is the only backup route in an
+         app with no server, and the copy beside it promises this file is the only thing that
+         survives losing the phone. */
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(a.href);
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
       return;
     }
+    let file: InstanceType<typeof File> | null = null;
     try {
-      const file = new File(Paths.cache, name);
+      file = new File(Paths.cache, name);
       if (file.exists) file.delete();
       file.create();
       file.write(body);
@@ -176,6 +194,14 @@ export default function Progress() {
          person getting nothing — this is the recovery path, and a clumsy export beats no
          export when the alternative is losing everything. */
       await Share.share({ message: body });
+    } finally {
+      /* Best effort, and silent. A failure to clean up must not surface as a failed export
+         when the export itself succeeded. */
+      try {
+        if (file?.exists) file.delete();
+      } catch {
+        /* nothing useful to do, and nothing worth telling the user about */
+      }
     }
   };
 

@@ -6,6 +6,7 @@ import { Caption, H2, H3, BodySm, useTheme } from '../../components/ui';
 import { Frost, IconBadge, WeekStrip, Explain } from '../../components/frost';
 import { Finish } from '../../components/Finish';
 import { MomentCard } from '../../components/MomentCard';
+import { StorageNotice } from '../../components/StorageNotice';
 import { Atmosphere } from '../../components/Atmosphere';
 import {
   space, radius, type as t, atmosphereForScheme, elevation,
@@ -150,6 +151,18 @@ export default function Today() {
         showsVerticalScrollIndicator={false}
       >
         <View style={{ width: '100%', maxWidth: LAYOUT_MAX_WIDTH, paddingHorizontal: space.lg }}>
+          {/* THE STORAGE NOTICE BELONGS ON THE SCREEN THE APP OPENS TO.
+              Its own docblock said "It appears on Today and Progress". It did not — it was
+              mounted only on Progress. That matters because of what it says: that this session
+              is being written in PLAIN TEXT because the keychain was unreachable, or that
+              writes are locked after a quarantine and everything typed this session is being
+              discarded. Onboarding promises "nobody, including us, can read it", and the
+              sentence retracting that lived a tab away, behind a screen that leads with an
+              Anneal+ pitch for anyone unentitled.
+              It self-suppresses when storage is healthy, so on almost every launch this
+              renders nothing at all. */}
+          <StorageNotice />
+
           {/* Right padding reserves the corner the always-mounted Support pill sits in.
               Without it, a longer name — or any text-size setting above the default — runs
               the greeting straight under the pill, and the name is what disappears. Found at

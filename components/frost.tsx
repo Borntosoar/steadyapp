@@ -691,15 +691,29 @@ export function ListRow({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${title}, ${sub}${locked ? `, opens ${lock}` : ''}${done ? ', done' : ''}`}
+      /* DISABLED IS PASSED, not merely painted. A locked row's onPress is already a no-op at
+         every call site, but without this React Native never derives `accessibilityState` —
+         so VoiceOver announced "Mirror practice, opens Week 4, button", the person
+         double-tapped, and nothing happened: no focus move, no announcement, no explanation.
+         Every other gated control in the app is announced correctly because it passes
+         `disabled`. This one was the exception. */
+      disabled={locked}
       onPress={onPress}
       style={({ pressed }) => ({
         flexDirection: 'row',
-        alignItems: 'center',
+        /* Top-aligned rather than centred. At large text the title wraps to two lines and the
+           sub to three, and a 48pt disc centred against a 200pt block sits level with
+           nothing. */
+        alignItems: 'flex-start',
         gap: space.lg,
         paddingVertical: space.md,
         borderTopWidth: first ? 0 : StyleSheet.hairlineWidth,
         borderTopColor: c.line,
-        opacity: pressed ? 0.85 : locked ? 0.62 : 1,
+        /* The locked state is carried by the ink token and the lock label below, NOT by a
+           container opacity. React Native composites `opacity` over the whole subtree — text
+           together with everything under it — which is how dimmed rows elsewhere measured
+           2.92:1. __tests__/motif.test.mjs fails on it now. */
+        opacity: pressed ? 0.85 : 1,
       })}
     >
       <View
@@ -715,7 +729,7 @@ export function ListRow({
         <Glyph kind={glyph} color={c.accentDeep} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={[t.h3, { color: c.ink }]}>{title}</Text>
+        <Text style={[t.h3, { color: locked ? c.inkFaint : c.ink }]}>{title}</Text>
         <Text style={[t.caption, { color: c.inkFaint, marginTop: 2 }]}>{count ?? sub}</Text>
       </View>
       {locked ? (

@@ -188,7 +188,7 @@ function Overview({
             <Pressable
               key={d.id}
               accessibilityRole="button"
-              accessibilityLabel={d.title}
+              accessibilityLabel={isNext ? `${d.title}, next` : d.title}
               accessibilityState={{ disabled: !open }}
               disabled={!open}
               onPress={() => onOpen(d)}
@@ -199,17 +199,26 @@ function Overview({
                 borderRadius: radius.md,
                 padding: space.lg,
                 gap: space.xs,
-                /* Closed days are dimmed rather than hidden. Seeing what is coming is part
-                   of what makes a sequence feel like one, and a locked row with a padlock on
-                   it would read as a paywall on somebody's worst month. */
-                opacity: open ? 1 : 0.45,
               }}
             >
-              <Text style={[t.body, { color: c.ink }]}>
-                {isDone ? '✓  ' : ''}
+              {/* LATER DAYS ARE SET IN A QUIETER INK, NOT DIMMED AS A CONTAINER.
+                  Seeing what is coming is part of what makes a sequence feel like one, and a
+                  padlock would read as a paywall on somebody's worst month — that reasoning
+                  stands. The execution was wrong. `opacity: 0.45` on the Pressable composited
+                  the text AND its own card together against the ground, which measured
+                  2.92:1 in light and 3.50:1 in dark, and made the wallpaper show through the
+                  card so the row read as a render fault. `inkFaint` clears AA on every ground
+                  in the app, which __tests__/motif.test.mjs now checks across the whole
+                  stack, so the row stays legible while still reading as later.
+
+                  A leading mark carries the state as well, because a border colour alone is
+                  WCAG 1.4.1 — and green against warm grey at low saturation is the
+                  deuteranopic worst case. */}
+              <Text style={[t.body, { color: open ? c.ink : c.inkFaint }]}>
+                {isDone ? '✓  ' : isNext ? '→  ' : ''}
                 {d.title}
               </Text>
-              {open && <Text style={[t.caption, { color: c.inkFaint }]}>{d.about}</Text>}
+              <Text style={[t.caption, { color: c.inkFaint }]}>{d.about}</Text>
             </Pressable>
           );
         })}

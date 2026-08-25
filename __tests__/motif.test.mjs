@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { MOODS, groundFor, isDeep, scatter, MOTIF_MAX_OPACITY, STROKE } from '../lib/motif.ts';
 import { SCENES } from '../content/curveball.ts';
 import { palette, ATMOSPHERES } from '../constants/palette.ts';
+import { contrastOn, AA_BODY } from '../lib/color.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(join(ROOT, p), 'utf8');
@@ -171,40 +172,107 @@ describe('the scatter is stable, spread and in bounds', () => {
  * `surfaceStrong`, 0.17 alpha on the dark palette. Body ink over that pill measured 4.36:1
  * on the brightest tender stop, and 3.65:1 where a motif stroke crossed it. */
 
-const lin = (v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; };
-const hex = (h) => [0, 2, 4].map((i) => parseInt(h.replace('#', '').slice(i, i + 2), 16));
-const lum = (rgb) => 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
-const ratio = (a, b) => { const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x); return (hi + 0.05) / (lo + 0.05); };
-const rgba = (s) => {
-  const m = s.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/);
-  return m ? [[+m[1], +m[2], +m[3]], m[4] === undefined ? 1 : +m[4]] : [hex(s), 1];
-};
-const over = (fg, a, bg) => fg.map((ch, i) => ch * a + bg[i] * (1 - a));
+/* THIS BLOCK USED TO ASSERT NOTHING, AND THAT IS THE MOST IMPORTANT THING TO KNOW ABOUT IT.
+ *
+ * It had its own compositor whose `rgba()` parser fell back to `[hex(s), 1]` for anything it
+ * did not recognise. `surfaceSolid` is a plain hex, so the pill's alpha came back as 1 — and
+ * `over(pillRGB, 1, painted)` returns `pillRGB` exactly, discarding `painted`, which was the
+ * only place the motif entered the calculation. The stated worst case on one line was deleted
+ * by the next.
+ *
+ * So it computed two numbers, twenty times each: 15.44 and 11.93. It would have passed
+ * identically with MOTIF_MAX_OPACITY at 1.0, with every ramp pure white, or with ATMOSPHERES
+ * deleted. Meanwhile the screens it was written to protect moved onto the deep ramps and
+ * drifted to 2.83:1.
+ *
+ * The arithmetic now lives in lib/color.ts, which has unit tests of its own, and this walks
+ * the stack the renderer actually paints — ground, motif, surface — across all three INK
+ * TOKENS rather than only `ink`, because that is where every failure was. */
 
-describe('a thought is readable on every ground the game can put it on', () => {
-  /** AA for body text. `t.body` is 16px/400, so the large-text allowance does not apply. */
-  const AA = 4.5;
+describe('every ground the app can put text on is readable', () => {
+  const motifLayer = (isDark) => ({
+    color: isDark ? palette.dark.ink : palette.light.ink,
+    alpha: isDark ? MOTIF_MAX_OPACITY.dark : MOTIF_MAX_OPACITY.light,
+  });
+
+  /* 'none' is not hypothetical: the track overview sets BodySm/inkSoft straight onto the
+     ground with no card under it. */
+  const SURFACES = ['none', 'surface', 'surfaceSolid'];
 
   for (const isDark of [false, true]) {
     const p = isDark ? palette.dark : palette.light;
-    const [pillRGB, pillA] = rgba(p.surfaceSolid);
-    const ink = hex(p.ink);
-    const ceiling = isDark ? MOTIF_MAX_OPACITY.dark : MOTIF_MAX_OPACITY.light;
+    const name = isDark ? 'dark' : 'light';
 
     for (const mood of Object.keys(MOODS)) {
       const ramp = groundFor(mood, isDark);
-      test(`${isDark ? 'dark' : 'light'} · ${mood} · ${ramp}`, () => {
+
+      test(`${name} · ${mood} · ${ramp}`, () => {
         for (const stop of ATMOSPHERES[ramp]) {
-          const bg = hex(stop);
-          /* Worst case: a motif stroke at full ceiling directly under the pill. */
-          const painted = over(ink, ceiling, bg);
-          const pill = over(pillRGB, pillA, painted);
-          const r = ratio(ink, pill);
-          assert.ok(r >= AA,
-            `body ink on a thought pill over ${ramp} ${stop} is ${r.toFixed(2)}:1, under ${AA}`);
+          for (const surface of SURFACES) {
+            for (const token of ['ink', 'inkSoft', 'inkFaint']) {
+              const layers = [motifLayer(isDark)];
+              if (surface !== 'none') layers.push(p[surface]);
+              const r = contrastOn(p[token], stop, layers);
+              assert.ok(
+                r >= AA_BODY,
+                `${name} ${token} on ${surface} over ${ramp} ${stop} is ${r.toFixed(2)}:1, under ${AA_BODY}`,
+              );
+            }
+          }
         }
       });
     }
+  }
+
+  test('the motif is genuinely in the arithmetic', () => {
+    /* The assertion the old version needed and did not have. If the motif term falls out
+       again, this fails rather than going quietly green. */
+    const stop = ATMOSPHERES[groundFor('daylight', false)][0];
+    const bare = contrastOn(palette.light.inkFaint, stop);
+    const painted = contrastOn(palette.light.inkFaint, stop, [motifLayer(false)]);
+    assert.notEqual(
+      bare.toFixed(3), painted.toFixed(3),
+      'compositing the motif changed nothing, so it is not in the calculation',
+    );
+  });
+
+  test('and a translucent surface never makes text worse than bare ground', () => {
+    /* Frost exists to help text. On the dark palette it used to hurt it, because `surface`
+       was a near-white mirrored over from the light palette. */
+    for (const mood of Object.keys(MOODS)) {
+      for (const isDark of [false, true]) {
+        const p = isDark ? palette.dark : palette.light;
+        const stop = ATMOSPHERES[groundFor(mood, isDark)][3];
+        const bare = contrastOn(p.inkFaint, stop);
+        const onFrost = contrastOn(p.inkFaint, stop, [p.surface]);
+        assert.ok(
+          onFrost >= bare,
+          `${isDark ? 'dark' : 'light'} ${mood}: a Frost panel reads ${onFrost.toFixed(2)}:1 ` +
+          `against ${bare.toFixed(2)}:1 on bare ground — the surface token is working backwards`,
+        );
+      }
+    }
+  });
+});
+
+describe('container dimming does not push text under AA', () => {
+  /* React Native composites `opacity` over the WHOLE subtree — text and its own card together
+     — against whatever is behind, which collapses the two toward each other. Nothing modelled
+     that, and the dimmed future-day rows on a track measured 2.92:1 in light.
+     A screen that wants to de-emphasise something dims the INK TOKEN, not the container:
+     inkFaint clears AA on every ground above, and a container opacity does not. */
+  const FILES = ['app/track/[id].tsx', 'components/frost.tsx'];
+
+  for (const file of FILES) {
+    test(`${file} does not dim a container that holds text`, () => {
+      const src = read(file).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+      const hit = src.match(/opacity:\s*[\w!.]+\s*\?\s*1\s*:\s*(0\.\d+)/);
+      assert.equal(
+        hit, null,
+        hit && `dims a container to ${hit[1]}. Dim the ink token instead — a container opacity ` +
+        'composites the text and its own card together and no palette guarantee survives it.',
+      );
+    });
   }
 });
 

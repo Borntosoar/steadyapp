@@ -4,6 +4,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { useTheme } from './ui';
 import { space, type as t } from '../constants/theme';
 import { BREATH } from '../content/exercises.ts';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 
 /* 4-7-8 paced breathing.
  *
@@ -25,30 +26,55 @@ export function BreathCircle({
   tone?: 'accent' | 'light';
 }) {
   const c = useTheme();
+  const reduced = useReducedMotion();
   const scale = useRef(new Animated.Value(0.55)).current;
   const [phase, setPhase] = useState<Phase>('inhale');
   const [cycle, setCycle] = useState(1);
 
+  /* THE CALLBACKS LIVE IN A REF, AND THAT IS A BUG FIX RATHER THAN A STYLE CHOICE.
+     This effect used to depend on `[onCycle, onDone, scale]`. Both callbacks are inline
+     arrows at the call site, so each gets a new identity on every render of the parent — and
+     `onDone` causes one, because it sets state. So the instant the fourth cycle finished the
+     effect tore down and ran again: the screen showed "Four cycles done" and a Done button
+     while the circle underneath started pacing from cycle one and kept going for another
+     seventy-six seconds. On the calm-down path, for somebody who arrived dysregulated.
+     The component owns the schedule and must not restart because its parent re-rendered. */
+  const cbs = useRef({ onCycle, onDone });
+  cbs.current = { onCycle, onDone };
+
   useEffect(() => {
     let cancelled = false;
+    let current: Animated.CompositeAnimation | null = null;
+    const timers: ReturnType<typeof setTimeout>[] = [];
 
     const step = (to: number, seconds: number, p: Phase) =>
       new Promise<void>((resolve) => {
         if (cancelled) return resolve();
         setPhase(p);
-        Animated.timing(scale, {
+        /* REDUCE MOTION: the pacing stays, the movement goes. hooks/useReducedMotion.ts sets
+           the rule — every animation collapses to something static — and this is the largest
+           sustained motion in the app, a circle scaling continuously for seventy-six seconds,
+           which never honoured it. The phase label and the cycle counter carry the exercise
+           perfectly well on their own; QuietCircle below already does exactly this. */
+        if (reduced) {
+          const timer = setTimeout(resolve, seconds * 1000);
+          timers.push(timer);
+          return;
+        }
+        current = Animated.timing(scale, {
           toValue: to,
           duration: seconds * 1000,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: false,
-        }).start(() => resolve());
+        });
+        current.start(() => resolve());
       });
 
     const run = async () => {
       for (let n = 1; n <= BREATH.cycles; n++) {
         if (cancelled) return;
         setCycle(n);
-        onCycle?.(n);
+        cbs.current.onCycle?.(n);
         await step(1, BREATH.inhale, 'inhale');
         // Hold keeps the circle expanded rather than freezing mid-motion.
         await step(1, BREATH.hold, 'hold');
@@ -56,15 +82,20 @@ export function BreathCircle({
       }
       if (!cancelled) {
         setPhase('done');
-        onDone?.();
+        cbs.current.onDone?.();
       }
     };
 
     void run();
     return () => {
       cancelled = true;
+      timers.forEach(clearTimeout);
+      /* Stop the in-flight timing as well as flagging the loop. `cancelled` alone left a
+         four-to-eight-second animation running against a detached tree — no setState escaped,
+         because of the guards, but it is pure cost on the way out of a screen. */
+      current?.stop();
     };
-  }, [onCycle, onDone, scale]);
+  }, [reduced, scale]);
 
   const r = size / 2 - 8;
   const label =

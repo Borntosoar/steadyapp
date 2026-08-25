@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, H1, BodySm, Caption, Options } from '../components/ui';
@@ -44,12 +44,33 @@ export default function CheckIn() {
   const [result, setResult] = useState<ReturnType<typeof computeReclaimed> | null>(null);
 
   /* Selecting an answer moves on by itself, after a beat long enough to see the selection
-     land. Without the pause the screen changes before the tap has registered visually and
-     it reads as a glitch rather than as progress. */
+     land. Without the pause the screen changes before the tap has registered visually and it
+     reads as a glitch rather than as progress.
+
+     ONE PENDING ADVANCE AT A TIME, AND IT IS CANCELLABLE. Those 260ms are a window in which
+     the screen has not changed yet, so a second tap — a change of mind, or a double-tap on a
+     five-option list — used to queue a SECOND timer. Two `setStep(s => s + 1)` calls skip a
+     question outright: the urge question never appeared, `urge` stayed null, and `save()`
+     wrote `urge ?? 0` — a hard zero the person never entered, into the record that drives the
+     urge chart and the clinician-facing export. It also broke the back button, whose effect a
+     queued timer would silently undo. */
+  const pending = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelAdvance = () => {
+    if (pending.current) {
+      clearTimeout(pending.current);
+      pending.current = null;
+    }
+  };
+  useEffect(() => cancelAdvance, []);
+
   const advance = <T,>(set: (v: T) => void, isLast: boolean) => (v: T) => {
     set(v);
     if (isLast) return;
-    setTimeout(() => setStep((s) => s + 1), 260);
+    cancelAdvance();
+    pending.current = setTimeout(() => {
+      pending.current = null;
+      setStep((s) => s + 1);
+    }, 260);
   };
 
   const save = () => {
@@ -149,7 +170,7 @@ export default function CheckIn() {
 
   return (
     <Ground>
-      <TopBar onBack={() => (step > 0 ? setStep(step - 1) : router.back())} />
+      <TopBar onBack={() => { cancelAdvance(); return step > 0 ? setStep(step - 1) : router.back(); }} />
 
       <Steps total={steps.length} current={step} />
 

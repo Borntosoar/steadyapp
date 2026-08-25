@@ -1060,3 +1060,107 @@ guard checks the claim against the actual day count.
 **All seven survey shapes now have exactly one track, `looking` included**, and the test that
 used to carve out the exception now asserts the rule — inverted rather than deleted, because
 the reasoning is the part worth keeping.
+
+## 12. The audit pass, and what it found
+
+Six agents were run over the whole app on 2026-08-23: security, React Native correctness,
+App Store readiness, accessibility and visual design, latent logic bugs, and the build
+pipeline. What follows is what was fixed. §12.4 is what was not.
+
+### 12.1 The dead test that was hiding the others
+
+`__tests__/motif.test.mjs` computed contrast with its own compositor, whose `rgba()` parser
+fell back to `[hex(s), 1]` for anything it did not recognise. `surfaceSolid` is a plain hex,
+so the pill's alpha came back as 1 — and `over(pillRGB, 1, painted)` returns `pillRGB`
+exactly, discarding the motif, which was the only reason the function was called. The stated
+worst case on one line was deleted by the next.
+
+It therefore computed two numbers, twenty times each: **15.44 and 11.93**. It would have
+passed with `MOTIF_MAX_OPACITY` at 1.0, with every ramp pure white, or with `ATMOSPHERES`
+deleted. `constants/palette.ts` opens by saying the previous generation of these guarantees
+"were asserted in comments instead, and they were wrong, by a factor of four in places, for
+months" — the replacement reproduced the defect one level down, in arithmetic that looked
+like proof.
+
+Behind it, four real failures, each verified independently before being fixed:
+
+| Failure | Measured | Fix |
+|---|---|---|
+| Dark ink on the grounds `groundFor` actually returns | `inkFaint` on `emberDeep[3]` **2.83:1** | All three deep ramps scaled into `night`'s luminance band (top stop 0.023). Proportional, so the gradient keeps its shape and both ramps keep their hue. |
+| `night` itself, with a motif over it | `inkFaint` on `night[2]` **4.44:1** | Same scaling. In dark the motif is LIGHT ink, so it raises the ground's luminance and costs contrast — the term nobody had modelled. |
+| Light `inkFaint` on any pale ramp plus motif | as low as **3.81:1** | `#5B6552` → `#505948`. The old value cleared AA with ~2% headroom and the motif was never in that budget. |
+| `Frost` on the dark palette | `inkFaint` **2.37:1** on a panel vs **3.00:1** on bare ground | `dark.surface` now darkens (`rgba(8,11,6,0.40)`). It was a near-white mirrored from the light palette, so the component that exists to help text was hurting it — and `surfaceSolid` darkens, so one screen had two surfaces with opposite elevation polarity. |
+
+The arithmetic now lives in `lib/color.ts` with **its own unit tests**, checked against the
+WCAG definitions rather than against its own output — black on white is 21:1, the primaries
+carry their stated coefficients, the linearisation knee is applied below 0.03928. The suite
+walks the stack the renderer actually paints (ground → motif → surface) across all three ink
+tokens, and asserts that removing the motif or the surface *changes the answer*, which is the
+assertion the old version needed and did not have.
+
+**Container opacity is now banned where it holds text.** RN composites `opacity` over the
+whole subtree, so the dimmed future-day rows on a track measured **2.92:1** and the wallpaper
+showed through the card. Later days are set in `inkFaint` at full opacity instead, keep their
+subtitle, and carry a `→` mark plus ", next" in the accessibility label — because a border
+colour alone was WCAG 1.4.1, and sage-on-warm-grey is the deuteranopic worst case.
+
+### 12.2 Security: the promise held at the centre and leaked at the edges
+
+No code path in the app can send user content off-device, and that is enforced by a test
+rather than by intent. The failures were all at the edges:
+
+- **Every export wrote the whole journal in plaintext to the app cache and left it there** —
+  where `wipeState()` does not reach, so after one export the "Delete everything" button on
+  that same screen stopped being true. Now deleted in a `finally` once the share sheet closes.
+- **The crash screen still used `Share.share({ message })`** — the text sheet whose leading
+  rows are Messages, Mail and WhatsApp, carrying every thought record and the relapse plan
+  including `whoToTell`. Progress was rewritten specifically to avoid that; this screen kept
+  it, and it fires when the person is most rattled. Now a file share, then deleted.
+- **`StorageNotice` was mounted only on Progress** despite its own docblock saying otherwise.
+  It is the sentence that retracts onboarding's "nobody, including us, can read it" when the
+  keychain is unreachable and the session is being written in plain text. Now on Today.
+- The web download path appended and removed the anchor and deferred `revokeObjectURL`, since
+  Firefox will not dispatch a click on a detached element and Safari can abort a download
+  whose blob URL is revoked in the same tick — and this is the only backup route in an app
+  with no server.
+
+### 12.3 The build pipeline could go green without running
+
+Three ways, all now closed and all three demonstrated rather than argued:
+
+1. **A signal-killed run exited 0.** `code` is `null` when a child dies from a signal, and
+   `process.exit(null)` exits zero. An OOM-killed suite printed nothing and CI recorded a pass.
+2. **`process.exit(0)` mid-file makes node report the whole file `ok`** — no `not ok` line
+   exists for the scanner to find. Stdout cannot reveal this, so there is now a floor on the
+   test count.
+3. **The glob was `__tests__/*.test.mjs`**, so a suite in a subdirectory ran zero times and
+   said nothing. `__tests__/helpers/` already established the habit.
+
+The reporter is also pinned and `NODE_OPTIONS` cleared on the child: failure detection reads
+TAP, and node only defaulted to TAP because stdout happened to be a pipe.
+
+**And preflight had a disarmed check reporting ✓.** With zero tags — which is where the repo
+is — the build-number monotonicity check compared nothing and printed a clean tick, in a file
+whose own header states that a disarmed check is a failing check. It now reports as skipped,
+which routes to the exit-2 path that already existed.
+
+### 12.4 What was found and NOT fixed
+
+Recorded rather than quietly dropped:
+
+- **The app cannot be submitted, and it is not a code problem.** `legal/entity.json` has no
+  `name`, and D-U-N-S → Apple Organization enrolment → a privacy-policy URL all hang off that
+  one null. Realistically four to eight weeks, dominated by third parties.
+- **`purchase()` grants paid access with no StoreKit and no money.** Preflight blocks on it;
+  CI does not run preflight.
+- **`usesNonExemptEncryption: false`** is declared while shipping a third-party 256-bit AEAD
+  over user content at rest, justified in the docs by "the app makes no network calls" — which
+  is not the EAR test. Needs somebody who does export compliance, not another opinion here.
+- **The age rating is planned as 4+** for an app whose first-run survey contains an explicit
+  self-harm tile and whose keywords include two clinical diagnoses.
+- **`weekGated()` and `FREE_LIMITS.maxWeek` have no call sites**, so the paywall's own table
+  describes a boundary the code does not enforce.
+- **iPad is declared supported with no iPad screenshots**, which blocks submission on its own.
+- `maxFontSizeMultiplier` is a no-op on react-native-web, so every text-size cap in the app
+  exists on one of two shipping targets. The tab bar overflows at 2.2x and the Support pill
+  occludes content on four screens that do not use `SUPPORT_PILL_CLEARANCE`.

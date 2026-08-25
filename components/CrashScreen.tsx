@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, Linking, Platform, Share } from 'rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from './ui';
 import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../constants/theme';
+import { File, Paths } from 'expo-file-system';
 import { exportJson } from '../lib/storage';
 import { useStore } from '../store/useStore';
 import { regionByKey } from '../constants/support';
@@ -42,15 +43,41 @@ export function CrashScreen({ error, onReset }: { error?: Error; onReset?: () =>
   const rescue = async () => {
     try {
       const json = exportJson(useStore.getState() as never);
+      const name = `anneal-backup-${new Date().toISOString().slice(0, 10)}.json`;
       if (Platform.OS === 'web') {
         const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `anneal-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(a.href);
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 0);
       } else {
-        await Share.share({ message: json });
+        /* SHARED AS A FILE, the same as the export on Progress, and for the same reason.
+           This path was still handing iOS a bare string, and `Share.share({ message })`
+           builds the TEXT sheet — whose leading rows are Messages, Mail and WhatsApp. The
+           string is every thought record, every urge trigger and the relapse plan including
+           whoToTell. Progress was rewritten specifically to stop that; this screen kept it,
+           and it fires at the moment the person is most rattled and least careful. A file url
+           with a .json extension leads with "Save to Files" instead.
+           Deleted again once the sheet closes, so a plaintext copy of the journal does not
+           outlive the crash it was rescued from. */
+        let file: InstanceType<typeof File> | null = null;
+        try {
+          file = new File(Paths.cache, name);
+          if (file.exists) file.delete();
+          file.create();
+          file.write(json);
+          await Share.share({ url: file.uri, title: name });
+        } finally {
+          try {
+            if (file?.exists) file.delete();
+          } catch {
+            /* nothing useful to do here */
+          }
+        }
       }
       setSaved('ok');
     } catch {

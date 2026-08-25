@@ -420,7 +420,25 @@ function previousRelease(currentTag) {
     return { skipped: 'git is not available here' };
   }
   const earlier = tags.filter((t) => t !== currentTag);
-  if (!earlier.length) return { tag: null, app: null };
+  /* NO EARLIER TAG MEANS THE CHECK CANNOT RUN, AND THAT IS NOT A PASS.
+     This used to return `{ tag: null, app: null }`, which reaches `check()` with no blockers
+     and no `skipped` — so the report printed a clean tick for a monotonicity check that had
+     compared nothing. The law stated at the top of this file is that a disarmed check is a
+     failing check; this was the one place that broke it.
+     It matters most at exactly zero tags, which is where the repo is. docs/DEPLOY.md §7.1 has
+     the first production build run by hand from a laptop to create signing credentials —
+     outside this pipeline, so preflight never sees it — and that build uploads CFBundleVersion
+     1. Nobody tags a credentials bootstrap. The next real release then builds buildNumber 1
+     again and App Store Connect rejects it as a duplicate, twenty to forty minutes after the
+     build started, which is the precise cost this check exists to avoid. */
+  if (!earlier.length) {
+    return {
+      skipped:
+        'there is no earlier v* tag, so the build number cannot be checked for monotonicity. '
+        + 'If a build has already been uploaded by hand (docs/DEPLOY.md §7.1), tag that commit '
+        + 'so this check has a floor to compare against.',
+    };
+  }
   const tag = earlier[0];
   try {
     return { tag, app: JSON.parse(git(['show', `${tag}:app.json`])) };

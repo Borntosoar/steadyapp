@@ -38,7 +38,12 @@ export const light = {
 
   ink: '#1E241B',
   inkSoft: '#414A3B',
-  inkFaint: '#5B6552',
+  /* Darkened from #5B6552. That value cleared AA on the pale ramps with about 2% of
+     headroom — and the motif is drawn ON TOP of the ramp at up to 0.10 of ink, which was
+     never in that budget. Every caption on a game or track screen sits on ramp-plus-motif
+     and measured 3.81-4.46:1. This clears 4.57:1 at the worst stop with the motif in the
+     stack, which is the number that matters because it is what gets rendered. */
+  inkFaint: '#505948',
 
   accent: '#46573B',
   accentDeep: '#35452C',
@@ -71,7 +76,14 @@ export const dark = {
 
   bg: '#12170F',
   bgDeep: '#0D110C',
-  surface: 'rgba(226,238,212,0.10)',
+  /* DARKENS. It used to be a near-white at 0.10, mirrored from the light palette without
+     re-deciding which way "raised" points in a dark room — so a Frost panel composited
+     BRIGHTER than its own ground and the component that exists to make text readable made
+     it worse: inkFaint on a panel over grove measured 2.37:1 against 3.00:1 bare. Worse
+     still, `surfaceSolid` darkens, so one screen had two surfaces with opposite elevation
+     polarity. Depth in dark comes from the TopEdge hairline, which constants/theme.ts
+     already says; the fill just has to get out of the way. */
+  surface: 'rgba(8,11,6,0.40)',
   surfaceStrong: 'rgba(226,238,212,0.17)',
   surfaceSolid: '#232D20',
   line: 'rgba(226,238,212,0.14)',
@@ -119,9 +131,23 @@ export const ATMOSPHERES: Record<AtmosphereKey, string[]> = {
      the artwork, so the ramp under it is a contrast requirement rather than a mood choice.
      `night` used to end at #616B49 — a mid olive lighter than the dark palette's own
      secondary ink, which is why every caption on a dark screen was invisible. */
-  night: ['#141A13', '#1B2418', '#232E1E', '#2B3824'],
-  grove: ['#16211A', '#22331F', '#2F4529', '#3E5735'],
-  emberDeep: ['#241209', '#3D2011', '#5A3219', '#7A4823'],
+  /* Scaled with the other two. `night` was the closest to right and still was not: a motif
+     stroke in DARK is LIGHT ink, so it raises the ground's luminance and costs contrast
+     rather than adding it — inkFaint over night[2] measured 4.44:1 with the motif in the
+     stack. All three deep ramps now top out at the same luminance, 0.023. */
+  night: ['#10150F', '#161D13', '#1C2518', '#222D1D'],
+  /* SCALED INTO NIGHT'S LUMINANCE BAND, and that is the whole of the correction.
+     `groundFor` hands these to every track and game screen, and those screens set palette
+     ink directly on them — so they are reading surfaces, whatever the comment above says
+     about immersive scenes. They were far too bright for that: emberDeep reached #7A4823,
+     where dark inkFaint measured 2.83:1 and inkSoft 4.18:1.
+     Scaled proportionally rather than clamped at the top, so the gradient keeps its shape
+     and both ramps keep their hue. The factors (0.67 and 0.64) were chosen to land their
+     luminance spread on `night`'s — 0.009 to 0.035 — because `night` was the one deep ramp
+     that was always correct, and the honest fix is to bring the other two into the band it
+     already defines rather than to invent a new one. */
+  grove: ['#0C110D', '#121B10', '#182415', '#212D1C'],
+  emberDeep: ['#120905', '#1F1009', '#2E190D', '#3E2411'],
 };
 
 /** Ramps whose type is set in WHITE, not in palette ink.
