@@ -99,6 +99,11 @@ const PAGES = [
      thoughts into a mental-health app should be able to read what it does and does not do
      with AI before installing it, not after. */
   { slug: 'ai', file: 'ai-policy.md', nav: 'AI' },
+  /* Its own link, in the nav, on the homepage. RCW 19.373.020 requires the consumer health
+     data policy to be published as a "separate and distinct link" — a section inside the
+     privacy policy does not satisfy it, and the statute separately forbids the document from
+     carrying anything the Act does not require. Hence a file of its own. */
+  { slug: 'health-data', file: 'consumer-health-data-policy.md', nav: 'Health data' },
 ];
 
 const nav = PAGES.map((p) => `<a href="/${p.slug}.html">${p.nav}</a>`).join('\n      ');

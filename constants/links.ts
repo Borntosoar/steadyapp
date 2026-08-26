@@ -32,6 +32,14 @@ export const LINKS = {
    *  purchase — but it is the same site and it is the document App Review reads most
    *  closely. */
   disclaimer: `${SITE_ORIGIN}/disclaimer.html`,
+  /** Washington's My Health My Data Act requires this one to be its own prominent link
+   *  rather than a section of the privacy policy, so it has its own page and its own entry
+   *  here. See legal/consumer-health-data-policy.md for why it is a separate document. */
+  healthData: `${SITE_ORIGIN}/health-data.html`,
+  /** What the app does and does not do with AI. Published because somebody deciding whether
+   *  to type their worst thoughts into a mental-health app should be able to read that
+   *  before installing it. */
+  ai: `${SITE_ORIGIN}/ai.html`,
 } as const;
 
 /** The address a person can reach a human on.

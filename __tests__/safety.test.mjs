@@ -923,3 +923,56 @@ describe('what is on screen does not survive in the app-switcher snapshot', () =
       'the cover is translucent or blurred, so the snapshot still contains readable text');
   });
 });
+
+describe('the camera creates no biometric identifier, and the policy says so', () => {
+  /* Illinois BIPA, Texas CUBI and Washington's biometric statute all turn on a TEMPLATE being
+     created — a scan of face geometry — not on a camera being switched on. BIPA expressly
+     excludes photographs, attaches $1,000/$5,000 per-violation statutory damages, and carries
+     a private right of action. A live preview that produces nothing is outside all three.
+     What would put the app inside them is one line of somebody's future work: face detection,
+     face landmarking, an on-device face model, an ARKit face anchor, a Vision landmark
+     request, or a "line your face up here" guide. Any of those creates a scan of face
+     geometry, and being on-device would then be a much weaker defence than it sounds, because
+     BIPA §15(b) regulates COLLECTION rather than retention — and §15(a) requires a public
+     retention schedule to exist BEFORE any collection begins.
+     So this is a tripwire, not a description. */
+
+  test('nothing in the source detects, tracks or measures a face', () => {
+    const FACE = /FaceDetector|face-detector|faceDetection|detectFaces|VNDetectFaceLandmarks|ARFaceAnchor|ARFaceTracking|faceLandmarks|FaceMesh|faceGeometry|BlazeFace/i;
+    for (const f of FILES) {
+      assert.doesNotMatch(withoutComments(f.src), FACE,
+        `${f.path} looks at the face in the frame. That creates a scan of face geometry and `
+        + 'puts the app inside BIPA, CUBI and Washington RCW 19.375 — see the note in '
+        + 'legal/privacy-policy.md §4, and read BIPA §15(a) before writing another line.');
+    }
+  });
+
+  test('no face or biometric package is installed', () => {
+    const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+    const names = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies });
+    for (const n of names) {
+      assert.ok(!/face|biometric|vision-camera|mediapipe/i.test(n),
+        `package.json installs "${n}", which may process faces. See legal/privacy-policy.md §4.`);
+    }
+  });
+
+  test('the mirror renders the camera with no ref, so capture is unreachable', () => {
+    /* Not merely unused — structurally unreachable. takePictureAsync and recordAsync are
+       methods on the ref, and there is no ref. */
+    const mirror = withoutComments(readFileSync(join(ROOT, 'components/MirrorSurface.tsx'), 'utf8'));
+    assert.doesNotMatch(mirror, /takePictureAsync|recordAsync|captureRef|toDataURL|drawImage/,
+      'the mirror can now capture. Nothing in this app may.');
+    const tag = mirror.slice(mirror.indexOf('<NativeCamera'), mirror.indexOf('<NativeCamera') + 200);
+    assert.doesNotMatch(tag, /\bref=/,
+      'the CameraView has a ref, which makes takePictureAsync reachable');
+  });
+
+  test('and the privacy policy states it, in the words the statutes use', () => {
+    const policy = readFileSync(join(ROOT, 'legal/privacy-policy.md'), 'utf8')
+      .replace(/<!--[\s\S]*?-->/g, '');
+    assert.match(policy, /biometric identifier/i,
+      'the privacy policy no longer states that no biometric identifier is collected');
+    assert.match(policy, /scan of face geometry/i,
+      'the policy no longer uses the statutory phrase, which is the one that matters');
+  });
+});

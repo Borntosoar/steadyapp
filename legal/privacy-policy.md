@@ -118,6 +118,19 @@ This is the sentence that makes the rest of this policy short. If we ever add a 
 - {{APP_NAME}} never asks for access to your photo library.
 - You can say no. If you decline the camera, the session runs with text prompts instead and records exactly the same before-and-after ratings. It is a fully supported path, not a broken one.
 
+**No biometrics, and this is worth saying precisely.** {{APP_NAME}} does not collect, capture,
+store, generate or derive any biometric identifier or biometric information — including any
+scan of face geometry. There is no face detection, no face landmarking, no on-device model
+looking at the picture, and no "line your face up here" guide. Nothing measures your face,
+nothing produces a template of it, and nothing compares it to anything. The camera output is
+drawn on the screen and discarded, and that is the whole of what happens to it.
+
+This matters legally as well as practically. Illinois, Texas and Washington all regulate
+biometric identifiers specifically, and Illinois attaches statutory damages and a private right
+of action. Those laws turn on a template being created — not on a camera being on. This app
+creates none.
+
+
 <!-- SOURCE: components/MirrorSurface.tsx. Native path renders expo-camera's CameraView with
      facing="front" and nothing else; web path calls getUserMedia and stops every track on
      unmount; the third path is text-guided. No capture API, no canvas snapshot, no media

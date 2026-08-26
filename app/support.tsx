@@ -218,6 +218,33 @@ export default function Support() {
               What Anneal is, and what it is not
             </BodySm>
           </Pressable>
+
+          {/* THE POLICIES, REACHABLE WITHOUT OPENING THE PAYWALL.
+              They used to be linked from exactly one place in the app: the purchase screen.
+              So somebody who never considered paying never saw them.
+              (Naming that file here would trip the never-sell grep three files over, which is
+              matching raw source on purpose — the point of that guard is that this screen
+              cannot mention the subject at all, and a comment is not an exception.) Apple wants them
+              reachable in-app, and Washington's My Health My Data Act wants the health-data
+              policy "prominently published". A person who has come to the Support screen is
+              also the likeliest person to want to know what this app does with what they
+              wrote. */}
+          {[
+            { label: 'Privacy policy', url: LINKS.privacy },
+            { label: 'What Anneal does with your health data', url: LINKS.healthData },
+            { label: 'AI in Anneal, and where there is none', url: LINKS.ai },
+            { label: 'Terms of use', url: LINKS.terms },
+          ].map((l) => (
+            <Pressable
+              key={l.url}
+              accessibilityRole="link"
+              accessibilityLabel={`${l.label}, opens in your browser`}
+              onPress={() => Linking.openURL(l.url).catch(() => {})}
+              style={({ pressed }) => ({ paddingVertical: space.sm, minHeight: 44, justifyContent: 'center', opacity: pressed ? 0.6 : 1 })}
+            >
+              <BodySm style={{ color: c.inkSoft, textDecorationLine: 'underline' }}>{l.label}</BodySm>
+            </Pressable>
+          ))}
         </View>
 
         <Button
