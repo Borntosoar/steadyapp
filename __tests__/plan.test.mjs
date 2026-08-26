@@ -282,3 +282,69 @@ describe('onboarding stores the two answers it says it uses', () => {
       'the hard-day screen editorialises about what they wanted back');
   });
 });
+
+describe('the numbers in the store listing and the paywall match the code', () => {
+  /* All four of these were found by sweeping user-facing strings against the data behind
+     them, and all four are the same shape as the Learn header: a claim a reader or a reviewer
+     can check, that nothing was holding to the thing it describes. */
+
+  test('the listing counts countries, not regions', () => {
+    /* SUPPORT_REGIONS has 31 entries, but the 31st is key 'other' / "Somewhere else", which
+       IS the international directory. The listing said "31 countries and a verified
+       international directory", counting the directory twice. */
+    const support = readFileSync(join(ROOT, 'constants/support.ts'), 'utf8');
+    const keys = [...support.matchAll(/^\s*key:\s*'([^']+)'/gm)].map((m) => m[1]);
+    const countries = keys.filter((k) => k !== 'other').length;
+    assert.ok(countries > 20, `only counted ${countries} regions — has the scan broken?`);
+    const listing = readFileSync(join(ROOT, 'fastlane/metadata/en-US/description.txt'), 'utf8');
+    assert.match(listing, new RegExp(`Crisis lines for ${countries} countries`),
+      `there are ${countries} countries plus a directory, and the listing says something else`);
+  });
+
+  test('the release notes do not sell a cadence the app does not have', () => {
+    /* "Twelve weeks, one practice a week" — the same claim the Learn header had to drop.
+       PRACTICE_DAYS_PER_WEEK is 4, and the modules are not one a week either. */
+    const notes = readFileSync(join(ROOT, 'fastlane/metadata/en-US/release_notes.txt'), 'utf8');
+    assert.doesNotMatch(notes, /one practice a week/i,
+      'the release notes claim one practice a week; the protocol asks for four days');
+  });
+
+  test('nothing claims cancelling is fewer taps than subscribing', () => {
+    /* Subscribing is one tap — yearly is pre-selected and the button is the whole flow.
+       Cancelling on iOS is six screens deep in Settings. It was a claim about money, on the
+       screen asking for the money, and no code in this repository can make it true. */
+    /* Comments stripped first. Both files now carry a note explaining what the line used to
+       say, and a guard that fires on its own explanation is a guard people delete. */
+    const strip = (x) => x.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, '');
+    for (const rel of ['app/paywall.tsx', 'content/copy.ts']) {
+      assert.doesNotMatch(strip(readFileSync(join(ROOT, rel), 'utf8')),
+        /fewer taps than (it took to|signing up)/i,
+        `${rel} claims cancelling takes fewer taps than subscribing`);
+    }
+  });
+
+  test('every statement of the trial-reminder window matches when it fires', () => {
+    /* lib/moments.ts fires on `left <= 2`. The user-facing string said two days and was
+       right; three separate code comments said three days, which is how the string gets
+       "corrected" to the wrong number by the next person to touch it. */
+    const moments = readFileSync(join(ROOT, 'lib/moments.ts'), 'utf8');
+    const window = moments.match(/left <= (\d+) && left >= 0/);
+    assert.ok(window, 'the trial-ending window is no longer readable by this test');
+    const days = Number(window[1]);
+    const WORD = ['zero', 'one', 'two', 'three', 'four'];
+    for (const rel of ['app/paywall.tsx', 'content/copy.ts', 'components/MomentCard.tsx']) {
+      const src = readFileSync(join(ROOT, rel), 'utf8');
+      for (const [, said] of src.matchAll(/last (\w+) days/gi)) {
+        assert.equal(said.toLowerCase(), WORD[days],
+          `${rel} says the reminder covers the last ${said} days; it fires on the last ${WORD[days]}`);
+      }
+    }
+  });
+
+  test('the reminder says where it actually appears', () => {
+    /* It said "a reminder here", on the paywall. MomentCard renders on Today. */
+    const paywall = readFileSync(join(ROOT, 'app/paywall.tsx'), 'utf8');
+    assert.doesNotMatch(paywall, /a reminder here in the last/i,
+      'the paywall says the trial reminder appears on the paywall; it appears on Today');
+  });
+});

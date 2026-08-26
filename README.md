@@ -47,7 +47,7 @@ is a supported path — the session runs text-guided instead. Nothing is capture
 either way.
 
 ```bash
-npm test          # 575 tests, no test runner to install — node --test
+npm test          # 1283 tests, no test runner to install — node --test
 npm run typecheck # tsc --noEmit
 ```
 
@@ -88,7 +88,7 @@ the hard-day path, and all crisis support are free forever and always within two
 
 ## Screens
 
-**Onboarding** — five steps, disclaimer-gated. Captures the four-question baseline that
+**Onboarding** — seven steps, disclaimer-gated. Captures the four-question baseline that
 every later number is measured against.
 
 **Home** — reclaimed hours, dominant. One recommended action, not a menu of nine. Week
@@ -119,7 +119,7 @@ summary, a plain-text export to hand a clinician, and a full backup file. Both e
 are free on every tier — onboarding promises them as the only backup, so selling them
 would make that sentence false.
 
-**Support** — region-selectable crisis lines (CA/US/UK/AU/other) and guidance on finding
+**Support** — region-selectable crisis lines (30 countries, plus an international directory) and guidance on finding
 a clinician who treats this specifically. Free, always, one tap from every screen.
 
 ---

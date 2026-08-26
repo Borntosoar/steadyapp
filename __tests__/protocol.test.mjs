@@ -131,7 +131,7 @@ describe('recommendedAction returns exactly one action', () => {
   const base = {
     week: 1,
     checkedInToday: false,
-    modulesReadThisWeek: 0,
+    hasUnreadForThisWeek: true,
     mirrorThisWeek: 0,
     recordsThisWeek: 0,
   };
@@ -141,9 +141,27 @@ describe('recommendedAction returns exactly one action', () => {
     assert.equal(recommendedAction({ ...base, week: 9 }).route, '/checkin');
   });
 
+  test('the reading card comes back every week, not only the first time ever', () => {
+    /* This was `modulesReadThisWeek: number`, fed `readModules.length` — an all-time count.
+       So the moment somebody read one module, ever, the branch was dead and "Read this week"
+       never returned, on the card whose entire job is to say what to do next. `readModules`
+       carries no timestamps, so "this week" was never computable from it; the question the
+       data can answer is whether anything DUE is still unread.
+       The rename also caught a hole here: these tests passed the old field name, so after the
+       rename they were handing the function `undefined` and still going green. */
+    const done = { ...base, checkedInToday: true, hasUnreadForThisWeek: false };
+    const due = { ...base, checkedInToday: true, hasUnreadForThisWeek: true };
+    assert.equal(recommendedAction({ ...due, week: 1 }).label, 'Read this week');
+    assert.notEqual(recommendedAction({ ...done, week: 1 }).label, 'Read this week',
+      'the card shows with nothing left to read');
+    /* And having read something in week 1 must not silence it in week 2. */
+    assert.equal(recommendedAction({ ...due, week: 2 }).label, 'Read this week',
+      'reading once turned the card off for the rest of the programme');
+  });
+
   test('phase 1 never recommends mirror work', () => {
     for (const week of [1, 2, 3]) {
-      const a = recommendedAction({ ...base, week, checkedInToday: true, modulesReadThisWeek: 2 });
+      const a = recommendedAction({ ...base, week, checkedInToday: true, hasUnreadForThisWeek: false });
       assert.notEqual(a.route, '/mirror', `week ${week} must not send someone to exposure yet`);
     }
   });

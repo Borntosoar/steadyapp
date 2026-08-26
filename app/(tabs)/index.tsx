@@ -82,13 +82,21 @@ export default function Today() {
   };
 
   /* The specific piece, not the list. */
+  /* Openable = free, or paid and subscribed. This used to be `m.free` alone, so a subscriber
+     who had read the three free week-one pieces was pointed at nothing, or back at week one,
+     for the remaining eleven weeks of a programme they had paid for. */
+  const openable = (m: (typeof MODULES)[number]) => m.free || entitled;
+  const dueThisWeek = MODULES.filter((m) => m.week <= week && openable(m));
+  const hasUnreadForThisWeek = dueThisWeek.some((m) => !readModules.includes(m.slug));
   const nextUnreadModule =
-    MODULES.find((m) => m.free && !readModules.includes(m.slug))?.slug ?? null;
+    dueThisWeek.find((m) => !readModules.includes(m.slug))?.slug
+    ?? MODULES.find((m) => openable(m) && !readModules.includes(m.slug))?.slug
+    ?? null;
 
   const action = recommendedAction({
     week,
     checkedInToday,
-    modulesReadThisWeek: readModules.length,
+    hasUnreadForThisWeek,
     mirrorThisWeek: since(mirrorSessions),
     recordsThisWeek: since(thoughtRecords),
     nextUnreadModule,

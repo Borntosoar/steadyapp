@@ -194,7 +194,14 @@ export type RecommendedAction =
 export function recommendedAction(opts: {
   week: number;
   checkedInToday: boolean;
-  modulesReadThisWeek: number;
+  /** True when there is reading DUE for the week they are on that they have not done.
+   *
+   *  Was `modulesReadThisWeek: number`, passed `readModules.length` — an all-time count. So
+   *  the moment anybody read one module ever, `modulesReadThisWeek < 1` was false forever and
+   *  the "Read this week" card never came back, on a screen whose whole job is to say what to
+   *  do next. `readModules` is a list of slugs with no timestamps, so "this week" was never
+   *  computable from it; this is the question the data can actually answer. */
+  hasUnreadForThisWeek: boolean;
   mirrorThisWeek: number;
   recordsThisWeek: number;
   /** Slug of the next unread module, when there is one. Passed in rather than looked up so
@@ -204,7 +211,7 @@ export function recommendedAction(opts: {
    *  more decision at the exact moment the app has already decided for them. */
   nextUnreadModule?: string | null;
 }): RecommendedAction {
-  const { week, checkedInToday, modulesReadThisWeek, mirrorThisWeek, recordsThisWeek } = opts;
+  const { week, checkedInToday, hasUnreadForThisWeek, mirrorThisWeek, recordsThisWeek } = opts;
 
   if (!checkedInToday) {
     return {
@@ -217,7 +224,7 @@ export function recommendedAction(opts: {
   const phase = phaseForWeek(week);
 
   if (phase.id === 1) {
-    if (modulesReadThisWeek < 1) {
+    if (hasUnreadForThisWeek) {
       return {
         route: opts.nextUnreadModule ? `/module/${opts.nextUnreadModule}` : '/learn',
         label: 'Read this week',

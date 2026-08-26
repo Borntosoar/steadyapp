@@ -390,7 +390,7 @@ export default function Paywall() {
             </BodySm>
             {/* "We will remind you" was an overstatement, and writing the test for it is what
                 made that obvious. The reminder is an in-app card: it fires on each of the
-                last three days, outranks every other moment, and survives the distress
+                last two days, outranks every other moment, and survives the distress
                 suppression that silences everything else — but somebody who does not open
                 Anneal during that week is not reminded at all. For an app deliberately built
                 to be missable, with no streak and no nagging, that is a realistic person
@@ -399,10 +399,17 @@ export default function Paywall() {
                 does not depend on us first. A promise the app keeps only for people who
                 happened to show up is the kind of small untruth this whole screen exists not
                 to tell. */}
+            {/* NOT "in fewer taps than it took to start". Starting is one tap: yearly is
+                pre-selected above and the button below is the whole flow. Cancelling on iOS is
+                Settings, Apple ID, Subscriptions, this subscription, Cancel, Confirm. The claim
+                was false in the ordinary case, it is a claim about money made on the screen
+                asking for the money, and nothing in this repository can make it true. Replaced
+                with the part that IS true and is why the sentence existed: cancelling does not
+                require asking us, and the reminder really does fire. */}
             {plan !== 'lifetime' && (
               <BodySm style={{ marginTop: space.xs, textAlign: 'center', color: c.inkFaint }}>
-                Cancel any time in your app store settings, in fewer taps than it took to
-                start. Anneal will also show you a reminder here in the last two days.
+                Cancel any time in your app store settings. You never have to ask us, and we
+                cannot make it hard. Anneal shows a reminder on Today in the last two days.
               </BodySm>
             )}
             {/* Guideline 3.1.2 wants these reachable from inside the app, adjacent to the

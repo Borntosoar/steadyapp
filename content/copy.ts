@@ -139,14 +139,18 @@ export const MOMENT_COPY = {
   },
 
   /* The title here is a fallback. components/MomentCard.tsx computes the real one from the
-     entitlement's own expiry, because this notice fires on each of the last three days and
+     entitlement's own expiry, because this notice fires on each of the last two days and
      a fixed "Two days left" is wrong on two of them. The body is prefixed there with the
      actual amount and renewal cadence: "before it renews" without saying into what is not
      the warning the paywall promised. */
   'trial-ending': {
     eyebrow: 'Your free month',
     title: 'Your free month is nearly up',
-    body: 'We said we would tell you before this happened, so here it is. Nothing changes if you stay. Cancelling takes fewer taps than signing up did.',
+    /* "Cancelling takes fewer taps than signing up did" was not true. Signing up is one
+       tap; cancelling an iOS subscription is six screens deep in Settings. The honest version
+       of the same reassurance is that nobody has to be asked and nothing is made difficult,
+       which is the part this app can actually promise. */
+    body: 'We said we would tell you before this happened, so here it is. Nothing changes if you stay. To stop it, cancel in your app store settings — you never have to ask us.',
     action: 'Manage my plan',
     dismiss: 'Got it',
   },

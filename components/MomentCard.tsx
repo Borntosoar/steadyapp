@@ -30,7 +30,7 @@ const ROUTES: Record<string, string> = {
   'rate-app': '/progress',
 };
 
-/** The trial notice fires on each of the last three days and used to say "Two days left"
+/** The trial notice fires on each of the last two days and used to say "Two days left"
  *  on all of them. A warning that is wrong about when is not much of a warning. */
 function trialEndingTitle(daysLeft: number): string {
   if (daysLeft <= 0) return 'Your free month ends today';
