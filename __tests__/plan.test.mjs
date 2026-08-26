@@ -13,6 +13,7 @@ const { NAMES } = await import('../content/names.ts');
 const { MODULES } = await import('../content/modules.ts');
 const { normalise, emptyState, exportText } = await import('../lib/storage.ts');
 const { practiceTarget, recordPracticeDay } = await import('../lib/protocol.ts');
+const { planForProduct } = await import('../lib/entitlement.ts');
 
 /* The plan.
  *
@@ -346,5 +347,39 @@ describe('the numbers in the store listing and the paywall match the code', () =
     const paywall = readFileSync(join(ROOT, 'app/paywall.tsx'), 'utf8');
     assert.doesNotMatch(paywall, /a reminder here in the last/i,
       'the paywall says the trial reminder appears on the paywall; it appears on Today');
+  });
+});
+
+describe('the store listing and the product table hold up', () => {
+  test('every product id in the submission doc maps to a plan', () => {
+    /* docs/SUBMISSION-ANSWERS.md §5 names `steady_plus_onetime`. planForProduct matched
+       'month', 'year', 'annual' and 'life' — none of which that contains — so a real one-off
+       purchase resolved to null, cached `plan: null`, and broke every RENEWAL_TERMS[plan]
+       lookup downstream. The table is the source of truth for what exists in App Store
+       Connect, so it is what this walks. */
+    const doc = readFileSync(join(ROOT, 'docs/SUBMISSION-ANSWERS.md'), 'utf8');
+    const ids = [...doc.matchAll(/\|\s*`(steady_plus_[a-z_]+)`\s*\|/g)].map((m) => m[1]);
+    assert.ok(ids.length >= 3, `only found ${ids.length} product ids in the submission doc`);
+    for (const id of ids) {
+      assert.ok(planForProduct(id), `"${id}" is offered for sale and planForProduct returns null`);
+    }
+  });
+
+  test('the listing states no figure it cannot source', () => {
+    /* SAFETY.md: no claim ships without a graded source. The opening paragraph asserted
+       "most people who worry about how they look lose between one and five hours a day",
+       which appears in no proof point and no evidence file — and it is the first sentence a
+       reviewer reads in a Health & Fitness listing. The app measures the reader's own hours,
+       so it never needed a population statistic. */
+    const listing = readFileSync(join(ROOT, 'fastlane/metadata/en-US/description.txt'), 'utf8');
+    assert.doesNotMatch(listing, /most people[^.]*\b(hours?|minutes?)\b/i,
+      'the listing makes an unsourced claim about how long most people lose');
+    assert.doesNotMatch(listing, /between one and five hours/i,
+      'the unsourced hours figure is back in the listing');
+  });
+
+  test('and it stays inside the App Store length limit', () => {
+    const listing = readFileSync(join(ROOT, 'fastlane/metadata/en-US/description.txt'), 'utf8');
+    assert.ok(listing.length <= 4000, `the description is ${listing.length} characters; the cap is 4000`);
   });
 });

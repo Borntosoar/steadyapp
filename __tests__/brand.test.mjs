@@ -58,6 +58,14 @@ const ALLOWED = [
   // A real URL under an account that still hosts the site. Still an open decision —
   // legal/entity.json → siteOrigin.
   'borntosoar.github.io/steadyapp',
+  // In-app purchase identifiers, created in App Store Connect before the rename. Exactly the
+  // same case as the storage keys above: they are addresses that already exist, and a product
+  // id cannot be renamed without orphaning every purchase made against it. Listed one by one
+  // rather than as a `steady_plus_` prefix, so a NEW product cannot inherit the exemption by
+  // being named to match. See docs/SUBMISSION-ANSWERS.md §5.
+  'steady_plus_yearly',
+  'steady_plus_monthly',
+  'steady_plus_onetime',
   // The rename history, recorded on purpose at the definitions it explains.
   'Steady → Cairn → Anneal',
   'The app was called Steady, then briefly Cairn, before it was called Anneal',

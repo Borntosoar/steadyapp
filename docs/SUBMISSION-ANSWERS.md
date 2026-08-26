@@ -34,7 +34,9 @@ customers exactly as you will see it. Use it to open everything.
 
 WHAT IS FREE AND MUST STAY FREE: grounding, breathing, the hard-day path, the daily
 check-in, and the crisis line directory. These are never behind a payment and are reachable
-in two taps from any screen via the Support control in the top right.
+in two taps from any screen: the Support control in the top right is one tap from anywhere,
+and the top of that screen lists breathing, grounding, the hard-day path and the check-in
+as direct rows. Tapping any of them opens the exercise itself, not a menu.
 
 MEDICAL POSITIONING. Anneal is educational self-help built on the methods used in cognitive
 behavioural therapy for body dysmorphic disorder. It is not therapy, does not diagnose, does

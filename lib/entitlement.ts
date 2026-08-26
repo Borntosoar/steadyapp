@@ -444,3 +444,22 @@ export function weekGated(week: number, entitled: boolean): boolean {
 export function effectiveWeek(week: number, entitled: boolean): number {
   return entitled ? week : Math.min(week, FREE_LIMITS.maxWeek);
 }
+
+/** Maps a store product identifier back onto a Plan. Kept beside the seam because it is
+ *  the one piece of the mapping that depends on how products were named in App Store
+ *  Connect, and it is the piece most likely to be wrong on the first attempt. */
+export function planForProduct(productId: string | null | undefined): Plan | null {
+  if (!productId) return null;
+  if (productId.includes('month')) return 'monthly';
+  if (productId.includes('year') || productId.includes('annual')) return 'yearly';
+  /* `onetime` and `one_time` map here too. docs/SUBMISSION-ANSWERS.md §5 names the
+     non-consumable `steady_plus_onetime`, which contains none of the strings above — so a
+     real one-off purchase would have returned null, cached `plan: null`, and broken every
+     RENEWAL_TERMS[plan] lookup downstream. A test now walks the product table in that
+     document and requires each id to resolve. */
+  if (productId.includes('life') || productId.includes('onetime')
+      || productId.includes('one_time') || productId.includes('one-time')) {
+    return 'lifetime';
+  }
+  return null;
+}

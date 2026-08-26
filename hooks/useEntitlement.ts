@@ -42,6 +42,7 @@ import { useStore } from '../store/useStore';
 import {
   isEntitled,
   localGrant,
+  planForProduct,
   projectFromProvider,
   trialExpiry,
   type Entitlement,
@@ -52,17 +53,15 @@ import {
 /** The entitlement identifier configured in the RevenueCat dashboard. */
 export const ENTITLEMENT_ID = 'anneal_plus';
 
-/** Maps a store product identifier back onto a Plan. Kept beside the seam because it is
- *  the one piece of the mapping that depends on how products were named in App Store
- *  Connect, and it is the piece most likely to be wrong on the first attempt. */
-export function planForProduct(productId: string | null | undefined): Plan | null {
-  if (!productId) return null;
-  if (productId.includes('month')) return 'monthly';
-  if (productId.includes('year') || productId.includes('annual')) return 'yearly';
-  if (productId.includes('life')) return 'lifetime';
-  return null;
-}
-
+/* `planForProduct` moved to lib/entitlement.ts.
+ *
+ * It is a pure string-to-Plan mapping with no React and no native dependency, and it lived
+ * here — beside the RevenueCat seam — because the naming is an App Store Connect concern.
+ * That reasoning was fine and the consequence was not: this file imports the store, so it
+ * cannot load under bare node, so nothing in the suite could test the mapping. It shipped
+ * unable to resolve `steady_plus_onetime`, one of the three products in the price table.
+ * Policy that decides what somebody has bought belongs in the file that already calls itself
+ * "the single place that decides", where a test can reach it. */
 /** REVENUECAT INTEGRATION POINT — replace with a real `getCustomerInfo()` call.
  *  Returning null means "could not ask", which is deliberately distinct from returning
  *  `{ active: false }`, which means "asked, and they do not have it". The first must not

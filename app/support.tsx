@@ -8,6 +8,8 @@ import { space, radius, type as t } from '../constants/theme';
 import { useStore } from '../store/useStore';
 import { SUPPORT_REGIONS, regionByKey, THERAPY_GUIDANCE, SUPPORT_INTRO } from '../constants/support';
 import { LINKS, SUPPORT_EMAIL, SUPPORT_MAILTO } from '../constants/links';
+import { Frost, ListRow } from '../components/frost';
+import { NAMES } from '../content/names';
 
 /* Free, always, and never gated. Action first — someone reading this may be in real
  * distress, so the numbers come before any explanation, and nothing on the way to them
@@ -49,6 +51,41 @@ export default function Support() {
             overreaction.
           </BodySm>
         </View>
+
+        {/* CALMING DOWN, FROM THE ONE SCREEN THAT IS ALWAYS ONE TAP AWAY.
+            SAFETY.md §4 promises grounding, breathing, the hard-day path and the daily
+            check-in are "reachable in two taps or fewer from any screen", and
+            docs/SUBMISSION-ANSWERS.md tells App Review they are reachable "via the Support
+            control in the top right". Neither was true: this screen held crisis lines, a
+            therapist section and an email link, and nothing else. From Learn or Progress,
+            breathing was three taps; from inside a module, four.
+            The Support pill is one tap from everywhere, so putting the tools here is what
+            makes the sentence true rather than what makes it shorter — and somebody who
+            opened this screen in distress is exactly who wants them.
+            Direct routes, not the grounding menu: a menu would put these back at three. */}
+        <Caption style={{ marginTop: space.xxl, marginBottom: space.sm }}>
+          Before you call, or instead
+        </Caption>
+        <Frost>
+          {[
+            { title: 'Slow your breathing', sub: 'About eighty seconds', route: '/grounding?tool=breath', glyph: 'rings' as const },
+            { title: 'Name five things', sub: 'About two minutes. No timer, no rush', route: '/grounding?tool=senses', glyph: 'senses' as const },
+            { title: 'Today is a hard day', sub: 'Nothing is required of you', route: '/grounding?mode=hard', glyph: 'wave' as const },
+            { title: NAMES.checkin.title, sub: NAMES.checkin.sub, route: '/checkin', glyph: 'plus' as const },
+          ].map((r, i) => (
+            <ListRow
+              key={r.route}
+              glyph={r.glyph}
+              title={r.title}
+              sub={r.sub}
+              first={i === 0}
+              onPress={() => router.push(r.route)}
+            />
+          ))}
+        </Frost>
+        <Caption style={{ marginTop: space.sm }}>
+          These are free forever, and they never need a subscription.
+        </Caption>
 
         <Caption style={{ marginTop: space.xxl, marginBottom: space.sm }}>Where are you?</Caption>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>

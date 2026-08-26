@@ -778,3 +778,48 @@ describe('SAFETY.md itself stays in place', () => {
     assert.ok(safety.split(/\s+/).length > 900, 'SAFETY.md is too thin to be useful');
   });
 });
+
+describe('the two-taps promise is a route, not a sentence', () => {
+  /* SAFETY.md §4: grounding, breathing, the hard-day path, the daily check-in and all crisis
+     support are "reachable in two taps or fewer from any screen", and docs/SUBMISSION-ANSWERS
+     tells App Review the same thing "via the Support control in the top right".
+     Neither was true. The Support screen held crisis lines, a therapist section and an email
+     link — nothing else — so from Learn or Progress breathing was three taps and from inside
+     a module it was four. A reviewer testing the sentence as written would have found it
+     false, which is the worst place for this particular claim to fail.
+     The Support pill is one tap from every screen (mounted outside the Stack in
+     app/_layout.tsx), so a direct row on that screen is the second tap. These assertions hold
+     the routes rather than the prose. */
+
+  const support = withoutComments(readFileSync(join(ROOT, 'app/support.tsx'), 'utf8'));
+
+  test('the Support screen carries a direct route to each thing SAFETY.md names', () => {
+    for (const [what, route] of [
+      ['breathing', "'/grounding?tool=breath'"],
+      ['grounding', "'/grounding?tool=senses'"],
+      ['the hard-day path', "'/grounding?mode=hard'"],
+      ['the daily check-in', "'/checkin'"],
+    ]) {
+      assert.ok(
+        support.includes(route),
+        `SAFETY.md promises ${what} is two taps from any screen, and app/support.tsx has no `
+        + `row for ${route} — from Learn it is three taps, from a module four`,
+      );
+    }
+  });
+
+  test('they open the exercise, not the menu that lists it', () => {
+    /* `/grounding` with no parameter is the menu, which would put every one of these back at
+       three taps and quietly make the promise false again. */
+    assert.doesNotMatch(support, /router\.push\('\/grounding'\)/,
+      'the Support screen routes to the grounding menu, which is one tap too many');
+  });
+
+  test('and the claim still says two, in both places that make it', () => {
+    for (const rel of ['SAFETY.md', 'docs/SUBMISSION-ANSWERS.md']) {
+      assert.match(readFileSync(join(ROOT, rel), 'utf8'), /two taps/i,
+        `${rel} no longer states the two-taps promise — if that is deliberate, the other file `
+        + 'and the App Review notes need to agree');
+    }
+  });
+});
