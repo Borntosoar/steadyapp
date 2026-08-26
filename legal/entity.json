@@ -12,5 +12,8 @@
 
   "contactEmail": "steadyrecovery3@gmail.com",
 
+  "_CLINICAL_REVIEW": "One of \"none\", \"informal\" or \"formal\". Decides the paragraph legal/ai-policy.md prints about clinical oversight. \"none\" is publishable and is the answer most self-help apps should be giving; what is not publishable is leaving a reader to assume. See CLINICAL_REVIEW_TEXT in site/entity.mjs for the exact wording each one prints.",
+  "clinicalReview": null,
+
   "quebecCounselConfirmed": false
 }

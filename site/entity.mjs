@@ -37,6 +37,11 @@ export const TOKENS = {
   PROVINCE: 'province',
   CONTACT_EMAIL: 'contactEmail',
   SITE_ORIGIN: 'siteOrigin',
+  /* Rendered into legal/ai-policy.md §2. Not a name or an address but a PARAGRAPH, because
+     the three honest answers to "has a clinician reviewed this?" are different documents, not
+     different words in the same sentence — and the wrong one is a claim about clinical
+     oversight that does not exist. See CLINICAL_REVIEW_TEXT below. */
+  CLINICAL_REVIEW: 'clinicalReviewText',
   /* Resolved from app.json rather than entity.json — app.json is already the single source
      for what the app is called, and two places to write a product name is the drift this
      whole file exists to stop. `fill` merges it in. */
@@ -74,7 +79,44 @@ const TRADE_NAME_FORMS = [
  *  belonging to a different company. It is the address printed in the cookie policy and the
  *  address the app's own privacy link opens, so it has to be one answer and it has to be
  *  one this entity controls. */
-export const REQUIRED = ['name', 'kind', 'address', 'province', 'siteOrigin'];
+export const REQUIRED = ['name', 'kind', 'address', 'province', 'siteOrigin', 'clinicalReview'];
+
+/** The three answers to "has a clinician reviewed the content?", as the paragraph each one
+ *  prints into legal/ai-policy.md.
+ *
+ *  A field rather than prose in the document because only the publisher knows the answer, and
+ *  because the difference between them is legally material: "reviewed by a named clinician"
+ *  is a claim about professional oversight, and making it when it is not true is exactly the
+ *  kind of statement that turns an FTC §5 problem into an easy one for somebody else to
+ *  prove. `null` is the honest starting state and site/build.mjs refuses to publish on it. */
+export const CLINICAL_REVIEW_TEXT = {
+  none:
+    'No clinician has reviewed this content. It was written against published clinical '
+    + 'literature by somebody who is not a clinician, and it has not been checked by one. If '
+    + 'that matters to you — and it reasonably might — that is the honest answer, and it is '
+    + 'the reason every screen in this app points at real help rather than standing in for it.',
+  informal:
+    'This content has been read informally by a qualified clinician, who gave comments that '
+    + 'were acted on. That is not a formal clinical review, it is not an endorsement, and it '
+    + 'does not make this app treatment. It means a professional has read it and it is not '
+    + 'wrong in the ways a professional would notice.',
+  formal:
+    'This content has been formally reviewed by a qualified clinician. That review covers the '
+    + 'accuracy of the methods described and the safety of the language used. It is not an '
+    + 'endorsement of this app, it does not make it treatment, and it does not mean the app '
+    + 'has been trialled — it has not.',
+};
+
+/** Marker returned when nobody has answered yet. Token-shaped so `fill` refuses to publish
+ *  on it — a second net under `problems()`, because this is the one field where the failure
+ *  mode is a document that quietly says nothing about clinical oversight. */
+const UNANSWERED = '{{CLINICAL_REVIEW_UNANSWERED}}';
+
+/** The paragraph for the current answer, or a marker the publish check will catch. */
+export function clinicalReviewText(entity) {
+  const key = entity.clinicalReview;
+  return CLINICAL_REVIEW_TEXT[key] ?? UNANSWERED;
+}
 
 /** Canada's provinces and territories, spelled as the documents will print them. Checked
  *  rather than accepted freely, because "ON" or "Ontario, Canada" in a choice-of-law clause
@@ -193,6 +235,16 @@ export function problems(entity, dir = LEGAL_DIR) {
     out.push(`entity.json: kind must be one of ${KINDS.map((k) => `"${k}"`).join(' or ')}.`);
   }
 
+  if (entity.clinicalReview && !(entity.clinicalReview in CLINICAL_REVIEW_TEXT)) {
+    out.push(
+      `entity.json: clinicalReview must be one of ` +
+        `${Object.keys(CLINICAL_REVIEW_TEXT).map((k) => `"${k}"`).join(', ')}. It decides what ` +
+        `legal/ai-policy.md says about clinical oversight, and "none" is a perfectly ` +
+        `publishable answer — an unreviewed app that says so is in a much better position ` +
+        `than one that implies otherwise by staying quiet.`
+    );
+  }
+
   out.push(...legalNameProblems(entity));
 
   /* Quebec is a different legal package, not a different word in the same one.
@@ -235,10 +287,17 @@ export function problems(entity, dir = LEGAL_DIR) {
 export function fill(md, entity, root = ROOT) {
   /* The product name comes from app.json, everything else from entity.json. Merged here so
      callers pass one object and cannot forget which fact lives where. */
-  const values = { appName: appName(root), ...entity };
+  const values = { appName: appName(root), ...entity, clinicalReviewText: clinicalReviewText(entity) };
   let out = md;
   for (const [token, field] of Object.entries(TOKENS)) {
     out = out.replaceAll(`{{${token}}}`, String(values[field]));
+  }
+  if (out.includes(UNANSWERED)) {
+    throw new Error(
+      'entity.json: "clinicalReview" is unanswered, so legal/ai-policy.md would publish with '
+      + 'nothing where the clinical-oversight paragraph goes. Set it to one of '
+      + `${Object.keys(CLINICAL_REVIEW_TEXT).map((k) => `"${k}"`).join(', ')}.`
+    );
   }
   const leftover = out.match(/\{\{[A-Z_]+\}\}/);
   if (leftover) throw new Error(`unsubstituted token ${leftover[0]}`);

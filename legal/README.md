@@ -17,6 +17,7 @@ worth paying for, so the review is an hour rather than a project.
 | `medical-disclaimer.md` | Not therapy, not a diagnosis, not a medical device | Recommended, and also belongs in-app |
 | `cookie-policy.md` | Marketing site only. The app has no cookies. | Only once a site exists |
 | `accessibility-statement.md` | What is supported, and the gaps, stated honestly | No, but publish it anyway |
+| `ai-policy.md` | No AI in the product; the content was AI-drafted. Both, plainly. | No, but publish it anyway |
 
 ## Why the privacy policy is unusual, and why that is worth protecting
 

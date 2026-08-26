@@ -98,6 +98,10 @@ describe('a half-answered entity cannot be published', () => {
   const complete = {
     name: 'Example Ltd.', kind: 'corporation', address: '1 Example St, Toronto ON',
     province: 'Ontario', contactEmail: 'a@b.co', siteOrigin: 'https://x.co',
+    /* "none" is a publishable answer and the one most self-help apps should be giving. What
+       is not publishable is leaving it null, which is how legal/ai-policy.md ends up silent
+       on clinical oversight and a reader ends up assuming. */
+    clinicalReview: 'none',
     quebecCounselConfirmed: false,
   };
 
@@ -171,6 +175,7 @@ describe('a half-answered entity cannot be published', () => {
 describe('substitution', () => {
   const entity = {
     name: 'Example Ltd.', address: '1 Example St', province: 'Ontario', contactEmail: 'a@b.co',
+    clinicalReview: 'none',
   };
 
   test('fills every token', () => {
@@ -193,6 +198,20 @@ describe('substitution', () => {
     for (const { file, md } of DOCS) {
       assert.doesNotThrow(() => fill(md, entity), `${file} has a token that will not resolve`);
     }
+  });
+
+  test('an unanswered clinical review refuses to publish, and says which field', () => {
+    /* A second net under problems(). This is the one field whose failure mode is a document
+       that publishes looking complete while saying nothing about clinical oversight — so the
+       substitution step refuses it too, and names the field rather than reporting a stray
+       token the reader would have to go and decode. */
+    const { clinicalReview, ...unanswered } = entity;
+    assert.throws(
+      () => fill('{{CLINICAL_REVIEW}}', unanswered),
+      /clinicalReview.*unanswered|unanswered.*clinicalReview/s,
+    );
+    assert.throws(() => fill('{{CLINICAL_REVIEW}}', { ...entity, clinicalReview: 'probably' }),
+      /clinicalReview/, 'an unrecognised answer was substituted rather than refused');
   });
 });
 
@@ -323,7 +342,7 @@ describe('the entity name has to be a legal person', () => {
      it matters — a term enforced by, or against, a company that does not exist. */
   const base = {
     address: '1 Road', province: 'Ontario', contactEmail: 'a@b.co',
-    siteOrigin: 'https://x.co', quebecCounselConfirmed: false,
+    siteOrigin: 'https://x.co', clinicalReview: 'none', quebecCounselConfirmed: false,
   };
   const brand = appName();
 

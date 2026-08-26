@@ -95,6 +95,10 @@ const PAGES = [
   { slug: 'disclaimer', file: 'medical-disclaimer.md', nav: 'Medical disclaimer' },
   { slug: 'accessibility', file: 'accessibility-statement.md', nav: 'Accessibility' },
   { slug: 'cookies', file: 'cookie-policy.md', nav: 'Cookies' },
+  /* Published rather than kept internal. Somebody deciding whether to type their worst
+     thoughts into a mental-health app should be able to read what it does and does not do
+     with AI before installing it, not after. */
+  { slug: 'ai', file: 'ai-policy.md', nav: 'AI' },
 ];
 
 const nav = PAGES.map((p) => `<a href="/${p.slug}.html">${p.nav}</a>`).join('\n      ');
