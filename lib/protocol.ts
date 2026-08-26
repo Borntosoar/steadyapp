@@ -117,30 +117,46 @@ export function isWeekUnlocked(week: number, state: ProtocolState): boolean {
   return state.completedWeeks.includes(week - 1);
 }
 
-export function weekProgress(state: ProtocolState): {
+export function weekProgress(state: ProtocolState, perWeek?: number): {
   done: number;
   required: number;
   complete: boolean;
   remaining: number;
 } {
+  const required = practiceTarget(perWeek);
   const done = new Set(state.weekPracticeDates).size;
   return {
     done,
-    required: PRACTICE_DAYS_PER_WEEK,
-    complete: done >= PRACTICE_DAYS_PER_WEEK,
-    remaining: Math.max(0, PRACTICE_DAYS_PER_WEEK - done),
+    required,
+    complete: done >= required,
+    remaining: Math.max(0, required - done),
   };
+}
+
+/** How many practice days a week this person is working to.
+ *
+ *  Onboarding asks — "Pick the number you can hit on a bad week, not a good one" — and says
+ *  the answer "sets your week". It set nothing: PRACTICE_DAYS_PER_WEEK was a hard 4 for
+ *  everybody, so somebody who honestly answered "two days" was held to double it and would
+ *  never see a week complete.
+ *
+ *  Clamped to the range the picker offers rather than trusted. This value arrives from stored
+ *  JSON, and a corrupt or hand-edited 0 would make `done >= required` true on an empty week
+ *  and advance the protocol on every render. */
+export function practiceTarget(perWeek?: number): number {
+  if (typeof perWeek !== 'number' || !Number.isFinite(perWeek)) return PRACTICE_DAYS_PER_WEEK;
+  return Math.min(7, Math.max(1, Math.round(perWeek)));
 }
 
 /** Record a practice day against the current week and advance when the minimum is met.
  *  Pure: returns the next state rather than mutating. */
-export function recordPracticeDay(state: ProtocolState, dayKey: string): ProtocolState {
+export function recordPracticeDay(state: ProtocolState, dayKey: string, perWeek?: number): ProtocolState {
   if (state.weekPracticeDates.includes(dayKey)) return state;
 
   const weekPracticeDates = [...state.weekPracticeDates, dayKey];
   const done = new Set(weekPracticeDates).size;
 
-  if (done < PRACTICE_DAYS_PER_WEEK) return { ...state, weekPracticeDates };
+  if (done < practiceTarget(perWeek)) return { ...state, weekPracticeDates };
 
   /* Week 12 is recorded as completed like any other week, and only then does the counter
      stop. Testing the ceiling first — which is what this used to do — meant week 12 could

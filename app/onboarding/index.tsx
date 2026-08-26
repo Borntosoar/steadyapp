@@ -91,7 +91,10 @@ export default function Onboarding() {
         avoidance: 'small',
         suds: 5,
       },
-      firstName.trim() || undefined
+      firstName.trim() || undefined,
+      /* Step five says "both get used", and for a while neither was. `days` sets the practice
+         target the week advances on; `wantBack` is what the hard-day path shows back. */
+      { practiceDaysPerWeek: days ?? undefined, wantBack },
     );
     acceptDisclaimer();
     router.replace('/');

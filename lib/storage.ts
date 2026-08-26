@@ -336,6 +336,17 @@ export function normalise(parsed: unknown): AppState {
   return {
     profile: {
       firstName: typeof profile.firstName === 'string' ? profile.firstName : undefined,
+      /* Both from step five of onboarding. `practiceDaysPerWeek` is left undefined rather
+         than defaulted here so that lib/protocol.ts owns the fallback in one place — and
+         `practiceTarget` clamps it, because a stored 0 would advance the protocol on an
+         empty week. */
+      practiceDaysPerWeek:
+        typeof profile.practiceDaysPerWeek === 'number' && Number.isFinite(profile.practiceDaysPerWeek)
+          ? profile.practiceDaysPerWeek
+          : undefined,
+      wantBack: typeof profile.wantBack === 'string' && profile.wantBack.trim()
+        ? profile.wantBack
+        : undefined,
       onboardedAt: strOrNull(profile.onboardedAt),
       disclaimerAcceptedAt: strOrNull(profile.disclaimerAcceptedAt),
       supportRegion: str(profile.supportRegion, base.profile.supportRegion),

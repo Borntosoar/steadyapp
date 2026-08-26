@@ -265,6 +265,8 @@ function HardDay({
 }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  /* Narrow selector — this screen must not re-render on every write elsewhere in the app. */
+  const wantBack = useStore((s) => s.profile.wantBack);
 
   /* Showing up on a hard day is logged the moment the screen opens. It is the single most
      clinically valuable thing someone can do on a bad day, so it must not depend on them
@@ -303,6 +305,20 @@ function HardDay({
             }}
           >
             <Text style={[t.display, onScene]}>{HARD_DAY.opening}</Text>
+
+            {/* THEIR OWN SENTENCE, HANDED BACK ON THE DAY IT IS FOR.
+                Onboarding asks "if you got an hour a day back, what would you do with it?" and
+                promises the answer is "what you will see on the days it is hard to start". It
+                was stored nowhere and shown nowhere. This is that day, and this is the screen.
+                Quoted verbatim, never paraphrased and never scored — the app does not get to
+                tell somebody whether they are living up to it. If they skipped the question,
+                nothing appears; an empty quotation mark would be worse than silence. */}
+            {wantBack ? (
+              <View style={{ marginTop: space.xl }}>
+                <Text style={[t.caption, onSceneSoft]}>What you said you wanted back</Text>
+                <Text style={[t.h2, onScene, { marginTop: space.xs }]}>{wantBack}</Text>
+              </View>
+            ) : null}
 
             <View style={{ marginTop: space.xxl }}>
               {HARD_DAY.options.map((o) => (

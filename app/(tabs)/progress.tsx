@@ -100,6 +100,8 @@ export default function Progress() {
   const urgeLogs = useStore((st) => st.urgeLogs);
   const mirrorSessions = useStore((st) => st.mirrorSessions);
   const protocol = useStore((st) => st.protocol);
+  /* Narrow, like the rest — only the practice target is read here. */
+  const practiceDaysPerWeek = useStore((st) => st.profile.practiceDaysPerWeek);
   const [exportFailed, setExportFailed] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const reset = useStore((st) => st.reset);
@@ -113,7 +115,7 @@ export default function Progress() {
   );
   const showNumber = reclaimed.hasData && reclaimed.sampleSize >= 3;
 
-  const wp = weekProgress(protocol);
+  const wp = weekProgress(protocol, practiceDaysPerWeek);
 
   /* Clamped, like every other screen that prints a week. This one was the loudest miss: the
      Progress tab said "Week 9 of 12" and lit the ninth pip while Today, Practice and Learn

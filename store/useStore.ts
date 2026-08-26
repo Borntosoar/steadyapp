@@ -31,7 +31,14 @@ interface StoreApi extends AppState {
   hydrate: () => Promise<void>;
   reset: () => Promise<void>;
 
-  completeOnboarding: (baseline: Baseline, firstName?: string) => void;
+  /** Everything the opening flow collects. `commitment` carries the two answers step five
+   *  calls "both of them yours, and both get used" — which was true of neither until this
+   *  signature grew to take them. */
+  completeOnboarding: (
+    baseline: Baseline,
+    firstName?: string,
+    commitment?: { practiceDaysPerWeek?: number; wantBack?: string },
+  ) => void;
   /** The opening survey. Answers and the shape they resolve to, both on device. */
   saveSurvey: (answers: SurveyAnswers, carrying: string) => void;
   /** Mark one day of a guided track finished. Idempotent — see lib/track.ts. */
@@ -228,12 +235,16 @@ export const useStore = create<StoreApi>((set, get) => ({
     persist(get, set);
   },
 
-  completeOnboarding: (baseline, firstName) => {
+  completeOnboarding: (baseline, firstName, commitment) => {
     set((s) => ({
       baseline,
       profile: {
         ...s.profile,
         firstName,
+        /* Both optional and both trimmed to undefined when blank, so an empty answer is an
+           absent field rather than an empty string sitting in the profile forever. */
+        practiceDaysPerWeek: commitment?.practiceDaysPerWeek,
+        wantBack: commitment?.wantBack?.trim() || undefined,
         onboardedAt: new Date().toISOString(),
       },
     }));
@@ -370,7 +381,9 @@ export const useStore = create<StoreApi>((set, get) => ({
          flipped from "week complete" back to "1 of 4 this week" mid-session.
          __tests__/protocol.test.mjs did exercise a same-day repeat, but only on day one —
          before any reset — so the reset path was never re-entered on the same key. */
-      protocol: alreadyToday ? s.protocol : recordPracticeDay(s.protocol, today),
+      protocol: alreadyToday
+        ? s.protocol
+        : recordPracticeDay(s.protocol, today, s.profile.practiceDaysPerWeek),
       pendingMilestone: milestone ?? s.pendingMilestone,
     });
     persist(get, set);

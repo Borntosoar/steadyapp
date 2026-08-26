@@ -185,6 +185,20 @@ export const PLAN_SECTIONS = [
 
 export interface Profile {
   firstName?: string;
+  /** Days a week this person said they could practise, chosen at onboarding.
+   *
+   *  Onboarding asks for it, says "The first sets your week", and used to throw it away —
+   *  `completeOnboarding` took only a baseline and a name, so picking "Two days a week" changed
+   *  nothing and `PRACTICE_DAYS_PER_WEEK = 4` decided for everybody. The screen also says
+   *  "Pick the number you can hit on a bad week, not a good one", which is advice that only
+   *  makes sense if the number is load-bearing.
+   *  Optional, so anybody who onboarded before this falls back to the protocol default. */
+  practiceDaysPerWeek?: number;
+  /** Their own answer to "if you got an hour a day back, what would you do with it?"
+   *
+   *  Onboarding promises this is "what you will see on the days it is hard to start". It was
+   *  stored nowhere and rendered nowhere. See app/grounding.tsx for where it now appears. */
+  wantBack?: string;
   onboardedAt: string | null;
   disclaimerAcceptedAt: string | null;
   /** Region key for support lines. */

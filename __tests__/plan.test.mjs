@@ -12,6 +12,7 @@ const { PLAN_SECTION_COPY, PLAN_INTRO } = await import('../content/exercises.ts'
 const { NAMES } = await import('../content/names.ts');
 const { MODULES } = await import('../content/modules.ts');
 const { normalise, emptyState, exportText } = await import('../lib/storage.ts');
+const { practiceTarget, recordPracticeDay } = await import('../lib/protocol.ts');
 
 /* The plan.
  *
@@ -194,3 +195,90 @@ function walk(dir) {
   }
   return out;
 }
+
+describe('onboarding stores the two answers it says it uses', () => {
+  /* Step five reads: "Two answers, both of them yours, and both get used. The first sets your
+     week. The second is what you will see on the days it is hard to start."
+     Neither was stored. `completeOnboarding` took a baseline and a name; `days` and `wantBack`
+     were local state that went out of scope on navigation. "The first sets your week" was
+     false twice over — PRACTICE_DAYS_PER_WEEK was a hard 4, so picking "Two days a week" left
+     somebody held to double what they said they could manage, on a screen that had just told
+     them to answer for a bad week. */
+
+  const onboarding = read('app/onboarding/index.tsx');
+
+  test('the flow passes both answers to the store', () => {
+    assert.match(onboarding, /completeOnboarding\([\s\S]{0,700}?practiceDaysPerWeek/,
+      'onboarding still drops the practice-days answer on the floor');
+    assert.match(onboarding, /completeOnboarding\([\s\S]{0,700}?wantBack/,
+      'onboarding still drops the "what would you do with it" answer');
+  });
+
+  test('the store writes them onto the profile', () => {
+    const store = read('store/useStore.ts');
+    /* The IMPLEMENTATION, not the interface. `completeOnboarding: (` matches the type
+       declaration first, which names the fields whether or not anything writes them — so this
+       guard passed with the persistence deleted until a mutation proved it. */
+    const at = store.indexOf('completeOnboarding: (baseline, firstName, commitment) => {');
+    assert.ok(at > 0, 'completeOnboarding no longer takes the commitment answers');
+    const body = store.slice(at, store.indexOf('\n  },', at));
+    assert.match(body, /practiceDaysPerWeek/, 'completeOnboarding does not persist the practice target');
+    assert.match(body, /wantBack/, 'completeOnboarding does not persist what they want back');
+  });
+
+  test('the practice target is what the week actually advances on', () => {
+    /* The claim is "the first sets your week", so the number has to reach the two functions
+       that decide when a week is done. */
+    const protocol = read('lib/protocol.ts');
+    assert.match(protocol, /export function practiceTarget/, 'there is no per-person target');
+    assert.match(protocol, /recordPracticeDay\([^)]*perWeek/, 'advancing a week ignores the answer');
+    assert.match(read('store/useStore.ts'), /recordPracticeDay\([\s\S]{0,120}?practiceDaysPerWeek/,
+      'the store advances the week without passing the target');
+  });
+
+  test('a corrupt target cannot advance the protocol on an empty week', () => {
+    /* It arrives from stored JSON. A 0 would make `done >= required` true immediately. */
+    for (const [input, want] of [[0, 1], [-4, 1], [99, 7], [2.4, 2], [NaN, 4], [undefined, 4]]) {
+      assert.equal(practiceTarget(input), want, `practiceTarget(${input}) should clamp to ${want}`);
+    }
+  });
+
+  test('somebody who answered two days completes a week in two', () => {
+    let state = { currentWeek: 1, weekPracticeDates: [], completedWeeks: [], avoidedConditions: [] };
+    state = recordPracticeDay(state, '2026-08-24', 2);
+    assert.equal(state.currentWeek, 1, 'one day should not finish a two-day week');
+    state = recordPracticeDay(state, '2026-08-25', 2);
+    assert.equal(state.currentWeek, 2, 'two days did not complete a two-day week');
+    assert.deepEqual(state.completedWeeks, [1]);
+  });
+
+  test('and the default is unchanged for everybody who onboarded before this', () => {
+    let state = { currentWeek: 1, weekPracticeDates: [], completedWeeks: [], avoidedConditions: [] };
+    for (const d of ['2026-08-21', '2026-08-22', '2026-08-23']) state = recordPracticeDay(state, d);
+    assert.equal(state.currentWeek, 1, 'three days completed a week with no answer stored');
+    state = recordPracticeDay(state, '2026-08-24');
+    assert.equal(state.currentWeek, 2, 'the four-day default no longer applies');
+  });
+
+  test('what they want back is shown on the day it was promised for', () => {
+    /* "what you will see on the days it is hard to start" — that is the hard-day screen. */
+    const grounding = read('app/grounding.tsx');
+    assert.match(grounding, /s\.profile\.wantBack/, 'it is not read from the profile');
+    /* The RENDER, not just the mention. Reading it into a variable and never drawing it is
+       the state this whole section exists to prevent, and greping for the identifier alone
+       passed with the render replaced by `{false ? (` — proved by mutation. */
+    assert.match(grounding, /\{wantBack \? \(/,
+      'wantBack is read but never conditionally rendered on the hard-day screen');
+    assert.match(grounding, /\{wantBack\}/, 'the value itself is never drawn');
+  });
+
+  test('it is quoted, never scored', () => {
+    /* SAFETY.md tone: the app does not tell somebody whether they are living up to their own
+       sentence. It hands it back and says nothing about it. */
+    const grounding = read('app/grounding.tsx');
+    const near = grounding.slice(Math.max(0, grounding.indexOf('{wantBack ?') - 700),
+                                 grounding.indexOf('{wantBack ?') + 700);
+    assert.doesNotMatch(near, /still|yet|closer|progress|on track|remember why/i,
+      'the hard-day screen editorialises about what they wanted back');
+  });
+});

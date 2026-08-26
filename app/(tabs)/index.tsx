@@ -63,7 +63,7 @@ export default function Today() {
      that is what the paywall sells. lib/entitlement.ts has the reasoning and the two safety
      rules that fix its scope. */
   const week = effectiveWeek(protocol.currentWeek, entitled);
-  const wp = weekProgress(protocol);
+  const wp = weekProgress(protocol, profile.practiceDaysPerWeek);
   const sky = atmosphereForScheme(c.isDark);
 
   const reclaimed = computeReclaimed(
