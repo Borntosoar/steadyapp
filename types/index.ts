@@ -147,13 +147,41 @@ export interface ProtocolState {
   relapsePlan?: RelapsePlan;
 }
 
+/** The plan written in week eleven, for a bad stretch later.
+ *
+ *  SIX FIELDS, BECAUSE THE MODULE TEACHES SIX SECTIONS. This carried four — earlyWarnings,
+ *  whatHelps, whoToTell, firstStep — while content/modules.ts walks the reader through six
+ *  numbered ones, NAMES.plan.sub says "Six sections, written now for later", and that module's
+ *  takeaway reads "Finish all six sections." Nothing wrote any of them: `setRelapsePlan` had
+ *  zero call sites, both modules whose action button reads "Write your plan" navigated to the
+ *  journal and to another article, and the export guarded on a field that could never be set.
+ *  The App Store description sold it too.
+ *
+ *  The field names match the module's own headings so the screen and the reading agree word
+ *  for word. `triggers` and `notDoing` are the two the old shape had no room for, and
+ *  `whatHelps` becomes `firstMoves`: the module asks for exactly three ranked actions, which
+ *  is a more useful and more answerable thing than "what helps". */
 export interface RelapsePlan {
+  /** 1. The observable things that show up days before the spiral. */
   earlyWarnings: string;
-  whatHelps: string;
+  /** 2. Sleep, stress, events, cycles, people, platforms. */
+  triggers: string;
+  /** 3. Exactly three, ranked, small enough to do on the worst day. */
+  firstMoves: string;
+  /** 4. The behaviours they will be pulled toward, decided against in advance. */
+  notDoing: string;
+  /** 5. One name, one method, and the opening sentence written out. */
   whoToTell: string;
-  firstStep: string;
+  /** 6. The point where this stops being the right tool, plus real contact details. */
+  myLine: string;
   updatedAt: string;
 }
+
+/** The six, in the order the module teaches them. Single source for the screen, the export
+ *  and the tests — a seventh section added here appears in all three without further edits. */
+export const PLAN_SECTIONS = [
+  'earlyWarnings', 'triggers', 'firstMoves', 'notDoing', 'whoToTell', 'myLine',
+] as const satisfies readonly (keyof Omit<RelapsePlan, 'updatedAt'>)[];
 
 export interface Profile {
   firstName?: string;

@@ -311,7 +311,7 @@ export const MODULES: LearnModule[] = [
     kicker: 'One bad week is not the thing coming back. Reading it that way is.',
     sections: [{ at: 4, label: 'Setbacks are triggered, not random' }, { at: 7, label: 'What to do when it happens', replaces: true }],
     pullquote: { after: 2, text: "Almost every relapse starts as a lapse that got read as a disaster." },
-    action: { thing: 'plan', route: '/module/your-own-plan' },
+    action: { thing: 'plan', route: '/plan' },
     /* "X is information" is a wellness cliché, and it still leads with the negative word.
        The real content is a distinction most readers do not know exists, and it is the exact
        sentence that intercepts "I have ruined everything". */
@@ -344,7 +344,7 @@ export const MODULES: LearnModule[] = [
     kicker: 'Written now, for a day you hope never comes.',
     sections: [{ at: 2, label: 'The six sections' }],
     pullquote: { after: 0, text: "In the middle of a bad stretch, your judgement is the thing that stops working." },
-    action: { thing: 'plan', route: '/journal' },
+    action: { thing: 'plan', route: '/plan' },
     /* Could have been a module in any app about anything. The module ends on its own
        metaphor, which is specific to what this is: a plan for a day you hope never comes. */
     title: 'Your fire exit',

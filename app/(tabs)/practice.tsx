@@ -46,6 +46,7 @@ export default function Practice() {
   const phase = phaseForWeek(week);
   const mirrorOpen = !!mirrorSpecForWeek(week);
   const experimentsOpen = phase.id >= 3;
+  const planOpen = week >= 11;
 
   /* WHY A ROW IS SHUT, SAID ACCURATELY.
      `mirrorOpen` and `experimentsOpen` read the CLAMPED week, so once the gate went in, a
@@ -54,6 +55,8 @@ export default function Practice() {
      here and the chip has to name whichever they are actually behind: still working up to it,
      or done working up to it and this part is paid. */
   const EXPERIMENT_UNLOCK_WEEK = 7;
+  /* Week eleven, matching the module that teaches it. */
+  const PLAN_UNLOCK_WEEK = 11;
   const shut = (unlockWeek: number) => (reached >= unlockWeek ? 'Anneal+' : `Week ${unlockWeek}`);
 
   /* Last seven days, by local day key. Never UTC — see lib/streak.ts. */
@@ -94,6 +97,19 @@ export default function Practice() {
       glyph: 'flask',
       kinds: ['experiment'],
       locked: experimentsOpen ? undefined : shut(EXPERIMENT_UNLOCK_WEEK),
+    },
+    /* The plan. Reachable from here as well as from the week-eleven module, because it is the
+       one thing in the app somebody comes BACK to — a document you revise, not an exercise you
+       finish — and a document you can only reach by re-opening the article that told you to
+       write it is a document nobody revises.
+       It carries no `kinds`, so no tally: "2 this week" is the wrong thing to say about a
+       plan, and content/tracks.ts refuses that kind of counter for the same reason. */
+    {
+      title: NAMES.plan.title,
+      sub: NAMES.plan.sub,
+      route: '/plan',
+      glyph: 'page',
+      locked: planOpen ? undefined : shut(PLAN_UNLOCK_WEEK),
     },
   ];
 

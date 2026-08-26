@@ -325,3 +325,98 @@ export const DISTORTIONS: Distortion[] = [
       "Assuming your attention on yourself is matched by everyone else's. It isn't, and it's been measured.",
   },
 ];
+
+/* ---------- the relapse plan ----------
+ *
+ * Week eleven. content/modules.ts walks somebody through six sections in prose; this is the
+ * same six as fields they fill in. The headings are copied from the module deliberately —
+ * a reader who has just finished "Your fire exit" should recognise every one of them, and a
+ * screen that renames them makes the reading feel like it was about something else.
+ *
+ * WRITTEN IN ADVANCE, FOR A DAY WHEN JUDGEMENT IS NOT AVAILABLE. That is the whole premise,
+ * and it sets the rules for the copy here: every prompt asks for something observable rather
+ * than something felt, because "I feel bad about myself" is not an early warning sign, and a
+ * plan made of feelings cannot be followed by somebody who is not feeling well. */
+
+export interface PlanSection {
+  key: string;
+  /** Matches the numbered heading in the module, so the two read as one thing. */
+  title: string;
+  /** What to write, in one line. */
+  prompt: string;
+  /** Shown in the empty field. Never a value — a shape. */
+  placeholder: string;
+  /** Longer guidance, folded away until asked for. */
+  help: string;
+  lines: number;
+}
+
+export const PLAN_INTRO =
+  'Six sections. Write them now, while things are steady, so that later you can follow this '
+  + 'instead of deciding. Nothing here is sent anywhere. You can change any of it whenever you like.';
+
+export const PLAN_SECTION_COPY: PlanSection[] = [
+  {
+    key: 'earlyWarnings',
+    title: 'My early warning signs',
+    prompt: 'What shows up first, days before the worst of it?',
+    placeholder: 'Checking after I leave the house. Changing clothes more than twice.',
+    help:
+      'Observable things, not feelings. "I feel bad about myself" is where this ends up, not '
+      + 'where it starts. You want the signs that turn up three days earlier.',
+    lines: 4,
+  },
+  {
+    key: 'triggers',
+    title: 'My triggers',
+    prompt: 'What tends to set it off?',
+    placeholder: 'Short sleep. Photos from an event. The week before my period.',
+    help: 'Sleep, stress, events, cycles, people, platforms. The ones you listed in week ten.',
+    lines: 4,
+  },
+  {
+    key: 'firstMoves',
+    title: 'My first three moves',
+    prompt: 'The first three things you will do, in order, no deciding required.',
+    placeholder: '1. One check-in.\n2. Slow my breathing.\n3. Text Dani.',
+    help:
+      'Exactly three, ranked. Keep them small enough that you would still do them on your '
+      + 'worst day — a plan you cannot follow at fifteen percent is not a plan.',
+    lines: 5,
+  },
+  {
+    key: 'notDoing',
+    title: 'What I will not do',
+    prompt: 'What makes it worse, that you will want to do anyway?',
+    placeholder: 'Cancel plans. Delete photos. Look up procedures.',
+    help:
+      'Write them down now. Later, doing one of them means breaking a promise you made — '
+      + 'not making a fresh choice on a bad day. That is much harder to talk yourself into.',
+    lines: 4,
+  },
+  {
+    key: 'whoToTell',
+    title: 'Who I tell',
+    prompt: 'One person, one way to reach them, and the first line you will send.',
+    placeholder:
+      'Dani, by text. "Having a rough one with the body image stuff. Don’t need advice, '
+      + 'just wanted someone to know."',
+    help:
+      'Write the opening sentence out in full. Composing one while you are struggling is the '
+      + 'step where people stop.',
+    lines: 5,
+  },
+  {
+    key: 'myLine',
+    title: 'My line',
+    prompt: 'When does this stop being the right tool, and who do you contact then?',
+    placeholder:
+      'If I miss work two days running. If I stop leaving the house for a week.\nDr Okafor — 0000 000 0000',
+    help:
+      'Set it as things you do, not things you feel. Put the real contact details in — a '
+      + 'doctor, a service, a helpline. Fill them in now, so there is nothing to look up '
+      + 'later. This section is not pessimism. It is knowing where the fire exit is in a '
+      + 'building you expect not to burn down.',
+    lines: 6,
+  },
+];

@@ -25,6 +25,8 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AppState, MomentRecord, AvoidanceLevel, PracticeKind } from '../types';
+import { PLAN_SECTIONS } from '../types/index.ts';
+import { PLAN_SECTION_COPY } from '../content/exercises.ts';
 import { initialStreak } from './streak.ts';
 /* Imported rather than redefined. Two identical constructors for one persisted shape is
    the same hazard the MomentRecord comment in moments.ts warns about for the type: they
@@ -511,13 +513,25 @@ export function normalise(parsed: unknown): AppState {
       weekPracticeDates: strArr(protocol.weekPracticeDates),
       completedWeeks: numArr(protocol.completedWeeks),
       avoidedConditions: strArr(protocol.avoidedConditions),
-      ...(plan.updatedAt || plan.earlyWarnings || plan.whatHelps || plan.whoToTell || plan.firstStep
+      /* Six sections, keyed off PLAN_SECTIONS so this cannot drift from the screen or the
+         export. The old four-field shape (earlyWarnings / whatHelps / whoToTell / firstStep)
+         is carried across rather than dropped: `whatHelps` becomes `firstMoves` and
+         `firstStep` is appended to it, since both were asking for the same thing in different
+         words. Nothing ever wrote one, so in practice this migrates nobody — but a type that
+         shipped is a shape that could be in an imported backup, and silently discarding a
+         relapse plan is not something to do on a guess. */
+      ...(plan.updatedAt || PLAN_SECTIONS.some((k) => plan[k]) || plan.whatHelps || plan.firstStep
         ? {
             relapsePlan: {
               earlyWarnings: str(plan.earlyWarnings, ''),
-              whatHelps: str(plan.whatHelps, ''),
+              triggers: str(plan.triggers, ''),
+              firstMoves: str(
+                plan.firstMoves,
+                [str(plan.whatHelps, ''), str(plan.firstStep, '')].filter(Boolean).join('\n'),
+              ),
+              notDoing: str(plan.notDoing, ''),
               whoToTell: str(plan.whoToTell, ''),
-              firstStep: str(plan.firstStep, ''),
+              myLine: str(plan.myLine, ''),
               updatedAt: str(plan.updatedAt, ''),
             },
           }
@@ -841,11 +855,15 @@ export function exportText(state: AppState): string {
 
   if (state.protocol.relapsePlan) {
     const p = state.protocol.relapsePlan;
-    l.push('RELAPSE PLAN');
-    l.push(`  Early warning signs: ${p.earlyWarnings}`);
-    l.push(`  What helps: ${p.whatHelps}`);
-    l.push(`  Who to tell: ${p.whoToTell}`);
-    l.push(`  First step: ${p.firstStep}`);
+    l.push('MY PLAN');
+    /* Walked from the same list the screen renders, so a section added to one appears in the
+       other. This block hard-coded four labels while the module taught six. */
+    for (const k of PLAN_SECTIONS) {
+      const section = PLAN_SECTION_COPY.find((c) => c.key === k);
+      if (!p[k]) continue;
+      l.push(`  ${section ? section.title : k}:`);
+      for (const line of p[k].split('\n')) l.push(`    ${line}`);
+    }
   }
 
   return l.join('\n');
