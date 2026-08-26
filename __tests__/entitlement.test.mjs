@@ -325,18 +325,25 @@ describe('every row of the paywall table is enforced somewhere in the app', () =
   /* Comments say what the code MEANT to do. Only stripped source says what it does. */
   const code = (rel) => src(rel).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
-  /* Every screen that shows somebody a week number, and the clamp it must read through.
-     Three, because the programme's week is displayed in three places and a clamp missing
-     from any one of them is a free user shown week 9 of a programme they are on week 1 of. */
-  const WEEK_SCREENS = [
-    ['app/(tabs)/index.tsx', /effectiveWeek\(protocol\.currentWeek, entitled\)/],
-    ['app/(tabs)/practice.tsx', /effectiveWeek\(reached, entitled\)/],
-    ['app/(tabs)/learn.tsx', /effectiveWeek\(reachedWeek, entitled\)/],
-  ];
+  /* Every screen that reads the protocol week — DISCOVERED, not listed.
+     The first version of this test named three files. There were seven readers, and the four
+     it did not name were the four that were wrong: Progress printed "Week 9 of 12" and lit
+     the ninth pip while the other tabs said week 1, Journal unlocked experiments off the raw
+     week while Practice locked them off the clamped one, and Mirror looked up its session
+     spec by the raw week. A hand-written list of call sites is a list of the ones somebody
+     remembered; the point of the invariant is the one nobody remembered. So this walks the
+     tree and finds them. */
+  const weekReaders = () =>
+    ['app', 'components', 'hooks']
+      .flatMap((dir) => walk(join(ROOT, dir)))
+      .filter((f) => /\.tsx?$/.test(f))
+      .map((f) => f.slice(ROOT.length + 1))
+      .filter((rel) => /\bprotocol\.currentWeek\b/.test(code(rel)))
+      .sort();
 
   /* label fragment -> [file, pattern that must appear in it] */
   const ENFORCED = [
-    ['weeks', ...WEEK_SCREENS[0]],
+    ['weeks', 'app/(tabs)/index.tsx', /effectiveWeek\(protocol\.currentWeek, entitled\)/],
     ['mirror', 'app/mirror.tsx', /isGated\('\/mirror', entitled\)/],
     ['Progress', 'app/(tabs)/progress.tsx', /if \(!entitled\)/],
     ['reads', 'app/(tabs)/learn.tsx', /m\.free \|\| entitled/],
@@ -360,32 +367,34 @@ describe('every row of the paywall table is enforced somewhere in the app', () =
     });
   }
 
-  test('the week claim is backed on every screen that shows a week', () => {
-    /* One clamp is not the feature. The row says "Week 1 / All 12" to everybody, so any
-       screen that prints a week has to agree with it or the table is false again — this
-       time in a way only a free user at week 9 ever sees. */
-    for (const [file, pattern] of WEEK_SCREENS) {
+  test('every reader of the protocol week clamps it', () => {
+    /* One clamp is not the feature. The row says "Week 1 / All 12" to everybody, so a screen
+       that reads the week and does not clamp it disagrees with the table — and, worse, with
+       the other tabs, which is how somebody finds out by being told two things at once. */
+    const readers = weekReaders();
+    assert.ok(readers.length >= 6, `only ${readers.length} readers found — has the walk broken?`);
+    for (const rel of readers) {
       assert.match(
-        code(file), pattern,
-        `${file} shows a week number without clamping it through effectiveWeek()`,
+        code(rel), /\beffectiveWeek\(/,
+        `${rel} reads protocol.currentWeek and never calls effectiveWeek()`,
       );
     }
   });
 
   test('and none of them reads the raw week past the clamp', () => {
-    /* The clamp is only worth having if it is the ONLY route to a displayed week.
+    /* The clamp is only worth having if it is the ONLY route to a used week.
        `protocol.currentWeek` — the qualified read, straight off the store — may appear in a
-       selector and may be passed to effectiveWeek. Anywhere else on those three screens it
-       is the unclamped number reaching the render, which is the exact bug the clamp exists
-       to prevent. The local each screen assigns the RESULT to is a different matter and is
-       deliberately not matched here: learn.tsx calls its clamped local `currentWeek`, which
-       is legitimate and which an unqualified grep flags. */
-    for (const [file] of WEEK_SCREENS) {
-      for (const line of code(file).split('\n')) {
+       selector and may be passed to effectiveWeek. Anywhere else it is the unclamped number
+       reaching the render or a gate, which is the exact bug the clamp exists to prevent.
+       The local each screen assigns the RESULT to is a different matter and is deliberately
+       not matched here: learn.tsx calls its clamped local `currentWeek`, which is legitimate
+       and which an unqualified grep flags. */
+    for (const rel of weekReaders()) {
+      for (const line of code(rel).split('\n')) {
         if (!/\bprotocol\.currentWeek\b/.test(line)) continue;
         assert.match(
           line.trim(), /useStore\(|effectiveWeek\(/,
-          `${file} reads protocol.currentWeek outside the store selector and the clamp:\n  ${line.trim()}`,
+          `${rel} reads protocol.currentWeek outside the store selector and the clamp:\n  ${line.trim()}`,
         );
       }
     }

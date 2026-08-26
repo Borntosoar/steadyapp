@@ -11,7 +11,7 @@ import { Finish } from '../components/Finish';
 import { space, radius, type as t } from '../constants/theme';
 import { useStore } from '../store/useStore';
 import { mirrorSpecForWeek, MIRROR_UNLOCK_WEEK } from '../lib/protocol';
-import { isGated } from '../lib/entitlement';
+import { isGated, effectiveWeek } from '../lib/entitlement';
 import { useEntitlement } from '../hooks/useEntitlement';
 import {
   MIRROR_RULES, DISTANCE_RATIONALE, NEUTRAL_SWAPS, promptsForPhase, CONDITION_SUGGESTIONS,
@@ -28,7 +28,13 @@ export default function Mirror() {
   const router = useRouter();
 
   const { entitled } = useEntitlement();
-  const week = useStore((s) => s.protocol.currentWeek);
+  const reached = useStore((s) => s.protocol.currentWeek);
+  /* Clamped, like every other screen that reads a week. Belt and braces here rather than a
+     live fix: `isGated` below already turns a free user away, so in practice this only ever
+     runs for somebody entitled, where the clamp is the identity. It is here so the invariant
+     is uniform — every reader of the protocol week goes through one function — which is what
+     the test enforces, and what stops the next screen from being the exception. */
+  const week = effectiveWeek(reached, entitled);
   const sessions = useStore((s) => s.mirrorSessions);
   const addMirrorSession = useStore((s) => s.addMirrorSession);
   const avoidedConditions = useStore((s) => s.protocol.avoidedConditions);

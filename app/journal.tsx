@@ -13,7 +13,7 @@ import {
   space, radius, type as t, LAYOUT_MAX_WIDTH, type AtmosphereKey,
 } from '../constants/theme';
 import { useStore } from '../store/useStore';
-import { FREE_LIMITS } from '../lib/entitlement';
+import { FREE_LIMITS, effectiveWeek } from '../lib/entitlement';
 import { useEntitlement } from '../hooks/useEntitlement';
 import {
   THOUGHT_RECORD_STEPS, THOUGHT_RECORD_CLOSING, DISTORTIONS, EXPERIMENT_FIELDS, EXPERIMENT_COPY,
@@ -28,11 +28,17 @@ type View_ = 'home' | 'record' | 'experiment';
 export default function Journal() {
   const c = useTheme();
   const router = useRouter();
-  const week = useStore((s) => s.protocol.currentWeek);
+  const { entitled } = useEntitlement();
+  const reached = useStore((s) => s.protocol.currentWeek);
   const records = useStore((s) => s.thoughtRecords);
   const experiments = useStore((s) => s.experiments);
   const [view, setView] = useState<View_>('home');
 
+  /* Clamped, like Today, Practice, Learn and Progress. Without this a free user at week 9 was
+     told two different things in the same minute: phaseForWeek(9) is phase 3, so experiments
+     read as UNLOCKED here, while Practice — reading the clamped week — showed them locked.
+     The gate is only coherent if every screen asks the same question. */
+  const week = effectiveWeek(reached, entitled);
   const phase = phaseForWeek(week);
   const experimentsUnlocked = phase.id >= 3;
 

@@ -17,6 +17,7 @@ import { File, Paths } from 'expo-file-system';
 import { exportText, exportJson } from '../../lib/storage';
 import { insightsSummary } from '../../content/copy.ts';
 import { weekProgress, WEEKS_TOTAL } from '../../lib/protocol';
+import { effectiveWeek } from '../../lib/entitlement';
 import { NAMES, EXPLAIN } from '../../content/names';
 import { SUPPORT_PILL_CLEARANCE } from '../_layout';
 
@@ -114,6 +115,12 @@ export default function Progress() {
 
   const wp = weekProgress(protocol);
 
+  /* Clamped, like every other screen that prints a week. This one was the loudest miss: the
+     Progress tab said "Week 9 of 12" and lit the ninth pip while Today, Practice and Learn
+     all said week 1 — the same fact, four tabs, two answers, and the tab whose whole job is
+     to be the honest record of what happened was the one disagreeing. */
+  const week = effectiveWeek(protocol.currentWeek, entitled);
+
   const hero = (
     <>
       <Caption style={{ marginTop: space.xl, paddingRight: SUPPORT_PILL_CLEARANCE }}>Hours back, last 7 days</Caption>
@@ -136,12 +143,12 @@ export default function Progress() {
         <Row>
           <H3>The twelve weeks</H3>
           <Caption>
-            Week {protocol.currentWeek} of {WEEKS_TOTAL}
+            Week {week} of {WEEKS_TOTAL}
           </Caption>
         </Row>
         <WeekPips
           done={protocol.completedWeeks}
-          current={protocol.currentWeek}
+          current={week}
           progress={wp.done / Math.max(1, wp.required)}
         />
         <Explain q={EXPLAIN.week.q} a={EXPLAIN.week.a} />
