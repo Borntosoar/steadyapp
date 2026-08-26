@@ -44,9 +44,14 @@ export default function LearnIndex() {
   return (
     <Ground tabBarSpace>
       <H1 style={{ marginTop: space.xl, paddingRight: SUPPORT_PILL_CLEARANCE }}>Learn</H1>
+      {/* "Twelve short reads, one a week" was not true. content/modules.ts puts three in week
+          one, nothing in weeks two and three, then one a week from four to twelve — twelve
+          reads across ten weeks. The reader can count: the three cards under Part 1 all say
+          "Week 1", directly below a line promising one a week. Small, and exactly the kind of
+          claim this app has shipped before and had to take back. Said accurately now. */}
       <BodySm style={{ marginTop: space.sm }}>
-        Twelve short reads, one a week. Each one explains why that week&apos;s practice works,
-        so you understand it instead of just following it.
+        Twelve short reads. Three to start, then one a week from week four. Each one explains
+        why that week&apos;s practice works, so you understand it instead of just following it.
       </BodySm>
 
       {resume ? (

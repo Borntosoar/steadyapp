@@ -1,5 +1,10 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const { MODULES, moduleBySlug, freeModules } = await import('../content/modules.ts');
 const { parseInline } = await import('../lib/inline.ts');
@@ -8,7 +13,7 @@ const { MIRROR_UNLOCK_WEEK, phaseForWeek } = await import('../lib/protocol.ts');
 const words = (m) => [...m.body, m.takeaway].join(' ').split(/\s+/).filter(Boolean).length;
 
 describe('module set structure', () => {
-  test('there are exactly 12 modules and every week 1-12 is covered', () => {
+  test('there are exactly 12 modules, on the intended uneven cadence', () => {
     assert.equal(MODULES.length, 12);
     // Week 1 carries three modules (the free tier); weeks 4-12 carry one each. Weeks 2
     // and 3 are consolidation — the protocol runs them without new reading.
@@ -17,6 +22,34 @@ describe('module set structure', () => {
       [1, 1, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     );
     assert.ok(MODULES.every((m) => m.week >= 1 && m.week <= 12));
+  });
+
+  test('the Learn header states that cadence, and states it correctly', () => {
+    /* The header said "Twelve short reads, one a week" while the three cards directly below
+       it all read "Week 1" — a claim the reader can disprove by looking at the same screen.
+       The numbers here are derived from MODULES rather than typed, so changing the module
+       set fails this test instead of quietly making the sentence false again. */
+    const src = readFileSync(join(ROOT, 'app/(tabs)/learn.tsx'), 'utf8');
+    const header = src.replace(/\/\*[\s\S]*?\*\//g, '').match(/Twelve short reads[^<]*/)?.[0];
+    assert.ok(header, 'the Learn header sentence has moved or been reworded past recognition');
+    const flat = header.replace(/\s+/g, ' ').replace(/&apos;/g, "'");
+
+    const firstWeek = MODULES.filter((m) => m.week === MODULES[0].week).length;
+    const resumesAt = MODULES.find((m) => m.week !== MODULES[0].week).week;
+    const NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
+                 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+
+    assert.match(flat, new RegExp(`^${NUM[MODULES.length]} short reads`, 'i'),
+      `the header states a total that is not ${MODULES.length}`);
+    assert.match(flat, new RegExp(`\\b${NUM[firstWeek]} to start\\b`, 'i'),
+      `week one carries ${firstWeek} reads and the header does not say so`);
+    assert.match(flat, new RegExp(`from week ${NUM[resumesAt]}\\b`, 'i'),
+      `reading resumes at week ${resumesAt} and the header does not say so`);
+
+    /* And the specific false version must not come back. Weeks 2 and 3 carry no reading by
+       design, so an unqualified "one a week" is wrong however it is phrased. */
+    assert.doesNotMatch(flat, /reads, one a week/i,
+      'the header claims one read a week again — weeks 2 and 3 have none');
   });
 
   test('modules are ordered so "next module" walks forward', () => {
