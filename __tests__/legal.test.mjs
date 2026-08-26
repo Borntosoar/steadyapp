@@ -209,6 +209,86 @@ describe('the factual claims the documents make about the app', () => {
         'the App Store privacy label and the onboarding screen both need changing too');
   });
 
+  test('the privacy policy names the cipher the app actually uses', () => {
+    /* This section said "does not add its own encryption ... ordinary readable text" for a
+       period AFTER XChaCha20-Poly1305 shipped. It even carried a warning block predicting the
+       encryption layer would land and instructing whoever shipped it to rewrite the section.
+       Nobody did, so the live legal document described a build that no longer existed while
+       the store listing said the opposite. Prose cannot be trusted to track a dependency. */
+    const privacy = withoutComments(DOCS.find((d) => d.file === 'privacy-policy.md').md);
+    const crypto = readFileSync(join(LEGAL_DIR, '..', 'lib', 'crypto.ts'), 'utf8');
+
+    assert.match(crypto, /xchacha20poly1305/i,
+      'lib/crypto.ts no longer uses xchacha20poly1305 — the policy names it by name');
+    assert.match(privacy, /XChaCha20-Poly1305/,
+      'lib/crypto.ts encrypts with XChaCha20-Poly1305 and the privacy policy does not say so');
+    assert.doesNotMatch(privacy, /does not add its own encryption|ordinary readable text/i,
+      'the privacy policy claims the app stores plain text while lib/crypto.ts encrypts it');
+  });
+
+  test('the privacy policy accounts for every link the app can open', () => {
+    /* It used to say the dialler "is the only outbound link in the whole app". True when
+       written, and wrong for four call sites since — two https links on the paywall, plus a
+       mailto: and a disclaimer link on Support. */
+    const privacy = withoutComments(DOCS.find((d) => d.file === 'privacy-policy.md').md);
+    const root = join(LEGAL_DIR, '..');
+    const opens = ['app/support.tsx', 'app/paywall.tsx', 'components/CrashScreen.tsx']
+      .map((rel) => readFileSync(join(root, rel), 'utf8'))
+      .join('\n').match(/Linking\.openURL\(/g)?.length ?? 0;
+
+    assert.ok(opens >= 4, `only ${opens} openURL call sites found — has the scan broken?`);
+    assert.doesNotMatch(privacy, /the only outbound link/i,
+      `the app has ${opens} Linking.openURL call sites and the policy calls one of them the only one`);
+    for (const [what, pattern] of [['a mailto: address', /mailto/i], ['the terms', /terms/i],
+                                   ['the medical disclaimer', /disclaimer/i]]) {
+      assert.match(privacy, pattern,
+        `the app opens ${what} and the privacy policy does not account for it`);
+    }
+  });
+
+  test('the privacy policy counts the crisis regions the app ships', () => {
+    /* It named four countries. There are thirty, plus a directory fallback. */
+    const privacy = withoutComments(DOCS.find((d) => d.file === 'privacy-policy.md').md);
+    const support = readFileSync(join(LEGAL_DIR, '..', 'constants', 'support.ts'), 'utf8');
+    const keys = support.match(/^\s*key:\s*'/gm)?.length ?? 0;
+    assert.ok(keys > 20, `only counted ${keys} support regions — has the scan broken?`);
+    assert.doesNotMatch(privacy, /Canada, the United States, the United Kingdom and Australia/,
+      'the privacy policy still names the four-region list from several versions ago');
+    assert.match(privacy, /thirty countries/i,
+      'the privacy policy no longer says how many countries the Support screen covers');
+  });
+
+  test('every document gives the same age rating', () => {
+    /* docs/SUBMISSION-ANSWERS.md §2 said "Expected result: 4+" and told the reader to stop if
+       the questionnaire produced anything higher, while docs/APP-STORE.md §7 argued for 16+
+       and legal/privacy-policy.md already published "rated 16+ on the App Store". The 4+ one
+       is the document headed "Copy these in" — the one that reaches the form. Under-rating is
+       guideline 2.3.6; the cost of these disagreeing is not theoretical. */
+    const root = join(LEGAL_DIR, '..');
+    const files = ['docs/SUBMISSION-ANSWERS.md', 'docs/APP-STORE.md', 'legal/privacy-policy.md'];
+    /* Only lines that STATE the answer. Prose comparing ratings ("12+ and 17+ were removed")
+       and the note explaining that this section used to say 4+ are discussion, not answers —
+       matching those would make the guard fire on its own explanation, which is how a test
+       gets routed around. Blockquoted lines are commentary and are skipped for the same
+       reason. */
+    const STATES_A_RATING =
+      /^(?!\s*>)(?=.*\b(?:expected result|recommended result|rated)\b)[^\n]*?\b(4\+|9\+|13\+|16\+|18\+)/i;
+    const ratings = new Map();
+    for (const rel of files) {
+      const stated = readFileSync(join(root, rel), 'utf8').split('\n')
+        .map((line) => line.match(STATES_A_RATING)?.[1])
+        .filter(Boolean);
+      if (stated.length) ratings.set(rel, [...new Set(stated)]);
+    }
+    assert.ok(ratings.size >= 2, `only ${ratings.size} documents state a rating — has the scan broken?`);
+    const all = new Set([...ratings.values()].flat());
+    assert.equal(
+      all.size, 1,
+      'the submission documents disagree about the age rating: '
+      + [...ratings].map(([f, r]) => `${f} says ${r.join('/')}`).join('; '),
+    );
+  });
+
   test('the cookie policy still describes a site with nothing on it', () => {
     /* site/build.mjs emits no script tag and fetches no font. The moment it does, this
        document is false, and it is four paragraphs long precisely because it is true. */

@@ -53,20 +53,31 @@ and no tracker of any kind.
 
 ## 2. Age rating questionnaire
 
-Answer **No** to every content question. The two that need thought:
+> **This section said 4+, and it was the wrong answer in the most consequential place.**
+> It instructed the reader to answer **No** to Medical/Treatment Information and to *"stop"*
+> if the questionnaire produced anything above 4+ — while `docs/APP-STORE.md` §7 argued the
+> opposite at length, and `legal/privacy-policy.md` already tells the world the app *"is
+> rated 16+ on the App Store"*. Three documents said 16+; this one said 4+, directly under a
+> sentence admitting `legal/` treats 16 as the floor. This is the document headed *"Copy
+> these in"*, so this is the one that would have been transcribed onto the form.
+>
+> The two errors are not symmetrical. Over-rating costs reach. Under-rating is guideline
+> 2.3.6 — a forced re-review, and what Apple describes as a possible inquiry from government
+> regulators. Corrected to match the other three.
 
 | Question | Answer | Why |
 |---|---|---|
-| Medical/Treatment Information | **No** | Anneal is educational self-help. It makes no diagnostic or treatment claim, and the description says so explicitly. Answering Yes here invites 1.4.1 scrutiny for a claim the app does not make. |
-| Unrestricted Web Access | **No** | The app opens three URLs (privacy, terms, disclaimer) and they go to Safari via `Linking.openURL`. There is no in-app browser — `__tests__/safety.test.mjs` asserts no WebView exists anywhere in the source. |
+| Medical/Treatment Information | **Frequent/Intense** | Anneal makes no diagnostic or treatment claim, and that distinction is real — but the questionnaire asks about content, not claims. Twelve reads on body dysmorphic disorder, a structured CBT protocol, mirror exposure work, a self-harm item in the survey and thirty countries of crisis lines is medical content, and it is the substance of the app rather than an occasional mention. Answer honestly and take the rating. |
+| Unrestricted Web Access | **No** | The app opens four addresses — privacy, terms, disclaimer and a `mailto:` — and every one goes to Safari or Mail via `Linking.openURL`. There is no in-app browser; `__tests__/safety.test.mjs` asserts no WebView exists anywhere in the source, and that assertion is now bypass-resistant. |
 | Horror/Fear, Violence, Profanity, Sexual Content, Gambling, Contests, Drugs, Alcohol | **No** | None present. |
 
-**Expected result: 4+.** Note that the age rating is not the same as the audience. This app
-is written for adults and older teenagers, and `legal/` treats 16 as the floor; the rating
-reflects content, not suitability judgement.
+**Expected result: 16+**, matching `docs/APP-STORE.md` §7 and the sentence already published
+in `legal/privacy-policy.md`. Here the rating and the audience agree: the app is written for
+adults and older teenagers, and `legal/` treats 16 as the floor.
 
-**If the questionnaire produces something higher than 4+,** stop and find out which answer
-caused it rather than accepting it — an inflated rating costs reach for nothing.
+**If the questionnaire produces something other than 16+,** work out which answer moved it
+before accepting the result — but do not answer a content question dishonestly in either
+direction to land on a preferred number.
 
 ---
 

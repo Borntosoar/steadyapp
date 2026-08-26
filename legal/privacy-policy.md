@@ -172,17 +172,36 @@ We want to be exact here rather than reassuring.
      default applies. RE-VERIFY THIS after any upgrade of that dependency — it is a library
      default, not something {{APP_NAME}} states in its own configuration. -->
 
-**What does not protect it:**
+**{{APP_NAME}}'s own encryption:**
 
-- {{APP_NAME}} does not add its own encryption on top of what iOS provides. What the app writes to storage is ordinary readable text inside the app's container.
-- Anyone who can unlock your phone can open {{APP_NAME}} and read everything in it. There is no PIN, no Face ID lock, and no hidden mode inside the app.
-- The export and backup files you create are not encrypted or password-protected.
+- What the app saves — every check-in, note, urge log and thought record — is encrypted before it is written down, using a cipher called XChaCha20-Poly1305. On disk it is unreadable bytes, not text.
+- The key is 32 random bytes made on your device the first time you open the app. It is kept in the iPhone Keychain, marked so that it never syncs to iCloud and can only be read while the phone is unlocked. It is never sent anywhere, because nothing in this app sends anything anywhere.
+- If the app cannot reach the Keychain — it happens, usually right after a restore or an install — it does not quietly invent a new key, because that would make everything you had already written unreadable. It saves that session in plain text instead **and says so on the home screen**, in those words. Closing the app fully and opening it again usually fixes it.
 
-<!-- SOURCE: lib/storage.ts:525 — AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(...)),
-     plain JSON. package.json has no expo-secure-store, no keychain module and no crypto
-     library. There is no app-lock screen in app/. -->
+**What that encryption does not protect:**
 
-> ⚠ **Depends on the build.** An at-rest encryption layer is being built for {{APP_NAME}} in parallel with this policy. **Until that ships and is confirmed present in the submitted build, do not add any sentence here claiming {{APP_NAME}} encrypts your data.** When it does ship, this section must be rewritten to say exactly what is encrypted, what is not, and where the key is kept — and the export/backup files will probably still be plain text unless that is changed too.
+- Anyone who can unlock your phone can open {{APP_NAME}} and read everything in it. There is no PIN, no Face ID lock, and no hidden mode inside the app. The encryption protects your writing from other software on the device and from anyone reading the raw storage — not from someone holding your unlocked phone.
+- The export and backup files you create are not encrypted or password-protected. That is deliberate: an export you cannot open is not a backup. Where you keep it is up to you.
+
+<!-- SOURCE: lib/crypto.ts:35,103 — xchacha20poly1305 from @noble/ciphers. lib/storage.ts
+     writes JSON.stringify(seal(...)) with 24 fresh random nonce bytes per write.
+     hooks/deviceKey.ts:39,51-52,68-71 — 32 bytes from expo-crypto getRandomBytes, held at
+     KEY_ID 'steady.device.key.v1' with keychainAccessible WHEN_UNLOCKED_THIS_DEVICE_ONLY.
+     A keychain read failure returns 'unavailable' and does NOT mint a replacement key
+     (deviceKey.ts:54-58). The plaintext fallback is disclosed by components/StorageNotice.tsx,
+     rendered on Today and Progress, wording in content/copy.ts STORAGE_COPY.notEncrypted.
+     There is still no app-lock screen in app/.
+
+     THIS SECTION WAS FALSE FOR A PERIOD, AND IT PREDICTED ITSELF. It said "{{APP_NAME}} does
+     not add its own encryption ... ordinary readable text", and carried a warning block
+     saying the encryption layer was being built and that this section must be rewritten when
+     it shipped. The layer shipped. The rewrite did not. So the live legal document went on
+     describing a build that no longer existed, while the App Store listing said the opposite
+     ("scrambled so other software on the device cannot read it") and the app said the
+     opposite again on the home screen. Break-risk #4 at the foot of this file is the entry
+     that called this exact drift. -->
+
+> ⚠ **Depends on the build.** Every sentence above describes the shipped app as of the commit carrying this file. If the encryption layer is ever removed, downgraded or made conditional, **this section has to move in the same commit** — a policy claiming encryption the app does not perform is worse than the plain-text version it replaced. There is a test that fails if the cipher named here stops matching `lib/crypto.ts`.
 
 **One more thing worth knowing.** If {{APP_NAME}} ever finds stored data it cannot read — a corrupted file, or a file written by a newer version of the app — it makes a copy of those bytes and sets them aside rather than overwriting them, so nothing is destroyed while it is still recoverable. Those set-aside copies stay on your device until you delete your data or delete the app. They contain the same private material as the main file.
 
@@ -208,14 +227,29 @@ At the version described at the top of this page, {{APP_NAME}} does not take pay
 
 ## 8. Crisis lines and phone calls
 
-The Support screen lists crisis helplines for Canada, the United States, the United Kingdom and Australia, plus international directories.
+The Support screen lists crisis helplines for thirty countries, plus a "somewhere else" option carrying international directories.
 
-Tapping a number hands it to your phone's dialler. That is the only outbound link in the whole app. We do not place the call, route it, record it, or learn that you made it. The call is between you, your phone company, and the organisation you rang — all of which are independent of us and have their own privacy practices. We do not operate any of these services.
+Tapping a number hands it to your phone's dialler. We do not place the call, route it, record it, or learn that you made it. The call is between you, your phone company, and the organisation you rang — all of which are independent of us and have their own privacy practices. We do not operate any of these services.
 
-<!-- SOURCE: constants/support.ts holds the numbers; app/support.tsx:25 and
-     components/CrashScreen.tsx:98 call Linking.openURL(`tel:…`). Those two tel: links are
-     the only Linking.openURL calls in the codebase, confirmed by grep and independently
-     noted in docs/APP-STORE.md §5.2 and §6. -->
+**Everywhere else the app can send you.** A handful of links open your normal web browser or your mail app, and nothing about you travels with them — no identifier, no query string, nothing about what you have written:
+
+- the privacy policy and the terms, from the subscription screen;
+- the medical disclaimer, from the Support screen;
+- a plain `mailto:` address for writing to us, from the Support screen. What you then type in your mail app is between you and your mail provider.
+
+None of these opens inside {{APP_NAME}}. There is no embedded browser anywhere in this app, deliberately — a page opening inside an app can be watched by that app, and one opening in Safari cannot.
+
+<!-- SOURCE: constants/support.ts holds the numbers — SUPPORT_REGIONS has 31 entries, of
+     which 30 are countries and the 31st is key 'other' / label 'Somewhere else' holding
+     findahelpline.com and IASP. Hence "thirty countries, plus". The previous sentence named
+     four countries (CA/US/UK/AU), which was the region list several versions ago.
+
+     Linking.openURL call sites, complete: app/support.tsx tel:, SUPPORT_MAILTO and
+     LINKS.disclaimer; app/paywall.tsx LINKS.privacy and LINKS.terms;
+     components/CrashScreen.tsx tel:. The old text here said the dialler "is the only
+     outbound link in the whole app", which was true when it was written and had been wrong
+     for four call sites since. Break-risk #5 at the foot of this file called this one too.
+     __tests__/safety.test.mjs holds the no-WebView rule that the last paragraph states. -->
 
 See `medical-disclaimer.md` for what we can and cannot promise about those lines.
 

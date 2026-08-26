@@ -685,7 +685,7 @@ Blockers first.
 - [ ] Free trial configured at a duration App Store Connect sells. `PRICING.trialDays` is
       30, i.e. the "1 month" introductory offer. Asserted in `__tests__/entitlement.test.mjs`
 - [ ] App Privacy label matches what the build actually does, including RevenueCat (5.7) — both states written out in `docs/SUBMISSION-ANSWERS.md` §3. Today the honest answer is Data Not Collected; the RevenueCat rows go in the SAME submission as the SDK
-- [ ] New age-rating questionnaire completed — answers written in `docs/SUBMISSION-ANSWERS.md` §2; expected result 4+, and if it comes out higher find out which answer did it rather than accepting it
+- [ ] New age-rating questionnaire completed — answers written in `docs/SUBMISSION-ANSWERS.md` §2; expected result 16+, matching §7 above and the sentence published in `legal/privacy-policy.md`. If it comes out lower, check that Medical or Treatment Information was answered Frequent — under-rating is 2.3.6
 - [x] App Review notes written, including the hardship path and the camera alternative (5.3) — `docs/SUBMISSION-ANSWERS.md` §1
 - [x] Category is Health & Fitness (5.5) — `fastlane/metadata/en-US/primary_category.txt`, asserted by test
 - [ ] No treatment vocabulary anywhere in name, subtitle, keywords, screenshots or
