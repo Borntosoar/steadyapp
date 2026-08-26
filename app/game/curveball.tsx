@@ -652,6 +652,16 @@ function RisingThought({
         right: 0,
         alignItems: 'center',
         transform: [{ translateY }, { translateX }, { rotate }],
+        /* AA-EXEMPT: an answered card, on its way out of a timed round.
+           The rule this sidesteps is real and is enforced everywhere else in the app: a
+           container opacity composites the text with its own card and drops it under AA.
+           Here the pill has already been read and answered — `pointerEvents` is 'none' on
+           the line above, and the recession IS the feedback that the answer landed. Nobody
+           is reading it any more; they are watching it go. The mark itself (hit or slip) is
+           carried by ThoughtPill's own colour and glyph at full strength, so the thing that
+           still has to be legible is not the thing being dimmed.
+           If this pill ever becomes something a player has to re-read — a review screen, an
+           undo — this exemption comes out with it. */
         opacity: mark ? 0.55 : 1,
       }}
     >
@@ -670,6 +680,7 @@ function StillThought({
   row, mark, onPress,
 }: { row: Live; mark?: 'hit' | 'slip'; onPress: () => void }) {
   return (
+    /* AA-EXEMPT: same as the falling pill above — answered, receding, not being read. */
     <View style={{ opacity: mark ? 0.62 : 1 }}>
       <ThoughtPill
         text={row.thought.text}

@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -11,6 +11,21 @@ import { contrastOn, AA_BODY } from '../lib/color.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(join(ROOT, p), 'utf8');
+
+/** Every .tsx under the given directories, repo-relative. Walked rather than listed, because
+ *  a hand-written file list is a list of the files somebody remembered. */
+function scanTree(dirs) {
+  const out = [];
+  const walk = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, e.name);
+      if (e.isDirectory()) walk(full);
+      else if (/\.tsx$/.test(e.name)) out.push(full.slice(ROOT.length + 1));
+    }
+  };
+  for (const d of dirs) walk(join(ROOT, d));
+  return out.sort();
+}
 
 /* The per-scene ground.
  *
@@ -261,17 +276,76 @@ describe('container dimming does not push text under AA', () => {
      that, and the dimmed future-day rows on a track measured 2.92:1 in light.
      A screen that wants to de-emphasise something dims the INK TOKEN, not the container:
      inkFaint clears AA on every ground above, and a container opacity does not. */
-  const FILES = ['app/track/[id].tsx', 'components/frost.tsx'];
+  /* THIS GUARD HAD TWO HOLES AND MISSED A LIVE VIOLATION THROUGH BOTH.
+     It named two files by hand, so app/(tabs)/learn.tsx — dimming every locked row's whole
+     subtree to 0.66, the exact thing described above — was never scanned. And its regex was
+     `opacity: X ? 1 : 0.NN`, which does not match a nested ternary, so learn.tsx would have
+     slipped through even if it had been listed. Both holes are the same mistake: describing
+     one known shape in one known place instead of the property.
+     It now walks the tree and reads the expression. */
+  const SCANNED = scanTree(['app', 'components']);
 
-  for (const file of FILES) {
+  test('there are components to scan', () => {
+    assert.ok(SCANNED.length > 15, `only found ${SCANNED.length} components to scan`);
+  });
+
+  for (const file of SCANNED) {
     test(`${file} does not dim a container that holds text`, () => {
-      const src = read(file).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
-      const hit = src.match(/opacity:\s*[\w!.]+\s*\?\s*1\s*:\s*(0\.\d+)/);
-      assert.equal(
-        hit, null,
-        hit && `dims a container to ${hit[1]}. Dim the ink token instead — a container opacity ` +
-        'composites the text and its own card together and no palette guarantee survives it.',
-      );
+      const raw = read(file);
+      /* An exemption has to be WRITTEN DOWN NEXT TO THE LINE, not inferred here. "It is only
+         readable for a moment" is a real argument in one place and the excuse that produced
+         every other violation everywhere else, so it is spelled out at the call site where a
+         reviewer sees it, and it is greppable. */
+      const lines = raw.split('\n');
+      const exempt = new Set();
+      lines.forEach((line, i) => {
+        const hit = line.match(/opacity:\s*([^,\n}]+)/);
+        if (!hit) return;
+        /* The marker must be in the comment IMMEDIATELY above, so an exemption cannot drift
+           onto an unrelated later line. Walk back through blank lines and line comments; when
+           a block comment's closing `*​/` is met, walk to its opener and read the whole block.
+           Anything else ends the search — a `//` two statements up is not an exemption. */
+        let j = i - 1;
+        while (j >= 0) {
+          const above = lines[j].trim();
+          if (above === '') { j -= 1; continue; }
+          if (above.startsWith('//')) {
+            if (above.includes('AA-EXEMPT:')) { exempt.add(hit[1].trim()); return; }
+            j -= 1; continue;
+          }
+          if (above.endsWith('*/')) {
+            const close = j;
+            while (j >= 0 && !lines[j].includes('/*')) j -= 1;
+            if (j < 0) return;
+            if (lines.slice(j, close + 1).join('\n').includes('AA-EXEMPT:')) {
+              exempt.add(hit[1].trim());
+              return;
+            }
+            j -= 1; continue;
+          }
+          return;
+        }
+      });
+      const src = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+      for (const [, expr] of src.matchAll(/opacity:\s*([^,\n}]+)/g)) {
+        if (exempt.has(expr.trim())) continue;
+        /* Press feedback is allowed, and is used deliberately throughout: it lasts as long as
+           a finger is down, so nobody reads through it. A dim that encodes STATE — locked,
+           done, ahead — is what this rule is about, because somebody does read that. */
+        const persistent = expr.replace(/[^?:]*\bpressed\b[^?:]*\?\s*[\d.]+\s*:/g, '').trim();
+        /* Strictly between 0 and 1. A subtree at exactly 0 is invisible, and nobody is
+           straining to read something that is not drawn — the harm this rule names is
+           text left legible but degraded. Anchored so that "0.55" reports as 0.55
+           rather than matching the leading "0". */
+        const dim = persistent.match(/(?<![\d.])0\.\d+(?![\d.])/);
+        if (!persistent.includes('?') || !dim) continue;
+        assert.fail(
+          `${file} dims a container to ${dim[0]} on a state, not a press:\n    opacity: ${expr.trim()}\n`
+          + '  React Native composites opacity over the whole subtree, so the text and its own '
+          + 'card collapse toward each other and no palette guarantee survives it. Dim the ink '
+          + 'token instead — inkFaint clears AA on every ground.',
+        );
+      }
     });
   }
 });

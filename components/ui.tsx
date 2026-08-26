@@ -4,6 +4,7 @@ import {
   type ViewStyle, type TextStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path, Rect } from 'react-native-svg';
 import {
   palette, space, radius, type as t, LAYOUT_MAX_WIDTH, TAB_BAR_HEIGHT, type Palette,
 } from '../constants/theme';
@@ -381,12 +382,51 @@ export function Field({
   );
 }
 
-export function Chip({ label, tone = 'neutral' }: { label: string; tone?: 'neutral' | 'accent' | 'cool' }) {
+/** A small pill. `glyph="lock"` draws a padlock before the label.
+ *
+ *  The padlock is an accessibility fix, not an ornament. On Learn, "Free" and "Anneal+" were
+ *  two filled pills differing only in hue — terracotta against moss — so the most
+ *  consequential distinction on the screen, can I open this or not, was carried by colour
+ *  alone. That is WCAG 1.4.1, and it fails for the eight percent of men with a colour vision
+ *  deficiency before it fails for anybody else. The word was always there; now a shape is
+ *  too, and a shape is what survives being desaturated. */
+export function Chip({
+  label, tone = 'neutral', glyph,
+}: { label: string; tone?: 'neutral' | 'accent' | 'cool'; glyph?: 'lock' }) {
   const c = useTheme();
   const bg = tone === 'accent' ? c.accentDim : tone === 'cool' ? c.coolDim : c.surfaceStrong;
   const fg = tone === 'accent' ? c.accentDeep : tone === 'cool' ? c.cool : c.inkSoft;
   return (
-    <View style={{ backgroundColor: bg, borderRadius: radius.pill, paddingVertical: 5, paddingHorizontal: space.md, alignSelf: 'flex-start' }}>
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: bg,
+        borderRadius: radius.pill,
+        paddingVertical: 5,
+        paddingHorizontal: space.md,
+        alignSelf: 'flex-start',
+      }}
+    >
+      {glyph === 'lock' && (
+        /* Decorative, and deliberately carrying no accessibility props of its own. The label
+           beside it already reads "Anneal+", so a screen reader announcing "lock, Anneal plus"
+           would be worse than one announcing "Anneal plus" — and an SVG with no <title> is not
+           announced anyway. Putting `importantForAccessibility` here to say so was worse
+           still: react-native-web forwards unknown props to the DOM node, so it logged a React
+           warning on every render of every locked row. */
+        <Svg width={11} height={11} viewBox="0 0 12 12">
+          <Path
+            d="M3.4 5.4V3.9a2.6 2.6 0 0 1 5.2 0v1.5"
+            stroke={fg}
+            strokeWidth={1.4}
+            strokeLinecap="round"
+            fill="none"
+          />
+          <Rect x={2.3} y={5.4} width={7.4} height={5.2} rx={1.3} fill={fg} />
+        </Svg>
+      )}
       <Text style={[t.caption, { color: fg }]}>{label}</Text>
     </View>
   );

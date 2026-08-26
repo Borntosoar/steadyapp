@@ -220,12 +220,19 @@ export function FaceScale({
               }}
               /* The deselection is what makes the selection feel like it arrived. Nothing
                  used to recede, so nothing landed — the chosen face grew by 6% and the
-                 other four sat there at full strength. */
+                 other four sat there at full strength.
+                 It receded via `opacity: 0.55` on this container, which composites the whole
+                 subtree — including the caption naming the face. That label is `inkFaint`
+                 when unselected: 7.06:1 on its own, 2.52:1 through the dim, against AA's 4.5.
+                 These are the five options somebody reads in order to choose, on the screen
+                 they open most days, so the four they have not picked cannot be the four they
+                 cannot read. The recession is carried by scale, weight and the ink token —
+                 all three were already here, and none of them touches contrast. */
               style={({ pressed }) => ({
                 flex: 1,
                 alignItems: 'center',
                 gap: 6,
-                opacity: pressed ? 0.8 : value === null || on ? 1 : 0.55,
+                opacity: pressed ? 0.8 : 1,
                 transform: [{ scale: on ? 1.12 : value === null ? 1 : 0.92 }],
               })}
             >

@@ -107,12 +107,24 @@ export default function LearnIndex() {
                     onPress={() => router.push(locked ? '/paywall' : `/module/${m.slug}`)}
                     style={({ pressed }) => ({
                       flexDirection: 'row',
-                      alignItems: 'center',
+                      /* flex-start, not center. A two-line title pushes the row to ~64pt and
+                         a centred 44pt disc then sits level with the kicker rather than the
+                         title — visibly drifting down the list as titles wrap. This is the
+                         rule ListRow in components/frost.tsx already states. */
+                      alignItems: 'flex-start',
                       gap: space.lg,
                       paddingVertical: space.md,
                       borderTopWidth: i === 0 ? 0 : StyleSheet.hairlineWidth,
                       borderTopColor: c.line,
-                      opacity: pressed ? 0.85 : locked ? 0.66 : 1,
+                      /* Press feedback only. This carried `locked ? 0.66`, which composites
+                         the entire subtree — React Native applies opacity to text and its
+                         card together — taking the kicker from 7.06:1 to 3.16:1 against AA's
+                         4.5. components/frost.tsx has stated that rule for a while and
+                         __tests__/motif.test.mjs claimed to enforce it; the guard named two
+                         files by hand and this was not one of them. The locked state is
+                         carried by the ink tokens below and by the chip, as it is everywhere
+                         else. */
+                      opacity: pressed ? 0.85 : 1,
                     })}
                   >
                     <View
@@ -142,7 +154,10 @@ export default function LearnIndex() {
                     </View>
 
                     <View style={{ flex: 1 }}>
-                      <H3>{m.title}</H3>
+                      {/* The locked state lives in the ink, not in a container opacity. Both
+                          tokens clear AA on this ground on their own; the composited version
+                          did not. */}
+                      <H3 style={locked ? { color: c.inkSoft } : undefined}>{m.title}</H3>
                       {/* The one line that says why this one is worth opening. Twelve titles
                           and twelve week numbers are not twelve reasons. */}
                       <BodySm style={{ marginTop: 2 }} numberOfLines={2}>
@@ -154,7 +169,11 @@ export default function LearnIndex() {
                     </View>
 
                     {locked ? (
-                      <Chip label="Anneal+" tone="accent" />
+                      /* The padlock is not decoration. "Free" and "Anneal+" were two filled
+                         pills differing only in hue — the single most consequential
+                         distinction on the screen carried by colour alone, which is WCAG
+                         1.4.1. A shape carries it now as well as the word. */
+                      <Chip label="Anneal+" tone="accent" glyph="lock" />
                     ) : m.free ? (
                       <Chip label="Free" tone="cool" />
                     ) : ahead ? (

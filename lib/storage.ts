@@ -707,6 +707,12 @@ export const EXPORT_FILE = /^anneal-(backup|summary)-\d{4}-\d{2}-\d{2}\.(json|tx
  *  touched AsyncStorage. Called from wipeState and once at launch, which covers both the user
  *  asking for it to be gone and the app simply getting another chance at it. */
 export async function sweepExports(): Promise<number> {
+  /* Web has no cache file to sweep: `download()` in app/(tabs)/progress.tsx hands the browser
+     a blob and never touches the filesystem. Checked before the import rather than after,
+     because expo-file-system logs "not supported on web" on every load — a warning on every
+     launch, for a sweep that could never find anything. */
+  if (typeof document !== 'undefined') return 0;
+
   let removed = 0;
   try {
     /* Imported here rather than at the top of the file on purpose. `expo-file-system` is a
