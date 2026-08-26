@@ -102,10 +102,13 @@ describe('a half-answered entity cannot be published', () => {
        is not publishable is leaving it null, which is how legal/ai-policy.md ends up silent
        on clinical oversight and a reader ends up assuming. */
     clinicalReview: 'none',
-    quebecCounselConfirmed: false,
+    /* True, because "complete" now means counsel has looked. The Quebec gate no longer keys
+       on the publisher's own province — Bill 96 and Law 25 follow the customer — so an
+       unconfirmed entity blocks from every province, which is the fix. */
+    quebecCounselConfirmed: true,
   };
 
-  test('a complete, non-Quebec entity passes', () => {
+  test('a fully answered entity passes, from any province', () => {
     assert.deepEqual(problems(complete), []);
   });
 
@@ -148,13 +151,48 @@ describe('a half-answered entity cannot be published', () => {
     }
   });
 
-  test('Quebec is blocked until a lawyer has actually looked', () => {
+  test('Quebec blocks on WHO YOU SELL TO, not where you are registered', () => {
+    /* THE GATE USED TO READ `entity.province === 'Quebec'`, AND THAT WAS THE WRONG FACT.
+       Neither statute is triggered by the publisher's province. Law 25 binds every person
+       carrying on an enterprise who holds personal information about others; the Charter
+       reaches goods and services offered to consumers in Quebec. Both are about who you sell
+       to. This app is planned for worldwide App Store availability, which includes Canada,
+       which includes Quebec.
+       So the old condition was a false-negative generator, and a confident one: setting the
+       province to Ontario published clean, with no warning, in exactly the case where the
+       documents are non-compliant. A gate that goes quiet on the scenario it exists to catch
+       is worse than no gate, because somebody trusts it. */
+    for (const province of PROVINCES) {
+      const found = problems({ ...complete, province, quebecCounselConfirmed: false });
+      assert.ok(
+        found.some((p) => p.startsWith('Quebec:')),
+        `a ${province} publisher passes with no Quebec warning. Bill 96 and Law 25 follow the `
+        + 'customer, not the certificate of incorporation.',
+      );
+    }
+  });
+
+  test('and it says so, so nobody reads it as a Quebec-only problem', () => {
+    const found = problems({ ...complete, province: 'Ontario', quebecCounselConfirmed: false });
+    const quebec = found.find((p) => p.startsWith('Quebec:'));
+    assert.match(quebec, /SELLING TO Quebec residents, not by where you are registered/,
+      'the message does not explain why a non-Quebec publisher is being told about Quebec');
+  });
+
+  test('confirming counsel is what clears it, for every province', () => {
+    for (const province of PROVINCES) {
+      const found = problems({ ...complete, province, quebecCounselConfirmed: true });
+      assert.deepEqual(found, [], `${province} still blocks after counsel confirmed`);
+    }
+  });
+
+  test('an unconfirmed entity is blocked until a lawyer has actually looked', () => {
     /* Not pedantry and not a formality. Bill 96 requires French consumer contracts, Law 25
        imposes privacy duties beyond PIPEDA including a published privacy officer, and the
        Consumer Protection Act restricts liability language these documents use. All three
        are unaddressed here, and every one of them is invisible in a document that otherwise
        looks finished. */
-    const qc = { ...complete, province: 'Quebec' };
+    const qc = { ...complete, province: 'Quebec', quebecCounselConfirmed: false };
     assert.ok(problems(qc).some((p) => /Bill 96|Law 25/.test(p)), 'Quebec published unreviewed');
     assert.deepEqual(problems({ ...qc, quebecCounselConfirmed: true }), []);
   });

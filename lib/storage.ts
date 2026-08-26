@@ -914,7 +914,28 @@ export function exportJson(state: AppState): string {
 }
 
 /** Parse a previously exported backup. Returns null if it is not one — never throws, and
- *  never half-applies. The caller confirms with the user before replacing local state. */
+ *  never half-applies.
+ *
+ *  ⚠ THIS FUNCTION HAS NO CALLER, AND THE DAY IT GETS ONE, TWO FIELDS MUST NOT COME FROM THE
+ *  FILE. There is no restore UI, no document picker (expo-document-picker would fail the
+ *  import allowlist) and no inbound file association, so today nothing can hand this a hostile
+ *  backup. As a parser it is safe: the payload goes through the same migrate → normalise
+ *  allowlist as a real load, so it cannot pollute a prototype or set a field outside AppState.
+ *
+ *  What it CAN set, and what a hand-edited file would therefore set:
+ *
+ *   · `entitlement`. `{"source":"purchase","plan":"lifetime","expiresAt":null}` normalises
+ *     cleanly and `isEntitled` returns true forever for a null expiry. A text editor is a
+ *     permanent subscription. Note the reasoning at normaliseEntitlement below concludes this
+ *     direction is safe — that is correct for a corrupted BYTE and wrong for a chosen FILE.
+ *   · `profile.disclaimerAcceptedAt`. An imported backup pre-accepts the medical disclaimer.
+ *     For an app whose survey asks about hurting yourself, that is a consent record, not a
+ *     preference.
+ *
+ *  So a restore path must take the collections and the profile from the file, and take those
+ *  two from the DEVICE'S CURRENT STATE. That is two lines in the caller, and the natural
+ *  implementation — `set(importJson(raw))` — gets it wrong. __tests__/storage.test.mjs holds
+ *  this note in place so it is read rather than discovered. */
 export function importJson(raw: string): AppState | null {
   try {
     const parsed = JSON.parse(raw);

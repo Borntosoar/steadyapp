@@ -224,8 +224,8 @@ STEADY+
 
 Anneal+ unlocks weeks 2 to 12, all twelve readings, unlimited thought records, mirror practice, behavioural experiments, and the full progress history.
 
-Anneal+ Yearly: 14-day free trial, then $79.99 per year. Renews annually until cancelled.
-Anneal+ Monthly: 14-day free trial, then $12.99 per month. Renews monthly until cancelled.
+Anneal+ Yearly: 30-day free trial, then $79.99 per year. Renews annually until cancelled.
+Anneal+ Monthly: 30-day free trial, then $12.99 per month. Renews monthly until cancelled.
 Anneal+ One-Time: $149 once. Not a subscription.
 
 Payment is charged to your Apple Account when you confirm the purchase. A subscription renews automatically unless auto-renew is switched off at least 24 hours before the period ends. Your account is charged for renewal within 24 hours of the end of the current period. Manage or cancel in your Apple Account settings. Any unused part of a free trial is forfeited if you buy a subscription during the trial.

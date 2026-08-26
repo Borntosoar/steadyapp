@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -478,3 +478,64 @@ describe('quarantine keeps one copy, not one per failed launch', () => {
       'wipeState no longer removes quarantined payloads');
   });
 });
+
+describe('a hostile backup file cannot grant itself anything', () => {
+  /* importJson has no caller today — no restore UI, no document picker, no file association —
+     so nothing can currently hand it a crafted file. As a parser it is already safe: the
+     payload goes through the same migrate → normalise allowlist as a real load.
+     Two fields are still attacker-settable through it, and both matter the moment somebody
+     builds the restore button that its own docstring assumes exists. These tests exist so
+     that person meets the constraint rather than discovering it. */
+
+  const crafted = () => importJson(JSON.stringify({
+    v: SCHEMA_VERSION,
+    data: {
+      ...emptyState(),
+      profile: { ...emptyState().profile, disclaimerAcceptedAt: '2020-01-01T00:00:00.000Z' },
+      entitlement: { source: 'purchase', plan: 'lifetime', expiresAt: null, verifiedAt: null },
+    },
+  }));
+
+  test('the parser still accepts it — the defence is in the caller, not here', () => {
+    /* Stated as a test so the next reader does not mistake "importJson refuses it" for the
+       protection. It does not refuse it, and it should not: refusing to PARSE a field is a
+       different job from refusing to APPLY it. */
+    const out = crafted();
+    assert.ok(out, 'a well-formed backup no longer parses');
+    assert.equal(out.entitlement.plan, 'lifetime');
+  });
+
+  test('and the file says, at the function, what a caller must not take from it', () => {
+    /* The note is the control. It is load-bearing, so it is pinned. */
+    const src = readFileSync(join(ROOT, 'lib/storage.ts'), 'utf8');
+    const at = src.indexOf('export function importJson');
+    const doc = src.slice(Math.max(0, at - 2000), at);
+    assert.match(doc, /HAS NO CALLER/, 'the importJson note no longer says it is unwired');
+    assert.match(doc, /entitlement/, 'the note does not warn about entitlement');
+    assert.match(doc, /disclaimerAcceptedAt/, 'the note does not warn about the consent record');
+    assert.match(doc, /DEVICE'S CURRENT STATE|device's current state/i,
+      'the note does not say where those two must come from instead');
+  });
+
+  test('it really has no caller, which is what makes the above a note and not a bug', () => {
+    const callers = ['app', 'components', 'store', 'hooks']
+      .flatMap((d) => walkTsx(join(ROOT, d)))
+      .filter((f) => /\bimportJson\s*\(/.test(readFileSync(f, 'utf8')))
+      .map((f) => f.slice(ROOT.length + 1));
+    assert.deepEqual(callers, [],
+      'importJson now has a caller. Check it takes entitlement and disclaimerAcceptedAt from '
+      + 'the device, not from the file — see the note above the function.');
+  });
+});
+
+function walkTsx(dir) {
+  const out = [];
+  let entries;
+  try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return out; }
+  for (const e of entries) {
+    const full = join(dir, e.name);
+    if (e.isDirectory()) out.push(...walkTsx(full));
+    else if (/\.tsx?$/.test(e.name)) out.push(full);
+  }
+  return out;
+}

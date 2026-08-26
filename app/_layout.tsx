@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Pressable, Text, ActivityIndicator, StyleSheet, Platform, AppState as RNAppState } from 'react-native';
 import { Stack, useRouter, usePathname } from 'expo-router';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -97,6 +97,8 @@ function Gate() {
   const router = useRouter();
   const pathname = usePathname();
   const hydrated = useStore((s) => s.hydrated);
+  /* True while the app is leaving the screen. See the AppState listener below. */
+  const [covered, setCovered] = useState(false);
   const hydrate = useStore((s) => s.hydrate);
   const disclaimerAcceptedAt = useStore((s) => s.profile.disclaimerAcceptedAt);
   const surveyedAt = useStore((s) => s.profile.surveyedAt);
@@ -141,6 +143,17 @@ function Gate() {
     const sub = RNAppState.addEventListener('change', (next) => {
       if (next === 'background' || next === 'inactive') void flushState();
       if (next === 'active') void refresh();
+      /* COVER THE APP-SWITCHER SNAPSHOT.
+         iOS renders and writes a snapshot of the live screen to
+         Library/Caches/Snapshots/<bundle-id>/ every time the app backgrounds, and shows it to
+         anyone who double-taps the home indicator. If somebody swipes home with a thought
+         record open, that text lands in the container as an UNENCRYPTED PNG.
+         This is the one place the encryption at rest is bypassed by the OS rather than by a
+         decision, and it is worse than the "unlocked phone" case lib/crypto.ts accepts: the
+         writing is visible in the switcher without opening the app at all.
+         'inactive' matters as much as 'background' — it is what fires for the app-switcher
+         gesture and for the share sheet, and it fires first. */
+      setCovered(next !== 'active');
     });
     return () => sub.remove();
   }, [refresh]);
@@ -197,6 +210,27 @@ function Gate() {
         }}
       />
       <SupportBar />
+      {/* The cover. Deliberately NOT an app lock — lib/crypto.ts is explicit that a passcode
+          between a person and the hard-day path at 2am is the wrong failure, and this is not
+          that: it appears only once the app is already leaving the screen, and it is gone
+          before a returning user can read it. Nothing to unlock, nothing to get past.
+          Opaque rather than blurred. A blur of legible text is still legible text at the
+          size a snapshot is displayed. */}
+      {covered && (
+        <View
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: c.bg,
+          }}
+        />
+      )}
     </View>
   );
 }

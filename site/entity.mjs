@@ -253,18 +253,44 @@ export function problems(entity, dir = LEGAL_DIR) {
    * be available in French; Law 25 imposes privacy duties beyond PIPEDA including a named,
    * published privacy officer; and Quebec's Consumer Protection Act restricts liability
    * language that is unremarkable in the rest of Canada. This repository's documents are
-   * English-only and written to PIPEDA. Publishing them under a Quebec choice of law without
-   * a lawyer having looked would be shipping a known defect in a legal document.
+   * English-only and written to PIPEDA. Publishing them without a lawyer having looked would
+   * be shipping a known defect in a legal document.
    *
    * A flag rather than an attempt, because writing French consumer-contract text and a Law 25
-   * privacy programme is not something to improvise. */
-  if (entity.province === 'Quebec' && entity.quebecCounselConfirmed !== true) {
+   * privacy programme is not something to improvise.
+   *
+   * ⚠ THIS GATE USED TO READ `entity.province === 'Quebec'`, AND THAT WAS THE WRONG FACT.
+   *
+   * Neither statute is triggered by where the publisher is registered. Law 25 binds every
+   * person who "carries on an enterprise" and holds personal information about others; the
+   * Charter reaches goods and services offered to consumers in Quebec. Both are about who you
+   * SELL TO, not where you are incorporated. This app is planned for worldwide App Store
+   * availability, which includes Canada, which includes Quebec.
+   *
+   * So the old condition was a false-negative generator, and a confident one: set the province
+   * to Ontario and the build certified a clean publish precisely in the case where the
+   * documents are non-compliant and nobody is told. A gate that goes quiet on the scenario it
+   * exists to catch is worse than no gate, because somebody trusts it.
+   *
+   * It now fires unless counsel has confirmed — for any province. Whether App Store
+   * distribution alone amounts to carrying on an enterprise in Quebec is a real question with
+   * a real argument on both sides, and it is exactly the kind of question that gets answered
+   * by a lawyer rather than by a conditional. `quebecCounselConfirmed` is where the answer
+   * goes once somebody qualified has given it. */
+  if (entity.quebecCounselConfirmed !== true) {
+    const local = entity.province === 'Quebec';
     out.push(
-      'Quebec: these documents are English-only and written to PIPEDA. Bill 96 (French ' +
-        'consumer contracts), Law 25 (privacy duties beyond PIPEDA, including a published ' +
-        'privacy officer) and the Consumer Protection Act (liability language) all apply and ' +
-        'none is addressed here. See legal/README.md. Set "quebecCounselConfirmed": true only ' +
-        'once a lawyer has actually reviewed it.'
+      `Quebec: these documents are English-only and written to PIPEDA. Bill 96 (French ` +
+        `consumer contracts), Law 25 (privacy duties beyond PIPEDA, including a published ` +
+        `privacy officer) and the Consumer Protection Act (liability language) are all ` +
+        (local
+          ? 'directly engaged, and none is addressed here. '
+          : 'triggered by SELLING TO Quebec residents, not by where you are registered — so ' +
+            `a ${entity.province ?? 'non-Quebec'} publisher on the Canadian App Store is in ` +
+            'scope too, and none of it is addressed here. ') +
+        'See legal/README.md §3.1. Set "quebecCounselConfirmed": true only once a lawyer has ' +
+        'actually reviewed it — or once you have decided to exclude Canada from the App Store ' +
+        'listing, which is the other real answer and is cheaper.'
     );
   }
 

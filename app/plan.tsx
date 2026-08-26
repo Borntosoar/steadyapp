@@ -99,6 +99,21 @@ export default function Plan() {
               placeholder={section.placeholder}
               placeholderTextColor={c.inkFaint}
               multiline
+              /* THE SAME THREE PROPS EVERY OTHER WRITING SURFACE IN THIS APP SETS, and the
+                 rule was written down in components/ui.tsx before this screen existed. This
+                 one is a raw TextInput rather than the shared `Field`, and it dropped them —
+                 on the most sensitive field set in the app.
+                 What is in these boxes: names of real people (`whoToTell`), and the point at
+                 which somebody would contact a professional about hurting themselves
+                 (`myLine`). On iOS `autoCorrect` defaults true, so those words enter the
+                 keyboard's learned lexicon, which persists across app deletion and is a known
+                 forensic artefact. On web these become a <textarea>, and Chrome's Enhanced
+                 Spellcheck and Edge's Microsoft Editor upload the full contents to Google and
+                 Microsoft — which would make "nothing leaves this phone" false on the one
+                 screen where it matters most. */
+              spellCheck={false}
+              autoCorrect={false}
+              autoComplete="off"
               accessibilityLabel={`${section.title}. ${section.prompt}`}
               style={[
                 t.body,

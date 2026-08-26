@@ -11,6 +11,8 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
+        "RCTAsyncStorageExcludeFromBackup": true,
+        "_RCTAsyncStorageExcludeFromBackup": "STATED, NOT INHERITED. AsyncStorage already defaults this to true and sets NSURLIsExcludedFromBackupKey on its directory — but that is a dependency default, Dependabot bumps the package weekly, and legal/privacy-policy.md carries a comment telling whoever upgrades it to re-verify. A comment is not a control. If upstream ever flips that default, every journal starts flowing into iCloud backups silently and the published privacy policy becomes false. Setting it here makes the guarantee ours.",
         "NSCameraUsageDescription": "Anneal uses the camera only as a live mirror for guided practice. Nothing is ever recorded, captured, or saved."
       },
       "config": {

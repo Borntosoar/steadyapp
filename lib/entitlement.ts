@@ -204,12 +204,45 @@ export function projectFromProvider(
   if (!p.active) {
     return { ...emptyEntitlement(), verifiedAt };
   }
+  /* THE TYPES END AT THIS LINE.
+   *
+   * `ProviderEntitlement` is typed `string | null | undefined`, and at runtime that type is a
+   * comment — this value arrives across a trust boundary from a third-party SDK's network
+   * response. Two fields were taken on faith, and both compose badly with decisions that are
+   * correct on their own:
+   *
+   *  · `expirationDate`. An unparseable-but-truthy value ("never", {}, a Date stringified
+   *    oddly) was stored as-is. `isEntitled` then finds Number.isNaN(expires) and returns
+   *    TRUE — "unparseable date: fail toward access", which is the right instinct for a
+   *    corrupted LOCAL cache and the wrong one for an unvalidated REMOTE field. Next launch,
+   *    normalise() either keeps the string or nulls it, and a null expiry is permanent
+   *    access. So one malformed response minted a subscription that survives restart.
+   *  · `productIdentifier`. `planFor` calls .includes() on it, so a non-string THROWS — and
+   *    projectFromProvider is called outside the .catch in hooks/useEntitlement.ts, from a
+   *    `void refresh()` that runs on every foreground.
+   *
+   * A response that fails validation is treated as "could not ask", not as "not entitled":
+   * this returns an unverified empty record, and the caller keeps its existing cache. The
+   * distinction is the one hooks/useEntitlement.ts is built around — never revoke on a
+   * question that could not be asked. */
+  const expiry = p.expirationDate;
+  const expiryOk =
+    expiry === null
+    || expiry === undefined
+    || (typeof expiry === 'string' && Number.isFinite(Date.parse(expiry)));
+  const productOk =
+    p.productIdentifier === null
+    || p.productIdentifier === undefined
+    || typeof p.productIdentifier === 'string';
+
+  if (!expiryOk || !productOk) return emptyEntitlement();
+
   // No cast. A cast here would let a stray or misspelled field through silently, which is
   // exactly the failure mode this file is being rewritten to remove.
   const out: Entitlement = {
     source: p.periodType === 'trial' ? 'trial' : 'purchase',
     plan: planFor(p.productIdentifier),
-    expiresAt: p.expirationDate ?? null,
+    expiresAt: expiry ?? null,
     verifiedAt,
   };
   if (typeof p.willRenew === 'boolean') out.willRenew = p.willRenew;

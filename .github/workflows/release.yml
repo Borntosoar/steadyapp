@@ -143,7 +143,11 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          npx eas-cli@latest build \
+          # PINNED, not @latest. This step's env holds EXPO_TOKEN, and `npx eas-cli@latest`
+          # downloads and executes whatever was published to npm minutes earlier — the only
+          # executable in the release path not covered by the lockfile, running next to the
+          # one secret. Dependabot bumps this like anything else.
+          npx eas-cli@21.4.1 build \
             --platform ios \
             --profile production \
             --non-interactive \

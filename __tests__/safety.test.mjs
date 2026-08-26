@@ -823,3 +823,103 @@ describe('the two-taps promise is a route, not a sentence', () => {
     }
   });
 });
+
+describe('nothing a person writes reaches a keyboard cache or a spellcheck server', () => {
+  /* components/ui.tsx has stated this rule since before there were five inputs to apply it
+     to, and app/journal.tsx applies it on all three of its raw ones. app/plan.tsx did not.
+     It is a raw TextInput rather than the shared `Field`, and it holds `whoToTell` — the
+     names of real people — and `myLine`, which content/modules.ts defines as the point at
+     which somebody would contact a professional about hurting themselves.
+     On iOS, autoCorrect defaults true, so those words enter the keyboard's learned lexicon
+     (Library/Keyboard/*-dynamic-text.dat), which survives app deletion and is a known
+     forensic artefact. On web, react-native-web renders a <textarea>, and Chrome's Enhanced
+     Spellcheck and Edge's Microsoft Editor upload the whole field to Google and Microsoft.
+     A rule written in a comment is a habit. This makes it a rule. */
+
+  const NEEDED = ['spellCheck={false}', 'autoCorrect={false}', 'autoComplete="off"'];
+
+  /** Every `<TextInput` in the tree, with the text of its own prop block. */
+  const inputs = () => {
+    const found = [];
+    for (const f of FILES) {
+      const src = withoutComments(f.src);
+      let i = src.indexOf('<TextInput');
+      while (i !== -1) {
+        /* To the end of the opening tag. Nested braces make a naive `>` search wrong, so
+           depth is tracked — a style object contains `}` and `>` of its own. */
+        let depth = 0;
+        let j = i;
+        for (; j < src.length; j += 1) {
+          const ch = src[j];
+          if (ch === '{') depth += 1;
+          else if (ch === '}') depth -= 1;
+          else if (ch === '>' && depth === 0) break;
+        }
+        found.push({ path: f.path, props: src.slice(i, j) });
+        i = src.indexOf('<TextInput', j);
+      }
+    }
+    return found;
+  };
+
+  test('there are text inputs to check', () => {
+    const all = inputs();
+    assert.ok(all.length >= 4, `only found ${all.length} TextInputs — has the scan broken?`);
+  });
+
+  test('every text input in the app sets all three', () => {
+    for (const { path, props } of inputs()) {
+      for (const need of NEEDED) {
+        assert.ok(
+          props.includes(need),
+          `${path} has a <TextInput> without ${need}.\n`
+          + '  Every field somebody types their own words into must set all three — see the '
+          + 'comment in components/ui.tsx. Use the shared `Field` component and this is free.',
+        );
+      }
+    }
+  });
+
+  test('the shared Field sets them too, so using it is the safe default', () => {
+    const ui = withoutComments(readFileSync(join(ROOT, 'components/ui.tsx'), 'utf8'));
+    for (const need of NEEDED) {
+      assert.ok(ui.includes(need), `components/ui.tsx Field no longer sets ${need}`);
+    }
+  });
+});
+
+describe('what is on screen does not survive in the app-switcher snapshot', () => {
+  /* iOS writes a snapshot of the live screen to Library/Caches/Snapshots/<bundle-id>/ every
+     time the app backgrounds, and shows it to anyone who double-taps the home indicator. A
+     thought record on screen at that moment becomes an unencrypted PNG in the container.
+     This is the one place the encryption at rest is bypassed by the OS rather than by a
+     decision, and it is worse than the unlocked-phone case lib/crypto.ts knowingly accepts:
+     the writing is readable from the switcher without opening the app.
+     Deliberately NOT an app lock. lib/crypto.ts is explicit that a passcode between somebody
+     and the hard-day path at 2am is the wrong failure. This appears only as the app leaves
+     the screen and is gone before a returning user sees it. */
+  const layout = withoutComments(readFileSync(join(ROOT, 'app/_layout.tsx'), 'utf8'));
+
+  test('the app covers itself when it stops being the active app', () => {
+    assert.match(layout, /setCovered\(next !== 'active'\)/,
+      'nothing covers the screen on backgrounding, so the app-switcher snapshot captures '
+      + 'whatever was on it — including an open thought record');
+  });
+
+  test('it covers on inactive as well as background', () => {
+    /* 'inactive' is what fires for the app-switcher gesture and the share sheet, and it
+       fires FIRST. Covering only on 'background' misses the case the snapshot is taken in. */
+    assert.doesNotMatch(layout, /setCovered\(next === 'background'\)/,
+      "the cover keys on 'background' alone; the switcher gesture fires 'inactive' first");
+  });
+
+  test('the cover is opaque, not a blur or a fade', () => {
+    /* Blurred legible text is legible text at the size a snapshot is displayed. */
+    const at = layout.indexOf('{covered && (');
+    assert.ok(at > 0, 'the cover is no longer rendered');
+    const block = layout.slice(at, at + 600);
+    assert.match(block, /backgroundColor: c\.bg/, 'the cover is not painted with a solid ground');
+    assert.doesNotMatch(block, /opacity|BlurView|intensity/,
+      'the cover is translucent or blurred, so the snapshot still contains readable text');
+  });
+});
