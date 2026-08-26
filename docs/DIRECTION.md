@@ -1372,3 +1372,56 @@ no writer anywhere in the app. Onboarding says "both get used" of two answers it
 neither of. `legal/entity.json` has five null fields that block submission. `purchase()` grants
 access with no StoreKit behind it. Each is a decision rather than a defect, and the honest
 version is that they are listed here rather than quietly patched.
+
+## 15. Closing the list §14 left open
+
+§14 ended with four things listed as open rather than fixed, on the grounds that they were
+decisions rather than defects. Three of them were not decisions once looked at properly, and
+this section is what they turned out to be.
+
+**The relapse plan was sold in six places and had no writer.** `NAMES.plan.title` is "Write
+your plan". Two modules render it as their action button. Progress promises the backup
+"contains everything you have written, including your plan" and that Delete everything erases
+it. The App Store description pitches "a written plan for the weeks that go badly" as part of
+weeks 10 to 12. `setRelapsePlan` had zero call sites, there was no screen, and the two buttons
+navigated to the journal — which offers a thought record and an experiment, neither of which
+is a plan — and to another article.
+
+It is built now, with six sections because the module teaches six numbered ones and the type
+had four that did not match any of them. The field titles are copied from the module's own
+headings, so somebody who has just read "Your fire exit" recognises every one; a test holds
+those together word for word. It is one scroll rather than a stepped flow, because a plan is a
+document you revise and half of it is only answerable after reading the other half. It saves
+on every keystroke and never blocks on being complete: a plan with two sections written is
+worth more on a bad day than one that was never started.
+
+**Onboarding said "both get used" of two answers it stored neither of.** "The first sets your
+week" was false twice over — `PRACTICE_DAYS_PER_WEEK` was a hard 4, so somebody who answered
+"two days a week" was held to double what they said they could manage, on the screen that had
+just told them to answer for a bad week. Both are stored now; the target reaches the two
+functions that decide when a week is done, clamped, because it arrives from stored JSON and a
+0 would advance the protocol on an empty week. What they said they wanted back appears on the
+hard-day screen, quoted and not commented on.
+
+**The two-taps promise was prose, not a route.** SAFETY.md §4 says grounding, breathing, the
+hard-day path and the check-in are "reachable in two taps or fewer from any screen", and the
+App Review notes told Apple the same thing "via the Support control in the top right". The
+Support screen held crisis lines, a therapist section and an email link. From Learn, breathing
+was three taps; from inside a module, four. A reviewer testing that sentence would have found
+it false. It was made true rather than narrowed, and the assertions hold the routes now.
+
+**The pattern from §14 held all the way down.** Two more guards were found asserting nothing:
+one matched an interface declaration instead of the implementation it was meant to check, and
+one grepped for an identifier that survived the render being deleted. Both were caught by
+mutation rather than by reading, which is the only way this class of hole is ever found. The
+`recommendedAction` rename exposed a third: the protocol tests are `.mjs`, so nothing
+typechecked them, and after a field was renamed they were passing `undefined` and staying
+green.
+
+**Still genuinely open, and these ones really are decisions.** `legal/entity.json` has five
+null fields that block submission and that only the publisher can fill — a legal name, an
+address, a jurisdiction. `purchase()` grants access with no StoreKit behind it, so the payment
+terms in the listing describe a flow that does not run; wiring RevenueCat needs credentials
+and a store account. Both are blocked on facts nobody in this repository has, rather than on
+work nobody has done, and `npm run preflight` already refuses to build a release while either
+stands.
