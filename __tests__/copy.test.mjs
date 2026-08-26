@@ -3,6 +3,12 @@ import assert from 'node:assert/strict';
 
 const copy = await import('../content/copy.ts');
 const ex = await import('../content/exercises.ts');
+const names = await import('../content/names.ts');
+const tracks = await import('../content/tracks.ts');
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /* Walk every exported string in a module, including inside objects and arrays, and
  * including the output of any string-returning function called with representative
@@ -126,6 +132,74 @@ describe('specific promises the copy makes', () => {
       assert.ok(copy.STREAK_COPY.milestones[n], `missing milestone ${n}`);
     }
     assert.match(copy.STREAK_COPY.milestones[7], /showing up/i);
+  });
+});
+
+describe('every number the copy states matches the thing it describes', () => {
+  /* A count in a sentence is a promise the user can check by doing the thing, and this app
+     has now shipped three that failed that check: "Twelve short reads, one a week" over
+     modules at weeks 1,1,1,4..12; "Seven questions" over an eight-step thought record whose
+     own progress caption reads "1 of 8"; and one exercise described as two minutes in
+     thirteen track rows and ninety seconds on the menu those rows open.
+     These derive from the data rather than restating it, so the data moving fails the test
+     instead of quietly making a sentence false. */
+
+  const WORD = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
+                'eight', 'nine', 'ten', 'eleven', 'twelve'];
+
+  test('the thought record states as many questions as it has steps', () => {
+    const n = ex.THOUGHT_RECORD_STEPS.length;
+    assert.match(
+      names.NAMES.thought.sub, new RegExp(`^${WORD[n]} questions`, 'i'),
+      `the thought record has ${n} steps and journal.tsx renders "1 of ${n}", so the row `
+      + `subtitle must say ${WORD[n]} — it reads "${names.NAMES.thought.sub}"`,
+    );
+  });
+
+  test('the urge timer states the duration it actually runs', () => {
+    const mins = ex.URGE_SURF.totalSeconds / 60;
+    assert.match(names.NAMES.urge.sub, new RegExp(`\\b${WORD[mins]} minutes\\b`, 'i'),
+      `URGE_SURF runs ${ex.URGE_SURF.totalSeconds}s and the row says "${names.NAMES.urge.sub}"`);
+  });
+
+  /** Every "<exercise>, <duration>" label on a track day, grouped by exercise. */
+  const practiceLabels = () =>
+    tracks.TRACKS.flatMap((t) => t.days.map((d) => d.practice.label));
+
+  test('one exercise is not two different durations in two different places', () => {
+    /* The values anchor was "ninety seconds" on the grounding menu, backed by
+       VALUES_ANCHOR.totalSeconds = 90, and "two minutes" on six track rows that route
+       straight into it. Same tap, two numbers, and nothing times either. */
+    const labels = practiceLabels();
+    for (const needle of ['values anchor', 'five senses', 'breathing', 'widening']) {
+      const found = new Set(
+        labels.filter((l) => l.toLowerCase().includes(needle))
+          .map((l) => l.replace(/^[^,]*,\s*/, '').trim().toLowerCase()),
+      );
+      assert.ok(found.size <= 1,
+        `"${needle}" is described as ${[...found].map((d) => `"${d}"`).join(' and ')} `
+        + 'on different track rows — same exercise, different numbers');
+    }
+  });
+
+  test('the values anchor says the duration its constant sets', () => {
+    assert.equal(ex.VALUES_ANCHOR.totalSeconds, 90, 'the constant moved — the copy must move with it');
+    const labels = practiceLabels().filter((l) => /values anchor/i.test(l));
+    assert.ok(labels.length > 0, 'no track row routes to the values anchor any more');
+    for (const l of labels) {
+      assert.match(l, /ninety seconds/i,
+        `VALUES_ANCHOR.totalSeconds is ${ex.VALUES_ANCHOR.totalSeconds}, and this row says "${l}"`);
+    }
+  });
+
+  test('the grounding menu agrees with the track rows that open it', () => {
+    /* The menu subtitle and the track label describe the same tap. They disagreed on two of
+       the four tools; this holds the pair together in both directions. */
+    const menu = readFileSync(join(ROOT, 'app/grounding.tsx'), 'utf8');
+    assert.match(menu, /'Remember what matters', sub: 'Ninety seconds/,
+      'the grounding menu no longer says ninety seconds for the values anchor');
+    assert.doesNotMatch(menu, /'Name five things', sub: 'Three minutes/,
+      'the five senses menu row says three minutes while thirteen track rows say two');
   });
 });
 

@@ -56,7 +56,7 @@ export const SENSES_STEPS: SensesStep[] = [
   {
     count: null,
     title: 'Done',
-    text: "Notice where your attention is now compared to three minutes ago. That's the skill. It's moveable.",
+    text: "Notice where your attention is now compared to a couple of minutes ago. That's the skill. It's moveable.",
   },
 ];
 

@@ -195,7 +195,7 @@ function Menu({ onPick, onBack, done }: { onPick: (t: Tool) => void; onBack: () 
   const c = useTheme();
   const items: { k: Tool; title: string; sub: string; glyph: GlyphKind }[] = [
     { k: 'breath', title: 'Slow your breathing', sub: 'About eighty seconds', glyph: 'rings' },
-    { k: 'senses', title: 'Name five things', sub: 'Three minutes. No timer, no rush', glyph: 'senses' },
+    { k: 'senses', title: 'Name five things', sub: 'About two minutes. No timer, no rush', glyph: 'senses' },
     { k: 'widen', title: 'Widen your attention', sub: 'One minute', glyph: 'wave' },
     { k: 'values', title: 'Remember what matters', sub: 'Ninety seconds. Three questions', glyph: 'anchor' },
   ];

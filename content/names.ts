@@ -37,7 +37,7 @@ export const NAMES = {
     title: 'Take a thought apart',
     unit: 'thought you took apart',
     unitPlural: 'thoughts you took apart',
-    sub: 'Seven questions, about five minutes',
+    sub: 'Eight questions, about five minutes',
   },
   experiment: {
     title: 'Test a prediction',

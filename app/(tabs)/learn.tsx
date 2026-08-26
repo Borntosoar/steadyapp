@@ -70,9 +70,18 @@ export default function LearnIndex() {
             <IconBadge icon="arrow" />
           </View>
         </Frost>
-      ) : (
+      ) : readCount >= MODULES.length ? (
         <Caption style={{ marginTop: space.lg }}>
           All {MODULES.length} read. They stay here for whenever you want them again.
+        </Caption>
+      ) : (
+        /* NOT "All 12 read". `unread` is filtered by `open()`, so it empties for a free user
+           the moment they finish the three free week-one reads — and the branch above then
+           congratulated them on finishing all twelve, on the same screen whose card had just
+           said "3 of 12 read". Running out of what you are allowed to open is a different
+           state from running out of reading, and only one of them is an achievement. */
+        <Caption style={{ marginTop: space.lg }}>
+          {readCount} of {MODULES.length} read. The rest open with Anneal+.
         </Caption>
       )}
 

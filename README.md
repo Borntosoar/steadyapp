@@ -103,7 +103,7 @@ neutral-description prompt every 25 seconds → post-rating → the delta, and t
 deltas across sessions. Three surfaces: native camera, web `getUserMedia`, or a
 text-guided session if either is declined. The third path collects identical data.
 
-**Journal** — a seven-step thought record with tappable distortion definitions, and the
+**Journal** — an eight-step thought record with tappable distortion definitions, and the
 behavioural-experiment engine: predict, drop a safety behaviour, do the thing, record
 what actually happened, re-rate. The archive of past experiments is the evidence.
 
