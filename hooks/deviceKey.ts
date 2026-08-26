@@ -94,3 +94,30 @@ export async function initDeviceCrypto(): Promise<KeyOutcome> {
   });
   return outcome;
 }
+
+/** Forget the device key.
+ *
+ *  Called only from `reset()`, after `wipeState()`. "Delete everything" left the 256-bit key
+ *  sitting in the Keychain, and the reasoning at the top of this file — "the key and the data
+ *  die together when the app is deleted" — is wrong about iOS on its own terms: Keychain items
+ *  survive an uninstall. AsyncStorage does die with the app, so the conclusion held by
+ *  accident, but the key did not die with it.
+ *
+ *  A key with no ciphertext is inert, so this is tidiness rather than a breach — until a
+ *  sealed byte survives somewhere it should not (a `multiRemove` that failed halfway, an
+ *  encrypted device backup of the container), at which point the key needed to read it is
+ *  still on the phone after the user was told everything was gone.
+ *
+ *  Deliberately silent and best-effort. A Keychain that cannot be reached must not turn a
+ *  successful "delete everything" into a visible failure — the journal is already gone by the
+ *  time this runs, and that is the part the user asked for. The next launch takes the
+ *  `'created'` path and mints a fresh key. */
+export async function forgetDeviceKey(): Promise<void> {
+  try {
+    await SecureStore.deleteItemAsync(KEY_ID, {
+      keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+    });
+  } catch {
+    /* nothing useful to do, and nothing worth telling the user about */
+  }
+}

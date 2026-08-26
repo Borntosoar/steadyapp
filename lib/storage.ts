@@ -681,6 +681,53 @@ export async function wipeState(): Promise<void> {
   } catch {
     /* nothing useful to do */
   }
+  /* And the exports. The button's own copy says it erases "every check-in, every note, your
+     plan and your history" — a cleartext backup of all four surviving in the cache makes that
+     sentence false in the same way the quarantine copies did. */
+  await sweepExports();
+}
+
+/** Every export filename this app can leave behind. */
+export const EXPORT_FILE = /^anneal-(backup|summary)-\d{4}-\d{2}-\d{2}\.(json|txt)$/;
+
+/** Delete any export file left in the cache directory. Returns how many went.
+ *
+ *  Both export paths write THE WHOLE JOURNAL IN CLEARTEXT to `Paths.cache`, hand it to
+ *  `Share.share`, and delete it in a `finally`. A `finally` does not run if the process is
+ *  killed — and while the iOS share sheet is up the app is backgrounded and eligible to be
+ *  jetsammed. So: tap "Save a full backup", sheet opens, iOS reclaims the app, and a plaintext
+ *  copy of every thought record, every urge trigger and the relapse plan's whoToTell is left
+ *  sitting in the container. That is precisely the file-level threat model lib/crypto.ts was
+ *  written for. The encryption at rest was being undone by the export button next to it.
+ *
+ *  The CrashScreen path is the likely one rather than the theoretical one: it renders on an
+ *  app that has just crashed, and asks the user to press "Save my writing" immediately.
+ *
+ *  Nothing swept this, so the file also outlived "Delete everything" — wipeState only ever
+ *  touched AsyncStorage. Called from wipeState and once at launch, which covers both the user
+ *  asking for it to be gone and the app simply getting another chance at it. */
+export async function sweepExports(): Promise<number> {
+  let removed = 0;
+  try {
+    /* Imported here rather than at the top of the file on purpose. `expo-file-system` is a
+       native module whose entry point is TypeScript, and the whole suite loads this file
+       under plain node — a top-level import makes every storage test fail to even parse.
+       Deferring it also means a platform without a cache directory never loads the module. */
+    const { Directory, Paths } = await import('expo-file-system');
+    for (const entry of new Directory(Paths.cache).list()) {
+      /* Directories carry a name too; only a file can match this pattern. */
+      if (!EXPORT_FILE.test(entry.name)) continue;
+      try {
+        entry.delete();
+        removed += 1;
+      } catch {
+        /* One file we cannot delete is not a reason to stop deleting the rest. */
+      }
+    }
+  } catch {
+    /* No cache directory, or a platform without one. Nothing to sweep. */
+  }
+  return removed;
 }
 
 /* ---------- export ----------

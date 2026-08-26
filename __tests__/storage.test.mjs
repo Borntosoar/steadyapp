@@ -1,9 +1,14 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   normalise, emptyState, exportText, exportJson, importJson, MIGRATIONS, SCHEMA_VERSION,
-  isFromNewerBuild, STORAGE_KEY, QUARANTINE_PREFIX,
+  isFromNewerBuild, STORAGE_KEY, QUARANTINE_PREFIX, EXPORT_FILE,
 } from '../lib/storage.ts';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /* Persistence.
  *
@@ -357,5 +362,69 @@ describe('the storage keys survive a rename of the app', () => {
 
   test('the quarantine prefix is unchanged, because quarantined data can least afford it', () => {
     assert.equal(QUARANTINE_PREFIX, 'steady.unreadable.');
+  });
+});
+
+describe('a cleartext export cannot outlive the share sheet', () => {
+  /* Both export paths write the WHOLE JOURNAL in cleartext to the cache, hand it to
+     Share.share, and delete it in a `finally`. A `finally` does not run when the process is
+     killed, and while the iOS share sheet is up the app is backgrounded and jetsammable. So
+     a plaintext copy of every thought record, every urge trigger and the relapse plan's
+     whoToTell could be left in the container — the exact file-level threat lib/crypto.ts
+     exists to defend against, undone by the button next to it. Worse, nothing swept it, so it
+     also survived "Delete everything".
+
+     EXPORT_FILE is what the sweep matches on, so these are tests of the pattern: it has to
+     catch every name the app can write, and nothing else in a directory it does not own. */
+
+  const matches = (name) => EXPORT_FILE.test(name);
+
+  test('it matches every filename the export paths can produce', () => {
+    /* The three literals in app/(tabs)/progress.tsx and components/CrashScreen.tsx. */
+    for (const name of ['anneal-backup-2026-08-26.json', 'anneal-summary-2026-08-26.txt',
+                        'anneal-backup-2024-01-01.json']) {
+      assert.ok(matches(name), `the sweep would leave ${name} behind`);
+    }
+  });
+
+  test('the names in the source are the names the sweep looks for', () => {
+    /* Derived, not restated. If somebody renames an export, this fails rather than the sweep
+       quietly stopping at the old prefix. */
+    const sources = ['app/(tabs)/progress.tsx', 'components/CrashScreen.tsx']
+      .map((rel) => readFileSync(join(ROOT, rel), 'utf8')).join('\n');
+    const names = [...sources.matchAll(/`(anneal-[a-z]+-\$\{[^`]*?\}\.(?:json|txt))`/g)]
+      .map((m) => m[1].replace(/\$\{[^}]*\}/, '2026-08-26'));
+    assert.ok(names.length >= 2, `only found ${names.length} export filenames in the source`);
+    for (const n of names) {
+      assert.ok(matches(n), `the export writes "${n}" and the sweep does not match it`);
+    }
+  });
+
+  test('it leaves everything it does not own alone', () => {
+    /* The sweep runs over a shared cache directory at every launch. Deleting somebody else's
+       file — or a half-written one of ours under a temp name — would be a worse bug than the
+       one it fixes. */
+    for (const name of ['photo.json', 'anneal.json', 'anneal-backup.json',
+                        'anneal-backup-2026-08-26.json.tmp', 'my-anneal-backup-2026-08-26.json',
+                        'anneal-backup-yesterday.json', 'ExponentAsset-abc123.png',
+                        'anneal-backup-2026-08-26.pdf', 'RCTAsyncLocalStorage']) {
+      assert.ok(!matches(name), `the sweep would delete ${name}, which is not its file`);
+    }
+  });
+
+  test('wipeState sweeps them, so "delete everything" means everything', () => {
+    /* The button's copy says it erases "every check-in, every note, your plan and your
+       history". A cleartext backup of all four surviving in the cache makes that false. */
+    const storage = readFileSync(join(ROOT, 'lib/storage.ts'), 'utf8');
+    const body = storage.slice(storage.indexOf('export async function wipeState'));
+    const fn = body.slice(0, body.indexOf('\n}\n') + 3);
+    assert.match(fn, /sweepExports\(\)/,
+      'wipeState no longer sweeps the exports — a plaintext backup survives "Delete everything"');
+  });
+
+  test('and it runs at launch, for the file a kill already orphaned', () => {
+    const store = readFileSync(join(ROOT, 'store/useStore.ts'), 'utf8');
+    assert.match(store, /hydrate: async \(\) => \{[\s\S]{0,600}?sweepExports\(\)/,
+      'nothing sweeps at launch, so a file orphaned by a kill stays until the next wipe');
   });
 });

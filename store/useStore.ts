@@ -12,7 +12,8 @@ import type {
   ThoughtRecord,
   UrgeLog,
 } from '../types';
-import { emptyState, loadState, saveState, wipeState, isEncryptionActive } from '../lib/storage';
+import { emptyState, loadState, saveState, wipeState, isEncryptionActive, sweepExports } from '../lib/storage';
+import { forgetDeviceKey } from '../hooks/deviceKey';
 import { regionForLocale } from '../constants/support';
 import { deviceLocale } from '../hooks/deviceLocale';
 import { dayKey, registerPractice, milestoneReached } from '../lib/streak';
@@ -137,6 +138,12 @@ export const useStore = create<StoreApi>((set, get) => ({
   encrypted: true,
 
   hydrate: async () => {
+    /* Sweep any export left behind by a share sheet the app did not survive. Not awaited: it
+       touches nothing this function reads, and the journal appearing on screen must not wait
+       on a directory listing. See sweepExports in lib/storage.ts for how a cleartext file gets
+       orphaned in the first place — a `finally` does not run when iOS reclaims the process. */
+    void sweepExports();
+
     const { state, ok, quarantinedAt } = await loadState();
 
     /* Guess the crisis-line region from the device, but ONLY on a genuinely fresh install.
@@ -170,6 +177,10 @@ export const useStore = create<StoreApi>((set, get) => ({
       saveTimer = null;
     }
     await wipeState();
+    /* The key too. wipeState removes every ciphertext; this removes the thing that could read
+       it. See hooks/deviceKey.ts — the Keychain survives an app uninstall on iOS, so "delete
+       everything" was leaving a live key behind. */
+    await forgetDeviceKey();
     set({
       ...emptyState(),
       hydrated: true,
