@@ -58,6 +58,46 @@ before changing anything about data handling.
 - **Retention of purchase records:** six years, per the CRA's general rule for business
   records.
 
+## US and Canadian review, August 2026 — what it found
+
+Three reviews ran over the document set and the code: one on US federal and state law, one on
+Canadian federal and provincial law, one on the app's real attack surface. What follows is the
+short version; the fixes are in the git history and the open items are in §3 and §5.
+
+**The document set was built for the wrong US regime.** It carries a CCPA section, and CCPA is
+the one US law that almost certainly never applies — a pre-revenue publisher meets none of its
+three thresholds. The six that plausibly DO apply — Washington's My Health My Data Act, Nevada
+SB 370, Connecticut SB 3, the Texas and Utah App Store Accountability Acts, and the FTC Health
+Breach Notification Rule — appeared nowhere in this folder. `consumer-health-data-policy.md`
+now covers the first two. The others are in §5.
+
+**The Quebec gate was checking the wrong fact, and it was a false-negative generator.** It
+fired only when `province === 'Quebec'`. Neither Bill 96 nor Law 25 is triggered by where the
+publisher is registered — Law 25 binds anyone carrying on an enterprise who holds personal
+information, and the Charter reaches goods offered to consumers in Quebec. Both follow the
+customer. Worldwide App Store availability includes Canada, which includes Quebec. So setting
+the province to Ontario published clean, with no warning, in precisely the case where these
+documents are non-compliant. Fixed: it now blocks from every province until counsel confirms.
+
+**The privacy policy said the journal was plain text, months after the encryption shipped.**
+Its own break-risk list had predicted that exact drift. Predicting is not preventing, so it is
+a test now — the policy must name the cipher `lib/crypto.ts` actually uses.
+
+**The camera position is stronger than the documents claimed, and is now stated properly.**
+BIPA, CUBI and Washington's biometric statute all turn on a template being created, not on a
+camera being on. The app creates none — no detection, no landmarking, no ref on the
+CameraView, so `takePictureAsync` is structurally unreachable. That is a real defence and it is
+now written in the statutory phrase, with four tests that fire if anybody adds face processing.
+
+**Nothing in the attack-surface review was a break.** Every deep-link parameter is validated
+against a closed set; the one mount-time write is guarded by an in-memory flag a URL cannot
+forge; `normalise()` is a real allowlist and prototype pollution is unreachable; there is no
+OTA path and three separate mechanisms stop one reappearing. Six findings, all hardening:
+the app-switcher snapshot, the keyboard cache on the relapse plan, an unvalidated provider
+response, an unpinned release CLI, an inherited backup default, and a note on `importJson`.
+
+---
+
 ## 3. What is still open
 
 Everything else is written. Nothing fake was invented, so these are the whole remaining gap.
@@ -224,3 +264,39 @@ are the ones specific to this product, and they are where the money is well spen
 5. **Whether "no data leaves the device" removes the controller obligations it appears to.**
    The answer is probably mostly yes, and it is worth an hour of a professional's time to
    know exactly which duties survive rather than assuming.
+
+---
+
+## What these reviews did NOT do, and must not be read as having done
+
+Three things, and the distinction matters more than the list.
+
+**No French translation was written, and none should be improvised.** If counsel concludes
+Quebec applies, `terms-of-use.md` and `privacy-policy.md` need professional French versions —
+Charter art. 55 requires a contract of adhesion to be drawn up in French and *remitted to and
+examined by* the other party before they may bind themselves in another language. Machine
+translation is the wrong tool twice over: it produces consumer-contract text nobody has
+verified, and `docs/LOCALISATION.md` §3 makes the separate point that translating the app's
+copy silently voids the English-pattern-matching safety tests in `__tests__/copy.test.mjs`,
+which is what currently stops treatment claims shipping. Budget for a translator or exclude
+Canada from the listing. Those are the two real options.
+
+**No legal conclusion was reached about whether the on-device data is "collected".** It is the
+question underneath PIPEDA, Law 25, MHMDA and CTDPA all at once, and there is no Canadian or
+Washington authority squarely on it. The argument that it is not is control-based and good; the
+counter-argument is that MHMDA reaches "infer, derive, or otherwise process ... in any manner"
+and that the publisher determines the purposes and means regardless of who holds the bytes.
+Everything written here is drafted so the answer does not change it. That is deliberate, and it
+is not the same as the answer being known.
+
+**No incorporation decision was made, and it is not an administrative one.** §3.2 frames sole
+proprietorship versus incorporation as cost and speed. On the US facts it is the largest
+financial exposure in this repository: MHMDA's private right of action carries treble damages
+and fee-shifting, BIPA carries $1,000/$5,000 per violation, and both are class-action shapes.
+A sole proprietor selling a body-dysmorphia app into fifty states has personal assets behind
+every one of them. Treat incorporation as a compliance control and ask counsel in those terms.
+
+**And the standing caveat, which has not moved.** Nobody who wrote any of this is a lawyer.
+Every document in this folder is a draft checked against the source code, which is a different
+and much smaller thing than legal review. §5 lists what to buy an hour of a professional's time
+for; the three items above are now at the top of it.
