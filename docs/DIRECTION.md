@@ -1302,3 +1302,73 @@ passes forever, and this file has been caught by that before.
 **"Test a prediction" did not come back to the table.** Experiments are gated by `phase.id >= 3`,
 which is a protocol position, not a billing one. With the week row restored it would be counted
 twice, and a free user who subscribes at week 1 does not get experiments — they get week 2.
+
+## 14. The second audit pass, and the pattern in what it found
+
+Four agents ran over the whole app at once — security, correctness, design, and a sweep for
+claims the code does not back. Twenty-odd findings, and once they were sorted the same defect
+was underneath most of them.
+
+**Every guard that failed had a hand-written list of places to look.**
+
+- The clamp test from §13 named three screens. There were seven readers of
+  `protocol.currentWeek`, and the four it did not name were the four that were wrong —
+  Progress printed "Week 9 of 12" beside three tabs saying week 1, Journal unlocked
+  experiments off the raw week while Practice locked them off the clamped one, Mirror looked
+  up its session spec by the raw week.
+- The container-dimming rule named two files. The screen doing exactly the forbidden thing —
+  Learn, dimming every locked row's whole subtree to 0.66, measured 3.16:1 against AA's 4.5 —
+  was not one of the two. Its regex also matched only `opacity: X ? 1 : 0.NN`, so a nested
+  ternary would have slipped past even from a listed file. Two independent holes, same cause.
+- The comment stripper the four network guards depend on was a regex that does not know what
+  a string literal is. Three lines — open with a string containing slash-star, put a `fetch`
+  in the middle, close with a string containing star-slash — and the network-primitive check,
+  the URL check, the WebView check and the import allowlist all pass. Verified by planting
+  real exfiltration paths in real shipped files: `fetch` in lib/storage.ts, a Sentry import in
+  hooks/useEntitlement.ts, a WebView in components/frost.tsx. All three passed the old guard.
+
+A hand-written list of call sites is a list of the ones somebody remembered, and the whole
+value of an invariant is the case nobody remembered. Every one of these now walks the tree and
+asserts the property. The clamp test was verified against a screen that does not exist yet —
+a brand-new file reading the week and never clamping it — which the old test could not have
+caught at any level of effort.
+
+**The second pattern: a document that predicted its own drift, and drifted anyway.**
+
+`legal/privacy-policy.md` said the journal is stored as "ordinary readable text", carried a
+warning block saying an encryption layer was being built, and instructed whoever shipped it to
+rewrite the section. XChaCha20-Poly1305 shipped. The rewrite did not. So the live legal
+document described a build that no longer existed, while the store listing said the opposite
+and the app said the opposite again on its home screen. Break-risk #4 at the foot of that same
+file had named this exact failure in advance. Its sibling, break-risk #5, called the other one:
+"the dialler is the only outbound link in the whole app", true when written and wrong for four
+call sites since.
+
+Predicting a drift is not preventing it. Both are now tests: the policy must name the cipher
+`lib/crypto.ts` actually uses, and must account for every `Linking.openURL` in the app.
+
+**The age rating was 4+ in the one document headed "Copy these in."** Three other places said
+16+, including the privacy policy, which publishes it to the world. `docs/APP-STORE.md` argued
+for 16+ at length in §7 and then said 4+ in its own release checklist. Four places, two
+answers, and the wrong one was the one that reaches Apple. Over-rating costs reach;
+under-rating is guideline 2.3.6.
+
+**And one real security defect, in the place the encryption was supposed to make safe.** Both
+export paths write the whole journal in cleartext to the cache, share it, and delete it in a
+`finally` — which does not run when iOS reclaims the process, and while the share sheet is up
+the app is backgrounded and jetsammable. Nothing swept the cache, so the file also outlived
+"Delete everything", whose own copy promises it erases every note. The CrashScreen path is the
+likely one rather than the theoretical one: it renders on an app that has just crashed and asks
+the user to press "Save my writing" immediately.
+
+**What the agents got wrong, for the record.** The design review reported the streak counter
+and the week strip disagreeing — "3 days in a row" over seven empty rings. They read from one
+`logPractice` write and cannot disagree; the disagreement was in the fixture data I seeded.
+Its separate point stands and is not yet acted on: a streak counter has a break state by
+definition, and the week strip was deliberately built without one.
+
+**Still open, and deliberately not fixed here.** The relapse plan is sold in six places and has
+no writer anywhere in the app. Onboarding says "both get used" of two answers it stores
+neither of. `legal/entity.json` has five null fields that block submission. `purchase()` grants
+access with no StoreKit behind it. Each is a decision rather than a defect, and the honest
+version is that they are listed here rather than quietly patched.
