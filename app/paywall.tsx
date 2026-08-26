@@ -215,7 +215,13 @@ export default function Paywall() {
               any. See .claude/skills/value-first-growth. */}
           <Rule />
           <H2 style={{ marginTop: space.lg }}>Why these twelve weeks</H2>
-          {[PROOF_POINTS[0], PROOF_POINTS[2]].map((p) => (
+          {/* [0] and [1], not [0] and [2]. The heading asks why TWELVE WEEKS, and
+              PROOF_POINTS[1] is the one about week twelve — "around half of people responding
+              do so by about week twelve" — while [2] is the prevalence figure, which answers a
+              different question and was the second thing under this heading. The effect size
+              and the timeline are the two halves of "why this length"; how common the
+              condition is belongs to "is this me", not to "why twelve". */}
+          {[PROOF_POINTS[0], PROOF_POINTS[1]].map((p) => (
             <View key={p.stat} style={{ marginTop: space.lg }}>
               <Text style={[t.h1, { color: c.accentDeep }]}>{p.stat}</Text>
               <BodySm style={{ marginTop: space.xs, color: c.ink }}>{p.claim}</BodySm>

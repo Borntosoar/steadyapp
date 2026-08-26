@@ -146,7 +146,7 @@ export default function Urges() {
         </Frost>
 
         <Button
-          label="I'm having an urge"
+          label="I’m having an urge"
           onPress={() => setStage('before')}
           style={{ marginTop: space.md }}
         />

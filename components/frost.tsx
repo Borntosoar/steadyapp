@@ -553,7 +553,8 @@ export function Explain({ q, a }: { q: string; a: string }) {
         >
           <Text
             maxFontSizeMultiplier={IN_FIXED_SHAPE}
-            style={[t.caption, { color: c.accentDeep, fontSize: 11, lineHeight: 13, fontWeight: '700' }]}
+            /* 12, not 11 — the iOS HIG floor. See the tab labels for the same fix. */
+            style={[t.caption, { color: c.accentDeep, fontSize: 12, lineHeight: 14, fontWeight: '700' }]}
           >
             {open ? '−' : '?'}
           </Text>

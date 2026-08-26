@@ -145,7 +145,9 @@ function TabBar({ state, navigation }: any) {
               <Text
                 numberOfLines={1}
                 maxFontSizeMultiplier={1.2}
-                style={[t.caption, { color, fontSize: 11 }]}
+                /* 12, not 11. iOS HIG sets 12pt as the floor for legible text and this is a
+                       hand-written override of `caption`, which is 13. */
+                style={[t.caption, { color, fontSize: 12 }]}
               >
                 {label}
               </Text>

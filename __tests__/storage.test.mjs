@@ -428,3 +428,53 @@ describe('a cleartext export cannot outlive the share sheet', () => {
       'nothing sweeps at launch, so a file orphaned by a kill stays until the next wipe');
   });
 });
+
+describe('quarantine keeps one copy, not one per failed launch', () => {
+  /* A quarantined payload is a full journal. The key was `steady.unreadable.${Date.now()}`,
+     with no cap and no TTL, and lib/storage.ts says garbage collection is deliberately
+     absent — so every failed load wrote ANOTHER complete copy. The failures this runs on are
+     usually not transient (an unreachable keychain, a payload from a newer build), the card
+     the user is shown tells them to relaunch, and relaunching writes one more. If the stored
+     payload was plaintext — a pre-encryption install, or any device whose keychain cannot be
+     reached — each copy is another readable journal sitting in storage forever.
+
+     Source assertions rather than a live AsyncStorage: `quarantine` is module-private and
+     this file runs under bare node with no native storage. What matters is that the prune
+     exists, runs after the write, and cannot fail the quarantine. */
+  const src = readFileSync(join(ROOT, 'lib/storage.ts'), 'utf8');
+  const fn = src.slice(src.indexOf('async function quarantine('));
+  const body = fn.slice(0, fn.indexOf('\n}\n') + 3);
+
+  test('the quarantine prunes older copies', () => {
+    assert.match(body, /pruneQuarantine\(/,
+      'quarantine writes a new keyed copy on every failure and removes none');
+  });
+
+  test('it prunes only after the new copy is safely written', () => {
+    /* Otherwise a failure between the two leaves somebody with nothing recoverable at all,
+       which is worse than the unbounded version this replaces. */
+    assert.ok(
+      body.indexOf('setItem') < body.indexOf('pruneQuarantine('),
+      'the prune runs before the write — a failure between them destroys the only copy',
+    );
+  });
+
+  test('a prune that fails cannot fail the quarantine', () => {
+    const prune = src.slice(src.indexOf('async function pruneQuarantine('));
+    assert.match(prune.slice(0, prune.indexOf('\n}\n')), /catch\s*\{/,
+      'pruneQuarantine can throw, which would turn a successful quarantine into a failed one');
+  });
+
+  test('and it keeps the newest rather than all of them', () => {
+    const prune = src.slice(src.indexOf('async function pruneQuarantine('));
+    assert.match(prune, /k !== keep/,
+      'the prune does not exclude the copy it was just handed');
+  });
+
+  test('"delete everything" still removes them', () => {
+    /* Unchanged, and the reason the prefix scan in wipeState has to stay a prefix scan. */
+    const wipe = src.slice(src.indexOf('export async function wipeState'));
+    assert.match(wipe.slice(0, wipe.indexOf('\n}\n')), /QUARANTINE_PREFIX/,
+      'wipeState no longer removes quarantined payloads');
+  });
+});

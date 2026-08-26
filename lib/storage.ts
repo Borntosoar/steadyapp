@@ -50,7 +50,8 @@ import { seal, open, isSealed } from './crypto.ts';
    there is no reason to want it, because nobody ever sees these strings. */
 export const STORAGE_KEY = 'steady.state.v2';
 
-/** Prefix for payloads that could not be read. Never garbage-collected automatically.
+/** Prefix for payloads that could not be read. At most ONE is kept — see `quarantine`; it
+ *  used to be one per failed launch, unbounded and never collected.
  *  Keeps the pre-rename prefix for the reason above — quarantined data is precisely the
  *  data least able to survive being re-addressed. */
 export const QUARANTINE_PREFIX = 'steady.unreadable.';
@@ -654,9 +655,34 @@ async function quarantine(raw: string): Promise<LoadResult> {
   const key = `${QUARANTINE_PREFIX}${Date.now()}`;
   try {
     await AsyncStorage.setItem(key, raw);
+    /* ONE COPY, NOT ONE PER LAUNCH.
+       Every quarantine used to write a NEW key stamped with the time, with no cap and no TTL,
+       and the header above says garbage collection is deliberately absent. The failure this
+       runs on is usually not transient — an unreachable keychain, a payload from a newer
+       build — so the user relaunches, it fails again, and another full copy of the journal
+       lands. The card they are shown even tells them to relaunch, so the remediation advice
+       caused the accumulation. If the stored payload was plaintext (a pre-encryption install,
+       or any device where the keychain is unreachable) each copy is another readable journal
+       sitting in storage forever.
+       Older copies are dropped only AFTER the new one is safely written, so a failure here
+       never leaves somebody with nothing. The newest is kept rather than the oldest: it is
+       the one that matches the build they are running. */
+    await pruneQuarantine(key);
     return { state: emptyState(), ok: false, quarantinedAt: key };
   } catch {
     return { state: emptyState(), ok: false };
+  }
+}
+
+/** Drop every quarantined payload except `keep`. Best effort and silent. */
+async function pruneQuarantine(keep: string): Promise<void> {
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    const stale = keys.filter((k) => k.startsWith(QUARANTINE_PREFIX) && k !== keep);
+    if (stale.length) await AsyncStorage.multiRemove(stale);
+  } catch {
+    /* A prune that fails leaves an extra copy, which is the old behaviour and is survivable.
+       It must never turn a successful quarantine into a failed one. */
   }
 }
 
