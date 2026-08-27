@@ -156,7 +156,19 @@ const SHOTS = [
   { route: '/journal', name: '09-journal' },
   { route: '/paywall', name: '10-paywall' },
   { route: '/track/breakup', name: '11-track' },
+  { route: '/mirror', name: '12-mirror' },
+  { route: '/plan', name: '13-plan' },
+  { route: '/game/curveball', name: '14-curveball' },
+  { route: '/game/toward', name: '15-toward' },
+  { route: '/game/ballast', name: '16-ballast' },
+  { route: '/game/groundwork', name: '17-groundwork' },
 ];
+
+/* THIS LIST DRIFTED, WHICH IS WHY THERE IS A TEST. The four games, the mirror and the
+   relapse plan all shipped while it still named eleven screens, so the one tool that exists
+   to look at the app could not see a third of it — and nobody found out, because a list
+   that is too short does not fail, it just shows less. __tests__/screens.test.mjs derives
+   the routes from app/ and requires each one to be listed or deliberately excluded. */
 
 const chromiumPath =
   process.env.CHROMIUM_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
