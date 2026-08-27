@@ -203,6 +203,12 @@ export interface Profile {
   disclaimerAcceptedAt: string | null;
   /** Region key for support lines. */
   supportRegion: string;
+  /** When this person last declined the PHQ-8/GAD-7 baseline.
+   *
+   *  A skip is a real answer and has to survive a restart, or the app asks again on every
+   *  launch — which is the behaviour that gets a mental-health app deleted. `baselineOwed()`
+   *  in lib/measure.ts re-offers exactly once, three days later, and never again. */
+  measureSkippedAt?: string | null;
   /* THE OPENING SURVEY.
      Three answers and the shape they resolve to. Stored on the device like everything else
      — this is the most sensitive thing anybody hands this app, and it never leaves.
@@ -266,6 +272,33 @@ export interface AppState {
    *  dismissal the app forgets overnight is not a dismissal, it is a delay. */
   moments: Record<string, MomentRecord>;
 
+  /** Sittings of PHQ-8 and GAD-7. Do NOT trust insertion order — sort with `completed()` in
+   *  lib/measure.ts, because an imported backup can arrive in any order.
+   *
+   *  This is the only clinical instrument in the app, and it exists for one reason:
+   *  DIRECTION.md defines winning as measurable PHQ and GAD improvement at 30, 60 and 90
+   *  days, and the daily check-in cannot produce that number. */
+  measures: Measure[];
+}
+
+/** One sitting of both questionnaires.
+ *
+ *  Answers are stored RAW, per item, rather than as a total. Three reasons, and the third is
+ *  the one that matters: a total cannot be re-scored when a scoring bug is found; a total
+ *  cannot be exported in a form a clinician can check; and a total silently survives the
+ *  instrument changing length, which is exactly how a PHQ-8 of 24 and a PHQ-9 of 24 end up
+ *  plotted on the same line. */
+export interface Measure {
+  id: string;
+  takenAt: string;
+  /** Eight integers 0–3, in published item order. */
+  phq8: number[];
+  /** Seven integers 0–3, in published item order. */
+  gad7: number[];
+  /** Which scheduled point this was: null for the baseline, then 30, 60 or 90. A repeat
+   *  somebody chose to take on their own is also null, so a voluntary retake cannot silently
+   *  satisfy the day-30 ask. */
+  milestone: number | null;
 }
 
 export interface MomentRecord {

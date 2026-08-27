@@ -49,6 +49,11 @@ interface StoreApi extends AppState {
   answerCommitment: (id: string, kept: string) => void;
   acceptDisclaimer: () => void;
   setSupportRegion: (region: string) => void;
+  /** One sitting of PHQ-8 and GAD-7. `milestone` is null for the baseline and for any
+   *  retake somebody chose themselves; only a scheduled ask carries 30, 60 or 90. */
+  saveMeasure: (phq8: number[], gad7: number[], milestone: number | null) => void;
+  /** They said not now. Stamped so `baselineOwed()` re-offers once and then stops. */
+  skipMeasure: () => void;
   /** The ONLY writer of the entitlement cache. Everything else projects it. */
   setEntitlement: (e: Entitlement) => void;
   momentShown: (id: MomentId) => void;
@@ -260,6 +265,33 @@ export const useStore = create<StoreApi>((set, get) => ({
 
   setSupportRegion: (supportRegion) => {
     set((s) => ({ profile: { ...s.profile, supportRegion } }));
+    persist(get, set);
+  },
+
+  saveMeasure: (phq8, gad7, milestone) => {
+    /* Appended, never replaced. Every sitting is kept for the life of the install, because
+       the whole point of the instrument is the series — and because a retake that overwrote
+       the baseline would delete the only number the 30/60/90 comparison is made against. */
+    set((s) => ({
+      measures: [
+        ...s.measures,
+        {
+          id: `m-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          takenAt: new Date().toISOString(),
+          phq8: [...phq8],
+          gad7: [...gad7],
+          milestone,
+        },
+      ],
+      /* Answering clears any earlier decline, so somebody who skipped and later changed
+         their mind is not still carrying a stamp that suppresses a future offer. */
+      profile: { ...s.profile, measureSkippedAt: null },
+    }));
+    persist(get, set);
+  },
+
+  skipMeasure: () => {
+    set((s) => ({ profile: { ...s.profile, measureSkippedAt: new Date().toISOString() } }));
     persist(get, set);
   },
 

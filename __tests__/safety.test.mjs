@@ -324,8 +324,32 @@ describe('the source tree is what SAFETY.md says it is', () => {
   ]);
 
   /** `from 'x'`, `import('x')` and `require('x')` alike. The second and third are the ones
-   *  the old regex could not see. */
-  const SPECIFIERS = /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*)['"]([^'"]+)['"]/g;
+   *  the old regex could not see.
+   *
+   *  THE `\s+` AFTER `from` IS LOAD-BEARING AND USED TO BE `\s*`.
+   *  With `\s*`, any ordinary sentence ENDING IN THE WORD "from" matched, because the closing
+   *  quote of the string sat directly against it. A screen containing
+   *
+   *      <H1>{'Where you are starting from'}</H1>
+   *
+   *  was reported as importing a package called "}<" — the capture ran from that quote to the
+   *  next one several lines later. A false positive in a security guard is not harmless: this
+   *  one is unfixable by the person who trips it except by rewording unrelated copy, which
+   *  teaches everyone that the egress guards cry wolf.
+   *
+   *  Requiring whitespace would leave `from'react'` — valid JS that nobody writes — unseen,
+   *  so the test below closes that hole explicitly rather than leaving it to a comment. */
+  const SPECIFIERS = /(?:\bfrom\s+|\bimport\s*\(\s*|\brequire\s*\(\s*)['"]([^'"]+)['"]/g;
+
+  /** An import whose specifier is jammed against the keyword: `from'react'`. Legal, never
+   *  written by hand, unformattable by prettier, and therefore the exact shape somebody
+   *  would reach for to slip a package past the matcher above.
+   *
+   *  The quoted text must look like a MODULE SPECIFIER — the first draft of this guard was
+   *  just `/\bfrom['"]/` and reproduced, in a new test, the identical false positive it had
+   *  been written to fix: it fired on `'Where you are starting from'` too. What separates an
+   *  import from a sentence is not the spacing, it is what comes after the quote. */
+  const JAMMED_IMPORT = /\bfrom['"][@\w][\w@.\-/]*['"]/;
 
   /** '@scope/pkg/deep/path' -> '@scope/pkg';  'pkg/deep/path' -> 'pkg'. */
   const packageOf = (spec) => {
@@ -390,6 +414,17 @@ describe('the source tree is what SAFETY.md says it is', () => {
             `the network.`
         );
       }
+    }
+  });
+
+  test('no import hides its package against the keyword', () => {
+    /* The other half of the `\s+` above. Nobody writes `from'react'`, and prettier would
+       undo it — so if it appears, the interesting question is why, and the allowlist above
+       cannot see it. Fail rather than let a package through unexamined. */
+    for (const f of FILES) {
+      assert.doesNotMatch(withoutComments(f.src), JAMMED_IMPORT,
+        `${f.path} has an import specifier jammed against "from", which the allowlist cannot `
+        + `read. Put a space after the keyword.`);
     }
   });
 

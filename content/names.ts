@@ -106,6 +106,16 @@ export const NAMES = {
     unitPlural: 'plans',
     sub: 'Six sections, written now for later',
   },
+  /* The two questionnaires. The title breaks the verb-and-object rule the same way the games
+     do, and for a related reason: "Measure your symptoms" would name the exact thing this
+     screen refuses to be. What somebody is doing here is marking where they are so that the
+     next reading means something. */
+  measure: {
+    title: 'Where you are now',
+    unit: 'check',
+    unitPlural: 'checks',
+    sub: 'Fifteen questions, about once a month',
+  },
 } as const;
 
 export type ThingKey = keyof typeof NAMES;

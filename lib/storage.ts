@@ -34,6 +34,7 @@ import { initialStreak } from './streak.ts';
    moment ids are a closed set and normalise() rejects stored keys outside it. */
 import { emptyMomentRecord, MOMENTS } from './moments.ts';
 import { emptyEntitlement, type Entitlement } from './entitlement.ts';
+import { DUE_DAYS } from './measure.ts';
 import { seal, open, isSealed } from './crypto.ts';
 
 /* The key never changes again. Versioning happens inside the envelope; the `.v2` suffix is
@@ -57,7 +58,7 @@ export const STORAGE_KEY = 'steady.state.v2';
 export const QUARANTINE_PREFIX = 'steady.unreadable.';
 
 /** Bumped whenever a migration is added below. */
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export const emptyState = (): AppState => ({
   profile: {
@@ -84,6 +85,7 @@ export const emptyState = (): AppState => ({
   },
   readModules: [],
   moments: {},
+  measures: [],
   entitlement: emptyEntitlement(),
 });
 
@@ -144,6 +146,16 @@ export const MIGRATIONS: ((s: Payload) => Payload)[] = [
       entitlement: { source: 'purchase', plan: null, expiresAt: null, verifiedAt: null },
     };
   },
+  /* 4 → 5: `measures` added — PHQ-8 and GAD-7 sittings. A static default, so normalise()
+     backfills it and there is genuinely nothing to do here.
+     THE VERSION STILL HAD TO GO UP, and this slot exists to record why. Without the bump a
+     v4 build reading v5 data would not see it as newer, would normalise it, drop the field
+     it has never heard of, and write it back — silently deleting somebody's clinical
+     baseline. Not hypothetical: `isFromNewerBuild` below was written after exactly that
+     shape of bug, and the trigger it names is a TestFlight build followed by an App Store
+     build. Adding a field with a static default is the case where skipping the bump looks
+     free and is not. */
+  (s) => s,
 ];
 
 /** True when a stored payload comes from a build NEWER than this one.
@@ -199,6 +211,11 @@ const strArr = (v: unknown): string[] => arr<unknown>(v).filter((x): x is string
 /** Array of finite numbers, dropping anything that is not one. */
 const numArr = (v: unknown): number[] =>
   arr<unknown>(v).filter((x): x is number => typeof x === 'number' && Number.isFinite(x));
+
+/** The three scheduled re-measurement days, as a set, DERIVED from the one list that
+ *  defines them. A second literal here would be a second source of truth for the schedule,
+ *  and the two would agree right up until somebody changed one. */
+const MEASURE_MILESTONES = new Set<number>(DUE_DAYS);
 
 /** Every row in a collection, rebuilt from an explicit shape. Rows that cannot be rebuilt
  *  are DROPPED rather than repaired-into-nonsense or passed through.
@@ -351,6 +368,7 @@ export function normalise(parsed: unknown): AppState {
       onboardedAt: strOrNull(profile.onboardedAt),
       disclaimerAcceptedAt: strOrNull(profile.disclaimerAcceptedAt),
       supportRegion: str(profile.supportRegion, base.profile.supportRegion),
+      measureSkippedAt: strOrNull(profile.measureSkippedAt),
       /* The survey. Every field optional and every value a plain string, because this is
          read back from disk and nothing on disk is trusted. An unrecognised answer resolves
          to 'looking' downstream rather than throwing — see lib/plan.ts carryingOf. */
@@ -552,6 +570,35 @@ export function normalise(parsed: unknown): AppState {
 
     readModules: strArr(p.readModules),
     moments,
+
+    /* Sittings of PHQ-8 and GAD-7.
+     *
+     * The item arrays are rebuilt element by element rather than passed through, and the
+     * length is NOT enforced here on purpose: `score()` in lib/measure.ts returns null for a
+     * wrong-length instrument, so a truncated sitting survives as the person's answers and
+     * is simply never scored or compared. Dropping the row instead would delete data to
+     * protect a number, which is the wrong way round.
+     *
+     * `milestone` is the field to watch. Anything that is not one of the three scheduled
+     * days becomes null — a hand-edited backup claiming milestone 45 would otherwise sit in
+     * `dueMilestone`'s "done" set forever and silently suppress a real day-30 ask. */
+    measures: rows(p.measures, (r) => {
+      const takenAt = strOrNull(r.takenAt);
+      if (!takenAt || !Number.isFinite(Date.parse(takenAt))) return null;
+      const answers = (v: unknown): number[] =>
+        arr<unknown>(v)
+          .map((x) => (typeof x === 'number' && Number.isInteger(x) && x >= 0 && x <= 3 ? x : null))
+          .filter((x): x is number => x !== null);
+      const ms = num(r.milestone, NaN);
+      return {
+        id: str(r.id, ''),
+        takenAt,
+        phq8: answers(r.phq8),
+        gad7: answers(r.gad7),
+        milestone: MEASURE_MILESTONES.has(ms) ? ms : null,
+      };
+    }),
+
     entitlement: normaliseEntitlement(p.entitlement),
   };
 }

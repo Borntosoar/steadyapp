@@ -104,7 +104,17 @@ export default function Onboarding() {
       { practiceDaysPerWeek: days ?? undefined, wantBack },
     );
     acceptDisclaimer();
-    router.replace('/');
+    /* Straight to the baseline questionnaires, not to Today.
+     *
+     * `replace` and not `push`, so Back from the measure screen cannot walk somebody back
+     * into an onboarding they have already completed. The measure screen itself routes to
+     * Today whether they answer or skip, so this is the last step of onboarding rather than a
+     * detour hanging off the end of it.
+     *
+     * It is offered here and nowhere earlier for the reason DIRECTION.md gives: this is the
+     * only moment that yields a true day-zero reading, and every day it is delayed is a day
+     * the intervention has already been running when the "before" number is taken. */
+    router.replace('/measure');
   };
 
   const BASELINE_STEP = 2;
