@@ -16,6 +16,8 @@ import {
 } from '../../types';
 import { costMirror, COST_MIRROR_FOOTER } from '../../lib/cost';
 import { PROOF_POINTS, PROOF_QUALIFIER } from '../../content/proof';
+import { RegionPicker } from '../../components/RegionPicker';
+import { regionByKey } from '../../constants/support';
 
 /* Onboarding.
  *
@@ -67,6 +69,11 @@ export default function Onboarding() {
   const [avoidance, setAvoidance] = useState<AvoidanceLevel | null>(null);
   const [suds, setSuds] = useState<number | null>(null);
   const [days, setDays] = useState<number | null>(4);
+  /* Read, not guessed again. hydrate() already resolved the device locale on this very
+     first run — asking twice could disagree with itself. */
+  const supportRegion = useStore((s) => s.profile.supportRegion);
+  const setSupportRegion = useStore((s) => s.setSupportRegion);
+  const [regionOpen, setRegionOpen] = useState(false);
   const [wantBack, setWantBack] = useState('');
 
   const baselineDraft =
@@ -372,9 +379,51 @@ export default function Onboarding() {
           If you are in danger right now, contact your local emergency number.
         </Body>
       </View>
+      {/* WHICH COUNTRY'S LINES, ASKED WHERE THE SUBJECT ALREADY IS.
+          The paragraph above points at crisis lines and at "your local emergency number",
+          and until this the app never said which country it thought that was. It guesses from
+          the device's region subtag on first launch (hooks/deviceLocale.ts) and the guess is
+          conservative — it only names a country on an exact match and otherwise falls to the
+          international directory rather than to a confident wrong answer.
+          But both of its failure modes were SILENT. A traveller, an immigrant who never
+          changed the setting, or anyone on a phone bought abroad gets another country's
+          numbers; a phone whose locale carries no region at all gets the directory instead of
+          the national line that exists. Neither person finds out until they open Support,
+          which is a bad day by definition.
+          So it is confirmed here, on the last step, at the calmest moment there is — and it is
+          a CONFIRMATION when the guess is confident and a QUESTION when it is not, because
+          "we could not tell" deserves a different sentence from "we think it is Canada".
+          Not a new step: onboarding is seven already, and this belongs to the paragraph it
+          sits under rather than to a screen of its own. */}
+      {regionOpen || supportRegion === 'other' ? (
+        <View style={{ marginTop: space.lg }}>
+          <Body style={{ color: c.ink }}>
+            {supportRegion === 'other'
+              ? 'We could not tell where you are, so Support will show international directories. Pick a country and it shows lines that work there instead.'
+              : 'Which country should Support show crisis lines for?'}
+          </Body>
+          <View style={{ marginTop: space.md }}>
+            <RegionPicker value={supportRegion} onChange={setSupportRegion} />
+          </View>
+        </View>
+      ) : (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Support will show crisis lines for ${regionByKey(supportRegion).label}. Change the country.`}
+          onPress={() => setRegionOpen(true)}
+          style={({ pressed }) => ({ marginTop: space.lg, minHeight: 44, justifyContent: 'center', opacity: pressed ? 0.6 : 1 })}
+        >
+          <BodySm style={{ color: c.ink }}>
+            Support will show crisis lines for{' '}
+            <Text style={{ fontWeight: '700' }}>{regionByKey(supportRegion).label}</Text>.{' '}
+            <Text style={{ color: c.accentDeep, textDecorationLine: 'underline' }}>Not right?</Text>
+          </BodySm>
+        </Pressable>
+      )}
+
       <Caption style={{ marginTop: space.lg }}>
         Tapping below records that you have read this. It stays on your device like
-        everything else.
+        everything else. You can change the country any time on the Support screen.
       </Caption>
     </View>,
   ];

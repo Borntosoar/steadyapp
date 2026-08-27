@@ -1,8 +1,13 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   SUPPORT_REGIONS, regionByKey, regionForLocale, BACKSTOP_CONTACT, THERAPY_GUIDANCE, SUPPORT_INTRO,
 } from '../constants/support.ts';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /* The crisis screen.
  *
@@ -229,5 +234,95 @@ describe('the words on the screen', () => {
        worst possible moment. */
     const all = [SUPPORT_INTRO, ...THERAPY_GUIDANCE].join(' ');
     assert.doesNotMatch(all, /\b(cure|guarantee\w*|will fix|always works)\b/i);
+  });
+});
+
+describe('the crisis-line region is confirmed before it is needed', () => {
+  /* The region is guessed from the device's locale on first launch, and the guess is
+     conservative: hooks/deviceLocale.ts reads a setting, constants/support.ts only names a
+     country on an exact region-subtag match, and anything else falls to the international
+     directory rather than to a confident wrong answer.
+     Both of its failure modes were SILENT, though. A traveller, an immigrant who never
+     changed the setting, or anyone on a phone bought abroad gets another country's numbers.
+     A locale carrying no region at all gets the directory instead of the national line that
+     exists for where they actually are. Neither person finds out until they open Support,
+     which is a bad day by definition.
+     So onboarding confirms it, on the step that already introduces crisis lines. */
+
+  const onboarding = readFileSync(join(ROOT, 'app/onboarding/index.tsx'), 'utf8');
+  const strip = (x) => x.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ');
+  const flow = strip(onboarding);
+
+  test('onboarding shows which country it settled on', () => {
+    assert.match(flow, /regionByKey\(supportRegion\)\.label/,
+      'onboarding never tells the person which country Support will use, so a wrong guess '
+      + 'stays invisible until they need it');
+  });
+
+  test('and lets them change it without leaving the flow', () => {
+    assert.match(flow, /<RegionPicker/, 'onboarding offers no way to correct the guess');
+    assert.match(flow, /setSupportRegion/, 'the correction is not written anywhere');
+  });
+
+  test('an unresolved guess is a question, not a confirmation', () => {
+    /* 'other' means the locale carried no usable region. Showing "Support will show crisis
+       lines for Somewhere else. Not right?" would be a confirmation of nothing. */
+    assert.match(flow, /supportRegion === 'other'/,
+      'onboarding treats an unresolved guess the same as a confident one');
+  });
+
+  test('it does not add an eighth step', () => {
+    /* Onboarding is seven, and this belongs to the paragraph it sits under. A step of its own
+       would put a geography question between somebody and the app on their first open.
+       Counting <View key="sN"> is the wrong probe and this test used to do it: the cost mirror
+       is a null placeholder in the array rendered by an early return, so the markup shows six
+       for seven steps. LAST is what the flow actually advances to, so that is what is read. */
+    const last = onboarding.match(/const LAST = (\d+)/);
+    assert.ok(last, 'onboarding no longer declares LAST, so the step count is unguarded');
+    assert.equal(Number(last[1]), 6, `onboarding now runs to step ${last[1]}`);
+
+    /* And the other direction: a step added to the array without bumping LAST is unreachable
+       rather than extra, which is a quieter bug than an eighth step and worth the same catch. */
+    const keys = [...onboarding.matchAll(/<View key="s(\d+)">/g)].map((m) => Number(m[1]));
+    assert.ok(keys.length > 0, 'onboarding renders no keyed steps at all');
+    assert.equal(Math.max(...keys), 6, 'a step exists past the last one the flow reaches');
+  });
+
+  test('it never asks for location permission, and could not', () => {
+    const app = JSON.parse(readFileSync(join(ROOT, 'app.json'), 'utf8'));
+    const plist = JSON.stringify(app.expo?.ios?.infoPlist ?? {});
+    assert.doesNotMatch(plist, /NSLocation/,
+      'a location permission has appeared. The region is a picker over a static list — see '
+      + 'legal/consumer-health-data-policy.md §6, which tells two US states that ban '
+      + 'geofencing around health facilities that this app requests no location at all.');
+    const android = JSON.stringify(app.expo?.android?.permissions ?? []);
+    assert.doesNotMatch(android, /LOCATION/, 'an Android location permission has appeared');
+  });
+});
+
+describe('there is one region picker, not two', () => {
+  /* The markup was inline on Support, and onboarding needed the same control. Copying it
+     would have made two lists of thirty regions that agree today and drift the first time one
+     gains an entry — the failure this repository has now caught in a dozen shapes. */
+  test('both screens render the shared component', () => {
+    for (const rel of ['app/support.tsx', 'app/onboarding/index.tsx']) {
+      assert.match(readFileSync(join(ROOT, rel), 'utf8'), /<RegionPicker/,
+        `${rel} does not use the shared picker`);
+    }
+  });
+
+  test('and neither re-implements the list', () => {
+    for (const rel of ['app/support.tsx', 'app/onboarding/index.tsx']) {
+      const src = readFileSync(join(ROOT, rel), 'utf8');
+      assert.doesNotMatch(src, /SUPPORT_REGIONS\.map/,
+        `${rel} maps over the region list itself instead of rendering RegionPicker`);
+    }
+  });
+
+  test('the shared picker meets the touch floor', () => {
+    /* It was 40 inline. This is the control somebody uses on the worst day they have had in
+       a while, and __tests__/a11y.test.mjs sets the floor at 44. */
+    const picker = readFileSync(join(ROOT, 'components/RegionPicker.tsx'), 'utf8');
+    assert.match(picker, /minHeight: 44/, 'the region chips are under the 44pt touch floor');
   });
 });

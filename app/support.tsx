@@ -6,9 +6,10 @@ import {
 } from '../components/ui';
 import { space, radius, type as t } from '../constants/theme';
 import { useStore } from '../store/useStore';
-import { SUPPORT_REGIONS, regionByKey, THERAPY_GUIDANCE, SUPPORT_INTRO } from '../constants/support';
+import { regionByKey, THERAPY_GUIDANCE, SUPPORT_INTRO } from '../constants/support';
 import { LINKS, SUPPORT_EMAIL, SUPPORT_MAILTO } from '../constants/links';
 import { Frost, ListRow } from '../components/frost';
+import { RegionPicker } from '../components/RegionPicker';
 import { NAMES } from '../content/names';
 
 /* Free, always, and never gated. Action first — someone reading this may be in real
@@ -88,33 +89,7 @@ export default function Support() {
         </Caption>
 
         <Caption style={{ marginTop: space.xxl, marginBottom: space.sm }}>Where are you?</Caption>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
-          {SUPPORT_REGIONS.map((r) => {
-            const on = r.key === region;
-            return (
-              <Pressable
-                key={r.key}
-                accessibilityRole="button"
-                accessibilityState={{ selected: on }}
-                onPress={() => setSupportRegion(r.key)}
-                style={{
-                  paddingVertical: 9,
-                  paddingHorizontal: space.md,
-                  borderRadius: radius.pill,
-                  backgroundColor: on ? c.accent : c.surface,
-                  borderWidth: StyleSheet.hairlineWidth,
-                  borderColor: on ? c.accent : c.line,
-                  minHeight: 40,
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={[t.bodySm, { color: on ? c.onAccent : c.inkSoft, fontWeight: on ? '600' : '400' }]}>
-                  {r.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <RegionPicker value={region} onChange={setSupportRegion} />
 
         <View style={{ marginTop: space.xxl }}>
           <Rule />
