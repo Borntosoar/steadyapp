@@ -29,7 +29,15 @@ Charter of the French Language, as amended by Bill 96, requires consumer contrac
 related documentation to be available in French. That would mean a French version of the
 terms and privacy policy at minimum, and arguably of the app's consumer-facing text — which
 is the one scenario in which the localisation question in §3 stops being a growth decision
-and becomes a compliance one. Any other province and it does not arise.
+and becomes a compliance one.
+
+⚠ **This used to end "Any other province and it does not arise", and that was the wrong test.**
+The Charter reaches goods and services offered to consumers **in** Quebec — it follows the
+customer, not the certificate of incorporation. Worldwide availability (§1) includes Quebec, so
+an Ontario or BC publisher is in the same position. `site/entity.mjs` gated on the same wrong
+fact and now blocks from every province until counsel answers. The cheap alternative nobody has
+priced: excluding Canada from the listing. §1 treats worldwide availability as costless, and
+against Bill 96 it is not.
 
 ---
 

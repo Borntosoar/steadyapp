@@ -368,8 +368,14 @@ We have not included either. They are common in apps sold into the United States
           privacy officer published on the website and specific breach-reporting duties.
        3. Quebec consumer law restricts some limitation-of-liability language that is
           acceptable elsewhere in Canada.
-     Any other province and none of that applies. This is worth deciding before the site is
-     published rather than after.
+     ⚠ NOT "any other province and none of that applies", which is what this note used to say.
+     Law 25 binds any person carrying on an enterprise who holds personal information about
+     others, and the Charter reaches goods offered to consumers IN Quebec. Both follow the
+     customer rather than the publisher's province, and this app is planned for worldwide App
+     Store availability. site/entity.mjs gated on the same wrong fact and would have certified
+     a clean publish for an Ontario publisher; it now blocks from every province until
+     quebecCounselConfirmed is set. Worth deciding before the site is published rather than
+     after.
 
      Not included, deliberately: an arbitration clause and a class-action waiver. See above. -->
 

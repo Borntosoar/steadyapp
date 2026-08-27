@@ -186,6 +186,29 @@ describe('a half-answered entity cannot be published', () => {
     }
   });
 
+  test('no document still says Quebec depends on the publisher province', () => {
+    /* The wrong fact lived in FOUR places at once — this gate, legal/README.md §3.1,
+       docs/LOCALISATION.md §1 and the §15 note in terms-of-use.md — all phrased as "any other
+       province and none of this applies". Fixing the conditional without fixing the prose
+       would leave three documents telling the next reader the gate is overreacting, which is
+       how a corrected guard gets reverted. */
+    const root = join(LEGAL_DIR, '..');
+    for (const rel of ['legal/README.md', 'docs/LOCALISATION.md', 'legal/terms-of-use.md']) {
+      const text = readFileSync(join(root, rel), 'utf8');
+      for (const line of text.split('\n')) {
+        if (!/other province and (none of )?(this|that|it)/i.test(line)) continue;
+        /* The correction quotes the old sentence to explain it. That is the one allowed
+           occurrence, and it has to be marked as historical on the same line. */
+        assert.match(
+          line, /used to (end|say)/i,
+          `${rel} still asserts that Quebec turns on the publisher's province:\n  ${line.trim()}\n`
+          + '  Bill 96 and Law 25 follow the customer. site/entity.mjs blocks from every '
+          + 'province, and a document saying otherwise makes that gate look like a bug.',
+        );
+      }
+    }
+  });
+
   test('an unconfirmed entity is blocked until a lawyer has actually looked', () => {
     /* Not pedantry and not a formality. Bill 96 requires French consumer contracts, Law 25
        imposes privacy duties beyond PIPEDA including a published privacy officer, and the

@@ -120,13 +120,22 @@ future edit writes the entity name back into a document inline.
    where the entity is registered or where you are resident. Spell it in full — it is printed
    verbatim into the governing-law clause, and the build rejects `ON`.
 
-   ⚠ **If the answer is Quebec, three things change.** The Charter of the French Language (as
-   amended by Bill 96) requires consumer contracts and related documentation to be available
-   in French — which collides directly with the English-only decision in
-   `docs/LOCALISATION.md` §3 and needs resolving before launch. Quebec's Law 25 adds privacy
-   duties beyond PIPEDA, including a published privacy officer. And Quebec consumer law
-   restricts some liability language that is fine elsewhere in Canada. Any other province and
-   none of this applies.
+   ⚠ **Quebec applies whatever this field says, and that is not what this paragraph used to
+   claim.** It used to end "Any other province and none of this applies", and
+   `site/entity.mjs` gated on the same wrong fact — so setting the province to Ontario
+   published clean, with no warning, in exactly the case where these documents are
+   non-compliant. Neither statute follows the publisher. Law 25 binds any person carrying on
+   an enterprise who holds personal information about others; the Charter of the French
+   Language reaches goods and services offered to consumers **in** Quebec. Both follow the
+   customer, and worldwide App Store availability includes Quebec.
+
+   So: the Charter as amended by Bill 96 requires consumer contracts and related documentation
+   to be available in French — which collides directly with the English-only decision in
+   `docs/LOCALISATION.md` §3. Law 25 adds privacy duties beyond PIPEDA, including a published
+   privacy officer. Quebec consumer law restricts liability language that is fine elsewhere in
+   Canada. The build now blocks on all three from every province until
+   `quebecCounselConfirmed` is set, and the two honest ways to set it are a lawyer's answer or
+   a decision to exclude Canada from the listing.
 
 2. **Legal entity name.** ⚠ **"Anneal" is not an answer to this field, and the build now
    says so.** The brand and the party to a contract are different objects. Terms of use are
@@ -137,19 +146,53 @@ future edit writes the entity name back into a document inline.
    in a real suffix, and requires a sole proprietorship to name the human. It cannot check
    registration, a NUANS search, or the trademark — only the error that looks finished.
 
-   Turning "Anneal" into a legal name means picking one of two shapes:
+   Turning "Anneal" into a legal name means picking one of two shapes. **This used to be
+   written here as a cost-and-speed choice with the veil as a trailing clause, and that is the
+   wrong frame.** On the US facts it is the single largest financial exposure in this
+   repository, and it should go to counsel in those terms rather than as an admin question.
+
+   **What is actually behind the choice.** This app is sold into all fifty states, and it holds
+   exactly the category of data that two US regimes attach private rights of action to:
+
+   - **Washington's My Health My Data Act.** A violation is a per se Consumer Protection Act
+     violation under RCW 19.86, which means a private suit, treble damages, attorney's fees,
+     and class treatment. Washington is the live one — whether the Act reaches data that never
+     leaves the phone is genuinely unsettled (see §5 and
+     `consumer-health-data-policy.md`), and "unsettled" is not the same as "safe".
+   - **Illinois BIPA**, at $1,000 negligent and $5,000 intentional **per violation**, with a
+     private right of action. This one does **not** apply today and the app is built so it
+     does not — no template, no face geometry, no ref on the camera. It is listed because it
+     is one feature away, and because per-violation statutory damages aggregate across a class
+     in a way ordinary damages do not.
+
+   A sole proprietor has personal assets behind both. That is the decision, and it is not
+   about filing fees.
+
+   **What incorporation does and does not buy.** It puts a company between a claim and the
+   founder's house, which is the whole point and is worth real money here. It does **not** make
+   the founder untouchable: a director or officer can still be personally liable for their own
+   tortious acts, so incorporating is not a licence to be careless about what the app claims or
+   how it handles data. It is a limit on the blast radius, not an exemption. Ask counsel where
+   the line sits for a solo founder who is also the developer, because that is this case.
+
+   The two shapes:
 
    - **Incorporate** — `Anneal Inc.` or `Anneal Technologies Inc.`, whichever survives a NUANS
      name search. Try the bare form first: "Anneal" is a rare word commercially, which is why
      it was chosen. Note that the same was said of the previous name and turned out to be
-     wrong on the App Store, so treat this as worth testing rather than assuming. This is also
-     what Apple's Organization account requirement (`docs/APP-STORE.md` §5.1) effectively
-     forces,
-     since the D-U-N-S number it needs in practice means a corporation — and that number
-     takes weeks, so it is worth starting before it is the last thing standing.
+     wrong on the App Store, so treat this as worth testing rather than assuming. Apple's
+     Organization account requirement (`docs/APP-STORE.md` §5.1) effectively forces this
+     anyway, since the D-U-N-S number it needs in practice means a corporation — and that
+     number takes weeks, so it is worth starting before it is the last thing standing.
+     **The practical forcing function and the risk argument point the same way, which is
+     unusual and makes this an easy decision to make early.**
    - **Sole proprietorship with a registered trade name** — the party is you, written
-     `Firstname Lastname, carrying on business as Anneal`. Faster and cheaper, but there is
-     no corporate veil: a claim about an app in this subject area reaches personal assets.
+     `Firstname Lastname, carrying on business as Anneal`. Faster and cheaper today. There is
+     no corporate veil, so everything in the paragraphs above lands on the founder personally,
+     and there is a second cost: §3.3 already notes that a sole proprietor's registered address
+     is normally their home, and that address goes in published legal documents for a
+     body-dysmorphia app. Choosing this shape is choosing both of those, and it is a defensible
+     choice for a pre-revenue product — but it should be a chosen one.
 
    Separately: the App Store name `Anneal` has to be free. A web search on 2026-08-18 found
    **no App Store app of that name at all**, which is why it is the name — but that is not an
