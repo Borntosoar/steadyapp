@@ -10,6 +10,7 @@ import * as StoreReview from 'expo-store-review';
 import { daysUntilExpiry, RENEWAL_TERMS } from '../lib/entitlement';
 import { countOf } from '../content/names.ts';
 import type { Moment } from '../lib/moments';
+import { dueMilestone } from '../lib/measure';
 
 /* The one place an unprompted message renders.
  *
@@ -28,6 +29,11 @@ const ROUTES: Record<string, string> = {
   plateau: '/learn',
   'month-two-proof': '/progress',
   'rate-app': '/progress',
+  /* The milestone rides along as a param so the screen shows the "same fifteen questions"
+     copy rather than the first-time intro, and so the sitting is stamped with which
+     scheduled point it answered. Filled in at the call site, which is the only place that
+     knows which one came due. */
+  'measure-due': '/measure',
 };
 
 /** The trial notice fires on each of the last two days and used to say "Two days left"
@@ -42,6 +48,9 @@ export function MomentCard({ moment }: { moment: Moment }) {
   const c = useTheme();
   const router = useRouter();
   const copy = MOMENT_COPY[moment.id];
+  /* A narrow selector: this component re-renders on every store change otherwise, and it
+     sits on the launch screen. */
+  const measures = useStore((s) => s.measures);
   const momentShown = useStore((s) => s.momentShown);
   const momentDismissed = useStore((s) => s.momentDismissed);
   const momentActed = useStore((s) => s.momentActed);
@@ -160,6 +169,16 @@ export function MomentCard({ moment }: { moment: Moment }) {
               void StoreReview.isAvailableAsync()
                 .then((ok) => (ok ? StoreReview.requestReview() : undefined))
                 .catch(() => {});
+              return;
+            }
+            if (moment.id === 'measure-due') {
+              /* Carry which milestone came due, so the screen shows the "same fifteen
+                 questions" copy rather than the first-time intro, and so the sitting is
+                 stamped with the point it answered. Without the stamp, `dueMilestone` would
+                 go on asking for the same day forever. Recomputed at the tap rather than
+                 passed down, because by then it can only have become a later milestone. */
+              const due = dueMilestone(measures, new Date().toISOString());
+              router.push(due === null ? '/measure' : `/measure?milestone=${due}`);
               return;
             }
             router.push(ROUTES[moment.id] ?? '/');

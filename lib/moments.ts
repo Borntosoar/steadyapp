@@ -33,6 +33,7 @@
  * published frequency figures behind the caps. */
 
 import type { AppState, CheckIn, MomentRecord } from '../types';
+import { dueMilestone } from './measure.ts';
 /* Day arithmetic comes from lib/streak.ts and nowhere else.
  *
  * This file used to define its own `dayKey` on `toISOString()`, which is UTC, while every
@@ -55,7 +56,8 @@ export type MomentId =
   | 'plateau'
   | 'month-two-proof'
   | 'week-one-ask'
-  | 'rate-app';
+  | 'rate-app'
+  | 'measure-due';
 
 /** What the moment is FOR. Governs suppression, not tone.
  *  - service   : the app owes the user this information. Fires regardless of mood.
@@ -105,6 +107,17 @@ export const MOMENTS: Record<MomentId, MomentConfig> = {
      prompt at three a year per user regardless — spending one of those on a person mid
      bad week is a waste of a scarce resource as well as a discourtesy. */
   'rate-app': { id: 'rate-app', kind: 'advocacy', priority: 20, maxShows: 1, cooldownDays: 90, maxDismissals: 1 },
+
+  /* The 30/60/90 re-measure. `content/measure.ts` tells the person "The app will ask you
+     again then", and for a while nothing did — `dueMilestone` had no production caller, so
+     the sentence was a promise the app could not keep and the series DIRECTION.md defines
+     winning by never ran.
+     'service' rather than 'care', because it is the app keeping its word rather than a
+     judgement about how the work is going. Priority below the trial notice and the winback:
+     a questionnaire can wait behind a payment somebody is about to be charged for, and
+     behind reaching a person who has stopped altogether. Two shows and one dismissal — a
+     "not now" is an answer, and the milestone stays owed until it is actually taken. */
+  'measure-due': { id: 'measure-due', kind: 'service', priority: 70, maxShows: 2, cooldownDays: 3, maxDismissals: 1 },
 };
 
 /* MomentRecord is declared once, in types/index.ts, because it is persisted — two
@@ -216,6 +229,19 @@ export function eligibleMoments(input: MomentInput, now: Date = new Date()): Mom
   const resisted = state.urgeLogs.filter((u) => u.resisted).length;
   if (practiceDays >= 10 && (resisted >= 3 || state.mirrorSessions.length >= 3)) {
     out.push('rate-app');
+  }
+
+  /* The 30/60/90 re-measure.
+   *
+   * `dueMilestone` did all of the arithmetic and had NO production caller — so
+   * `content/measure.ts` told everybody "The app will ask you again then" and nothing ever
+   * asked. This call site is what makes that sentence true, and it is the same shape of bug
+   * as the relapse plan six places sold and nothing implemented.
+   *
+   * Unlike every other moment in this function, the condition is not a judgement about how
+   * somebody is using the app. It is a date the app already promised to watch. */
+  if (dueMilestone(state.measures, now.toISOString()) !== null) {
+    out.push('measure-due');
   }
 
   return out;

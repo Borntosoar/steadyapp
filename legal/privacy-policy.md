@@ -77,13 +77,23 @@ What is in that record:
 | Practice history | which exercises you did and on which dates, streak counts, which weeks you finished, which readings you have opened |
 | Guided mirror sessions | date, how long, distress rating before and after, whether you finished |
 | Urge logs | what set it off, what you wanted to do, how strong it was, whether you rode it out |
-| Settings | your first name if you gave one, which country's crisis lines to show, that you read the disclaimer |
+| Two questionnaires | your answers to PHQ-8 and GAD-7 — fifteen questions about how the last two weeks have been — taken when you start and about once a month after, with the date of each |
+| Settings | your first name if you gave one, which country's crisis lines to show, that you read the disclaimer, and whether you declined the questionnaires |
 | Purchase state | which tier you are on and when it runs out |
 
 <!-- SOURCE: lib/storage.ts normalise() rebuilds the whole persisted shape field by field —
      profile, baseline, checkIns, urgeLogs, thoughtRecords, mirrorSessions, experiments,
-     practice, streak, protocol (incl. relapsePlan), readModules, moments, entitlement.
-     That function is an exhaustive list of what can be stored. -->
+     practice, commitments, tracks, streak, protocol (incl. relapsePlan), readModules,
+     moments, measures, entitlement. That function is an exhaustive list of what can be
+     stored.
+
+     ⚠ THIS LIST WENT STALE IN THREE PLACES BEFORE ANYBODY NOTICED — `commitments`, `tracks`
+     and `measures` were all added to normalise() without being added here, and `measures` is
+     the one with legal weight, because it is the questionnaire data.
+     A comment claiming to be exhaustive is the least reliable kind of comment there is, so
+     __tests__/legal.test.mjs now DERIVES the check: every top-level key of emptyState() must
+     be named in the table above and in consumer-health-data-policy.md §1. Adding a field to
+     the app now fails the suite until the policy names it. -->
 
 **What is never stored, by design:** no photographs, no video, no audio, no weight, no measurements, no clothing size, no calories, no attractiveness score, no rating or ranking of how you look, and no before-and-after of any kind. There is no field for any of them.
 

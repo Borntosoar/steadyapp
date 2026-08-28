@@ -422,10 +422,27 @@ export function Ground({
   children,
   tabBarSpace = false,
   variant,
+  fill = false,
 }: {
   children: React.ReactNode;
   tabBarSpace?: boolean;
   variant?: AtmosphereKey;
+  /** Let a `flex: 1` child fill the viewport and centre inside it.
+   *
+   *  ⚠ WITHOUT THIS, `flex: 1` IN HERE SILENTLY DOES NOTHING. A ScrollView's content
+   *  container is sized by its content, so a child asking for `flex: 1` gets its natural
+   *  height and `justifyContent: 'center'` then centres it within that — which is to say,
+   *  not at all. The failure is invisible to every kind of check except looking: the screen
+   *  renders, all the text is present, and any content assertion passes.
+   *
+   *  That is exactly how Still shipped. `app/still.tsx` asked for a centred breathing circle
+   *  with the exit pushed to the bottom, and got the circle jammed under the top bar with
+   *  two-thirds of the screen empty below it — through a browser check that passed, because
+   *  the check read text and not layout.
+   *
+   *  Opt-in rather than default: most screens here are documents that should start at the
+   *  top and grow, and `flexGrow: 1` would stretch the short ones oddly. */
+  fill?: boolean;
 }) {
   const c = useTheme();
   const insets = useSafeAreaInsets();
@@ -442,11 +459,19 @@ export function Ground({
           paddingTop: insets.top + space.sm,
           paddingBottom: insets.bottom + (tabBarSpace ? TAB_BAR_HEIGHT + space.xl : space.xxxl),
           alignItems: 'center',
+          ...(fill ? { flexGrow: 1 } : null),
         }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={{ width: '100%', maxWidth: LAYOUT_MAX_WIDTH, paddingHorizontal: space.lg }}>
+        <View
+          style={{
+            width: '100%',
+            maxWidth: LAYOUT_MAX_WIDTH,
+            paddingHorizontal: space.lg,
+            ...(fill ? { flex: 1 } : null),
+          }}
+        >
           {children}
         </View>
       </ScrollView>

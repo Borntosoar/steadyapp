@@ -6,6 +6,7 @@ import {
   loadEntity, problems, legalNameProblems, fill, tokensUsed, TOKENS, REQUIRED, PROVINCES,
   KINDS, LEGAL_DIR, appName,
 } from '../site/entity.mjs';
+import { emptyState } from '../lib/storage.ts';
 
 /* The legal documents.
  *
@@ -472,6 +473,83 @@ describe('the site has one address', () => {
       if (file === 'README.md') continue;
       assert.doesNotMatch(withoutComments(md), /borntosoar|github\.io/i,
         `${file} names a host inline; use {{SITE_ORIGIN}}`);
+    }
+  });
+});
+
+describe('the published policies name everything the app stores', () => {
+  /* THE CONTROL THAT WAS MISSING, AND THE DRIFT IT WOULD HAVE CAUGHT.
+   *
+   * legal/privacy-policy.md carries a maintainer comment asserting that normalise() is "an
+   * exhaustive list of what can be stored" — and by the time anybody checked, three fields
+   * had been added to normalise() without reaching either policy: `commitments`, `tracks`
+   * and `measures`. The last is PHQ-8 and GAD-7 responses, which is the most clearly
+   * clinical category in the app and the one Washington's My Health My Data Act reaches.
+   * An under-inclusive category list in a consumer-health-data policy is the specific defect
+   * RCW 19.373.030(1)(a) creates a private right of action over.
+   *
+   * A prose document cannot be diffed against a type, so this maps each stored key to the
+   * words that must appear. THE MAP IS HAND-WRITTEN BUT THE KEYS ARE DERIVED: a field added
+   * to emptyState() with no entry here fails the suite, which forces the decision rather
+   * than allowing the omission. That is the difference between this and the comment it
+   * replaces. */
+  const state = emptyState();
+
+  /** Stored key → something the policies must say about it. */
+  const MUST_MENTION = {
+    checkIns: /daily check-in/i,
+    urgeLogs: /urge/i,
+    thoughtRecords: /thought record/i,
+    mirrorSessions: /mirror/i,
+    experiments: /experiment/i,
+    practice: /practice/i,
+    readModules: /reading|readings|module/i,
+    protocol: /relapse plan|plan for a bad|week/i,
+    streak: /streak/i,
+    tracks: /guided|track/i,
+    commitments: /commitment|tomorrow/i,
+    measures: /PHQ-8|GAD-7/,
+    baseline: /check-in|start/i,
+    profile: /first name|settings/i,
+    entitlement: /purchase|tier|subscription/i,
+  };
+
+  /** Keys that hold no personal data, with the reason. Excluding one is a deliberate edit. */
+  const NOT_PERSONAL = new Map([
+    ['moments', 'impression and dismissal counts for the app\'s own prompts — about the app, not the person'],
+  ]);
+
+  test('every stored field is either described or deliberately excluded', () => {
+    const unaccounted = Object.keys(state)
+      .filter((k) => !(k in MUST_MENTION) && !NOT_PERSONAL.has(k));
+    assert.deepEqual(unaccounted, [],
+      `these fields are stored but neither described in the policies nor excluded here: `
+      + `${unaccounted.join(', ')}. Add each to MUST_MENTION with the words the policy uses, `
+      + `or to NOT_PERSONAL with the reason it holds no personal data.`);
+  });
+
+  test('the privacy policy describes each of them', () => {
+    const doc = readFileSync(join(LEGAL_DIR, 'privacy-policy.md'), 'utf8');
+    for (const [key, rx] of Object.entries(MUST_MENTION)) {
+      assert.match(doc, rx,
+        `legal/privacy-policy.md never mentions ${key}, which normalise() stores`);
+    }
+  });
+
+  test('and the consumer health data policy names the clinical ones', () => {
+    /* Washington and Nevada ask specifically for the CATEGORIES collected. The questionnaire
+       responses are the category most obviously inside "mental health ... diagnoses or
+       diagnostic testing", so this one is checked by name rather than by the general map. */
+    const doc = readFileSync(join(LEGAL_DIR, 'consumer-health-data-policy.md'), 'utf8');
+    for (const rx of [/PHQ-8/, /GAD-7/, /thought record/i, /urge/i, /hurting\s+yourself/i]) {
+      assert.match(doc, rx,
+        `legal/consumer-health-data-policy.md §1 omits a collected category (${rx})`);
+    }
+  });
+
+  test('every exclusion carries a reason', () => {
+    for (const [key, why] of NOT_PERSONAL) {
+      assert.ok(why && why.length > 25, `${key} is excluded without saying why`);
     }
   });
 });

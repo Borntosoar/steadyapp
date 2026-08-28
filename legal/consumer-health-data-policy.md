@@ -60,7 +60,15 @@ document answers only what these two laws ask.
 that would be consumer health data if anyone else could see them: how many minutes a day
 appearance worry takes, notes about urges and what you did instead, thought records, answers
 to an opening survey including a question about whether you are thinking about hurting
-yourself, and a written plan for a bad stretch.
+yourself, a written plan for a bad stretch, and your answers to two standard questionnaires
+about depression and anxiety — PHQ-8 and GAD-7 — which the app offers when you start and
+about once a month after that, along with the fact that you declined them if you did.
+
+That last one is the most clearly clinical thing in the app, so it is worth being plain about
+what it is and is not: the questionnaires are optional, you can use every part of the app
+without answering them, they are scored only on your own phone, and the app never turns the
+score into a diagnosis or a severity label. They exist so that you can tell whether any of
+this is working.
 
 **All of it is created and kept on your own phone.** It is encrypted there. It is never
 transmitted to us, because the app contains no code that could transmit it — there is no

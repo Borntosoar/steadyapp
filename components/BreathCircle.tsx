@@ -29,12 +29,21 @@ export function BreathCircle({
   size = 220,
   tone = 'accent',
   pattern,
+  showCycles = true,
 }: {
   onCycle?: (n: number) => void;
   onDone?: () => void;
   size?: number;
   /** `light` when this sits on artwork rather than on the app ground. */
   tone?: 'accent' | 'light';
+  /** Show "cycle 3 of 30" under the circle.
+   *
+   *  On Calm down this is load-bearing safety copy: BREATH is 4-7-8, its own outro says four
+   *  cycles is enough, and a visible end is part of the instruction. In Still it contradicts
+   *  the section — STILL_INTRO says "None of them is scored, none of them can be done wrong",
+   *  Float deliberately has no clock, and content/still.ts calls a completion mark "the app
+   *  asking to be thanked". Then the most-used mode counted to thirty on screen. */
+  showCycles?: boolean;
   /** The pace to run.
    *
    *  Defaults to BREATH — 4-7-8, four cycles — so the Calm down path is exactly what it was.
@@ -129,10 +138,10 @@ export function BreathCircle({
     phase === 'done'
       ? 'Done'
       : phase === 'inhale'
-        ? BREATH.phaseLabels.inhale
+        ? P.phaseLabels.inhale
         : phase === 'hold'
-          ? BREATH.phaseLabels.hold
-          : BREATH.phaseLabels.exhale;
+          ? P.phaseLabels.hold ?? ''
+          : P.phaseLabels.exhale;
 
   const light = tone === 'light';
   const fill = light ? 'rgba(255,255,255,0.10)' : c.accentDim;
@@ -156,7 +165,9 @@ export function BreathCircle({
       >
         {phase === 'done'
           ? ''
-          : `${P.during[(cycle - 1) % P.during.length]}  ·  cycle ${cycle} of ${P.cycles}`}
+          : showCycles
+            ? `${P.during[(cycle - 1) % P.during.length]}  ·  cycle ${cycle} of ${P.cycles}`
+            : P.during[(cycle - 1) % P.during.length]}
       </Text>
     </View>
   );

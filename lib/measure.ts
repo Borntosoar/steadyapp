@@ -84,11 +84,18 @@ export const isComplete = (m: Measure): boolean => {
  *  `normalise` rebuilds row by row without reordering, and an import is normalise over a file
  *  written in that same order. A hand-scrambled backup defeats both signals equally, so
  *  nothing is lost by preferring the one the device clock cannot corrupt. */
-export const completed = (all: readonly Measure[]): Measure[] => all.filter(isComplete);
+export const completed = (all: readonly Measure[] | null | undefined): Measure[] =>
+  /* Tolerates a missing array rather than throwing. `eligibleMoments` reaches this with
+     whatever state it was handed, and a state assembled before `measures` existed — an old
+     fixture, a partial object, a payload mid-migration — has no such field. An absent
+     history is an empty history; that is a different thing from a crash on the launch
+     screen, which is where this is called from. */
+  Array.isArray(all) ? all.filter(isComplete) : [];
 
-export const baselineOf = (all: readonly Measure[]): Measure | null => completed(all)[0] ?? null;
+export const baselineOf = (all: readonly Measure[] | null | undefined): Measure | null =>
+  completed(all)[0] ?? null;
 
-export const latestOf = (all: readonly Measure[]): Measure | null => {
+export const latestOf = (all: readonly Measure[] | null | undefined): Measure | null => {
   const c = completed(all);
   return c[c.length - 1] ?? null;
 };
@@ -115,7 +122,10 @@ export function daysBetween(fromIso: string, toIso: string): number | null {
  *  Returns the LARGEST milestone that has come due and has not been answered — so somebody
  *  who ignores the app for four months is asked once, for day 90, rather than being handed
  *  three questionnaires in a row for having been away. */
-export function dueMilestone(all: readonly Measure[], nowIso: string): number | null {
+export function dueMilestone(
+  all: readonly Measure[] | null | undefined,
+  nowIso: string,
+): number | null {
   const base = baselineOf(all);
   if (!base) return null;
 
@@ -140,7 +150,7 @@ export function dueMilestone(all: readonly Measure[], nowIso: string): number | 
  *  Skipping is a real answer and it has to survive a restart, or the app asks again on
  *  every launch — which is the behaviour that makes people delete a mental-health app. */
 export function baselineOwed(
-  all: readonly Measure[],
+  all: readonly Measure[] | null | undefined,
   skippedAt: string | null | undefined,
   nowIso: string,
 ): boolean {
@@ -196,7 +206,7 @@ export function changeSince(
 }
 
 /** Baseline → latest, for both instruments. Null when there is nothing to compare yet. */
-export function progressSoFar(all: readonly Measure[]): { phq8: Change | null; gad7: Change | null } | null {
+export function progressSoFar(all: readonly Measure[] | null | undefined): { phq8: Change | null; gad7: Change | null } | null {
   const base = baselineOf(all);
   const last = latestOf(all);
   if (!base || !last || base === last) return null;

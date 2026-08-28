@@ -36,6 +36,7 @@ import { WEEKS_TOTAL } from './protocol.ts';
 import { emptyMomentRecord, MOMENTS } from './moments.ts';
 import { emptyEntitlement, type Entitlement } from './entitlement.ts';
 import { DUE_DAYS } from './measure.ts';
+import { PHQ8, GAD7 } from '../content/measure.ts';
 import { seal, open, isSealed } from './crypto.ts';
 
 /* The key never changes again. Versioning happens inside the envelope; the `.v2` suffix is
@@ -615,16 +616,47 @@ export function normalise(parsed: unknown): AppState {
          The alternative — dropping the row — would delete real answers to protect a date, and
          the answers are the part that matters. */
       const clamped = Date.parse(takenAt) > Date.now() ? new Date().toISOString() : takenAt;
-      const answers = (v: unknown): number[] =>
-        arr<unknown>(v)
-          .map((x) => (typeof x === 'number' && Number.isInteger(x) && x >= 0 && x <= 3 ? x : null))
-          .filter((x): x is number => x !== null);
+      /* ALL OR NOTHING, NEVER COMPACTED, and the difference is a wrong clinical score.
+       *
+       * This used to `.map(valid ? x : null).filter(Boolean)`, which DROPS the bad element and
+       * closes the gap. `score()` in lib/measure.ts validates only the length, so an
+       * over-length array carrying one invalid value compacted down to exactly the expected
+       * length and scored:
+       *
+       *   stored [0,1,2,3,7,3,3,3,3]  ->  kept [0,1,2,3,3,3,3,3]  ->  PHQ-8 of 18, "complete"
+       *
+       * Answers five through eight shifted up a slot, so the total is arithmetic over items
+       * the person never answered in those positions — and it becomes the baseline every
+       * later comparison is made against. Precisely the "plausible lie" the header of
+       * lib/measure.ts promises this code will not produce, produced one layer below it.
+       *
+       * So: any invalid element, or a wrong length, discards the whole instrument. The empty
+       * array is not scoreable, `isComplete` is false, and the sitting is kept but never
+       * becomes a baseline — which is the honest outcome. The other answers in the row, and
+       * the other instrument, survive untouched. */
+      const answers = (v: unknown, expected: number): number[] => {
+        const raw = arr<unknown>(v);
+        if (raw.length !== expected) return [];
+        const out: number[] = [];
+        for (const x of raw) {
+          if (typeof x !== 'number' || !Number.isInteger(x) || x < 0 || x > 3) return [];
+          out.push(x);
+        }
+        return out;
+      };
       const ms = num(r.milestone, NaN);
       return {
-        id: str(r.id, ''),
+        /* Never an empty string. A hand-edited or truncated backup can carry several rows
+           with no id, and `str(r.id, '')` gave every one of them the same one — which is a
+           duplicate React key the moment these are listed, and a broken identity for anything
+           that later dedupes or references a sitting. Derived from the timestamp so it stays
+           stable across reloads of the same file rather than changing on every launch. */
+        id: str(r.id, '') || `restored-m-${Date.parse(clamped)}`,
         takenAt: clamped,
-        phq8: answers(r.phq8),
-        gad7: answers(r.gad7),
+        /* Lengths from the instruments themselves, never written as 8 and 7 here — a second
+           copy of those numbers drifts the day an instrument changes. */
+        phq8: answers(r.phq8, PHQ8.items.length),
+        gad7: answers(r.gad7, GAD7.items.length),
         milestone: MEASURE_MILESTONES.has(ms) ? ms : null,
       };
     }),

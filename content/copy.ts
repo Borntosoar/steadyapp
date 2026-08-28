@@ -179,6 +179,16 @@ export const MOMENT_COPY = {
     dismiss: 'Close',
   },
 
+  /* The scheduled re-measure. Says how long it takes and what it is for, and does not
+     imply anything about how the person is doing — the whole point of the number is that
+     the app does not interpret it. */
+  'measure-due': {
+    eyebrow: 'A month on',
+    title: 'The same fifteen questions',
+    body: 'You answered these when you started, so there is something to compare against now. It takes a couple of minutes, and the app will not tell you what your answers mean.',
+    action: 'Answer them',
+    dismiss: 'Not now',
+  },
   'rate-app': {
     eyebrow: 'One small thing',
     title: 'Would you say so publicly?',
