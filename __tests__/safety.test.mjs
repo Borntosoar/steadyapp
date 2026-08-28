@@ -3,6 +3,11 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+/* Imported rather than grepped. lib/entitlement.ts is pure and loads under bare Node — which
+   is the reason it was refactored — so the free-route rules can be EXECUTED here instead of
+   pattern-matched against the text of their own declaration. Two tests below used to assert
+   that the source contained `'/grounding'`, which a commented-out `isGated` satisfies. */
+import { ALWAYS_FREE_ROUTES, isGated } from '../lib/entitlement.ts';
 
 /* The SAFETY.md constraints, as a test.
  *
@@ -241,12 +246,72 @@ describe('the source tree is what SAFETY.md says it is', () => {
   });
 
   test('no weight, calorie or measurement field on any type', () => {
-    const types = FILES.find((f) => f.path === 'types/index.ts');
-    const declarations = types.src
-      .split('\n')
-      .filter((l) => /^\s{2}\w+[?]?:/.test(l))
-      .join('\n');
-    assert.doesNotMatch(declarations, /weight|calorie|bmi|measurement|photo|image|uri/i);
+    /* "ANY TYPE" MEANT ONE FILE. This read only types/index.ts, while more than twenty files
+       under lib/ and content/ declare exported interfaces — so
+       `export interface BodyLog { weight: number; calories: number }` in lib/measure.ts
+       passed the whole suite, breaching SAFETY.md §2 in silence. Verified by doing it.
+       The indent filter was the second half of the problem: `^\s{2}` matches exactly two
+       spaces, so any nested declaration was invisible. Field lines are now taken at any
+       depth, from every file. */
+    /* SCANS TYPE BODIES, NOT LINES. The first repair here matched `^\s+name:` — a field on
+       its own line — which meant a ONE-LINE declaration slipped straight past it:
+       `export interface BodyLog { weight: number; calories: number; photoUri: string; }`
+       appended to lib/measure.ts was not caught. That is the same "the fixture cannot tell
+       the bug from the fix" shape this whole pass exists to remove, committed while removing
+       it. Brace-matching each interface and type-alias body catches any formatting.
+       Deliberately NOT every `name:` in the file: `WEIGHT` in content/groundwork.ts is how
+       much an action weighs against a day's capacity, and `weight: '700'` in the type scale
+       is a font weight. Both are object literals rather than type declarations, so scoping to
+       type bodies excludes them without needing an exemption for either. */
+    const TYPE_HEAD = /\b(?:interface\s+\w+[^{;]*|type\s+\w+\s*=\s*)\{/g;
+    const typeBodies = (src) => {
+      const out = [];
+      for (const m of src.matchAll(TYPE_HEAD)) {
+        let depth = 0;
+        for (let j = m.index + m[0].length - 1; j < src.length; j += 1) {
+          if (src[j] === '{') depth += 1;
+          else if (src[j] === '}') {
+            depth -= 1;
+            if (depth === 0) { out.push(src.slice(m.index + m[0].length, j)); break; }
+          }
+        }
+      }
+      return out;
+    };
+    const FIELD = /(?<![\w.$])([A-Za-z_$][\w$]*)\s*\??\s*:/g;
+    /* WHOLE WORDS, NOT SUBSTRINGS. The first version matched `uri` anywhere and flagged
+       `during: BREATHE.during` in app/still.tsx — d-uri-ng. A guard that fires on innocent
+       identifiers gets deleted by whoever it fires on, so the field name is split on
+       camelCase and each part checked for membership. `photoUri` still fails; `during` does
+       not. */
+    const BANNED = new Set([
+      'weight', 'calorie', 'calories', 'bmi', 'measurement', 'measurements',
+      'photo', 'photos', 'image', 'images', 'uri', 'thumbnail', 'selfie',
+    ]);
+    const parts = (name) => name.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase().split(/[\s_]+/);
+
+    /* Style properties that collide with a banned word and mean something else entirely.
+       Enumerated across the whole tree rather than guessed: `fontWeight` is the only one, in
+       two files. Kept as an explicit set so that adding to it is a visible decision — the
+       banned word here is BODY weight, and the day somebody wants to exempt `bodyWeight`
+       this list is where the argument has to happen. */
+    const STYLE_PROPS = new Set(['fontWeight']);
+
+    for (const f of FILES) {
+      /* Comments stripped first: several files legitimately EXPLAIN in prose that there is no
+         weight field, and a guard that fails on its own justification is one people route
+         around — the lesson the comment stripper at the top of this file was written for. */
+      for (const body of typeBodies(withoutComments(f.src))) {
+        for (const m of body.matchAll(FIELD)) {
+          if (STYLE_PROPS.has(m[1])) continue;
+          const hit = parts(m[1]).find((w) => BANNED.has(w));
+          assert.ok(!hit,
+            `${f.path} declares a field named "${m[1]}", which contains "${hit}". SAFETY.md `
+            + `§2: no field for weight, measurements, calories, photographs or an image URI `
+            + `exists anywhere in this app.`);
+        }
+      }
+    }
   });
 
   /* The layering rule the whole test strategy rests on. Every suite here imports
@@ -339,7 +404,7 @@ describe('the source tree is what SAFETY.md says it is', () => {
    *
    *  Requiring whitespace would leave `from'react'` — valid JS that nobody writes — unseen,
    *  so the test below closes that hole explicitly rather than leaving it to a comment. */
-  const SPECIFIERS = /(?:\bfrom\s+|\bimport\s*\(\s*|\brequire\s*\(\s*)['"]([^'"]+)['"]/g;
+  const SPECIFIERS = /(?:\bfrom\s+|\bimport\s*\(\s*|\brequire\s*\(\s*)['"`]([^'"`]+)['"`]/g;
 
   /** An import whose specifier is jammed against the keyword: `from'react'`. Legal, never
    *  written by hand, unformattable by prettier, and therefore the exact shape somebody
@@ -349,7 +414,7 @@ describe('the source tree is what SAFETY.md says it is', () => {
    *  just `/\bfrom['"]/` and reproduced, in a new test, the identical false positive it had
    *  been written to fix: it fired on `'Where you are starting from'` too. What separates an
    *  import from a sentence is not the spacing, it is what comes after the quote. */
-  const JAMMED_IMPORT = /\bfrom['"][@\w][\w@.\-/]*['"]/;
+  const JAMMED_IMPORT = /\bfrom['"`][@\w][\w@.\-/]*['"`]/;
 
   /** '@scope/pkg/deep/path' -> '@scope/pkg';  'pkg/deep/path' -> 'pkg'. */
   const packageOf = (spec) => {
@@ -563,8 +628,22 @@ describe('the source tree is what SAFETY.md says it is', () => {
   // SAFETY.md §11
   test('completing an experiment cannot rewrite the prediction', () => {
     const store = FILES.find((f) => f.path === 'store/useStore.ts');
-    const fn = store.src.slice(store.src.indexOf('completeExperiment:'));
-    const body = fn.slice(0, fn.indexOf('markModuleRead'));
+    /* ⚠ THIS READ THE INTERFACE, NOT THE IMPLEMENTATION, AND SO ASSERTED NOTHING.
+       `completeExperiment:` first occurs in the interface at the top of store/useStore.ts, and
+       `markModuleRead` a few lines later — also in the interface. The slice was four lines of
+       type signature; the real function, three hundred lines down, was never read. Verified by
+       rewriting `prediction` inside it: the whole suite stayed green while hindsight bias
+       overwrote the frozen prediction, which is the one thing SAFETY.md §11 exists to stop.
+       Anchored on the implementation's own signature, which only the definition has. */
+    const at = store.src.indexOf('completeExperiment: (expId, outcome) => {');
+    assert.notEqual(at, -1,
+      'completeExperiment is no longer implemented under that signature, so this guard is '
+      + 'reading nothing again — re-anchor it on the definition');
+    const fn = store.src.slice(at);
+    /* Bounded by the end of the arrow function rather than by the next member's name, so a
+       reordering of the store cannot silently widen or empty the window. */
+    const end = fn.indexOf('\n  },');
+    const body = end === -1 ? fn : fn.slice(0, end);
     assert.doesNotMatch(body, /prediction|likelihoodBefore|avoiding/,
       'completeExperiment touches a pre-event field');
   });
@@ -587,9 +666,46 @@ describe('the money never touches the safety surfaces', () => {
      when somebody's app has just broken and their only copy of a year of private writing is
      on the far side of a button. That is the least acceptable moment in the entire product
      to mention a subscription. */
+  /* DERIVED, NOT LISTED — this was five hand-written paths and it had drifted past three of
+     the screens it exists to protect. `app/checkin.tsx` is named in SAFETY.md §4;
+     `app/still.tsx` is promised BY NAME to every person who finishes the survey; and
+     `app/measure.tsx` is the clinical baseline. All three could have grown a paywall with the
+     suite green, which was verified by doing it.
+     Every always-free route's screen is sacred by construction now, plus the two components
+     that render at somebody's worst moment. A route added to ALWAYS_FREE_ROUTES is covered
+     the day it lands rather than the day somebody remembers this list. */
+  const ROUTE_FILES = {
+    '/checkin': 'app/checkin.tsx',
+    '/grounding': 'app/grounding.tsx',
+    '/support': 'app/support.tsx',
+    '/still': 'app/still.tsx',
+    '/measure': 'app/measure.tsx',
+  };
+  /* FREE IS NOT THE SAME AS SACRED, and deriving this list is what forced the distinction to
+     be written down. Sacred means "reached at somebody's worst, so it must never sell".
+     Three free routes deliberately sell and are exempt by name rather than by omission:
+       · /paywall     — it is the purchase screen.
+       · /onboarding  — screen one states the commercial shape on purpose, because a customer
+                        who knows the deal from the start converts better and refunds less.
+       · /            — Today is where the app's ONE commercial interruption is designed to
+                        land (the `week-one-ask` moment, after a real number has moved). It is
+                        free forever and it is not a crisis surface. */
+  const SELLS_BY_DESIGN = new Set(['/paywall', '/onboarding', '/']);
+
+  test('every always-free route has a screen this list knows about', () => {
+    /* Without this, adding a route and forgetting to map it would quietly shrink the guard —
+       which is exactly how the previous hand-written version decayed. */
+    const unmapped = ALWAYS_FREE_ROUTES
+      .filter((r) => !SELLS_BY_DESIGN.has(r) && !(r in ROUTE_FILES));
+    assert.deepEqual(unmapped, [],
+      `these free routes have no screen mapped, so nothing checks them for an upgrade `
+      + `surface: ${unmapped.join(', ')}`);
+  });
+
   const SACRED = [
-    'app/grounding.tsx', 'app/support.tsx', 'app/urges.tsx',
-    'components/Finish.tsx', 'components/CrashScreen.tsx',
+    ...Object.values(ROUTE_FILES),
+    /* Not routes, but rendered at the worst moments there are. */
+    'app/urges.tsx', 'components/Finish.tsx', 'components/CrashScreen.tsx',
   ];
 
   for (const path of SACRED) {
@@ -601,7 +717,27 @@ describe('the money never touches the safety surfaces', () => {
     });
   }
 
-  test('the always-free routes are still free in code, not only in prose', () => {
+  test('a lapsed user is not gated out of a single free route', () => {
+    /* THE TEST THIS REPLACES ASSERTED ON PROSE, despite being named for the opposite. It
+       grepped lib/entitlement.ts for the string `'/grounding'` — which the declaration
+       contains whether or not `isGated` consults it. Deleting the
+       `ALWAYS_FREE_ROUTES.includes(route)` line from isGated() entirely, so that every route
+       including crisis support is gated for a lapsed user, left this file green. Now it runs
+       the function. */
+    for (const route of ALWAYS_FREE_ROUTES) {
+      assert.equal(isGated(route, false), false,
+        `${route} is gated for somebody with no entitlement, and it must never be`);
+    }
+    /* And the set has not quietly shrunk. Named separately from the list above so that
+       removing a route from ALWAYS_FREE_ROUTES fails rather than trivially passing an empty
+       loop — the shape that made the previous version decay. */
+    for (const route of ['/grounding', '/support', '/checkin', '/', '/still', '/measure']) {
+      assert.ok(ALWAYS_FREE_ROUTES.includes(route),
+        `${route} dropped out of ALWAYS_FREE_ROUTES`);
+    }
+  });
+
+  test('the free-route list is also intact in the source', () => {
     const ent = FILES.find((f) => f.path === 'lib/entitlement.ts');
     for (const route of ['/grounding', '/support', '/checkin']) {
       assert.ok(ent.src.includes(`'${route}'`), `${route} dropped out of ALWAYS_FREE_ROUTES`);

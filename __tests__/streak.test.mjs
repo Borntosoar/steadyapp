@@ -72,7 +72,14 @@ describe('registerPractice', () => {
       s = registerPractice(s, dayKey(d));
     }
     assert.equal(s.current, 60);
-    assert.ok(s.freezesRemaining <= MAX_FREEZES, 'freezes must be capped');
+    /* ⚠ THE CAP ALONE ASSERTED NOTHING. STARTING_FREEZES is 2 and MAX_FREEZES is 5, so
+       `2 <= 5` passes whether or not a single freeze was ever earned. Making grantFreeze()
+       return its input unchanged — disabling the silent-forgiveness mechanic this whole
+       module exists for — left the suite green. Verified.
+       So the arithmetic is asserted, not just the ceiling: sixty consecutive days is eight
+       whole weeks, far past the cap, so the count must be sitting exactly on it. */
+    assert.equal(s.freezesRemaining, MAX_FREEZES,
+      'sixty consecutive days earned no freeze — grantFreeze is not being reached');
   });
 });
 

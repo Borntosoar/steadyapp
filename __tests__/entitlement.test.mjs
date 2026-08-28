@@ -341,13 +341,23 @@ describe('every row of the paywall table is enforced somewhere in the app', () =
       .filter((rel) => /\bprotocol\.currentWeek\b/.test(code(rel)))
       .sort();
 
-  /* label fragment -> [file, pattern that must appear in it] */
+  /* label fragment -> [file, pattern that must appear in it]
+   *
+   * ⚠ EACH PATTERN MUST MATCH THE COMPARISON, NOT JUST THE CONSTANT. The records row was
+   * `/FREE_LIMITS\.thoughtRecordsPerMonth/`, and that identifier appears three times in
+   * app/journal.tsx: once in the gate and twice in the copy that explains the limit. So
+   * replacing the gate itself with `const overLimit = false` left the pin satisfied by the
+   * display strings — the free tier gained unlimited thought records while the paywall went
+   * on selling "5 a month", with the suite green. Verified by doing it.
+   * The Progress row had the same weakness for a different reason: `/if \(!entitled\)/` is
+   * among the most common lines in the codebase, so it pins almost nothing. Both now match
+   * the shape of the decision rather than a token that happens to sit near it. */
   const ENFORCED = [
     ['weeks', 'app/(tabs)/index.tsx', /effectiveWeek\(protocol\.currentWeek, entitled\)/],
     ['mirror', 'app/mirror.tsx', /isGated\('\/mirror', entitled\)/],
-    ['Progress', 'app/(tabs)/progress.tsx', /if \(!entitled\)/],
+    ['Progress', 'app/(tabs)/progress.tsx', /!entitled\s*&&|if \(!entitled\)/],
     ['reads', 'app/(tabs)/learn.tsx', /m\.free \|\| entitled/],
-    ['records', 'app/journal.tsx', /FREE_LIMITS\.thoughtRecordsPerMonth/],
+    ['records', 'app/journal.tsx', /!entitled\s*&&[^\n]*>=\s*FREE_LIMITS\.thoughtRecordsPerMonth/],
   ];
 
   test('there is one enforcement point per row, and no orphan rows', () => {
@@ -361,7 +371,11 @@ describe('every row of the paywall table is enforced somewhere in the app', () =
   for (const [what, file, pattern] of ENFORCED) {
     test(`the ${what} row is backed by ${file}`, () => {
       assert.match(
-        src(file), pattern,
+        /* `code`, not `src`. Grepping raw source meant a COMMENTED-OUT gate satisfied its own
+           pin: `// if (isGated('/mirror', entitled)) {` matches, and mirror practice opens to
+           everyone with the suite green. This file already defines both helpers and already
+           uses `code` for the week-reader walk; this line was the one that did not. */
+        code(file), pattern,
         `the paywall sells this and ${file} no longer enforces it`,
       );
     });

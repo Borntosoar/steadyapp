@@ -6,6 +6,7 @@ const {
   isWeekUnlocked,
   weekProgress,
   recordPracticeDay,
+  MIRROR_SPECS,
   mirrorSpecForWeek,
   recommendedAction,
   PRACTICE_DAYS_PER_WEEK,
@@ -108,7 +109,21 @@ describe('mirror hierarchy cannot be skipped', () => {
     }
   });
 
-  test('durations increase monotonically across phases', () => {
+  test('durations increase strictly across the four specs', () => {
+    /* ⚠ `>=` ADMITTED A FLAT LINE. The weeks sampled here span only four distinct specs — 10
+       and 12 share one — so the comparison had to tolerate equality, and tolerating equality
+       meant every duration could be set to the same number with the suite green. Verified:
+       collapsing the ladder from 90/180/300/480 to a flat 90 seconds was not caught, and a
+       graded-exposure ladder that does not grade is the intervention not happening.
+       The specs are compared directly, where strict increase is the actual requirement. */
+    const specs = [1, 2, 3, 4].map((p) => MIRROR_SPECS[p]);
+    for (let i = 1; i < specs.length; i++) {
+      assert.ok(specs[i].durationSeconds > specs[i - 1].durationSeconds,
+        `phase ${i + 1} lasts ${specs[i].durationSeconds}s and phase ${i} lasts `
+        + `${specs[i - 1].durationSeconds}s — the exposure ladder must climb`);
+    }
+
+    /* And the weeks still map onto that ladder without going backwards. */
     const durations = [4, 6, 8, 10, 12].map((w) => mirrorSpecForWeek(w).durationSeconds);
     for (let i = 1; i < durations.length; i++) {
       assert.ok(durations[i] >= durations[i - 1], 'duration must not decrease with phase');
