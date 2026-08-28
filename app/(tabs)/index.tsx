@@ -162,6 +162,7 @@ export default function Today() {
       ? []
       : [{ title: NAMES.checkin.title, sub: '30 seconds', route: '/checkin', icon: 'plus' as const }]),
     { title: NAMES.calm.title, sub: 'Free, always', route: '/grounding', icon: 'play' as const },
+    { title: NAMES.still.title, sub: NAMES.still.sub, route: '/still', icon: 'play' as const },
     { title: NAMES.urge.title, sub: '3 minutes', route: '/urges', icon: 'play' as const },
     { title: NAMES.thought.title, sub: 'About 5 minutes', route: '/journal', icon: 'plus' as const },
   ];

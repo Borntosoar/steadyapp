@@ -23,6 +23,15 @@ export const ALWAYS_FREE_ROUTES = [
   '/support',
   '/onboarding',
   '/paywall',
+  /* Still — Breathe, Reset and Float. Free for the same reason Calm down is, plus one
+     specific to it: the survey promises one of the three BY NAME to every person who
+     finishes it, on the screen where they decide whether to trust the app. A promise made
+     there must not turn out to have a price on it. */
+  '/still',
+  /* The PHQ-8 and GAD-7 baseline. Free because it is how somebody tells whether the thing
+     they may be paying for is working, which makes it the worst available thing to charge
+     for. See app/measure.tsx. */
+  '/measure',
 ] as const;
 
 /** Free tier caps on otherwise-paid surfaces. */

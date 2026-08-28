@@ -159,6 +159,7 @@ const SHOTS = [
   { route: '/mirror', name: '12-mirror' },
   { route: '/plan', name: '13-plan' },
   { route: '/measure', name: '18-measure' },
+  { route: '/still', name: '19-still' },
   { route: '/game/curveball', name: '14-curveball' },
   { route: '/game/toward', name: '15-toward' },
   { route: '/game/ballast', name: '16-ballast' },

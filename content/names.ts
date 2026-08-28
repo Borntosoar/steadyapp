@@ -116,6 +116,15 @@ export const NAMES = {
     unitPlural: 'checks',
     sub: 'Fifteen questions, about once a month',
   },
+  /* The meditation layer. One word, like the games, and for the same reason: it is a place
+     rather than a task, so a verb-and-object name would be wrong. The survey has always
+     named its three modes — Breathe, Reset, Float — to every person who finishes it. */
+  still: {
+    title: 'Still',
+    unit: 'session',
+    unitPlural: 'sessions',
+    sub: 'Free, always',
+  },
 } as const;
 
 export type ThingKey = keyof typeof NAMES;

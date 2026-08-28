@@ -13,17 +13,35 @@ import { useReducedMotion } from '../hooks/useReducedMotion';
 
 type Phase = 'inhale' | 'hold' | 'exhale' | 'done';
 
+/** A pace this circle can run. `hold` is optional and Still's does not have one. */
+export interface BreathPattern {
+  inhale: number;
+  hold?: number;
+  exhale: number;
+  cycles: number;
+  during: readonly string[];
+  phaseLabels: { inhale: string; hold?: string; exhale: string };
+}
+
 export function BreathCircle({
   onCycle,
   onDone,
   size = 220,
   tone = 'accent',
+  pattern,
 }: {
   onCycle?: (n: number) => void;
   onDone?: () => void;
   size?: number;
   /** `light` when this sits on artwork rather than on the app ground. */
   tone?: 'accent' | 'light';
+  /** The pace to run.
+   *
+   *  Defaults to BREATH — 4-7-8, four cycles — so the Calm down path is exactly what it was.
+   *  Still passes its own, because a sustained mode cannot use this one: BREATH's own outro
+   *  says "Four cycles is enough. More isn't better", and running it for five minutes would
+   *  contradict the app's own safety copy in the same build. See content/still.ts. */
+  pattern?: BreathPattern;
 }) {
   const c = useTheme();
   const reduced = useReducedMotion();
@@ -41,6 +59,13 @@ export function BreathCircle({
      The component owns the schedule and must not restart because its parent re-rendered. */
   const cbs = useRef({ onCycle, onDone });
   cbs.current = { onCycle, onDone };
+
+  /* The pattern is read through a ref for the same reason the callbacks are: the effect below
+     owns a schedule that must not restart because the parent re-rendered with a fresh object
+     literal. A caller writing `pattern={{ ... }}` inline would otherwise re-pace the circle
+     mid-breath, which is the exact bug the comment above describes. */
+  const pat = useRef(pattern ?? BREATH);
+  const P = pat.current;
 
   useEffect(() => {
     let cancelled = false;
@@ -71,14 +96,16 @@ export function BreathCircle({
       });
 
     const run = async () => {
-      for (let n = 1; n <= BREATH.cycles; n++) {
+      for (let n = 1; n <= P.cycles; n++) {
         if (cancelled) return;
         setCycle(n);
         cbs.current.onCycle?.(n);
-        await step(1, BREATH.inhale, 'inhale');
-        // Hold keeps the circle expanded rather than freezing mid-motion.
-        await step(1, BREATH.hold, 'hold');
-        await step(0.55, BREATH.exhale, 'exhale');
+        await step(1, P.inhale, 'inhale');
+        /* Hold keeps the circle expanded rather than freezing mid-motion. Skipped entirely
+           when the pattern has none — a zero-second hold would still set the phase and flash
+           the "Hold" label for a frame. */
+        if (P.hold) await step(1, P.hold, 'hold');
+        await step(0.55, P.exhale, 'exhale');
       }
       if (!cancelled) {
         setPhase('done');
@@ -95,7 +122,7 @@ export function BreathCircle({
          because of the guards, but it is pure cost on the way out of a screen. */
       current?.stop();
     };
-  }, [reduced, scale]);
+  }, [reduced, scale, P]);
 
   const r = size / 2 - 8;
   const label =
@@ -129,7 +156,7 @@ export function BreathCircle({
       >
         {phase === 'done'
           ? ''
-          : `${BREATH.during[(cycle - 1) % BREATH.during.length]}  ·  cycle ${cycle} of ${BREATH.cycles}`}
+          : `${P.during[(cycle - 1) % P.during.length]}  ·  cycle ${cycle} of ${P.cycles}`}
       </Text>
     </View>
   );
