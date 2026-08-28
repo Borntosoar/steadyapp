@@ -45,7 +45,9 @@
     "site": "node site/build.mjs",
     "shots": "node scripts/screenshots.mjs",
     "shots:store": "node scripts/screenshots.mjs --store",
-    "bigtext": "node scripts/bigtext.mjs"
+    "bigtext": "node scripts/bigtext.mjs",
+    "fuzz": "node --experimental-strip-types scripts/fuzz.mjs",
+    "scenarios": "node scripts/scenarios.mjs"
   },
   "private": true
 }

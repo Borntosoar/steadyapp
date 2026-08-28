@@ -19,7 +19,14 @@ export const CYCLE_SECONDS = BREATHE.inhale + BREATHE.exhale;
  *  exercise is a screen that ends the instant it starts. */
 export function cyclesFor(minutes: number): number {
   if (!Number.isFinite(minutes) || minutes <= 0) return 1;
-  return Math.max(1, Math.floor((minutes * 60) / CYCLE_SECONDS));
+  /* Clamped at both ends. The upper clamp is not decoration: `Math.floor(1e308 * 60 / 10)`
+     is Infinity, and `Math.max(1, Infinity)` is Infinity — so a absurd length produced an
+     infinite cycle count from a function whose contract is "a whole number of breaths".
+     Found by fuzzing, not reachable from the picker today, and exactly the kind of hole that
+     stops being unreachable the first time a length comes from somewhere else. An hour is
+     already far past anything this screen should offer. */
+  const MAX_CYCLES = Math.floor((60 * 60) / CYCLE_SECONDS);
+  return Math.min(MAX_CYCLES, Math.max(1, Math.floor((minutes * 60) / CYCLE_SECONDS)));
 }
 
 /** What the session will actually take, which is not what was asked for.

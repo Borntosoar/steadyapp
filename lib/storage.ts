@@ -28,6 +28,7 @@ import type { AppState, MomentRecord, AvoidanceLevel, PracticeKind } from '../ty
 import { PLAN_SECTIONS } from '../types/index.ts';
 import { PLAN_SECTION_COPY } from '../content/exercises.ts';
 import { initialStreak } from './streak.ts';
+import { WEEKS_TOTAL } from './protocol.ts';
 /* Imported rather than redefined. Two identical constructors for one persisted shape is
    the same hazard the MomentRecord comment in moments.ts warns about for the type: they
    compile happily while drifting apart. `MOMENTS` comes across for the same reason — the
@@ -539,7 +540,24 @@ export function normalise(parsed: unknown): AppState {
        `protocol: { weekPracticeDates: 5 }` survived, and `weekProgress` — called on the
        launch screen — threw "number 5 is not iterable". */
     protocol: {
-      currentWeek: num(protocol.currentWeek, 1),
+      /* CLAMPED TO THE PROTOCOL, not merely checked for being a number.
+       *
+       * `num()` alone only rejects non-finite values, so 999, 0, -5 and 1.5 all survived it
+       * and reached the screens. Found by fuzzing. It matters more than "a silly number on a
+       * label", for two reasons:
+       *
+       *   · `effectiveWeek(week, entitled)` is `entitled ? week : Math.min(week, maxWeek)`.
+       *     Math.min(-5, 1) is -5, so a NEGATIVE week is not clamped by the free tier either
+       *     — the one guard everything else trusts passes it straight through, and the
+       *     Practice screen offers "Week -5 of 12".
+       *   · a fractional week indexes nothing: phaseForWeek(1.5) and the module lookups all
+       *     miss, so the screen renders empty rather than wrong, which is harder to notice.
+       *
+       * Rounded then clamped rather than dropped to the default: somebody restoring a backup
+       * from a build that ran to more weeks should land on the last week that exists here,
+       * not be sent back to week one having lost their place. Validate at the boundary —
+       * docs/READINESS.md §1.2, the same rule the rest of this function follows. */
+      currentWeek: Math.min(WEEKS_TOTAL, Math.max(1, Math.round(num(protocol.currentWeek, 1)))),
       weekPracticeDates: strArr(protocol.weekPracticeDates),
       completedWeeks: numArr(protocol.completedWeeks),
       avoidedConditions: strArr(protocol.avoidedConditions),
