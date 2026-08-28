@@ -66,11 +66,25 @@ export const isComplete = (m: Measure): boolean => {
   return s.phq8 !== null && s.gad7 !== null;
 };
 
-/** Completed sittings, oldest first. The one source for every ordering question below —
- *  a second sort somewhere else is how two screens end up disagreeing about which was
- *  first. */
-export const completed = (all: readonly Measure[]): Measure[] =>
-  all.filter(isComplete).slice().sort((a, b) => Date.parse(a.takenAt) - Date.parse(b.takenAt));
+/** Completed sittings, in the order they were taken. The one source for every ordering
+ *  question below — a second sort somewhere else is how two screens end up disagreeing about
+ *  which was first.
+ *
+ *  ⚠ ORDER COMES FROM THE ARRAY, NOT FROM THE TIMESTAMPS, and that is a correction.
+ *
+ *  This used to sort by `Date.parse(takenAt)`, which trusts a clock the user controls and
+ *  which is wrong on more phones than one would like. The failure it caused was not subtle:
+ *  take the baseline while the phone's clock is a year fast, let the clock correct itself,
+ *  and the FIRST sitting somebody ever took sorts to the END. `progressSoFar` then compares
+ *  a later real sitting against it backwards and reports the direction inverted — the app
+ *  telling somebody who is getting better, on a depression measure, that they are getting
+ *  worse. Found by an adversarial clock-skew probe, not by any example test.
+ *
+ *  Append order is the more trustworthy signal and always was: `saveMeasure` appends,
+ *  `normalise` rebuilds row by row without reordering, and an import is normalise over a file
+ *  written in that same order. A hand-scrambled backup defeats both signals equally, so
+ *  nothing is lost by preferring the one the device clock cannot corrupt. */
+export const completed = (all: readonly Measure[]): Measure[] => all.filter(isComplete);
 
 export const baselineOf = (all: readonly Measure[]): Measure | null => completed(all)[0] ?? null;
 
@@ -104,8 +118,14 @@ export function daysBetween(fromIso: string, toIso: string): number | null {
 export function dueMilestone(all: readonly Measure[], nowIso: string): number | null {
   const base = baselineOf(all);
   if (!base) return null;
+
+  /* A future-dated baseline makes `elapsed` negative and no milestone is ever owed. The
+     repair is NOT here — clamping the anchor to `now` at read time was tried and is wrong,
+     because the anchor then moves with the clock and elapsed stays pinned at zero forever.
+     A stable anchor has to be a stored value, so `normalise` in lib/storage.ts pulls an
+     implausible `takenAt` back to load time and this stays a plain guard. */
   const elapsed = daysBetween(base.takenAt, nowIso);
-  if (elapsed === null) return null;
+  if (elapsed === null || elapsed < 0) return null;
 
   const done = new Set(completed(all).map((m) => m.milestone).filter((d): d is number => typeof d === 'number'));
   let owed: number | null = null;
@@ -126,7 +146,15 @@ export function baselineOwed(
 ): boolean {
   if (baselineOf(all)) return false;
   if (!skippedAt) return true;
-  const since = daysBetween(skippedAt, nowIso);
+  /* Clamped for the same reason as the milestone anchor above: a skip stamped by a fast
+     clock is in the future forever, `since` stays negative, and the one follow-up offer
+     never comes. A future stamp is treated as "just now", so the three-day wait starts from
+     the first launch with a sane clock rather than never. */
+  const skipMs = Date.parse(skippedAt);
+  const nowMs = Date.parse(nowIso);
+  const since = Number.isFinite(skipMs) && Number.isFinite(nowMs) && skipMs > nowMs
+    ? 0
+    : daysBetween(skippedAt, nowIso);
   /* Asked once at the end of onboarding, and once more three days later if that was a no.
      Never a third time. Two asks is a reminder; three is nagging somebody who already
      answered the question. */

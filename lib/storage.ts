@@ -603,6 +603,18 @@ export function normalise(parsed: unknown): AppState {
     measures: rows(p.measures, (r) => {
       const takenAt = strOrNull(r.takenAt);
       if (!takenAt || !Number.isFinite(Date.parse(takenAt))) return null;
+      /* A sitting cannot have been answered in the future, so one that claims to have been is
+         pulled back to load time.
+         This is the boundary repair for a phone whose clock was fast when the baseline was
+         taken — wrong on setup, a bad restore, a hand-set date. Left alone, `elapsed` in
+         lib/measure.ts is negative forever, no 30/60/90 milestone is ever owed, and the
+         series DIRECTION.md defines winning by silently never runs. Repairing it at read
+         time in measure.ts does not work: the anchor would move with the clock and elapsed
+         would stay pinned at zero, so the schedule has to be re-anchored to something
+         STORED. Each load re-clamps until the clock is sane, then it settles.
+         The alternative — dropping the row — would delete real answers to protect a date, and
+         the answers are the part that matters. */
+      const clamped = Date.parse(takenAt) > Date.now() ? new Date().toISOString() : takenAt;
       const answers = (v: unknown): number[] =>
         arr<unknown>(v)
           .map((x) => (typeof x === 'number' && Number.isInteger(x) && x >= 0 && x <= 3 ? x : null))
@@ -610,7 +622,7 @@ export function normalise(parsed: unknown): AppState {
       const ms = num(r.milestone, NaN);
       return {
         id: str(r.id, ''),
-        takenAt,
+        takenAt: clamped,
         phq8: answers(r.phq8),
         gad7: answers(r.gad7),
         milestone: MEASURE_MILESTONES.has(ms) ? ms : null,

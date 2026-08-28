@@ -9,6 +9,7 @@ import {
   score, scores, isComplete, completed, baselineOf, latestOf, MAX, RELIABLE_CHANGE,
   DUE_DAYS, dueMilestone, baselineOwed, daysBetween, changeSince, progressSoFar, changeSentence,
 } from '../lib/measure.ts';
+import { normalise } from '../lib/storage.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -129,20 +130,25 @@ describe('a partial instrument produces no score', () => {
   });
 });
 
-describe('ordering never trusts insertion order', () => {
-  /* An imported backup can arrive in any order, and two screens sorting separately is how
-     they end up disagreeing about which sitting was first. */
+describe('ordering follows the order sittings were taken', () => {
+  /* ⚠ THIS BLOCK ASSERTED THE OPPOSITE UNTIL A CLOCK-SKEW PROBE SHOWED IT WAS WRONG.
+     It used to require sorting by `takenAt`, on the reasoning that an imported backup can
+     arrive in any order. That reasoning is mistaken: `saveMeasure` appends, `normalise`
+     rebuilds row by row without reordering, and an import is normalise over a file written
+     in that order — so array position IS the order they were taken, and it is the one signal
+     a wrong device clock cannot corrupt. See the comment on `completed` in lib/measure.ts. */
   const a = sitting('2026-03-01T00:00:00Z', okPhq(1), okGad(1));
   const b = sitting('2026-01-01T00:00:00Z', okPhq(2), okGad(2));
   const c = sitting('2026-02-01T00:00:00Z', okPhq(3), okGad(3));
 
-  test('the baseline is the earliest complete sitting, whatever order it is stored in', () => {
-    assert.equal(baselineOf([a, b, c]).takenAt, b.takenAt);
-    assert.equal(baselineOf([c, a, b]).takenAt, b.takenAt);
+  test('the baseline is the first one taken, not the earliest timestamp', () => {
+    assert.equal(baselineOf([a, b, c]).takenAt, a.takenAt);
+    assert.equal(baselineOf([c, a, b]).takenAt, c.takenAt);
   });
 
-  test('the latest is the most recent', () => {
+  test('the latest is the last one taken', () => {
     assert.equal(latestOf([b, c, a]).takenAt, a.takenAt);
+    assert.equal(latestOf([a, b, c]).takenAt, c.takenAt);
   });
 
   test('incomplete sittings are kept but never become the baseline', () => {
@@ -328,5 +334,78 @@ describe('the measure is free, and reachable', () => {
       return statSync(p).isDirectory() ? walk(p) : [p];
     });
     assert.ok(walk(join(ROOT, 'app')).some((p) => p.endsWith('measure.tsx')));
+  });
+});
+
+describe('the device clock is not trusted', () => {
+  /* Found by an adversarial clock-skew probe rather than by any example test. A phone whose
+     clock is fast when the baseline is taken — wrong on setup, a bad restore, a hand-set
+     date — used to break this feature in three separate ways at once. */
+
+  const plus = (iso, d) => new Date(Date.parse(iso) + d * 864e5).toISOString();
+
+  test('order comes from the array, never from the timestamps', () => {
+    /* THE SERIOUS ONE. `completed()` used to sort by Date.parse(takenAt). Take the baseline
+       with a clock a year fast, let it correct, and the FIRST sitting somebody ever took
+       sorts to the END — so progressSoFar compares backwards and reports the direction
+       inverted. The app telling somebody who is getting better, on a depression measure,
+       that they are getting worse. */
+    const first = sitting('2027-01-01T00:00:00Z', okPhq(3), okGad(3));  // clock was fast
+    const second = sitting('2026-03-01T00:00:00Z', okPhq(2), okGad(2));
+    const third = sitting('2026-05-01T00:00:00Z', okPhq(1), okGad(1));
+    const all = [first, second, third];
+
+    assert.equal(baselineOf(all).takenAt, first.takenAt,
+      'the baseline is no longer the first sitting taken');
+    assert.equal(latestOf(all).takenAt, third.takenAt,
+      'the latest is no longer the last sitting taken');
+
+    const p = progressSoFar(all);
+    assert.equal(p.phq8.direction, 'down',
+      'the direction is inverted: this person improved from 24 to 8 and the app says otherwise');
+  });
+
+  test('a future-dated sitting is pulled back at the boundary', () => {
+    /* The repair lives in normalise, not in this file. Clamping the anchor at read time was
+       tried and does not work — the anchor moves with the clock, so elapsed stays pinned at
+       zero and the schedule never starts. A stable anchor has to be a stored value. */
+    const st = normalise({ measures: [{
+      id: 'x', takenAt: '2099-01-01T00:00:00Z',
+      phq8: [1, 1, 1, 1, 1, 1, 1, 1], gad7: [1, 1, 1, 1, 1, 1, 1], milestone: null,
+    }] });
+    assert.equal(st.measures.length, 1, 'the sitting was dropped rather than repaired');
+    assert.ok(Date.parse(st.measures[0].takenAt) <= Date.now() + 1000,
+      'a sitting dated in the future survived normalise');
+  });
+
+  test('and the 30/60/90 schedule then actually runs', () => {
+    /* Without the clamp, `elapsed` is negative forever: no milestone is ever owed and the
+       series DIRECTION.md defines winning by silently never fires. Nothing surfaces. */
+    const st = normalise({ measures: [{
+      id: 'x', takenAt: '2099-01-01T00:00:00Z',
+      phq8: [1, 1, 1, 1, 1, 1, 1, 1], gad7: [1, 1, 1, 1, 1, 1, 1], milestone: null,
+    }] });
+    const anchor = st.measures[0].takenAt;
+    assert.equal(dueMilestone(st.measures, plus(anchor, 29)), null);
+    assert.equal(dueMilestone(st.measures, plus(anchor, 30)), 30,
+      'the schedule never restarts after a skewed baseline');
+    assert.equal(dueMilestone(st.measures, plus(anchor, 90)), 90);
+  });
+
+  test('a sane timestamp is preserved exactly', () => {
+    /* The clamp must not rewrite a correct record of when somebody answered. */
+    const st = normalise({ measures: [{
+      id: 'x', takenAt: '2026-01-01T00:00:00Z',
+      phq8: [1, 1, 1, 1, 1, 1, 1, 1], gad7: [1, 1, 1, 1, 1, 1, 1], milestone: null,
+    }] });
+    assert.equal(st.measures[0].takenAt, '2026-01-01T00:00:00Z');
+  });
+
+  test('a skip stamped in the future still gets its one follow-up', () => {
+    const now = '2026-06-01T00:00:00Z';
+    assert.equal(baselineOwed([], '2099-01-01T00:00:00Z', now), false,
+      'a future skip stamp should read as "just skipped", not as owed immediately');
+    assert.equal(baselineOwed([], '2099-01-01T00:00:00Z', plus(now, 5)), false,
+      'the stamp is in the future, so the three-day wait has not run');
   });
 });
