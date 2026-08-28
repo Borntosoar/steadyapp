@@ -2,8 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { View, ScrollView, Pressable, StyleSheet, Text } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, H1, H2, Body, BodySm, Caption, useTheme } from '../components/ui';
-import { Frost, TopBar } from '../components/frost';
+import { Button, H1, H2, Body, BodySm, Caption, Options, useTheme } from '../components/ui';
+import { Frost, Ground, TopBar } from '../components/frost';
+import { SUPPORT_PILL_CLEARANCE } from './_layout';
 import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../constants/theme';
 import { useStore } from '../store/useStore';
 import { haptic } from '../hooks/haptics';
@@ -117,19 +118,11 @@ export default function Measure() {
   /* ---------- the finished state ---------- */
   if (done) {
     return (
-      <View style={{ flex: 1, backgroundColor: c.bg }}>
+      <Ground>
         {/* They answered, so leaving is not a decline — plain back, no skip stamp. */}
-        <TopBar onBack={exit} title={NAMES.measure.title} />
-        <ScrollView
-          contentContainerStyle={{
-            padding: space.lg,
-            paddingBottom: insets.bottom + space.xxl,
-            maxWidth: LAYOUT_MAX_WIDTH,
-            width: '100%',
-            alignSelf: 'center',
-          }}
-        >
-          <H1>{MEASURE_DONE_TITLE}</H1>
+        <TopBar onBack={exit} />
+        <View>
+          <H1 style={{ paddingRight: SUPPORT_PILL_CLEARANCE }}>{MEASURE_DONE_TITLE}</H1>
           <Body style={{ marginTop: space.md, color: c.ink }}>{MEASURE_DONE_BODY}</Body>
 
           <View style={{ marginTop: space.xl, gap: space.md }}>
@@ -139,9 +132,16 @@ export default function Measure() {
                  surface, and setting them again out here wrapped every card in a second one. */
               return (
                 <Frost key={ins.key}>
-                  <Caption style={{ color: c.inkSoft }}>{ins.plainName}</Caption>
+                  {/* THE SENTENCE LEADS, NOT THE FIGURE. This card used to set the total at
+                      40pt/700 in near-black — twice the size of anything else — directly above
+                      copy saying "They mean nothing on their own". A number that large does
+                      severity work whether or not a severity label is printed, because the eye
+                      lands on it and the reader supplies the meaning the app declined to give.
+                      So the instrument's plain name is the heading, and the score is one
+                      string at body scale. Nothing is hidden and nothing is interpreted. */}
+                  <H2>{ins.plainName}</H2>
                   <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: space.xs }}>
-                    <Text style={[t.hero, { color: c.ink, fontSize: 40, lineHeight: 44 }]}>
+                    <Text style={[t.h3, { color: c.ink }]}>
                       {value ?? '—'}
                     </Text>
                     {/* marginLeft rather than the row's `gap`, which does not survive baseline
@@ -162,8 +162,8 @@ export default function Measure() {
           <BodySm style={{ marginTop: space.lg, color: c.inkSoft }}>{MEASURE_NOT_A_DIAGNOSIS}</BodySm>
 
           <Button label="Done" onPress={exit} style={{ marginTop: space.xl }} />
-        </ScrollView>
-      </View>
+        </View>
+      </Ground>
     );
   }
 
@@ -171,20 +171,14 @@ export default function Measure() {
   if (!started) {
     const lines = milestone ? [MEASURE_DUE_BODY] : MEASURE_INTRO;
     return (
-      <View style={{ flex: 1, backgroundColor: c.bg }}>
+      <Ground>
         {/* Leaving without finishing is a decline, and is stamped as one so the app does not
             re-offer on the next launch. */}
-        <TopBar onBack={leave} title={NAMES.measure.title} />
-        <ScrollView
-          contentContainerStyle={{
-            padding: space.lg,
-            paddingBottom: insets.bottom + space.xxl,
-            maxWidth: LAYOUT_MAX_WIDTH,
-            width: '100%',
-            alignSelf: 'center',
-          }}
-        >
-          <H1>{milestone ? MEASURE_DUE_TITLE : 'Where you are starting from'}</H1>
+        <TopBar onBack={leave} />
+        <View>
+          <H1 style={{ paddingRight: SUPPORT_PILL_CLEARANCE }}>
+            {milestone ? MEASURE_DUE_TITLE : 'Where you are starting from'}
+          </H1>
           {lines.map((line) => (
             <Body key={line} style={{ marginTop: space.md, color: c.ink }}>
               {line}
@@ -209,8 +203,8 @@ export default function Measure() {
           >
             <Text style={[t.label, { color: c.accentDeep }]}>{MEASURE_SKIP}</Text>
           </Pressable>
-        </ScrollView>
-      </View>
+        </View>
+      </Ground>
     );
   }
 
@@ -219,18 +213,10 @@ export default function Measure() {
   const answered = answers[step];
 
   return (
-    <View style={{ flex: 1, backgroundColor: c.bg }}>
-      <TopBar onBack={leave} title={NAMES.measure.title} />
-      <ScrollView
-        contentContainerStyle={{
-          padding: space.lg,
-          paddingBottom: insets.bottom + space.xxl,
-          maxWidth: LAYOUT_MAX_WIDTH,
-          width: '100%',
-          alignSelf: 'center',
-        }}
-      >
-        <Caption style={{ color: c.inkFaint }}>
+    <Ground>
+      <TopBar onBack={leave} />
+      <View>
+        <Caption style={{ color: c.inkFaint, paddingRight: SUPPORT_PILL_CLEARANCE }}>
           {step + 1} of {STEPS.length}
         </Caption>
 
@@ -244,30 +230,22 @@ export default function Measure() {
 
         <H2 style={{ marginTop: s.first ? space.lg : space.md }}>{s.text}</H2>
 
-        <View style={{ marginTop: space.xl, gap: space.sm }}>
-          {CHOICES.map((choice) => {
-            const on = answered === choice.value;
-            return (
-              <Pressable
-                key={choice.value}
-                accessibilityRole="button"
-                accessibilityState={{ selected: on }}
-                onPress={() => answer(choice.value)}
-                style={({ pressed }) => ({
-                  minHeight: 56,
-                  justifyContent: 'center',
-                  paddingHorizontal: space.lg,
-                  borderRadius: radius.card,
-                  backgroundColor: on ? c.accent : c.surface,
-                  borderWidth: StyleSheet.hairlineWidth,
-                  borderColor: on ? c.accent : c.line,
-                  opacity: pressed ? 0.8 : 1,
-                })}
-              >
-                <Text style={[t.body, { color: on ? c.onAccent : c.ink }]}>{choice.label}</Text>
-              </Pressable>
-            );
-          })}
+        {/* THE APP'S OWN OPTION ROW, not a second one invented here.
+            The hand-rolled version filled each row with `surface` over `line` on a flat
+            background — roughly 1.1:1 for both the fill and the border, so the only controls
+            on the screen were nearly invisible, well under the 3:1 WCAG asks of a control
+            boundary. Elsewhere those same tokens survive because there is a gradient behind
+            them and Frost adds elevation; here there was neither.
+            `Options` is what every other choice in the app looks like — accentDim fill,
+            accent border, radius.md rather than a second card radius — and it announces as a
+            radio, which is what these four are. */}
+        <View style={{ marginTop: space.xl }}>
+          <Options
+            options={CHOICES.map((ch) => ch.value)}
+            labels={CHOICES.map((ch) => ch.label)}
+            value={answered}
+            onChange={(v) => answer(v)}
+          />
         </View>
 
         <View style={{ flexDirection: 'row', gap: space.xl, marginTop: space.xl }}>
@@ -291,7 +269,7 @@ export default function Measure() {
             <Text style={[t.label, { color: c.inkSoft }]}>Not now</Text>
           </Pressable>
         </View>
-      </ScrollView>
-    </View>
+      </View>
+    </Ground>
   );
 }

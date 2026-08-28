@@ -6,6 +6,7 @@ import { Frost, Ground, TopBar, ListRow, type GlyphKind } from '../components/fr
 import { BreathCircle, QuietCircle } from '../components/BreathCircle';
 import { space, radius, type as t } from '../constants/theme';
 import { haptic } from '../hooks/haptics';
+import { SUPPORT_PILL_CLEARANCE } from './_layout';
 import {
   MODES, BREATHE, RESET, FLOAT, modeByKey,
   STILL_TITLE, STILL_INTRO, STILL_NOT_THE_POINT, type StillMode,
@@ -61,10 +62,13 @@ const GLYPHS: Record<StillMode, GlyphKind> = {
 };
 
 function Menu({ onPick, onBack }: { onPick: (m: StillMode) => void; onBack: () => void }) {
+  const c = useTheme();
   return (
     <Ground>
       <TopBar onBack={onBack} />
-      <H1 style={{ marginTop: space.lg }}>{STILL_TITLE}</H1>
+      {/* The Support pill floats over the top-right corner; every other titled screen in the
+          app reserves the space and these two did not. */}
+      <H1 style={{ marginTop: space.lg, paddingRight: SUPPORT_PILL_CLEARANCE }}>{STILL_TITLE}</H1>
       <BodySm style={{ marginTop: space.sm, marginBottom: space.xl }}>{STILL_INTRO}</BodySm>
 
       <Frost>
@@ -80,7 +84,10 @@ function Menu({ onPick, onBack }: { onPick: (m: StillMode) => void; onBack: () =
         ))}
       </Frost>
 
-      <Caption style={{ marginTop: space.lg }}>{STILL_NOT_THE_POINT}</Caption>
+      {/* Was `Caption` — 13pt inkFaint, the smallest and palest type here. "It is here for
+          the days when the rest of it is too much" is the kindest line in this file and it
+          was styled like a disclaimer. */}
+      <BodySm style={{ marginTop: space.lg, color: c.inkSoft }}>{STILL_NOT_THE_POINT}</BodySm>
     </Ground>
   );
 }
@@ -141,7 +148,10 @@ function Lengths({
  *  header. It says what happened and offers the way out. */
 function Outro({ line, onBack }: { line: string; onBack: () => void }) {
   return (
-    <Ground>
+    /* `fill`, or the closing beat of every mode collapses to the top of the screen. A
+       `flex: 1` child inside a ScrollView's content container gets its natural height, so
+       `justifyContent: 'center'` centres it within nothing. See the prop's own comment. */
+    <Ground fill>
       <TopBar onBack={onBack} />
       <View style={{ flex: 1, justifyContent: 'center' }}>
         <H2>{line}</H2>
@@ -179,8 +189,10 @@ function BreatheMode({ onBack }: { onBack: () => void }) {
   if (phase === 'intro') {
     return (
       <Ground>
-        <TopBar onBack={onBack} title={m.title} />
-        <H1 style={{ marginTop: space.lg }}>{m.title}</H1>
+        {/* No title on the bar: the H1 directly beneath is the same word, and two identical
+            headings stacked reads as a mistake rather than a hierarchy. */}
+        <TopBar onBack={onBack} />
+        <H1 style={{ marginTop: space.lg, paddingRight: SUPPORT_PILL_CLEARANCE }}>{m.title}</H1>
         <Body style={{ marginTop: space.md }}>{m.intro}</Body>
 
         <Caption style={{ marginTop: space.xl }}>How long</Caption>
@@ -193,10 +205,13 @@ function BreatheMode({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <Ground>
-      <TopBar onBack={onBack} title={m.title} />
+    <Ground fill>
+      <TopBar onBack={onBack} />
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <BreathCircle pattern={pattern} onDone={() => setPhase('done')} />
+        {/* No counter. STILL_INTRO promises "none of them is scored", and counting to thirty
+            on screen for five minutes is the app keeping score out loud. The rotating
+            `during` lines carry the pacing on their own. */}
+        <BreathCircle pattern={pattern} showCycles={false} onDone={() => setPhase('done')} />
       </View>
       {/* Leaving is a plain control at full weight, never a confirm. Urge surfing asks twice
           on purpose because leaving early IS the urge; there is nothing to resist here. */}
@@ -251,8 +266,10 @@ function ResetMode({ onBack }: { onBack: () => void }) {
   if (phase === 'intro') {
     return (
       <Ground>
-        <TopBar onBack={onBack} title={m.title} />
-        <H1 style={{ marginTop: space.lg }}>{m.title}</H1>
+        {/* No title on the bar: the H1 directly beneath is the same word, and two identical
+            headings stacked reads as a mistake rather than a hierarchy. */}
+        <TopBar onBack={onBack} />
+        <H1 style={{ marginTop: space.lg, paddingRight: SUPPORT_PILL_CLEARANCE }}>{m.title}</H1>
         <Body style={{ marginTop: space.md }}>{m.intro}</Body>
         <Body style={{ marginTop: space.md }}>{RESET.setup}</Body>
 
@@ -267,8 +284,8 @@ function ResetMode({ onBack }: { onBack: () => void }) {
   const line = resetStepAt(elapsed, total);
 
   return (
-    <Ground>
-      <TopBar onBack={onBack} title={m.title} />
+    <Ground fill>
+      <TopBar onBack={onBack} />
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <QuietCircle size={160} />
         {/* One line at a time, centred, large enough to read lying down with the phone at
@@ -299,12 +316,18 @@ function FloatMode({ onBack }: { onBack: () => void }) {
   const c = useTheme();
   const m = modeByKey('float');
   const [started, setStarted] = useState(false);
+  /* FLOAT.outro was written in content/still.ts and rendered nowhere — Leave went straight
+     back to the menu. Dead copy in a content file is how the words on screen and the words
+     in the file drift apart. */
+  const [done, setDone] = useState(false);
 
   if (!started) {
     return (
       <Ground>
-        <TopBar onBack={onBack} title={m.title} />
-        <H1 style={{ marginTop: space.lg }}>{m.title}</H1>
+        {/* No title on the bar: the H1 directly beneath is the same word, and two identical
+            headings stacked reads as a mistake rather than a hierarchy. */}
+        <TopBar onBack={onBack} />
+        <H1 style={{ marginTop: space.lg, paddingRight: SUPPORT_PILL_CLEARANCE }}>{m.title}</H1>
         <Body style={{ marginTop: space.md }}>{m.intro}</Body>
         <Caption style={{ marginTop: space.lg }}>{FLOAT.opening}</Caption>
         <Button label="Start" onPress={() => setStarted(true)} style={{ marginTop: space.xl }} />
@@ -315,15 +338,21 @@ function FloatMode({ onBack }: { onBack: () => void }) {
   /* NO TIMER, NO COUNT, NO SCRIPT, AND NO ELAPSED READOUT. The brief asks for the app to get
      out of the way, and a clock is the app staying in the room. The only text is the way
      out, which has to be visible or leaving becomes a puzzle. */
+  if (done) return <Outro line={FLOAT.outro} onBack={onBack} />;
+
   return (
-    <Ground>
+    /* The top bar stays. Breathe and Reset both keep theirs, and dropping it here left the
+       only way out as a control at the bottom of a screen that was not filling — so on a
+       short viewport Float could be entered and not obviously left. */
+    <Ground fill>
+      <TopBar onBack={onBack} />
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <QuietCircle size={240} />
       </View>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Leave"
-        onPress={onBack}
+        onPress={() => setDone(true)}
         style={({ pressed }) => ({
           minHeight: 44,
           alignItems: 'center',

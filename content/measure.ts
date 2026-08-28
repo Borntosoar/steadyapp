@@ -112,10 +112,8 @@ export const INSTRUMENTS: readonly Instrument[] = [PHQ8, GAD7] as const;
  *  where the answers go. In that order, because the third is the one that decides whether
  *  somebody in this position answers honestly. */
 export const MEASURE_INTRO = [
-  'These fifteen questions are how you will be able to tell whether any of this is working.',
-  'They are two standard questionnaires, used in clinics and in research. Answering them now gives you a starting point to compare against later.',
-  'This is not a test and there is no result to pass. Nothing here is a diagnosis, and the app will not tell you what your answers mean about you.',
-  'Your answers stay on this phone like everything else. You can skip this and still use every part of the app.',
+  'These are two standard questionnaires, used in clinics and in research. Answering them now gives you a starting point to compare against later.',
+  'You can skip this and still use every part of the app. Your answers stay on this phone, this is not a test, and nothing here is a diagnosis.',
 ] as const;
 
 /** The skip control. Says what happens, not "maybe later". */

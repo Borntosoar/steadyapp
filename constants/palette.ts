@@ -168,10 +168,23 @@ export const DARK_INK_GROUND = '#2B3824';
  * Sizes only; theme.ts adds the families. The old scale had ten steps with six of them
  * inside a 4.5pt band, and `h3` and `body` were both 16 — which is exactly why the list
  * screens read as undifferentiated walls of text. */
+/* ⚠ THE HEADING WEIGHTS CAME DOWN, AND THAT IS A TONE FIX RATHER THAN A TASTE ONE.
+ *
+ * `display` and `h1` were 700 with -0.8 and -0.7 tracking, in near-black. Heavy, tight,
+ * near-black headlines are assertive typography — the voice of a dashboard telling you a
+ * number. "Where you are starting from", set that way above fifteen questions about somebody's
+ * worst fortnight, is tonally the opposite of the brief's "nothing competes".
+ *
+ * 500 and -0.2 is the same scale and the same hierarchy at a lower temperature. `hero` keeps
+ * its weight: it is the hours-back figure, the one number the product is actually about, and
+ * it is meant to land.
+ *
+ * The real answer is still the brief's warm humanist serif, which needs a bundled face and a
+ * font loader — neither is in package.json, so that stays a decision rather than a change. */
 export const TYPE_SCALE = {
   hero: { fontSize: 64, lineHeight: 66, letterSpacing: -2.6, weight: '700' },
-  display: { fontSize: 34, lineHeight: 38, letterSpacing: -0.8, weight: '700' },
-  h1: { fontSize: 27, lineHeight: 33, letterSpacing: -0.7, weight: '700' },
+  display: { fontSize: 34, lineHeight: 38, letterSpacing: -0.2, weight: '500' },
+  h1: { fontSize: 27, lineHeight: 33, letterSpacing: -0.2, weight: '500' },
   h2: { fontSize: 21, lineHeight: 27, letterSpacing: -0.4, weight: '600' },
   h3: { fontSize: 17, lineHeight: 23, letterSpacing: -0.1, weight: '600' },
   body: { fontSize: 16, lineHeight: 25, letterSpacing: 0, weight: '400' },

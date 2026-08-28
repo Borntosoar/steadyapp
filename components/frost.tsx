@@ -739,9 +739,12 @@ export function ListRow({
            nothing. */
         alignItems: 'flex-start',
         gap: space.lg,
-        paddingVertical: space.md,
-        borderTopWidth: first ? 0 : StyleSheet.hairlineWidth,
-        borderTopColor: c.line,
+        /* NO RULE BETWEEN ROWS, AND MORE AIR INSTEAD.
+           These were the only hard dividers in the app — edge to edge, including under the
+           48pt glyph disc — on the one screen where they were the most visible element inside
+           the card. The house rule is that spacing and tone do the separating, so the
+           hairline is gone and the padding grew to carry the grouping. */
+        paddingVertical: space.lg,
         /* The locked state is carried by the ink token and the lock label below, NOT by a
            container opacity. React Native composites `opacity` over the whole subtree — text
            together with everything under it — which is how dimmed rows elsewhere measured
@@ -772,7 +775,12 @@ export function ListRow({
           <Path d="M3 8.4 6.4 11.8 13 5" stroke={c.cool} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </Svg>
       ) : (
-        <Text style={[t.body, { color: c.inkFaint }]}>›</Text>
+        /* Drawn, not typed. This was a `›` character in a file that already carries a full
+           SVG glyph set: optically lighter than everything around it, unaligned because the
+           row is top-aligned, and it read as a placeholder. */
+        <Svg width={16} height={16} viewBox="0 0 16 16">
+          <Path d="M6 3.5 10.5 8 6 12.5" stroke={c.inkFaint} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </Svg>
       )}
     </Pressable>
   );
