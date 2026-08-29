@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -188,7 +188,16 @@ describe('what the answers configure, and what they must not', () => {
   test('an unknown or missing answer never throws', () => {
     for (const a of [{}, { brought: 'nonsense' }, { brought: null }, { worst: 'never' }]) {
       const p = planFor(a);
-      assert.ok(p.reflection && p.stone && p.calm && p.order.length === 2);
+      /* Every game, even for an answer the survey could not have produced. A garbled or
+         absent `brought` must fall through to the full set rather than to a short one — an
+         unreadable profile is the case where somebody most obviously should not end up with
+         a smaller app than everybody else. Counted against app/game/ rather than a literal,
+         for the reason in "no answer ever hides a game" above. */
+      assert.ok(p.reflection && p.stone && p.calm);
+      assert.equal(
+        p.order.length,
+        readdirSync(join(ROOT, 'app/game')).filter((f) => f.endsWith('.tsx')).length,
+      );
     }
   });
 
@@ -205,16 +214,30 @@ describe('what the answers configure, and what they must not', () => {
     assert.equal(toneOf({ brought: 'spirals', tried: 'first' }), 'plain');
   });
 
-  test('no answer ever hides a game', () => {
+  test('no answer ever hides a game, and every game is in the order', () => {
     /* Order only, per the founder's choice. Hiding a game behind a survey answer means
-       somebody who tapped quickly at 2am has a smaller app forever. */
+       somebody who tapped quickly at 2am has a smaller app forever.
+
+       ⚠ DERIVED FROM THE GAMES THAT EXIST, not from a list written here. The previous version
+       asserted exactly two routes by name, and it went on passing for the whole period after
+       Groundwork and Ballast shipped — `orderOf` described half the product, had no consumer,
+       and the test agreed with it. A hardcoded expectation is how a guard ends up defending
+       the shape the code had when somebody last looked at it. */
+    const games = readdirSync(join(ROOT, 'app/game'))
+      .filter((f) => f.endsWith('.tsx'))
+      .map((f) => `/game/${f.replace(/\.tsx$/, '')}`)
+      .sort();
+    assert.ok(games.length >= 4, `only ${games.length} game screens found — has the walk broken?`);
+
     const routes = new Set();
     for (const brought of Object.keys(REFLECTION)) {
       const o = orderOf({ brought });
-      assert.equal(o.length, 2, `${brought} sees fewer games than somebody else`);
+      assert.equal(o.length, games.length, `${brought} sees fewer games than somebody else`);
+      assert.equal(new Set(o).size, o.length, `${brought} is offered the same game twice`);
       o.forEach((r) => routes.add(r));
     }
-    assert.deepEqual([...routes].sort(), ['/game/curveball', '/game/toward']);
+    assert.deepEqual([...routes].sort(), games,
+      'orderOf and app/game/ disagree about which games exist');
   });
 
   test('the thought-checking game never leads for the shape whose trouble is checking', () => {

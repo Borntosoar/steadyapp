@@ -24,6 +24,7 @@ import { markHardDayIntent } from '../../hooks/navIntent';
 import { SUPPORT_PILL_CLEARANCE } from '../_layout';
 import { effectiveWeek } from '../../lib/entitlement';
 import { useEntitlement } from '../../hooks/useEntitlement';
+import { orderOf } from '../../lib/plan';
 
 /* Today.
  *
@@ -167,6 +168,27 @@ export default function Today() {
     { title: NAMES.thought.title, sub: 'About 5 minutes', route: '/journal', icon: 'plus' as const },
   ];
 
+  /* THE GAMES, ON THE SCREEN THE APP OPENS TO — docs/DIRECTION.md §16.7, item 3.
+   *
+   * They were not here. DIRECTION.md §9 says the games ARE the product, four of them shipped
+   * across nine days, and Today's grid was check-in, calm, Still, urges and the thought
+   * record — every one of them a practice from the twelve-week protocol. `recommendedAction`
+   * never returns a game route either, so the app's own recommender could not surface them.
+   * The product was one tab away and mentioned by nothing.
+   *
+   * ORDERED BY THE SURVEY, through `orderOf`, which until now had no production consumer at
+   * all: three questions were asked at first open and their answer was used to draw one
+   * screen and then discarded. It decides order only — every game is present for everybody,
+   * because a survey answer must never leave somebody with a smaller app.
+   *
+   * A ROW THAT SCROLLS, not a second grid. Four more 48% tiles under the existing five reads
+   * as a wall of equal choices, and the point of this row is that these four are not the same
+   * kind of thing as "check in" — they are the thing to play. */
+  const games = orderOf(profile.survey ?? {}).map((route) => {
+    const key = route.replace('/game/', '') as 'curveball' | 'toward' | 'groundwork' | 'ballast';
+    return { route, title: NAMES[key].title, sub: NAMES[key].sub };
+  });
+
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       {/* The light everything floats on. Fixed behind the scroll so the frost has
@@ -237,6 +259,43 @@ export default function Today() {
             </View>
             <WeekStrip days={days} />
             <Explain q={EXPLAIN.week.q} a={EXPLAIN.week.a} />
+          </View>
+
+          {/* ---------- the games ----------
+              ABOVE "Next up", NOT BELOW THE GRID, and the placement is the point.
+              First draft put this under the tile grid, which is a full screen down: the
+              product was still not on the screen the app opens to, only closer to it. This
+              sits directly under the week strip, so the first scroll shows the number and
+              then the four things to play.
+              It stays ABOVE "Next up" rather than replacing it, because `recommendedAction`
+              never returns a game route — the two are answering different questions, and
+              deleting the recommendation to make room would take the protocol's one thread
+              away from the person still following it. */}
+          <View style={{ marginTop: space.xl }}>
+            <Caption style={{ color: c.inkSoft, marginBottom: space.sm }}>Games</Caption>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              /* Negative margin plus matching padding so the row bleeds to the screen edge.
+                 A horizontal scroller that stops at the content gutter reads as having
+                 nothing more in it, which is the opposite of what the affordance is for. */
+              style={{ marginHorizontal: -space.lg }}
+              contentContainerStyle={{ paddingHorizontal: space.lg, gap: space.md }}
+            >
+              {games.map((g) => (
+                <Frost key={g.route} style={{ width: 200 }} onPress={() => router.push(g.route)}>
+                  <View style={{ minHeight: 104, justifyContent: 'space-between', gap: space.md }}>
+                    <View>
+                      <H3>{g.title}</H3>
+                      <Caption style={{ marginTop: 2 }}>{g.sub}</Caption>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <IconBadge icon="play" size={40} />
+                    </View>
+                  </View>
+                </Frost>
+              ))}
+            </ScrollView>
           </View>
 
           {/* The one thing to do now. Solid, not frosted, and the only object on the

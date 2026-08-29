@@ -174,7 +174,36 @@ export function orderOf(a: Answers): string[] {
      §11.8. Curveball is still second, and still one tap away in Practice. */
   const towardFirst =
     carrying === 'spirals' || carrying === 'spent' || carrying === 'unmoored' || carrying === 'loss';
-  return towardFirst ? [toward, curveball] : [curveball, toward];
+  const thinking = towardFirst ? [toward, curveball] : [curveball, toward];
+
+  /* ---------- and the other two ----------
+   *
+   * ⚠ THIS USED TO RETURN TWO, and returning four is what gave the function a consumer.
+   *
+   * It was written when there were two games, and it stayed at two after Groundwork and
+   * Ballast shipped — so it described a third of the product and was called by nothing. The
+   * home screen now leads with the games (docs/DIRECTION.md §16.7), and a home screen needs
+   * an order for all four. The alternative was a second ordering somewhere in app/, which is
+   * the two-lists-that-drift defect this repository has found in six other places.
+   *
+   * Groundwork leads the shapes where the trouble is that nothing is happening — flat and
+   * spent — because behavioural activation is the component the evidence is warmest about
+   * and the one those shapes' tracks lean on. Ballast leads `harsh`, which content/ballast.ts
+   * opens by saying it was built for: "the shape the survey could do least for".
+   *
+   * Order only, still. Nobody ever sees a smaller app for having answered a question. */
+  const groundwork = '/game/groundwork';
+  const ballast = '/game/ballast';
+  const doing = carrying === 'flat' || carrying === 'spent' ? [groundwork, ballast]
+    : carrying === 'harsh' ? [ballast, groundwork]
+    : [groundwork, ballast];
+
+  /* The shapes whose lead game is one of these two get it first, ahead of the thinking pair.
+     A person who said "everything feels flat" and is handed a game about adjudicating
+     thoughts has been given the wrong first move, which is the same error the spirals note
+     above records making in the other direction. */
+  const doingLeads = carrying === 'flat' || carrying === 'harsh';
+  return doingLeads ? [...doing, ...thinking] : [...thinking, ...doing];
 }
 
 /** The featured calm-down mode for a "when is it worst" answer, defaulting for anything the
