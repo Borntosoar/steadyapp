@@ -13,6 +13,8 @@ import { useStore } from '../../store/useStore';
 import { haptic } from '../../hooks/haptics';
 import { TRACK_CAVEAT, closeFor, type Track, type TrackDay } from '../../content/tracks.ts';
 import { openTrack, nextDay, isOpen, isComplete, progressOf } from '../../lib/track.ts';
+import { trackGated } from '../../lib/entitlement';
+import { useEntitlement } from '../../hooks/useEntitlement';
 
 /* A guided track. One route serves all of them — the breakup one is simply the first.
  *
@@ -37,6 +39,7 @@ export default function TrackScreen() {
   const c = useTheme();
   const tracks = useStore((s) => s.tracks);
   const completeTrackDay = useStore((s) => s.completeTrackDay);
+  const { entitled } = useEntitlement();
 
   const [openDay, setOpenDay] = useState<TrackDay | null>(null);
 
@@ -57,6 +60,52 @@ export default function TrackScreen() {
   }
 
   const { track, state } = resolved;
+
+  /* ---------- the entitlement boundary ----------
+   *
+   * ⚠ IT IS HERE, ON THE CATALOGUE, AND NEVER ON A DAY. See the long note beside
+   * `trackGated` in lib/entitlement.ts. The retention pass that produced this row proposed
+   * gating days four to seven of every set; the comment further down THIS file — about why
+   * later days are drawn in a quieter ink rather than dimmed — already refuses that, and it
+   * was right to. A padlock inside a sequence somebody is working through, on the worst
+   * month of their year, is the one place in this product a price must never appear.
+   *
+   * So the first set somebody opens is theirs, whole, forever. This screen is only ever
+   * reached for a SECOND set, which is a thing somebody wants once the first has done
+   * something for them. Nobody is ever interrupted; the worst this does is decline to start
+   * another one. */
+  if (trackGated(track.id, tracks, entitled)) {
+    return (
+      <View style={{ flex: 1, backgroundColor: c.bg }}>
+        <Stage>
+          <TopBar onBack={() => router.back()} />
+          <View style={{ paddingTop: space.xxl, gap: space.md }}>
+            <Caption>Part of Anneal+</Caption>
+            <H2>{track.title}</H2>
+            <Body>{track.blurb}</Body>
+            <Body>
+              The set you started is yours, all seven days, free. Anneal+ opens the other six
+              for when you want them.
+            </Body>
+            <BodySm>
+              The four games, calming down, checking in, the hard-day path and crisis support
+              are not affected. Those are free forever and are not part of this.
+            </BodySm>
+            <View style={{ paddingTop: space.lg }}>
+              <Button label="See Anneal+" onPress={() => router.push('/paywall')} />
+              <Button
+                label="Back"
+                variant="ghost"
+                onPress={() => router.back()}
+                style={{ marginTop: space.xs }}
+              />
+            </View>
+          </View>
+        </Stage>
+      </View>
+    );
+  }
+
   /* The overview borrows the FIRST DAY's ground rather than a literal, so each track opens
      somewhere of its own — the breakup one into moons at evening, the flat one into rays at
      morning. It was a hardcoded pair, which meant every future track would have arrived

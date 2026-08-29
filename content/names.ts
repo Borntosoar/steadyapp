@@ -166,7 +166,7 @@ export const EXPLAIN = {
   },
   plus: {
     q: 'What is Anneal+?',
-    a: 'It is the paid part: weeks 2 to 12, the full picture on the Progress tab, and unlimited writing. Checking in, calming down and crisis support are free forever and are not part of it.',
+    a: 'It is the paid part: the other six guided sets, the full picture on the Progress tab, unlimited writing, and the twelve weeks. The four games, checking in, calming down and crisis support are free forever and are not part of it.',
   },
 } as const;
 

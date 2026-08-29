@@ -86,16 +86,31 @@ export const insightsSummary = (v: {
 /* ---------- paywall ---------- */
 
 export const PAYWALL_COPY = {
-  headline: 'You have seen your number.',
-  /* TRUE AGAIN, AND IT WAS NOT FOR A WHILE.
-     This line claims a week gate, and for a period nothing in the app implemented one —
-     `weekGated()` had no call sites, so the whole twelve-week protocol was free while four
-     separate places said it was not. The gate is wired up now: `effectiveWeek` in
-     lib/entitlement.ts clamps the week a free user is SHOWN, at Today, Practice and Learn.
-     If it is ever unwired, this sentence has to go with it. `__tests__/entitlement.test.mjs`
-     fails in both directions — a claim with no call site, and a call site with no claim. */
-  sub: 'Weeks 2 to 12 are how you change it.',
-  freeLine: 'Calming down, check-ins and support stay free, always.',
+  /* ⚠ REWRITTEN BY THE FOURTH COUNCIL — docs/DIRECTION.md §16.5.
+   *
+   * The old pair was "You have seen your number." / "Weeks 2 to 12 are how you change it."
+   * Two things were wrong with it and only one was a copy problem.
+   *
+   * The copy problem: `hasNumber` in app/paywall.tsx is false unless somebody has three
+   * appearance check-ins behind them, so the headline told most readers they had seen a
+   * number they had not seen.
+   *
+   * The real problem: it sold the twelve-week body-dysmorphia protocol, to an audience that
+   * arrived for four games and a guided set, in an app whose own DIRECTION.md §9 says the
+   * games are the product. A person who found this on "dysmorphia", answered the survey with
+   * "I lost someone", played a CBT game about a character named Theo and ran a seven-day
+   * breakup set was then asked for $79.99 for eleven more weeks of mirror exposure nobody had
+   * mentioned. The thing sold and the thing delivered were different products.
+   *
+   * What is sold now is depth and permanence beside a free product, which is the only shape
+   * with any evidence behind it at this size — see §16.3 on Finch, which gives the whole
+   * therapeutic product away and charges for what sits next to it. The games are in
+   * ALWAYS_FREE_ROUTES, so `freeLine` below is an unconditional promise rather than a
+   * description of the current call sites, and `__tests__/entitlement.test.mjs` fails in both
+   * directions — a claim with no call site, and a call site with no claim. */
+  headline: 'Anneal, all the way through.',
+  sub: 'The games stay free. Anneal+ is the other six guided sets, the whole record kept, and the twelve weeks.',
+  freeLine: 'The games, calming down, check-ins and support stay free, always.',
   /* Said out loud rather than left to be discovered. Removing time pressure converts a
      little worse on the day and a lot better over a year, and in this category it is the
      difference between a brand people recommend and one they warn each other about. */

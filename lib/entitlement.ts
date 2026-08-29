@@ -32,13 +32,40 @@ export const ALWAYS_FREE_ROUTES = [
      they may be paying for is working, which makes it the worst available thing to charge
      for. See app/measure.tsx. */
   '/measure',
+  /* THE FOUR GAMES. Promised, as of the fourth council — see docs/DIRECTION.md §16.5.
+   *
+   * They were already free, but free by ACCIDENT: `isGated` reads deny-by-default and has
+   * one production call site, so nothing ever gated them. The comment further down this file
+   * said so and declined to promise it, on the grounds that ALWAYS_FREE_ROUTES is an
+   * unconditional promise and the business decision had not been made. Three council seats
+   * found the same thing separately, so the decision is made here.
+   *
+   * Three reasons it goes this way rather than the other:
+   *   · docs/DIRECTION.md §9 says the games ARE the product, and free-by-omission is not the
+   *     same object as free-by-commitment even though it costs the same money.
+   *   · They are the only acquisition surface. Nothing else in here is a reason to tell
+   *     somebody about this app.
+   *   · content/tracks.ts deep-links them from 49 track days, so gating one would break
+   *     content sold on the other side of the paywall.
+   *
+   * Finch is the existence proof that this can pay: it gives the whole therapeutic product
+   * away forever and sells cosmetics beside it. What Anneal sells instead is below. */
+  '/game/curveball',
+  '/game/toward',
+  '/game/groundwork',
+  '/game/ballast',
 ] as const;
 
 /** Free tier caps on otherwise-paid surfaces. */
 export const FREE_LIMITS = {
-  thoughtRecordsPerMonth: 5,
+  /* Five was hostile at the app's best-evidenced exercise. Somebody doing week one properly
+     hits it and reads the cap as a punishment for engaging, which is the wrong moment to be
+     charging at and the wrong thing to be charging for. */
+  thoughtRecordsPerMonth: 10,
   learnModules: 3,
   maxWeek: 1,
+  /** Guided tracks a free user keeps in full. See `trackGated`. */
+  freeTracks: 1,
 };
 
 /* Pricing.
@@ -409,16 +436,32 @@ type TierRow = { label: string; free: string | true; plus: string | true };
  *  rows — "5 a month" last, because it is the most generous free value on the list and the
  *  least persuasive thing in the block.
  *
- *  NOT LISTED, AND DELIBERATELY: the four games and the seven guided tracks are ungated. They
- *  are absent here rather than added to ALWAYS_FREE, because that list is an unconditional
- *  promise and nobody has decided to make one about them yet. Absent is accurate; promised
- *  would be a business decision this file should not make on its own. */
+ *  ⚠ REWRITTEN BY THE FOURTH COUNCIL — docs/DIRECTION.md §16.5, and this paragraph replaces
+ *  the one that used to sit here declining to decide.
+ *
+ *  What this table used to sell: the twelve weeks, the mirror, Progress, nine reads and
+ *  unlimited records — every row of it a piece of the twelve-week body-dysmorphia protocol
+ *  that §9 retired. What the app actually is, per §9, is four games and seven guided sets.
+ *  Those were free, unpromised and unmentioned here, so the app gave away the product and
+ *  charged for the thing it had decided to stop being. Four council seats found that
+ *  independently; the store description found it too, by containing the words "game" and
+ *  "track" zero times.
+ *
+ *  The decision, made rather than deferred: THE GAMES ARE FREE AND PROMISED — they are in
+ *  ALWAYS_FREE_ROUTES and ALWAYS_FREE now — and what is sold is DEPTH AND PERMANENCE beside
+ *  them. Every row below is something that gets more valuable the longer somebody stays,
+ *  which is the shape a renewal needs and the shape a twelve-week protocol never had.
+ *
+ *  The protocol row stays, last, and demoted in the pitch: it is now a specialist track
+ *  inside a general app rather than the product. It is still real, still gated, still worth
+ *  something to the person it was written for. It is no longer the headline. */
 export const PLUS_ADDS: TierRow[] = [
-  { label: 'The twelve weeks', free: 'Week 1', plus: 'All 12' },
-  { label: NAMES.mirror.title, free: '—', plus: true },
+  { label: 'The other six guided sets', free: 'The one you started', plus: 'All seven' },
   { label: 'The full picture on Progress', free: '—', plus: true },
   { label: 'Short reads', free: '3 of 12', plus: 'All 12' },
-  { label: NAMES.thought.title, free: '5 a month', plus: 'No limit' },
+  { label: NAMES.thought.title, free: '10 a month', plus: 'No limit' },
+  { label: 'The twelve weeks', free: 'Week 1', plus: 'All 12' },
+  { label: NAMES.mirror.title, free: '—', plus: true },
 ];
 
 /** Free on both tiers, forever. Rendered as a list, not a comparison.
@@ -427,8 +470,12 @@ export const PLUS_ADDS: TierRow[] = [
  *  as hostage-taking and converts worse than an honest one. Splitting it out does not make
  *  it less generous; it stops the generosity being displayed as a deficit. */
 export const ALWAYS_FREE: string[] = [
+  /* First, because it is the product and because it is the sentence that makes the rest of
+     this screen believable. Somebody who has played Curveball forty times and is now being
+     asked for money needs to read, before anything else, that the forty-first is free. */
+  'All four games, as often as you like',
   `${NAMES.checkin.title} and your hours number`,
-  `${NAMES.calm.title}, and the hard-day path`,
+  `${NAMES.calm.title}, ${NAMES.still.title}, and the hard-day path`,
   'Crisis support and help finding a therapist',
   /* Free on both sides, because onboarding promises it before any data is collected:
      "there is no backup … you can export a plain-text copy whenever you like." Selling
@@ -485,6 +532,64 @@ export function weekGated(week: number, entitled: boolean): boolean {
  *  refreshed entitlement corrects. */
 export function effectiveWeek(week: number, entitled: boolean): number {
   return entitled ? week : Math.min(week, FREE_LIMITS.maxWeek);
+}
+
+/* ---------- guided tracks ----------
+ *
+ * ⚠ THE GATE IS ON THE CATALOGUE, NEVER ON A DAY, and that is not a preference.
+ *
+ * The retention pass that proposed this gate proposed it as "the first three days of every
+ * track are free" — which would put a padlock on day four of somebody's worst month.
+ * `app/track/[id].tsx` already argues against exactly that, in a comment about why later
+ * days are set in a quieter ink rather than dimmed: "a padlock would read as a paywall on
+ * somebody's worst month, and that reasoning stands." It does stand. A sequence somebody is
+ * inside is the last place in this product a price should appear.
+ *
+ * So the line is drawn where `learn.tsx` already draws one — around the catalogue. The FIRST
+ * track somebody opens is theirs, all seven days, free forever. The survey routes everybody
+ * to one, so in practice the free tier is "the set that was chosen for you, complete." What
+ * Anneal+ opens is the other six, which is a thing somebody wants only once the first has
+ * done something for them — the correct order for an ask, and a value that grows with tenure
+ * rather than shrinking.
+ *
+ * Nobody is ever interrupted. The worst this can do is decline to open a SECOND track. */
+
+/** The track a free user keeps: the earliest one they opened.
+ *
+ *  Ties break on the id rather than on object order, because `Object.entries` order for a
+ *  record rebuilt by `normalise` is an implementation detail and this decides what somebody
+ *  paid for. Returns null when they have opened none — the next one they open claims it. */
+export function freeTrackId(
+  tracks: Record<string, { startedAt: string }> | null | undefined,
+): string | null {
+  if (!tracks || typeof tracks !== 'object') return null;
+  let best: { id: string; at: number } | null = null;
+  for (const [id, state] of Object.entries(tracks)) {
+    const at = Date.parse(state?.startedAt ?? '');
+    /* An unparseable stamp sorts last rather than throwing or winning. A clock-skewed
+       startedAt is the same failure lib/measure.ts documents at length; here the blast
+       radius is one free track, so a plain guard is enough. */
+    const t = Number.isFinite(at) ? at : Number.POSITIVE_INFINITY;
+    if (!best || t < best.at || (t === best.at && id < best.id)) best = { id, at: t };
+  }
+  return best?.id ?? null;
+}
+
+/** True when this track is past what the free tier includes.
+ *
+ *  Fails toward the user in every ambiguous case: no tracks opened yet, an unknown id, or a
+ *  track they have already started all return false. */
+export function trackGated(
+  id: string,
+  tracks: Record<string, { startedAt: string }> | null | undefined,
+  entitled: boolean,
+): boolean {
+  if (entitled) return false;
+  if (FREE_LIMITS.freeTracks < 1) return true;
+  const claimed = freeTrackId(tracks);
+  /* Nothing opened yet: this open claims the free slot. Already opened: it is theirs. */
+  if (claimed === null || claimed === id) return false;
+  return true;
 }
 
 /** Maps a store product identifier back onto a Plan. Kept beside the seam because it is

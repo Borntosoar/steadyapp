@@ -680,6 +680,16 @@ describe('the money never touches the safety surfaces', () => {
     '/support': 'app/support.tsx',
     '/still': 'app/still.tsx',
     '/measure': 'app/measure.tsx',
+    /* The four games, promised free by the fourth council (docs/DIRECTION.md §16.5). They are
+       sacred rather than merely free, and the reason is specific to them: a game is the only
+       surface in this product somebody opens repeatedly for months, which makes it the
+       surface where an upsell would be most tempting and would cost the most. Somebody who
+       has played Curveball forty times has been told forty times that it is free. The
+       forty-first must not be the one that asks. */
+    '/game/curveball': 'app/game/curveball.tsx',
+    '/game/toward': 'app/game/toward.tsx',
+    '/game/groundwork': 'app/game/groundwork.tsx',
+    '/game/ballast': 'app/game/ballast.tsx',
   };
   /* FREE IS NOT THE SAME AS SACRED, and deriving this list is what forced the distinction to
      be written down. Sacred means "reached at somebody's worst, so it must never sell".

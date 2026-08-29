@@ -7,7 +7,8 @@ import { PAYWALL_COPY } from '../content/copy.ts';
 import {
   isEntitled, daysUntilExpiry, emptyEntitlement, localGrant, projectFromProvider,
   trialExpiry, isGated, weekGated, ALWAYS_FREE_ROUTES, TIER_COMPARISON,
-  BILLING_GRACE_DAYS, OFFLINE_GRACE_DAYS, PRICING, RENEWAL_TERMS, PRICE_NUMBERS, PLUS_ADDS, ALWAYS_FREE} from '../lib/entitlement.ts';
+  BILLING_GRACE_DAYS, OFFLINE_GRACE_DAYS, PRICING, RENEWAL_TERMS, PRICE_NUMBERS, PLUS_ADDS, ALWAYS_FREE,
+  trackGated, freeTrackId} from '../lib/entitlement.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -304,6 +305,68 @@ describe('the prices on the paywall are arithmetic, not typed literals', () => {
     assert.ok(ALWAYS_FREE.some((l) => /crisis/i.test(l)), 'crisis support must stay free');
     assert.ok(ALWAYS_FREE.some((l) => /export|backup/i.test(l)), 'export must stay free');
   });
+
+  test('the games are promised free, in the list that is a promise', () => {
+    /* THE POINT OF THIS ONE IS THE ROUTES, NOT THE SENTENCE.
+       Before the fourth council the games were free the way an unlocked door is closed:
+       `isGated` reads deny-by-default but has one call site, so nothing ever gated them and
+       nothing ever promised them either. That is free by accident, it costs exactly the same
+       money as free by commitment, and it buys none of the trust. DIRECTION.md §16.5 made
+       the decision; this pins it.
+       Asserting the route list rather than the ALWAYS_FREE string is deliberate — a label
+       can be reworded and the promise survives, but a route dropped from ALWAYS_FREE_ROUTES
+       is the promise becoming false while the sentence still reads true. */
+    for (const route of ['/game/curveball', '/game/toward', '/game/groundwork', '/game/ballast']) {
+      assert.equal(
+        isGated(route, false), false,
+        `${route} is gated for a free user, and the paywall promises it is not`,
+      );
+    }
+    assert.ok(
+      ALWAYS_FREE.some((l) => /games/i.test(l)),
+      'the games are in ALWAYS_FREE_ROUTES but the paywall no longer says so',
+    );
+  });
+});
+
+describe('the guided-set catalogue gate', () => {
+  /* ⚠ THE GATE IS ON THE CATALOGUE AND NEVER ON A DAY — see lib/entitlement.ts. The failure
+     this is guarding against is not a free user reaching a second set. It is a PAYING-shaped
+     defect in the other direction: somebody mid-sequence, on the worst month of their year,
+     meeting a price on day four. Every assertion below is about who is NOT stopped. */
+  const at = (iso) => ({ startedAt: iso, done: [] });
+
+  test('an entitled user is never gated', () => {
+    assert.equal(trackGated('spirals', { breakup: at('2026-01-01T00:00:00Z') }, true), false);
+  });
+
+  test('the first set opened is theirs, and stays theirs', () => {
+    const tracks = { breakup: at('2026-01-01T00:00:00Z'), spirals: at('2026-02-01T00:00:00Z') };
+    assert.equal(trackGated('breakup', tracks, false), false);
+    assert.equal(trackGated('spirals', tracks, false), true);
+  });
+
+  test('with nothing opened yet, nothing is gated — the next open claims the slot', () => {
+    /* Otherwise the very first set somebody is routed to by the survey would meet a paywall,
+       which is the opposite of the decision. */
+    assert.equal(trackGated('breakup', {}, false), false);
+    assert.equal(trackGated('breakup', null, false), false);
+    assert.equal(trackGated('breakup', undefined, false), false);
+  });
+
+  test('an unreadable startedAt sorts last rather than winning the free slot', () => {
+    /* A clock-skewed or hand-edited stamp must not silently move which set somebody paid
+       nothing for. It fails toward the real one. */
+    const tracks = { breakup: at('2026-01-01T00:00:00Z'), spirals: at('not a date') };
+    assert.equal(freeTrackId(tracks), 'breakup');
+    assert.equal(trackGated('breakup', tracks, false), false);
+  });
+
+  test('a tie breaks on the id, so the answer does not depend on object order', () => {
+    const iso = '2026-01-01T00:00:00Z';
+    assert.equal(freeTrackId({ spirals: at(iso), breakup: at(iso) }), 'breakup');
+    assert.equal(freeTrackId({ breakup: at(iso), spirals: at(iso) }), 'breakup');
+  });
 });
 
 describe('every row of the paywall table is enforced somewhere in the app', () => {
@@ -322,8 +385,25 @@ describe('every row of the paywall table is enforced somewhere in the app', () =
      — trusting the table — is what produced the defect. */
 
   const src = (rel) => readFileSync(join(ROOT, rel), 'utf8');
-  /* Comments say what the code MEANT to do. Only stripped source says what it does. */
-  const code = (rel) => src(rel).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  /* Comments say what the code MEANT to do. Only stripped source says what it does.
+   *
+   * ⚠ TRAILING `//` COMMENTS COUNT, and that is a correction found by mutation.
+   *
+   * This used to strip block comments and WHOLE-LINE `//` comments only. The whole-line case
+   * was itself added after a commented-out mirror gate satisfied its own pin — but the fix
+   * stopped one character short. Disabling a gate like this:
+   *
+   *     if (false) { // trackGated(track.id, tracks, entitled)
+   *
+   * leaves the pattern sitting in a trailing comment on a live line, the pin matches the
+   * comment, and the suite stays green while the gate is off. Verified by doing it: the
+   * guided-set gate was neutralised and 1,457 tests passed.
+   *
+   * The `(?<!:)` guard is what keeps `https://…` out of it — a URL in a string is not a
+   * comment, and stripping from the `//` onwards would eat the rest of the line. */
+  const code = (rel) => src(rel)
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(?<!:)\/\/.*$/gm, '');
 
   /* Every screen that reads the protocol week — DISCOVERED, not listed.
      The first version of this test named three files. There were seven readers, and the four
@@ -353,11 +433,15 @@ describe('every row of the paywall table is enforced somewhere in the app', () =
    * among the most common lines in the codebase, so it pins almost nothing. Both now match
    * the shape of the decision rather than a token that happens to sit near it. */
   const ENFORCED = [
-    ['weeks', 'app/(tabs)/index.tsx', /effectiveWeek\(protocol\.currentWeek, entitled\)/],
-    ['mirror', 'app/mirror.tsx', /isGated\('\/mirror', entitled\)/],
+    /* The catalogue gate, added by the fourth council. Matches the CALL, with the arguments,
+       rather than the identifier — an import of `trackGated` that nothing invokes is exactly
+       the shape of defect this whole block exists to catch. */
+    ['other sets', 'app/track/[id].tsx', /trackGated\(track\.id, tracks, entitled\)/],
     ['Progress', 'app/(tabs)/progress.tsx', /!entitled\s*&&|if \(!entitled\)/],
     ['reads', 'app/(tabs)/learn.tsx', /m\.free \|\| entitled/],
     ['records', 'app/journal.tsx', /!entitled\s*&&[^\n]*>=\s*FREE_LIMITS\.thoughtRecordsPerMonth/],
+    ['weeks', 'app/(tabs)/index.tsx', /effectiveWeek\(protocol\.currentWeek, entitled\)/],
+    ['mirror', 'app/mirror.tsx', /isGated\('\/mirror', entitled\)/],
   ];
 
   test('there is one enforcement point per row, and no orphan rows', () => {

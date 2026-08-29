@@ -375,8 +375,12 @@ export default function Paywall() {
               );
             })}
 
+            {/* NOT "Start my twelve weeks". That label named the one row of the table that
+                is now last and demoted — the twelve-week protocol DIRECTION.md §9 retired as
+                the product — on the button somebody presses to hand over money. It described
+                a purchase most buyers were not making. */}
             <Button
-              label="Start my twelve weeks"
+              label="Start Anneal+"
               onPress={async () => {
                 await purchase(plan);
                 router.replace('/');
