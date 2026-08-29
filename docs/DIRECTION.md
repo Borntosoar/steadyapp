@@ -1425,3 +1425,200 @@ terms in the listing describe a flow that does not run; wiring RevenueCat needs 
 and a store account. Both are blocked on facts nobody in this repository has, rather than on
 work nobody has done, and `npm run preflight` already refuses to build a release while either
 stands.
+
+---
+
+## 16. Fourth council — is this profitable, and the answer that was not about the product
+
+**Convened 2026-08-29, on the founder's question, stated in their words:** *"is this app
+profitable if not then rework it to make it profitable and find leading apps that are
+profitable and add key elements from them that match the mental health niche."*
+
+Four seats: market research, the financial model, a red team, and a product/retention pass.
+Each read the repository rather than the brief. Three of them independently returned the
+same finding, and it is not a finding about money.
+
+### 16.1 The four things that are true before any of this matters
+
+Verified, not asserted. `npm run preflight` returns four blocker groups today.
+
+1. **The app cannot take a payment.** `hooks/useEntitlement.ts:69` — `fetchProviderEntitlement()`
+   is a commented-out body and `return null`. `purchase(plan)` calls `localGrant()`: no
+   StoreKit, no receipt, no money. There is no billing SDK in `package.json`. Revenue at any
+   download volume is currently exactly zero. `restore()` can only ever return false, which is
+   a Guideline 2.1 rejection on its own — a reviewer will tap that button.
+2. **`legal/entity.json` has six null fields, and the count went up.** `git log` on that file
+   since 2026-08-19 shows one commit. Its entire diff is `+ "clinicalReview": null` — a field
+   whose own comment says `"none"` is a valid publishable answer. In the ten days since a red
+   team named five null fields as the binding constraint, the file gained a sixth and lost
+   none, alongside 61 commits and four games.
+3. **The privacy policy and terms return HTTP 403.** Apple requires a URL that loads without a
+   login. `constants/links.ts:26` still points at the apparel-brand origin §8.4 flagged.
+4. **`git tag` is empty and `buildNumber` is 1.** No binary has ever been produced.
+
+**So the honest answer to "is this app profitable" is that it is not unprofitable. It is
+unshipped, and it has been unshipped for the whole time the question has been asked.**
+
+### 16.2 The number, once it can take money
+
+The financial seat built it from the code. Costs to run: **~$1,135/yr** (Apple $99, domain,
+banking, a corporate return; no servers, no analytics SDK, no push infrastructure). Break-even
+is **19 payers, about 860 downloads** — cleared in a quarter if it ranks at all.
+
+Two corrections that cost real money and are wrong everywhere in the repo:
+
+- **Every revenue figure here is ~8% high.** Apple is Merchant of Record and list prices are
+  tax-inclusive outside the US, so a $79.99 UK sale is $66.66 before Apple's cut. Net is
+  **0.78 of list, not 0.85**.
+- **The 15% Small Business rate is not automatic.** It requires an application from an
+  enrolled entity, and there is no entity. Without it: 30% on subscriptions for year one and
+  **30% forever on the $149 non-consumable**. On $30k gross that omission costs ~$4,500/yr —
+  four times the entire cost base.
+
+Realistic mature volume, rebuilt from keyword search volume rather than from prevalence:
+**8,000–20,000 downloads/yr, central 12,000.** At a 2.2% install-to-paid and $60.40 net per
+payer:
+
+> **$8,000–$36,000/yr net at maturity. Central case ~$16,000. Year one $3,000–$9,000.**
+
+$2k/mo is the optimistic case. $5k/mo needs four times the realistic ceiling. Moving the
+paywall onto the onboarding path and repricing takes the central case to roughly **$46k–$60k**,
+and that is the honest ceiling of fixing the business model without moving a constraint.
+
+### 16.3 What the market says about a games app, and it is the hard part
+
+The research seat found that **games-first mental health has essentially never made consumer
+money**:
+
+| | Outcome |
+|---|---|
+| SPARX | Government-funded. 21,320 lifetime NZ users, ~2% of the target population. No consumer revenue. |
+| eQuoo | €1.7M seed, 500k players, an RCT — and **no revenue figure published in eight years.** |
+| Happify / Twill | Raised $200M+. Sold to DarioHealth for $10M cash. |
+| Mightier | The only one with real revenue (~$6.5M/yr) — and it needed $30M, a hardware heart-rate peripheral and Boston Children's Hospital's name. |
+| Zombies, Run! (adjacent) | $7.9M over 13 years. **$0.68 lifetime revenue per download.** Sold 2021, bought back Dec 2025 for a high six-figure sum — ~90% of its value gone in four years. |
+
+**Finch is the counter-example and it is not a games app.** ~$2.9M/month, bootstrapped, zero
+VC, D1 54% / D7 37% — above Duolingo's 51%/35%. It gives away the entire therapeutic product
+forever and charges $9.99/$69.99 for **hats, colours, shop slots and timer durations**. It is
+a self-care app with a pet economy attached, and it charges for the pet, not the therapy.
+
+The transferable lesson is therefore not "add game mechanics". It is: **give the therapeutic
+product away and promise it, and sell depth, permanence and authorship beside it.** §16.5 is
+that decision.
+
+### 16.4 Three things already right, and the constraint the evidence indicts
+
+Right, and worth not breaking:
+
+- **The 30-day trial.** RevenueCat 2026 across 115,000+ apps: trial-to-paid is 25.5% at ≤4
+  days, 37.4% at 5–9, **42.5% at 17–32 days**. This is at the top of the best band.
+- **Annual pre-selected.** Health & Fitness is the only category where annual dominates
+  revenue (60.6%). Day-380 retention: annual-with-trial 19.9%, monthly 14.2%, weekly 5.5%.
+- **A generous free core.** Finch is the existence proof that `SAFETY.md` §4 is not what is
+  killing this.
+
+**The constraint the evidence indicts is not the paywall rule. It is "no analytics of any
+kind."** Every population-scale finding in the research is a distribution with a 3–5x spread
+between median and top decile — Health & Fitness trial-to-paid is 39.9% at the median and
+68.3% at the top. Rootd found its 6x by measuring and moving the paywall. Anneal must choose
+its configuration once, blind, and can never learn which one it chose. Estimated cost: a
+**2–5x revenue haircut, permanent and undetectable.** There is no local-only version, because
+the mechanic requires comparison across users. This is recorded as a price, not a
+recommendation; it stays the founder's to move.
+
+The no-discount rule has a second, smaller price nobody had named: Daylio discounts annual up
+to 75%, Bearable cuts $34.99 to $18.99, Calm runs 50%-off promos. So Anneal's list price is
+its real price, and $79.99 competes against their real-world $9–19 while shipping less
+content than either.
+
+### 16.5 The finding all four seats reached separately
+
+**The app gives away the product and charges for the thing it decided to stop being.**
+
+`isGated()` reads deny-by-default but has exactly **one** production call site,
+`app/mirror.tsx:84`. `app/game/*.tsx` and `app/track/[id].tsx` import no entitlement code at
+all. So the four games and seven tracks are free — and `lib/entitlement.ts:412` says so
+deliberately: *"Absent is accurate; promised would be a business decision this file should not
+make on its own."*
+
+Meanwhile `PLUS_ADDS` sells weeks 2–12, the mirror, Progress, nine modules and unlimited
+thought records — the twelve-week body-dysmorphia protocol that §9 says does not carry
+forward. The purchase button reads **"Start my twelve weeks."** The store listing is
+`Anneal: Body Image Anxiety` and its description contains the words *game*, *track* and
+*Still* zero times.
+
+Five surfaces, five answers to what this is. A person who found the app on `dysmorphia`,
+answered the survey with "I lost someone", was asked how long they think about how they look,
+played a CBT game about a character named Theo, ran a seven-day breakup track — and is then
+asked for $79.99 for eleven more weeks of mirror exposure they were never sold.
+
+**That deferred decision is now being made by default, in the direction of zero revenue.**
+§16.7 makes it deliberately.
+
+### 16.6 The retention findings, which are worse than expected and cheaper to fix
+
+Counted from source:
+
+| Game | Unique units | Drawn per session | First repeat |
+|---|---|---|---|
+| Curveball | **7 scenes** | 4 | **Session 2, guaranteed** (4+4 > 7) |
+| Toward | **5 scenes** | all 5, **fixed order, no shuffle** | **Session 2, 100% of it** |
+| Ballast | 12 facts / 5 beliefs | 6, filtered | Session 2 |
+| Groundwork | 16 actions | 6 | Session 2, p ≈ 0.95 |
+
+**~25–30 minutes of non-repeating game material, exhausted in about twelve sessions.** The
+protocol asks for 48 practice days. The 49 track days are wrappers — ~37 words each — that
+deep-link back into the same four games. Tracks multiply framings, not material. **Day 40 is
+not the cliff. Day 15 is.**
+
+And there is no day-200 reason to open it. Every number on Today is a rolling window or
+resets: `reclaimed.hours` is 7-day rolling and vanishes below three check-ins; `streak.current`
+silently resets to 1. The only monotonic value in the product is the resisted-urge counter,
+which is scoped to one narrow event and hidden at zero.
+
+**The machinery for the fix is already written and has zero call sites.** `stageOf`,
+`progress`, `STAGES` and `STAGE_AT` in `lib/plan.ts:206-233` — the stone, a four-stage memento
+already defended in the file against Deci 1999 and Six 2021 — are referenced by nothing but a
+test. So are `toneOf`, `orderOf` and `calmFor`. `reclaimedByWeek()`'s own docstring promises
+*"cumulative hours reclaimed across the whole history"* and returns per-week values.
+
+**Onboarding is 27 screens and ~33 taps before the first game scene renders**, in an app whose
+own docstring says seven or eight of every ten people are never coming back. The games appear
+on no screen the app opens to: the Today grid is check-in, calm, Still, urges, thought record,
+and `recommendedAction()` never returns a game route.
+
+Notifications do not exist, and `__tests__/safety.test.mjs:502` bans `expo-notifications` in
+the same regex as Sentry, Firebase and Amplitude — under a heading about dependencies that can
+phone home. That is a category error: local scheduling never registers a push token and never
+touches the network. The file already contains the correct pattern for exactly this case,
+applied to `expo-file-system`: admit the package, name which half is used, and add a guard
+test asserting the network half is never referenced.
+
+### 16.7 What this council changes, in order
+
+Ranked by effect ÷ cost. Items 1–8 are roughly nine working days and every one is either
+wiring code that already exists and is already tested, or deleting a screen.
+
+1. **The paywall sells what the app is.** Promise the four games free in
+   `ALWAYS_FREE_ROUTES`; rewrite `PLUS_ADDS` to sell depth, permanence and authorship; add
+   `trackDayGated` so the first three days of every track are free and the rest is the paid
+   thing; raise free thought records 5 → 10; give the free tier 30 days of Progress.
+2. **Play a game as screen one of onboarding**, before anything is asked or collected.
+3. **Put the games on Today**, ordered by `orderOf`, which finally gives it a consumer.
+4. **Move `/measure` out of onboarding** to a day-3 moment. −16 screens.
+5. **Toward draws 3 of 5, shuffled.** One hour, and it halves the worst repeat profile.
+6. **Stop rendering `streak.current` on Today.** It is the only number that silently goes
+   down, and it is at the top of the first screen.
+7. **Wire the stone; add `lifetimeReclaimed()`; extend `STAGE_AT` past 90** so there is
+   always an unclaimed horizon and never a countdown to one.
+8. **Local notifications** — the daily check-in, the Groundwork follow-up the game already
+   promises in writing, and the trial-ending notice `app/paywall.tsx:397` already apologises
+   for not being able to send. Suppression must cancel pending notifications on a distress
+   signal, not merely skip scheduling.
+9. **Write content.** Curveball 7 → 30 scenes, Toward 5 → 20. No mechanic above fixes seven
+   scenes; this is last only because it is not a code change, and cheapest per unit of
+   retention.
+
+**And none of it is worth anything until §16.1 is cleared.** Six fields, one of which can be
+`"none"`; a billing SDK; a reachable privacy URL. That is the whole gate.
