@@ -74,7 +74,12 @@ describe('the daily budget follows the local day, not UTC', () => {
          interruption could arrive in the same local day. */
       const same = inZone(tz, `
         const base = {
-          profile: {}, baseline: null, checkIns: [], urgeLogs: [], thoughtRecords: [],
+          /* measureSkippedAt so the baseline is not owed. This test is about the daily
+             budget resetting on the LOCAL day; without it 'measure-baseline' also becomes
+             eligible and wins the priority sort, turning a question about which day it is
+             into a question about which moment ranks higher. */
+          profile: { measureSkippedAt: day(0) },
+          baseline: null, checkIns: [], urgeLogs: [], thoughtRecords: [],
           mirrorSessions: [], experiments: [],
           practice: [0,1,2,3].map((n) => ({ id: 'p'+n, date: day(n), kind: 'checkin' })),
           streak: { current: 4, longest: 4, lastPracticeDate: day(0), freezes: 2 },

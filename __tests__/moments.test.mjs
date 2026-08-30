@@ -4,7 +4,12 @@ import {
   nextMoment, eligibleMoments, markShown, markDismissed, markActed,
   distressRecently, MOMENTS, dayKey,
 } from '../lib/moments.ts';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { baseAppState, qualifiedForAsk, day, trialing, lifetime } from './helpers/state.mjs';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /* The scheduler decides everything the app says without being asked. Its failure modes are
  * not crashes — they are nagging, and prompts landing on somebody at their worst. Both are
@@ -335,4 +340,105 @@ describe('the configuration itself', () => {
     }
     assert.ok(ask.maxDismissals > 0, 'the ask must be dismissable for good');
   });
+});
+
+describe('the baseline moved out of onboarding and is still asked for', () => {
+  /* ⚠ THE DELETION THIS GUARDS AGAINST. `app/onboarding/index.tsx` used to end on
+     `router.replace('/measure')`, making fifteen PHQ-8 and GAD-7 items the last step of
+     onboarding — sixteen screens between a first open and anything in this app that does
+     something, at the point of highest drop-off, in a product whose own onboarding docblock
+     says seven or eight of every ten people never come back.
+     It now goes to Today and `measure-baseline` offers the sitting a few days in. The risk
+     of that change is not that the moment misbehaves; it is that the baseline quietly stops
+     being collected AT ALL and nobody notices for months, because the only symptom is an
+     absence. DIRECTION.md's win condition is a PHQ and GAD series, so an app that never
+     takes a baseline cannot produce the one claim it exists to make.
+     `baselineOwed` in lib/measure.ts already owns the asking rule and is tested there. What
+     is tested here is the wiring: that the moment exists, that it fires for somebody who has
+     not answered, and that it stops. */
+
+  /** Somebody a few days in who has never been offered the questionnaires. */
+  const owing = (over = {}) => {
+    const s = baseAppState();
+    s.measures = [];
+    Object.assign(s, over);
+    return qualifiedForAsk(s);
+  };
+
+  test('onboarding hands off to Today, not to the questionnaires', () => {
+    /* The pin for the change itself. Comments stripped, trailing ones included, so the long
+       note explaining WHY it moved cannot satisfy a grep for the thing it describes. */
+    const code = readFileSync(join(ROOT, 'app/onboarding/index.tsx'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(?<!:)\/\/.*$/gm, '');
+    assert.doesNotMatch(code, /router\.replace\('\/measure'\)/,
+      'onboarding sends people straight into fifteen clinical items again');
+    assert.match(code, /router\.replace\('\/'\)/,
+      'onboarding no longer routes anywhere on completion');
+  });
+
+  test('it is offered to somebody who has not answered yet', () => {
+    assert.ok(eligibleMoments(owing()).includes('measure-baseline'));
+  });
+
+  test('not on the first day — there has to be something to have a baseline of', () => {
+    /* Fifteen questions about the worst fortnight of somebody's year, on the day they
+       installed the app, is the placement this change exists to undo. Moving it from the end
+       of onboarding to the first launch after it would be the same screen one tap later. */
+    const s = baseAppState();
+    s.measures = [];
+    s.practice = [{ id: 'p0', date: day(0), kind: 'checkin' }];
+    assert.ok(!eligibleMoments(qualifiedForAsk(s)).includes('measure-baseline'));
+  });
+
+  test('it stops once the baseline exists', () => {
+    /* baseAppState carries a completed sitting. If this ever fires for somebody who has
+       answered, the app is asking a person to redo work it already has. */
+    assert.ok(!eligibleMoments(qualifiedForAsk(baseAppState())).includes('measure-baseline'));
+  });
+
+  test('a fresh decline is respected, and re-offered exactly once, later', () => {
+    /* The rule `baselineOwed` encodes: asked, declined, asked once more three days on, never
+       again. A skip the app forgets overnight is not a skip, it is a delay. */
+    const justSkipped = owing();
+    justSkipped.state.profile = { ...justSkipped.state.profile, measureSkippedAt: day(0) };
+    assert.ok(!eligibleMoments(justSkipped).includes('measure-baseline'),
+      'it re-asked the day after somebody said no');
+
+    const skippedAWhileAgo = owing();
+    skippedAWhileAgo.state.profile = { ...skippedAWhileAgo.state.profile, measureSkippedAt: day(5) };
+    assert.ok(eligibleMoments(skippedAWhileAgo).includes('measure-baseline'),
+      'the one follow-up offer never comes');
+  });
+
+  test('it never outranks the trial-ending notice', () => {
+    /* A questionnaire must not stand in front of a payment somebody is about to be charged
+       for. The paywall promises that warning in writing. */
+    assert.ok(MOMENTS['measure-baseline'].priority < MOMENTS['trial-ending'].priority);
+    const s = owing({ entitlement: trialing(1) });
+    assert.equal(nextMoment(s)?.id, 'trial-ending');
+  });
+
+  test('it is service, so it does not sell and is not silenced by a hard day', () => {
+    /* Same reasoning as its 'measure-due' sibling: the app doing a thing it said it would,
+       rather than a judgement about how the work is going. But it must also not be
+       COMMERCIAL, or SAFETY.md's rule about money and distress would apply to it and it
+       would be suppressed exactly when a person is most worth measuring. */
+    assert.equal(MOMENTS['measure-baseline'].kind, 'service');
+    const s = owing();
+    s.state.practice.push({ id: 'hd', date: day(0), kind: 'hard-day' });
+    assert.ok(eligibleMoments(s).includes('measure-baseline'));
+  });
+
+  test('the card knows where to send somebody, with no milestone attached', () => {
+    /* A moment with no route falls through to '/' — it would render, be tapped, and take the
+       person to the screen they are already on. And a milestone param here would stamp a
+       first sitting as a 30/60/90 answer, which corrupts the series `dueMilestone` walks. */
+    const card = readFileSync(join(ROOT, 'components/MomentCard.tsx'), 'utf8');
+    assert.match(card, /'measure-baseline':\s*'\/measure'/,
+      'measure-baseline has no route, so its action goes nowhere');
+    assert.doesNotMatch(card, /measure-baseline[\s\S]{0,200}milestone=/,
+      'a first sitting is being stamped with a milestone it did not answer');
+  });
+
 });

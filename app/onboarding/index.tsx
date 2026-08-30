@@ -104,17 +104,25 @@ export default function Onboarding() {
       { practiceDaysPerWeek: days ?? undefined, wantBack },
     );
     acceptDisclaimer();
-    /* Straight to the baseline questionnaires, not to Today.
+    /* ⚠ STRAIGHT TO TODAY, AND THE BASELINE COMES LATER. This used to be
+     * `router.replace('/measure')` — fifteen PHQ-8 and GAD-7 items as the last step of
+     * onboarding — which put sixteen more screens between a first open and the first thing
+     * in this app that does anything. The docblock at the top of this file says seven or
+     * eight of every ten people who open it are never coming back and that whatever reaches
+     * somebody has to reach them in the first two minutes; the default path to Today ran
+     * twenty-seven screens.
      *
-     * `replace` and not `push`, so Back from the measure screen cannot walk somebody back
-     * into an onboarding they have already completed. The measure screen itself routes to
-     * Today whether they answer or skip, so this is the last step of onboarding rather than a
-     * detour hanging off the end of it.
+     * The old comment here was right about the cost, and it is worth keeping the argument
+     * rather than deleting it: this was the only moment yielding a true day-zero reading,
+     * and every day of delay is a day the intervention has been running before the "before"
+     * is taken. That cost is accepted. A day-three baseline from somebody still using the
+     * app beats a day-zero baseline from somebody who left at question four, `Measure.takenAt`
+     * records when it was really answered, and nothing in SAFETY.md asks for day zero.
      *
-     * It is offered here and nowhere earlier for the reason DIRECTION.md gives: this is the
-     * only moment that yields a true day-zero reading, and every day it is delayed is a day
-     * the intervention has already been running when the "before" number is taken. */
-    router.replace('/measure');
+     * It is not dropped. `measure-baseline` in lib/moments.ts offers it once two practice
+     * days exist, and `baselineOwed` caps the asking at twice, ever. `replace` and not
+     * `push`, so Back cannot walk somebody into an onboarding they have finished. */
+    router.replace('/');
   };
 
   const BASELINE_STEP = 2;

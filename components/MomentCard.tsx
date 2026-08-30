@@ -34,6 +34,9 @@ const ROUTES: Record<string, string> = {
      scheduled point it answered. Filled in at the call site, which is the only place that
      knows which one came due. */
   'measure-due': '/measure',
+  /* No milestone param: this IS the first sitting, so the screen shows the first-time intro
+     and `saveMeasure` stamps it with a null milestone. */
+  'measure-baseline': '/measure',
 };
 
 /** The trial notice fires on each of the last two days and used to say "Two days left"

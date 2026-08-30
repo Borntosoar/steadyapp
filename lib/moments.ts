@@ -33,7 +33,7 @@
  * published frequency figures behind the caps. */
 
 import type { AppState, CheckIn, MomentRecord } from '../types';
-import { dueMilestone } from './measure.ts';
+import { dueMilestone, baselineOwed } from './measure.ts';
 /* Day arithmetic comes from lib/streak.ts and nowhere else.
  *
  * This file used to define its own `dayKey` on `toISOString()`, which is UTC, while every
@@ -57,7 +57,8 @@ export type MomentId =
   | 'month-two-proof'
   | 'week-one-ask'
   | 'rate-app'
-  | 'measure-due';
+  | 'measure-due'
+  | 'measure-baseline';
 
 /** What the moment is FOR. Governs suppression, not tone.
  *  - service   : the app owes the user this information. Fires regardless of mood.
@@ -118,6 +119,31 @@ export const MOMENTS: Record<MomentId, MomentConfig> = {
      behind reaching a person who has stopped altogether. Two shows and one dismissal — a
      "not now" is an answer, and the milestone stays owed until it is actually taken. */
   'measure-due': { id: 'measure-due', kind: 'service', priority: 70, maxShows: 2, cooldownDays: 3, maxDismissals: 1 },
+
+  /* The FIRST PHQ-8 and GAD-7 sitting, offered a few days in rather than during onboarding.
+   *
+   * WHY IT MOVED. It used to be the last step of onboarding: `app/onboarding/index.tsx`
+   * ended on `router.replace('/measure')`, so the default path from first open to the first
+   * real thing the app does ran through fifteen questions about the worst fortnight of
+   * somebody's year — at minute three, before anything had worked, in an app whose own
+   * onboarding docblock says "seven or eight of every ten people who open this are never
+   * coming back". That is the single most clinical-looking object in the product, placed at
+   * the point of highest drop-off.
+   *
+   * WHAT MOVING IT COSTS, STATED HONESTLY. The old comment was right that this is the only
+   * moment yielding a true day-zero reading, and every day of delay is a day the
+   * intervention has already been running when the "before" is taken. That cost is real and
+   * it is accepted, because a day-three baseline from somebody still using the app beats a
+   * day-zero baseline from somebody who left at question four. Nothing in SAFETY.md requires
+   * day zero. `Measure.takenAt` records when it was actually answered, so the delay is
+   * visible in the data rather than hidden by it.
+   *
+   * 'service', like its sibling: the app doing a thing it said it would, not a judgement.
+   * Priority just under 'measure-due' — a scheduled re-measure compares against something
+   * and is worth more than a first sitting that compares against nothing yet.
+   * `baselineOwed` already encodes the "asked once, once more after three days, never a
+   * third time" rule, so maxShows here is its ceiling rather than a second policy. */
+  'measure-baseline': { id: 'measure-baseline', kind: 'service', priority: 65, maxShows: 2, cooldownDays: 3, maxDismissals: 1 },
 };
 
 /* MomentRecord is declared once, in types/index.ts, because it is persisted — two
@@ -242,6 +268,23 @@ export function eligibleMoments(input: MomentInput, now: Date = new Date()): Mom
    * somebody is using the app. It is a date the app already promised to watch. */
   if (dueMilestone(state.measures, now.toISOString()) !== null) {
     out.push('measure-due');
+  }
+
+  /* The baseline, once there is something to have a baseline OF.
+   *
+   * `practiceDays >= 2` is the whole delay mechanism, and it is deliberately days rather
+   * than a date: somebody who opened the app twice has done something twice, and somebody
+   * who installed it three days ago and has not come back should not be met with fifteen
+   * questions when they finally do. `baselineOwed` owns the rest of the rule — no baseline
+   * yet, and either never offered or offered and declined at least three days ago — so this
+   * asks at most twice in total and then stops for good.
+   *
+   * Ordered after `measure-due` so that if both were somehow true the scheduled re-measure
+   * wins the priority sort, though in practice `dueMilestone` returns null without a
+   * baseline and the two are mutually exclusive. */
+  if (practiceDays >= 2
+      && baselineOwed(state.measures, state.profile.measureSkippedAt, now.toISOString())) {
+    out.push('measure-baseline');
   }
 
   return out;

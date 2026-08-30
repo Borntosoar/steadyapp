@@ -46,6 +46,24 @@ export function baseAppState() {
     readModules: [],
     moments: {},
     entitlement: { source: 'none', plan: null, expiresAt: null, verifiedAt: null },
+    /* A COMPLETED BASELINE, because this fixture is somebody eight days in.
+     *
+     * It had no `measures` field at all, which was fine while nothing consulted one. The
+     * `measure-baseline` moment does: `baselineOwed` sees no baseline and no skip stamp,
+     * says yes, and it fired in every test in the suite — eighteen of them, each failing on
+     * a moment they were not written about.
+     * The fix is the fixture becoming realistic rather than the moment becoming quieter. A
+     * person who onboarded eight days ago has either answered these or declined them; this
+     * one answered. Tests about the baseline being owed clear the field or set
+     * `profile.measureSkippedAt` explicitly, which is the honest way to express "this person
+     * has not done it yet". Taken eight days ago, so no 30/60/90 milestone is due either. */
+    measures: [{
+      id: 'm0',
+      takenAt: iso(8),
+      milestone: null,
+      phq8: [1, 1, 2, 1, 0, 2, 1, 0],
+      gad7: [2, 1, 1, 1, 0, 1, 1],
+    }],
   };
 }
 

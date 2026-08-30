@@ -204,6 +204,18 @@ export const MOMENT_COPY = {
     action: 'Answer them',
     dismiss: 'Not now',
   },
+  /* The first sitting, offered a few days in rather than during onboarding — see the note
+     beside 'measure-baseline' in lib/moments.ts for why it moved.
+     The body has one job the 'measure-due' version does not: this person has never seen
+     these questions, so it says what they are, that they are optional, and where the answers
+     go. That third one decides whether somebody in this position answers honestly. */
+  'measure-baseline': {
+    eyebrow: 'A starting point',
+    title: 'Two standard questionnaires',
+    body: 'Fifteen questions used in clinics and in research. Answering them now gives you something to compare against in a month. They stay on this phone, and the app will not tell you what your answers mean.',
+    action: 'Answer them',
+    dismiss: 'Not now',
+  },
   'rate-app': {
     eyebrow: 'One small thing',
     title: 'Would you say so publicly?',
