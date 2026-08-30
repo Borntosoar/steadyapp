@@ -100,6 +100,9 @@ export default function Progress() {
   const urgeLogs = useStore((st) => st.urgeLogs);
   const mirrorSessions = useStore((st) => st.mirrorSessions);
   const protocol = useStore((st) => st.protocol);
+  /* Only `longest` is read — the running streak is deliberately not shown anywhere. See the
+     note beside the week strip in app/(tabs)/index.tsx. */
+  const streak = useStore((st) => st.streak);
   /* Narrow, like the rest — only the practice target is read here. */
   const practiceDaysPerWeek = useStore((st) => st.profile.practiceDaysPerWeek);
   const [exportFailed, setExportFailed] = useState(false);
@@ -155,6 +158,27 @@ export default function Progress() {
         />
         <Explain q={EXPLAIN.week.q} a={EXPLAIN.week.a} />
       </Frost>
+
+      {/* THE LONGEST RUN, AS A RECORD — and only ever the longest.
+          Today stopped printing the RUNNING streak (see the note in app/(tabs)/index.tsx):
+          `streak.current` is the one number in this product that goes down for a reason
+          nobody chose, and it did that at the top of the first screen. `longest` cannot fall
+          — lib/streak.ts preserves it through every restart — so it is a thing that happened
+          rather than a thing being lost, which is the only version of this worth showing to
+          somebody who has just come back after a fortnight away.
+          Hidden below two, because "1 day, longest run" is a scoreboard reading of a person's
+          first week and says nothing they do not already know. */}
+      {streak.longest > 1 && (
+        <Frost style={{ marginTop: space.md }}>
+          <Row>
+            <H3>Longest run</H3>
+            <Caption>{streak.longest} days</Caption>
+          </Row>
+          <Caption style={{ marginTop: space.xs }}>
+            The most days in a row you have done something here. It does not go down.
+          </Caption>
+        </Frost>
+      )}
     </>
   );
 

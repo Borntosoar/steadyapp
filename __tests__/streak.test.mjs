@@ -1,5 +1,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const {
   initialStreak,
@@ -127,5 +130,67 @@ describe('copy safety — nothing in this module may shame or reference appearan
 
   test('returning copy does not account for time away', () => {
     assert.doesNotMatch(returningCopy(), /\d+\s*(day|week|month)/i);
+  });
+});
+
+describe('the running streak is never rendered, only the longest run', () => {
+  /* ⚠ THIS IS AN ARITHMETIC RULE, NOT A COPY RULE, and every other guard in this file is a
+     copy rule. That gap is what let the defect stand.
+     lib/streak.ts is careful in every way a STRING can be careful — silent freezes, no red,
+     `longest` preserved through a restart, hard-day taps counting, and the suite above
+     checking every message for shaming language and appearance references. Then
+     `app/(tabs)/index.tsx` printed `streak.current` at the top of the screen the app opens
+     to. Come back after a fortnight and 40 becomes 1. No sentence shames anybody; the NUMBER
+     does, and it is the only value in the product that falls for a reason the person did not
+     choose. Defanging a streak removes the loss aversion that makes one work while keeping
+     its whole cost.
+     `registerPractice` is untouched — `pendingMilestone` and the `winback` moment still need
+     it. What changed is that nothing displays the running count. */
+
+  const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+  /** Every screen and component, DISCOVERED rather than listed. A named list of two files is
+   *  a list of the two somebody remembered, and this rule has to hold everywhere. */
+  const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const full = join(dir, e.name);
+    return e.isDirectory() ? walk(full) : [full];
+  });
+  const uiFiles = ['app', 'components']
+    .flatMap((d) => walk(join(ROOT, d)))
+    .filter((f) => /\.tsx$/.test(f));
+
+  /* Comments stripped, including trailing ones — the note explaining this rule names
+     `streak.current` several times, and a guard that cannot tell an explanation from a
+     violation is worse than none. Same stripper as __tests__/entitlement.test.mjs, and for
+     the same reason: a commented-out line must not satisfy a pin, and `https://` must not be
+     mistaken for a comment. */
+  const code = (f) => readFileSync(f, 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(?<!:)\/\/.*$/gm, '');
+
+  test('no screen reads the running streak count', () => {
+    assert.ok(uiFiles.length > 20, `only ${uiFiles.length} UI files found — has the walk broken?`);
+    const offenders = uiFiles.filter((f) => /\bstreak\.current\b/.test(code(f)));
+    assert.deepEqual(
+      offenders.map((f) => f.slice(ROOT.length + 1)), [],
+      'these render the running streak, which is the one number here that goes down',
+    );
+  });
+
+  test('the longest run is shown somewhere, so the record is not merely kept', () => {
+    /* The other half. Removing the running count and showing nothing at all would delete a
+       real thing somebody earned rather than reframe it — and a comment promising `longest`
+       lives on Progress, with no call site, is the exact defect this repository keeps
+       finding. Derived: any screen may host it, this only insists one does.
+
+       ⚠ IT MATCHES THE RENDER, NOT THE IDENTIFIER, and that is a correction found by
+       mutation. The first version tested `/\bstreak\.longest\b/`, which the VISIBILITY
+       CONDITION `streak.longest > 1` satisfies all by itself. So replacing the rendered
+       number with a hardcoded string left the guard green and the record invisible —
+       verified by doing it. This is the same weakness lib/entitlement.ts's pins document:
+       an identifier that appears in a gate and in its own copy pins whichever one survives.
+       `{streak.longest}` is a JSX text interpolation, which is the thing a reader sees. */
+    const shows = uiFiles.filter((f) => /\{\s*streak\.longest\s*\}/.test(code(f)));
+    assert.ok(shows.length > 0, 'nothing renders streak.longest, so the record is invisible');
   });
 });

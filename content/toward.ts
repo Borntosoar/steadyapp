@@ -295,6 +295,37 @@ export const SCENES: TowardScene[] = [
 
 /* ---------- pure helpers ---------- */
 
+/** How many scenes one run of Toward plays.
+ *
+ *  Three of five rather than all five, which is a change and not a tuning.
+ *
+ *  `app/game/toward.tsx` walked `SCENES` by index, in order, to the end — so the second run
+ *  anybody ever played was the first run again, in the same sequence, one hundred per cent of
+ *  it. Curveball has drawn 4 of 7 at random since it shipped; this game never got the same
+ *  treatment because it was built as a single arc and nobody revisited the assumption when it
+ *  became something people would open repeatedly.
+ *
+ *  Three is the number because of what the run has to hold. Every scene offers relief and
+ *  offers movement, the away moves compound, and `ESCALATE_AT` turns the later scenes over at
+ *  two — so a run needs at least three slots for that mechanic to be visible inside one
+ *  sitting. Below three the escalation can only ever land on the final scene, which is where
+ *  a player is least able to do anything with it. */
+export const SCENES_PER_RUN = 3;
+
+/** The scenes for one run, in a shuffled order.
+ *
+ *  Same contract as Curveball's `sessionScenes`: randomness is injected rather than reached
+ *  for, and asking for more scenes than exist returns what exists rather than repeating one.
+ *  Replaying a scene inside a single run would let a player answer from memory instead of
+ *  from the choice, which is the whole thing this game is for. */
+export function runScenes(
+  n = SCENES_PER_RUN,
+  rand: Rand = Math.random,
+  from: readonly TowardScene[] = SCENES,
+): TowardScene[] {
+  return shuffle(from, rand).slice(0, Math.min(n, from.length));
+}
+
 /** The situation as it arrives, given how much has already been stepped around. */
 export function situationFor(scene: TowardScene, awayCount: number): string {
   return awayCount >= ESCALATE_AT ? scene.escalated : scene.situation;

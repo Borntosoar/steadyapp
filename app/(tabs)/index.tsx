@@ -251,11 +251,22 @@ export default function Today() {
           <View style={{ marginTop: space.xxl }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: space.sm }}>
               <Caption style={{ color: c.inkSoft }}>This week</Caption>
-              <Caption>
-                {streak.current > 0
-                  ? `${streak.current} day${streak.current === 1 ? '' : 's'} in a row`
-                  : `Week ${week} of ${WEEKS_TOTAL}`}
-              </Caption>
+              {/* ⚠ THE RUNNING STREAK IS DELIBERATELY NOT PRINTED HERE — §16.7 item 6.
+                  This read "N days in a row" off `streak.current`, and lib/streak.ts is
+                  careful about it in every way a string can be careful: silent freezes, no
+                  red, `longest` preserved, hard-day taps counting, every message regex-tested
+                  for shaming language.
+                  None of that reaches the arithmetic. Come back after two weeks away and the
+                  top of the first screen turns 40 into 1. No sentence shames anybody; the
+                  NUMBER does, and it is the only value in this product that goes down for a
+                  reason the person did not choose. Defanging a streak removes the loss
+                  aversion that makes a streak work and keeps the cost of one — so what is
+                  left is the cost.
+                  `registerPractice` is untouched: it still feeds `pendingMilestone` and the
+                  `winback` moment, and `streak.longest` is a record rather than a demotion,
+                  so Progress is where it belongs. What sits here instead is the one thing
+                  that cannot fall. */}
+              <Caption>Week {week} of {WEEKS_TOTAL}</Caption>
             </View>
             <WeekStrip days={days} />
             <Explain q={EXPLAIN.week.q} a={EXPLAIN.week.a} />

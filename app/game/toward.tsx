@@ -13,9 +13,9 @@ import { space, radius, type as t, LAYOUT_MAX_WIDTH } from '../../constants/them
 import { useStore } from '../../store/useStore';
 import { haptic } from '../../hooks/haptics';
 import {
-  VALUES, SCENES, VALUES_TO_PICK, PASS_LABEL, PASS_ACKNOWLEDGEMENT,
-  situationFor, optionsFor, tallyByValue, actionFor, labelFor,
-  type TowardOption, type Value,
+  VALUES, VALUES_TO_PICK, PASS_LABEL, PASS_ACKNOWLEDGEMENT,
+  situationFor, optionsFor, runScenes, tallyByValue, actionFor, labelFor,
+  type TowardOption, type Value, type TowardScene,
 } from '../../content/toward.ts';
 
 /* Toward — the ACT game.
@@ -57,7 +57,16 @@ export default function Toward() {
      anywhere can accidentally start treating a pass as a choice. */
   const [passed, setPassed] = useState(0);
 
-  const scene = SCENES[Math.min(index, SCENES.length - 1)];
+  /* ⚠ THE RUN IS A DRAW, NOT A WALK OF `SCENES`.
+     This read `SCENES[Math.min(index, SCENES.length - 1)]` — all five, in the order they
+     are written, every single time. Curveball has drawn 4 of 7 at random since it shipped;
+     this game walked its whole list, so the second run anybody played was the first run
+     again in the same sequence, one hundred per cent of it.
+     Drawn once per mount and held: recomputing on render would reshuffle the run under the
+     player between scenes, which is the bug the memo exists to prevent rather than a
+     performance nicety. */
+  const scenes = useMemo<TowardScene[]>(() => runScenes(), []);
+  const scene = scenes[Math.min(index, scenes.length - 1)];
   const awayCount = picks.filter((p) => p.move === 'away').length;
   const ground = groundFor(scene.mood, c.isDark);
 
@@ -89,7 +98,7 @@ export default function Toward() {
           scene={scene}
           awayCount={awayCount}
           index={index}
-          total={SCENES.length}
+          total={scenes.length}
           onBack={() => router.back()}
           onPick={(option) => {
             setPicks((p) => [...p, option]);
@@ -99,7 +108,7 @@ export default function Toward() {
           }}
           onPass={() => setPassed((n) => n + 1)}
           onNext={() => {
-            if (index + 1 < SCENES.length) setIndex(index + 1);
+            if (index + 1 < scenes.length) setIndex(index + 1);
             else {
               logPractice('toward');
               setPhase('done');
@@ -229,7 +238,7 @@ function PickValues({
 function Moment({
   scene, awayCount, index, total, onBack, onPick, onPass, onNext,
 }: {
-  scene: (typeof SCENES)[number];
+  scene: TowardScene;
   awayCount: number;
   index: number;
   total: number;
