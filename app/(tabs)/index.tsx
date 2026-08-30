@@ -13,7 +13,9 @@ import {
   TAB_BAR_HEIGHT, LAYOUT_MAX_WIDTH,
 } from '../../constants/theme';
 import { useStore } from '../../store/useStore';
-import { computeReclaimed, checkInsInLastDays, reclaimedCopy, previousWeekCheckIns } from '../../lib/reclaimed';
+import {
+  computeReclaimed, checkInsInLastDays, reclaimedCopy, previousWeekCheckIns, lifetimeReclaimed,
+} from '../../lib/reclaimed';
 import { weekProgress, recommendedAction, WEEKS_TOTAL } from '../../lib/protocol';
 import { milestoneCopy } from '../../lib/streak';
 import { lastSevenDays } from '../../lib/week';
@@ -24,7 +26,7 @@ import { markHardDayIntent } from '../../hooks/navIntent';
 import { SUPPORT_PILL_CLEARANCE } from '../_layout';
 import { effectiveWeek } from '../../lib/entitlement';
 import { useEntitlement } from '../../hooks/useEntitlement';
-import { orderOf } from '../../lib/plan';
+import { orderOf, progress, stoneFor, STAGE_AT } from '../../lib/plan';
 
 /* Today.
  *
@@ -57,6 +59,8 @@ export default function Today() {
   const checkedInToday = useStore((s) => s.checkedInToday)();
   const moments = useStore((s) => s.moments);
   const entitlement = useStore((s) => s.entitlement);
+  /* Read for lib/moments.ts, not for rendering — see the memo below. */
+  const measures = useStore((s) => s.measures);
 
   /* THE WEEK SHOWN, NOT NECESSARILY THE WEEK REACHED. A free user keeps earning — the
      counter in storage advances exactly as before and resumes at the real week the moment
@@ -110,10 +114,28 @@ export default function Today() {
      here is already individually subscribed, so this object changes exactly when one of the
      things nextMoment reads changes, and not before.
      Kept in a useMemo so the object identity is stable between renders that did not touch
-     any of them. lib/moments.ts reads these eight and nothing else. */
+     any of them.
+
+     ⚠ THE LIST HAS TO MATCH WHAT lib/moments.ts READS, AND IT DID NOT. The line here used to
+     say "lib/moments.ts reads these eight and nothing else", and that sentence was already
+     false when it was written: `measure-due` reads `state.measures`, which was absent, so
+     `dueMilestone` was handed `undefined` every time. It returns null on an absent history
+     rather than throwing, so the scheduled 30/60/90 re-measure silently never fired from
+     this screen — the exact bug lib/moments.ts's own docblock records finding once already,
+     back when `dueMilestone` had no caller at all. It had a caller and no data.
+     Then `measure-baseline` added a read of `state.profile`, which is not optional-chained
+     at every level, and the missing field stopped being silent: the home screen crashed to
+     CrashScreen on launch. That is how this was found — a screenshot, not a test, because
+     every test builds a COMPLETE state and only this screen builds a partial one.
+     __tests__/moments.test.mjs now derives the required list from lib/moments.ts and fails
+     if this object is missing any of it. Do not shorten it by hand. */
   const momentState = React.useMemo(
-    () => ({ checkIns, entitlement, mirrorSessions, moments, practice, protocol, streak, urgeLogs }),
-    [checkIns, entitlement, mirrorSessions, moments, practice, protocol, streak, urgeLogs],
+    () => ({
+      baseline, checkIns, entitlement, measures, mirrorSessions, moments, practice, profile,
+      protocol, streak, urgeLogs,
+    }),
+    [baseline, checkIns, entitlement, measures, mirrorSessions, moments, practice, profile,
+      protocol, streak, urgeLogs],
   );
 
   const moment = nextMoment({
@@ -184,6 +206,35 @@ export default function Today() {
    * A ROW THAT SCROLLS, not a second grid. Four more 48% tiles under the existing five reads
    * as a wall of equal choices, and the point of this row is that these four are not the same
    * kind of thing as "check in" — they are the thing to play. */
+  /* ---------- the record ----------
+   *
+   * THE ONE THING HERE THAT CANNOT FALL, and the reason to open this on day 200.
+   *
+   * Everything else on this screen is a rolling window or resets. `reclaimed.hours` is seven
+   * days and vanishes below three check-ins, so a fortnight away deletes the headline; the
+   * running streak went back to 1 and was taken off this screen for that reason. So there
+   * was no answer to "why open it in March", because nothing in the app accumulated. Daylio
+   * and Bearable both retain on exactly this and nothing else — the record is yours and it
+   * has 199 entries in it.
+   *
+   * `days` is DISTINCT DAYS, ALL TIME, and never revised down. Not the streak, which a gap
+   * resets; not sessions, which would pay somebody per action for staying in the app longer.
+   * It is the same count lib/moments.ts already uses, so a missed week subtracts nothing and
+   * two things in one day are worth what one is.
+   *
+   * The stone was drawn once, on the survey result screen, and never again — `stageOf`,
+   * `progress` and `STAGES` had no production call site at all. lib/plan.ts already argues
+   * this out against Deci 1999 and Six 2021: it is a memento given for arriving, not a
+   * payment for acts, which is why it is safe to put where a reward would not be. */
+  const practiceDays = new Set(practice.map((p) => p.date)).size;
+  const stone = stoneFor(profile.carrying);
+  const record = stone ? progress(stone, practiceDays) : null;
+  const lifetime = lifetimeReclaimed(baseline, checkIns);
+  /* The next rung, or null once past the last. Shown as a horizon, NEVER as a countdown with
+     a number attached — "N days to go" is a deadline, and a deadline is the thing a memento
+     must not become. */
+  const nextRung = STAGE_AT.find((d) => d > practiceDays) ?? null;
+
   const games = orderOf(profile.survey ?? {}).map((route) => {
     const key = route.replace('/game/', '') as 'curveball' | 'toward' | 'groundwork' | 'ballast';
     return { route, title: NAMES[key].title, sub: NAMES[key].sub };
@@ -336,6 +387,43 @@ export default function Today() {
               <IconBadge icon="arrow" size={56} />
             </View>
           </Pressable>
+
+          {/* ---------- the record ----------
+              A memento and a total, both monotonic. Below the games rather than above them
+              because it is a thing to notice, not a thing to do — and the moment it becomes
+              the first thing on the screen it starts reading as the point of opening the app,
+              which is when a memento turns into a score.
+              Rendered only once there is something to show: a stone at Rough with zero days
+              on day one is a scoreboard reading of somebody who has just arrived. */}
+          {record && record.days > 0 && (
+            <Frost style={{ marginTop: space.md }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.lg }}>
+                <View style={{ flex: 1 }}>
+                  <H3>{record.stone.name}</H3>
+                  {/* Stage and days on one line. The stage is the memento; the day count is
+                      the thing that cannot fall, and it is the one somebody checks. */}
+                  <Caption style={{ marginTop: 2 }}>
+                    {record.stage} · {record.days} {record.days === 1 ? 'day' : 'days'} here
+                  </Caption>
+                </View>
+              </View>
+              {/* NO COUNTDOWN. The next rung is named as somewhere the stone gets to, never
+                  as "N days to go" — a number counting down is a deadline, and a deadline is
+                  what this must never become. Absent once past the last rung. */}
+              {nextRung !== null && (
+                <Caption style={{ marginTop: space.sm, color: c.inkFaint }}>
+                  It keeps changing the longer you are here.
+                </Caption>
+              )}
+              {lifetime.hours > 0 && (
+                <Caption style={{ marginTop: space.sm }}>
+                  {lifetime.hours} hours you have already got back, across {lifetime.weeks}
+                  {lifetime.weeks === 1 ? ' week' : ' weeks'}. You cannot lose an hour you
+                  already got back.
+                </Caption>
+              )}
+            </Frost>
+          )}
 
           {/* Everything else, two up. */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.md }}>

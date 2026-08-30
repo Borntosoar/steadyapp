@@ -213,6 +213,22 @@ export function calmFor(worst: string | undefined | null): string {
   return Object.prototype.hasOwnProperty.call(FEATURED_CALM, k) ? FEATURED_CALM[k] : 'Breathe';
 }
 
+/** Somebody's stone, from the shape cached on their profile.
+ *
+ *  Only `carrying` is persisted — the stone itself is derived, so a content edit cannot
+ *  reassign anybody's months later. This is the read path for every screen after the survey.
+ *
+ *  Own-property guard for the same reason `calmFor` has one, and it is not theoretical:
+ *  `carrying` comes off disk through `strOrNull`, which accepts any string, so
+ *  `carrying: 'constructor'` would hand a screen the Object constructor to render and
+ *  `'__proto__'` would hand it Object.prototype. `??` catches neither, because neither is
+ *  nullish. Null for anything unrecognised — a person from before the survey existed has no
+ *  stone, and that is a real state rather than an error. */
+export function stoneFor(carrying: string | undefined | null): Stone | null {
+  const k = carrying ?? '';
+  return Object.prototype.hasOwnProperty.call(STONES, k) ? STONES[k as Carrying] : null;
+}
+
 export function planFor(a: Answers): Plan {
   const carrying = carryingOf(a);
   return {
@@ -243,12 +259,30 @@ export function planFor(a: Answers): Plan {
  * The stages are named for what happens to a stone rather than for a level, and there is no
  * final one: `stageOf` keeps returning the last stage forever. A progression that completes
  * tells somebody there is a point at which they are done, and there is not. */
-export const STAGES = ['Rough', 'Worked', 'Polished', 'Set'] as const;
+export const STAGES = ['Rough', 'Worked', 'Polished', 'Set', 'Weathered', 'Seamed', 'Bedrock'] as const;
 export type Stage = (typeof STAGES)[number];
 
 /** Days needed to reach each stage after the first. Widely spaced on purpose: the gap
- *  between them should be long enough that nobody is opening the app to close one. */
-export const STAGE_AT = [0, 7, 30, 90];
+ *  between them should be long enough that nobody is opening the app to close one.
+ *
+ *  ⚠ IT USED TO STOP AT NINETY, and the docblock above already said why that was wrong
+ *  without noticing that it was true: "there is no final one". `stageOf` does keep returning
+ *  the last stage forever, so nothing broke — but from day 90 onwards there was nothing
+ *  ahead, and a record with nothing ahead of it is exactly the day-200 problem. Somebody
+ *  three months in had reached the end of the only thing in this app that accumulates.
+ *
+ *  The three added rungs are 180, 365 and 730 — half a year, a year, two years. Deliberately
+ *  further apart than the first four, because the point of a horizon is that it stays a
+ *  horizon; a rung a fortnight out is a thing to chase, and chasing is what a memento must
+ *  never become. There is still no last one in practice: 730 days is longer than this app
+ *  has existed, and if anybody reaches it the honest response is to add another rung rather
+ *  than to have planned a finish line.
+ *
+ *  The names stay names for what happens to stone, never for a level or a rank, which
+ *  __tests__/survey.test.mjs checks. Weathered, Seamed and Bedrock are all things a stone
+ *  becomes by staying where it is through weather — which is the claim, and it is a true one.
+ *  None of them means "better than". */
+export const STAGE_AT = [0, 7, 30, 90, 180, 365, 730];
 
 export function stageOf(days: number): Stage {
   let i = 0;

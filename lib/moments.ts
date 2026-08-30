@@ -214,11 +214,35 @@ export function eligibleMoments(input: MomentInput, now: Date = new Date()): Mom
   const out: MomentId[] = [];
   const today = dayKey(now);
 
+  /* ---------- every read below tolerates absence ----------
+   *
+   * ⚠ THIS FUNCTION USED TO THROW ON SIX DIFFERENT MISSING FIELDS, and one of them reached
+   * production for a commit: `state.profile.measureSkippedAt` on a state with no profile
+   * rendered CrashScreen on launch. It was found in a screenshot, not by 1,484 passing tests,
+   * and the reason no test could find it is structural: every fixture in this repository
+   * builds a COMPLETE AppState, while `app/(tabs)/index.tsx` composes a partial one out of
+   * individually-subscribed store slices so the home screen does not re-render on every write
+   * anywhere in the app. The only caller that can produce the failing shape is the one place
+   * no unit test constructs.
+   *
+   * So the fix is not a guard on the field that happened to break. This is called from the
+   * launch screen, on a state assembled from disk by `normalise`, on installs older than
+   * fields that now exist. `lib/measure.ts`'s `completed()` already argues the principle at
+   * length: an absent history is an empty history, and that is a different thing from a crash
+   * on the screen somebody opens at 2am. The same rule now applies to all of it.
+   *
+   * `__tests__/moments.test.mjs` deletes each field in turn and asserts this does not throw,
+   * so a future read added without a guard fails there rather than in somebody's hand. */
+  const practice = state.practice ?? [];
+  const urgeLogs = state.urgeLogs ?? [];
+  const streak = state.streak ?? null;
+  const protocol = state.protocol ?? null;
+
   /* Practice DAYS, not practice events. `practice` holds one row per action, so a person
      who did ten things in their first sitting has `length === 10` on day one — which made
      `rate-app` fire at somebody with a single day of use, under a comment promising it
      would not. lib/storage.ts already counted it this way; this file did not. */
-  const practiceDays = new Set(state.practice.map((p) => p.date)).size;
+  const practiceDays = new Set(practice.map((p) => p.date)).size;
 
   /* Trial ending: two days out or closer, and not yet over.
      Read off the entitlement's own expiry rather than reconstructed from a start date and
@@ -226,23 +250,23 @@ export function eligibleMoments(input: MomentInput, now: Date = new Date()): Mom
      the trial length changes, when the store grants an extension, and when somebody's
      trial started on a different device. */
   const ent = state.entitlement;
-  if (ent.source === 'trial') {
+  if (ent?.source === 'trial') {
     const left = daysUntilExpiry(ent, now);
     if (left !== null && left <= 2 && left >= 0) out.push('trial-ending');
   }
 
   // Winback: has a history worth returning to, and has been gone ten days.
-  const lastPractice = state.streak.lastPracticeDate;
+  const lastPractice = streak?.lastPracticeDate;
   if (lastPractice && practiceDays >= 3) {
     if (daysBetween(lastPractice, today) >= 10) out.push('winback');
   }
 
   // Plateau: named in week four, before weeks five to eight arrive.
-  if (state.protocol.currentWeek >= 4 && state.protocol.currentWeek <= 5) out.push('plateau');
+  if ((protocol?.currentWeek ?? 0) >= 4 && (protocol?.currentWeek ?? 0) <= 5) out.push('plateau');
 
   // Month two: the evidence that keeps a subscription alive past the first renewal.
   const entitled = isEntitled(state.entitlement, now);
-  if (entitled && state.protocol.currentWeek >= 8 && input.reclaimedSampleSize >= 3) {
+  if (entitled && (protocol?.currentWeek ?? 0) >= 8 && input.reclaimedSampleSize >= 3) {
     out.push('month-two-proof');
   }
 
@@ -252,7 +276,7 @@ export function eligibleMoments(input: MomentInput, now: Date = new Date()): Mom
   }
 
   // Review: after real, sustained, self-evidently good use. Never on a thin account.
-  const resisted = state.urgeLogs.filter((u) => u.resisted).length;
+  const resisted = urgeLogs.filter((u) => u.resisted).length;
   if (practiceDays >= 10 && (resisted >= 3 || state.mirrorSessions.length >= 3)) {
     out.push('rate-app');
   }
@@ -281,9 +305,18 @@ export function eligibleMoments(input: MomentInput, now: Date = new Date()): Mom
    *
    * Ordered after `measure-due` so that if both were somehow true the scheduled re-measure
    * wins the priority sort, though in practice `dueMilestone` returns null without a
-   * baseline and the two are mutually exclusive. */
+   * baseline and the two are mutually exclusive.
+   *
+   * ⚠ `state.profile?.` AND NOT `state.profile.`, which is a crash this shipped with for one
+   * commit. Every test in this repository builds a COMPLETE AppState; the home screen builds
+   * a partial one out of individual store slices, and `profile` was not among them. So an
+   * unguarded read threw on launch and the app rendered CrashScreen — found by looking at a
+   * screenshot, which printed the message, and not by 1,484 passing tests.
+   * Everything else this function touches already tolerates absence: `completed()` in
+   * lib/measure.ts documents at length why an absent history is an empty history rather than
+   * a crash on the launch screen. This is the same rule, applied one field over. */
   if (practiceDays >= 2
-      && baselineOwed(state.measures, state.profile.measureSkippedAt, now.toISOString())) {
+      && baselineOwed(state.measures, state.profile?.measureSkippedAt, now.toISOString())) {
     out.push('measure-baseline');
   }
 
@@ -327,7 +360,7 @@ export function nextMoment(input: MomentInput, now: Date = new Date()): Moment |
   const today = dayKey(now);
   const moments = state.moments ?? {};
 
-  const hardDays = state.practice.filter((p) => p.kind === 'hard-day').map((p) => p.date);
+  const hardDays = (state.practice ?? []).filter((p) => p.kind === 'hard-day').map((p) => p.date);
   const suppressed = distressRecently(state.checkIns, hardDays, now);
 
   // One interruption a day, across the whole app. Published guidance puts the ceiling at

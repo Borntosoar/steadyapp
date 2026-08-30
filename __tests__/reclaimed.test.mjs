@@ -17,6 +17,8 @@ const {
   checkInsInLastDays,
   reclaimedByWeek,
   reclaimedCopy,
+  lifetimeReclaimed,
+  MIN_SAMPLE,
 } = mod;
 
 const baseline = {
@@ -222,5 +224,95 @@ describe('reclaimedCopy — tone safety', () => {
        safety regression. */
     assert.doesNotMatch(headline, /\d/, `a single check-in produced a number: "${headline}"`);
     assert.match(headline, /still|gathering|adding|starts/i, `headline does not say it is incomplete: "${headline}"`);
+  });
+});
+
+
+describe('lifetimeReclaimed — the one number here that cannot fall', () => {
+  /* WHY IT EXISTS. Every other figure in this app is a rolling window or resets:
+     `computeReclaimed` is seven days and disappears below MIN_SAMPLE check-ins, so a
+     fortnight away deletes the headline, and the running streak went back to 1 and was taken
+     off Today for the same reason. Nothing accumulated, so nothing answered "why open this
+     on day 200". `reclaimedByWeek`'s own docstring had promised a cumulative figure for
+     months and no such function existed.
+
+     The property that matters is MONOTONICITY: adding days must never reduce it. That is the
+     whole claim the copy makes — "you cannot lose an hour you already got back" — and it is
+     a claim about English as much as arithmetic, so it is tested rather than asserted in a
+     comment. */
+
+  /** `days` consecutive check-ins at `minutes`, starting at 2026-01-02. */
+  const run = (days, minutes, from = 1) =>
+    Array.from({ length: days }, (_, i) => {
+      const d = new Date(Date.UTC(2026, 0, from + 1 + i));
+      return ci(d.toISOString().slice(0, 10), minutes);
+    });
+
+  test('no baseline and no check-ins produce nothing rather than zero-as-a-claim', () => {
+    assert.deepEqual(lifetimeReclaimed(null, run(7, 120)), { hours: 0, weeks: 0 });
+    assert.deepEqual(lifetimeReclaimed(baseline, []), { hours: 0, weeks: 0 });
+  });
+
+  test('a thin week is not counted, because the app refuses to name that number anyway', () => {
+    /* `reclaimedCopy` will not state a figure below MIN_SAMPLE. A lifetime total built partly
+       from weeks the app declines to describe individually is that same refused number, said
+       louder and with more authority. */
+    const thin = lifetimeReclaimed(baseline, run(MIN_SAMPLE - 1, 120));
+    assert.equal(thin.weeks, 0);
+    assert.equal(thin.hours, 0);
+
+    const enough = lifetimeReclaimed(baseline, run(MIN_SAMPLE, 120));
+    assert.equal(enough.weeks, 1);
+    assert.ok(enough.hours > 0);
+  });
+
+  test('a heavy week is not netted off a good one', () => {
+    /* ⚠ THE RULE, AND IT IS A CLAIM ABOUT THE PAST RATHER THAN ABOUT ARITHMETIC. A week
+       worse than baseline has a negative figure. Subtracting it would mean the app taking
+       back hours somebody genuinely did get back in March because April was worse, under a
+       sentence saying they cannot lose them. The heavy weeks are not hidden — the signed
+       week-by-week chart ships beside this and contains every one. Two questions, two
+       numbers, both true. */
+    const good = run(7, 120);                 // well under the 240 baseline
+    const heavy = run(7, 400, 8);             // well over it
+    const both = lifetimeReclaimed(baseline, [...good, ...heavy]);
+    const goodOnly = lifetimeReclaimed(baseline, good);
+    assert.equal(both.hours, goodOnly.hours,
+      'a bad fortnight reduced hours the person had already got back');
+    assert.equal(both.weeks, goodOnly.weeks);
+  });
+
+  test('it never decreases as days are added — the property the copy promises', () => {
+    /* Walked rather than sampled. Mixes good weeks and heavy ones deliberately, because the
+       only way this goes backwards is a heavy week being allowed to subtract. */
+    const all = [...run(7, 120), ...run(7, 400, 8), ...run(7, 60, 15), ...run(7, 300, 22)];
+    let prev = -1;
+    for (let n = 0; n <= all.length; n += 1) {
+      const h = lifetimeReclaimed(baseline, all.slice(0, n)).hours;
+      assert.ok(h >= prev, `hours fell from ${prev} to ${h} after ${n} check-ins`);
+      prev = h;
+    }
+  });
+
+  test('the total is rounded once, at the end', () => {
+    /* ⚠ ASSERTS THE VALUE, NOT THE SHAPE, and that is a correction found by mutation. The
+       first version checked `r.hours === Math.round(r.hours * 10) / 10`, which is true of
+       any already-rounded number — including a total built by rounding every week first. It
+       passed happily against exactly the bug it was written for.
+       133 minutes a day against a 240 baseline is 12.5 hours a week, which is the discriminator:
+       three such weeks are 37.5 rounded once, and 39 if each week is rounded before summing.
+       Half an hour per week does not sound like much until it is a year of data, at which
+       point the headline number is out by a working day. */
+    const r = lifetimeReclaimed(baseline, [...run(7, 133), ...run(7, 133, 8), ...run(7, 133, 15)]);
+    assert.equal(r.weeks, 3);
+    assert.equal(r.hours, 37.5, 'the weekly figures were rounded before they were added up');
+  });
+
+  test('weeks counts the weeks that contributed, not the weeks that elapsed', () => {
+    /* Somebody who logged one good week, vanished for a month, then logged another should
+       read "2 weeks", not "6". The number is a count of their own record, and a gap is not
+       something they did. */
+    const r = lifetimeReclaimed(baseline, [...run(7, 120), ...run(7, 120, 29)]);
+    assert.equal(r.weeks, 2);
   });
 });

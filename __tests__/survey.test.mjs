@@ -309,18 +309,62 @@ describe('the stone is a memento, not a currency', () => {
   });
 
   test('progression is a record of days and nothing is ever spent or lost', () => {
-    assert.equal(stageOf(0), STAGES[0]);
-    assert.equal(stageOf(STAGE_AT[1]), STAGES[1]);
-    assert.equal(stageOf(STAGE_AT[2]), STAGES[2]);
-    assert.equal(stageOf(STAGE_AT[3]), STAGES[3]);
+    /* DERIVED FROM THE ARRAYS, not indexed by hand. This asserted STAGE_AT[1..3] against
+       STAGES[1..3] by literal index, so it described a four-rung ladder and would have gone
+       on passing while three more rungs sat untested. */
+    assert.equal(STAGES.length, STAGE_AT.length,
+      'a stage with no threshold, or a threshold with no stage');
+    STAGE_AT.forEach((days, i) => {
+      assert.equal(stageOf(days), STAGES[i], `${days} days should be ${STAGES[i]}`);
+      if (days > 0) {
+        assert.equal(stageOf(days - 1), STAGES[i - 1],
+          `the rung at ${days} days is reached a day early`);
+      }
+    });
     /* Never completes and never goes backwards. A progression that finishes tells somebody
        there is a point at which they are done. */
     assert.equal(stageOf(100000), STAGES[STAGES.length - 1]);
     let prev = -1;
-    for (let d = 0; d < 400; d++) {
+    for (let d = 0; d <= STAGE_AT[STAGE_AT.length - 1] + 50; d++) {
       const i = STAGES.indexOf(stageOf(d));
       assert.ok(i >= prev, `stage went backwards at ${d} days`);
       prev = i;
+    }
+  });
+
+  test('the ladder outlasts the twelve weeks by a long way', () => {
+    /* ⚠ THE DEFECT THIS REPLACES. STAGE_AT was [0, 7, 30, 90] — the last rung landed a week
+       after the twelve-week protocol ends. The docblock said "there is no final one" and
+       `stageOf` does keep returning the last stage forever, so nothing broke; but from day
+       90 there was nothing ahead, and a record with nothing ahead of it is the day-200
+       problem itself. Somebody three months in had finished the only thing here that
+       accumulates.
+       Checked against WEEKS_TOTAL rather than a literal 90, so shortening the protocol
+       cannot quietly satisfy this by moving the other end. */
+    const last = STAGE_AT[STAGE_AT.length - 1];
+    assert.ok(last >= 365,
+      `the last rung is ${last} days — somebody who stays a year has nothing ahead of them`);
+    assert.ok(STAGE_AT.length >= 6, 'the ladder has fewer rungs than it did');
+  });
+
+  test('the rungs get further apart, never closer', () => {
+    /* A horizon has to stay a horizon. Rungs that bunch up as somebody goes turn a memento
+       into a thing to chase, which is the mechanic lib/plan.ts spends sixty lines refusing. */
+    const gaps = STAGE_AT.slice(1).map((d, i) => d - STAGE_AT[i]);
+    gaps.forEach((g, i) => {
+      if (i > 0) {
+        assert.ok(g >= gaps[i - 1],
+          `the gap before rung ${i + 2} is ${g} days, shorter than the ${gaps[i - 1]} before it`);
+      }
+    });
+  });
+
+  test('no stage name is a level, a rank or a countdown', () => {
+    /* The same rule the stone names are held to, applied to the stages — three were added
+       and the guard covered only the stones. */
+    for (const name of STAGES) {
+      assert.doesNotMatch(name, /\b(tier|level|rank|grade|stage|pro|elite|master)\b|\d/i,
+        `"${name}" is a level with a mineral costume on`);
     }
   });
 

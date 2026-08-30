@@ -442,3 +442,61 @@ describe('the baseline moved out of onboarding and is still asked for', () => {
   });
 
 });
+
+describe('the home screen hands this module everything it reads', () => {
+  /* ⚠ THE BUG THIS EXISTS FOR, AND WHY 1,484 TESTS DID NOT FIND IT.
+   *
+   * Every test in this repository builds a COMPLETE AppState and passes it in. `app/(tabs)/
+   * index.tsx` does not: it composes a partial object out of individually-subscribed store
+   * slices, deliberately, so the screen does not re-render on every write anywhere in the
+   * app. That object carried a comment reading "lib/moments.ts reads these eight and nothing
+   * else", and the sentence was false when it was written — `measure-due` reads
+   * `state.measures`, which was absent. `dueMilestone` returns null on an absent history
+   * instead of throwing, so the scheduled 30/60/90 re-measure silently never fired from the
+   * home screen. Nothing failed. Nothing could.
+   *
+   * Then `measure-baseline` added a read of `state.profile`, the same field list was still
+   * short, and the missing field stopped being silent: the home screen threw on launch and
+   * rendered CrashScreen. It was found by looking at a screenshot, which printed the message.
+   *
+   * So this walks lib/moments.ts for every `state.X` it reads and insists the screen's object
+   * contains all of them. A hand-written list is a list of the fields somebody remembered,
+   * which is precisely how the first one got out of date. */
+
+  const code = (rel) => readFileSync(join(ROOT, rel), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(?<!:)\/\/.*$/gm, '');
+
+  test('every state field lib/moments.ts reads is in the home screen momentState', () => {
+    const reads = [...new Set(
+      [...code('lib/moments.ts').matchAll(/\bstate\.([a-zA-Z][a-zA-Z0-9]*)/g)].map((m) => m[1]),
+    )].sort();
+    assert.ok(reads.length >= 8, `only ${reads.length} state reads found — has the walk broken?`);
+
+    const home = code('app/(tabs)/index.tsx');
+    const memo = home.slice(home.indexOf('const momentState'), home.indexOf('const moment = nextMoment'));
+    assert.ok(memo.length > 0, 'momentState is gone from app/(tabs)/index.tsx');
+
+    const missing = reads.filter((f) => !new RegExp(`\\b${f}\\b`).test(memo));
+    assert.deepEqual(missing, [],
+      `lib/moments.ts reads these and the home screen does not pass them: ${missing.join(', ')}`);
+  });
+
+  test('eligibleMoments is total over a partial state', () => {
+    /* The other half, and the one that actually stops a crash screen. The guard above keeps
+       the two lists in step; this says that falling out of step is not fatal. A person whose
+       stored payload predates a field — an old install, a partial import, anything mid
+       migration — must not be shown a crash screen on launch. lib/measure.ts's `completed()`
+       makes exactly this argument for exactly this reason. */
+    const full = baseAppState();
+    for (const field of Object.keys(full)) {
+      const partial = { ...full };
+      delete partial[field];
+      assert.doesNotThrow(
+        () => eligibleMoments(qualifiedForAsk(partial)),
+        `eligibleMoments throws when "${field}" is missing, which is a crash screen on launch`,
+      );
+    }
+    assert.doesNotThrow(() => eligibleMoments(qualifiedForAsk({})), 'an empty state throws');
+  });
+});

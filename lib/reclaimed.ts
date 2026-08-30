@@ -153,7 +153,23 @@ export function checkInsInLastDays(checkIns: CheckIn[], days: number, now = new 
   return checkIns.filter((c) => c.date >= lo && c.date <= hi);
 }
 
-/** Cumulative hours reclaimed across the whole history, week by week.
+/** The fewest check-ins in a window before this file will state a figure at all.
+ *
+ *  It was the bare number 3, in `reclaimedCopy` only. `lifetimeReclaimed` needs the same
+ *  threshold for the same reason — a lifetime total built partly out of weeks the app
+ *  refuses to name individually is a number it has declined to say, said louder — and two
+ *  copies of a rule is how the two answers drift. Three because two points is a line and a
+ *  line is not a week. */
+export const MIN_SAMPLE = 3;
+
+/** Hours reclaimed PER WEEK across the whole history.
+ *
+ *  ⚠ NOT CUMULATIVE, and this line used to say it was. Each entry is that week's own figure,
+ *  and every consumer treats it that way — the chart plots one bar per week. The word was
+ *  wrong for long enough that a council seat read it, went looking for the running total it
+ *  promised, and found the function did not exist. `lifetimeReclaimed` below is that
+ *  function, written because the docstring had already committed the app to it.
+ *
  *  Used by the hero chart on /insights. */
 export function reclaimedByWeek(
   baseline: Baseline | null,
@@ -187,6 +203,42 @@ export function reclaimedByWeek(
     }));
 }
 
+/** Hours already got back, across the whole history. The one number here that cannot fall.
+ *
+ *  WHY THIS EXISTS. Every figure this app puts in front of somebody is a rolling window or
+ *  resets. `computeReclaimed` is seven days and disappears below three check-ins, so a
+ *  fortnight away deletes the product from the home screen; the running streak went back to
+ *  1 and was removed from Today for that reason. So there was no answer to "why open this on
+ *  day 200", because nothing in it accumulated. Daylio and Bearable both retain on exactly
+ *  this — the record is yours and it has 199 entries in it — and this app had the engine for
+ *  it and no function.
+ *
+ *  ⚠ POSITIVE WEEKS ONLY, AND THAT IS A CLAIM ABOUT ENGLISH RATHER THAN ARITHMETIC. A heavy
+ *  week has a negative figure, and netting it off would mean the app taking back hours
+ *  somebody genuinely did get back in March because April was worse. "Hours you have already
+ *  got back" is a statement about the past, and the past does not un-happen. The heavier
+ *  weeks are not hidden: the signed week-by-week chart ships alongside this on Progress and
+ *  includes every one of them. Two different questions, two different numbers, both true.
+ *
+ *  Only weeks with enough check-ins to state a figure at all are counted — `reclaimedCopy`
+ *  already refuses to name a number below three, and a lifetime total built partly from
+ *  thin weeks would be a number the app declines to say, said louder. */
+export function lifetimeReclaimed(
+  baseline: Baseline | null,
+  checkIns: CheckIn[],
+): { hours: number; weeks: number } {
+  const weekly = reclaimedByWeek(baseline, checkIns).filter(
+    (w) => w.sampleSize >= MIN_SAMPLE && w.hours > 0,
+  );
+  const hours = weekly.reduce((n, w) => n + w.hours, 0);
+  return {
+    /* Rounded once, at the end. Summing pre-rounded weekly figures drifts by up to half an
+       hour per week, which on a year of data is a headline number wrong by a working day. */
+    hours: Math.round(hours * 10) / 10,
+    weeks: weekly.length,
+  };
+}
+
 /**
  * Copy for the home card.
  *
@@ -201,7 +253,7 @@ export function reclaimedCopy(r: ReclaimedResult, _firstName?: string): {
   sub: string;
 } {
   if (!r.hasData) return RECLAIMED_COPY.empty;
-  if (r.sampleSize < 3) return RECLAIMED_COPY.gathering(r.sampleSize);
+  if (r.sampleSize < MIN_SAMPLE) return RECLAIMED_COPY.gathering(r.sampleSize);
 
   if (r.direction === 'up') return RECLAIMED_COPY.positive(Math.abs(r.hours));
 

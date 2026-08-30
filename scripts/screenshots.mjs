@@ -84,6 +84,14 @@ const seed = () => ({
     onboardedAt: iso(30),
     disclaimerAcceptedAt: iso(30),
     supportRegion: 'us',
+    /* Somebody who answered the opening survey, which by day 30 almost everybody has. It was
+       absent, so this seed rendered a person with no survey behind them — and that quietly
+       hid two things from every screenshot ever taken: the games row is ORDERED by the
+       survey, and the record card needs a stone, which `stoneFor(undefined)` does not give.
+       A seed that cannot show a feature is a seed nobody can review one with. */
+    survey: { brought: 'spirals', tried: 'apps', worst: 'night' },
+    carrying: 'spirals',
+    surveyedAt: iso(30),
   },
   baseline: { capturedAt: iso(30), preoccupationMinutes: 240, urge: 8, avoidance: 'significant', suds: 8 },
   checkIns: Array.from({ length: 16 }, (_, n) => ({
@@ -212,6 +220,25 @@ const browser = await chromium.launch({
 
 let failures = 0;
 
+/** Did this page render CrashScreen instead of the app?
+ *
+ *  ⚠ THE `pageerror` LISTENER BELOW CANNOT SEE THIS, and that is the whole reason this
+ *  exists. React's error boundary CATCHES the throw, renders CrashScreen, and never lets it
+ *  reach `window.onerror` — so `errors` stays empty, `failures` stays 0, and the script
+ *  prints "Wrote 38 screenshots" and exits 0 while every image is a crash screen. That is
+ *  exactly what happened: a missing `state.profile` threw on the home screen, the capture
+ *  reported complete success, and it was caught by a human looking at a PNG.
+ *
+ *  A screenshot tool that cannot tell a rendered app from a rendered crash is worse than no
+ *  screenshot tool, because it produces confident evidence of the wrong thing. Checked in
+ *  the DOM, against the heading CrashScreen actually renders. */
+const crashedText = async (page) => {
+  const t = await page.evaluate(() => document.body.innerText || '');
+  return t.includes('Something went wrong') && t.includes('This is the app failing')
+    ? (t.match(/Cannot read[^\n]*|[A-Za-z]*Error[^\n]*/) ?? ['unknown error'])[0]
+    : null;
+};
+
 for (const device of DEVICES) {
   for (const scheme of SCHEMES) {
     const ctx = await browser.newContext({
@@ -259,11 +286,17 @@ for (const device of DEVICES) {
           const part = file.replace(/\.png$/, steps > 1 ? `-${i + 1}.png` : '.png');
           await page.screenshot({ path: part });
         }
-        process.stdout.write(`${device.name}/${scheme}  ${shot.name} (${steps} frames)\n`);
+        const crashFull = await crashedText(page);
+        if (crashFull) errors.push(`${shot.route} rendered CrashScreen: ${crashFull}`);
+        process.stdout.write(
+          `${device.name}/${scheme}  ${shot.name} (${steps} frames)${crashFull ? '  ✗ CRASHED' : ''}\n`,
+        );
         continue;
       }
+      const crash = await crashedText(page);
+      if (crash) errors.push(`${shot.route} rendered CrashScreen: ${crash}`);
       await page.screenshot({ path: file });
-      process.stdout.write(`${device.name}/${scheme}  ${shot.name}\n`);
+      process.stdout.write(`${device.name}/${scheme}  ${shot.name}${crash ? '  ✗ CRASHED' : ''}\n`);
     }
 
     if (errors.length) {
