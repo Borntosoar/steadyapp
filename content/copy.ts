@@ -225,6 +225,70 @@ export const MOMENT_COPY = {
   },
 };
 
+/* ---------- notifications ----------
+ *
+ * ⚠ THESE ARE THE ONLY STRINGS THIS APP WILL EVER PUT ON SOMEBODY'S LOCK SCREEN, and they
+ * live here rather than beside the scheduler for one specific reason: __tests__/copy.test.mjs
+ * already walks this entire export for shaming language, appearance references and
+ * exclamation marks, and __tests__/readability.test.mjs holds it to eighth grade. Putting
+ * them here means the hardest surface in the product is covered by the guards that already
+ * exist, on the day it ships, rather than by a new set somebody has to remember to write.
+ *
+ * A notification to somebody with body dysmorphia, arriving at nine in the evening while
+ * they are doing something else, is not a neutral object. Three rules the scheduler cannot
+ * enforce and these strings must:
+ *
+ *   · NO COUNT AND NO STREAK. Not "day 12", not "you have not checked in for a while", not
+ *     "keep it going". lib/streak.ts's `returningCopy` is the model — forward-looking, and
+ *     it never accounts for time away. A number on a lock screen is a scoreboard read by
+ *     somebody who did not ask for one.
+ *   · NO QUESTION ABOUT HOW THEY LOOK OR FEEL. The check-in asks those; the notification
+ *     only says the door is open. Asking "how are you feeling?" from a lock screen is a
+ *     demand for an answer at a moment nobody chose.
+ *   · IT SAYS WHAT IT WANTS AND HOW LONG IT TAKES. Somebody deciding whether to tap should
+ *     not have to open the app to find out what it is asking for. */
+
+export const NOTIFY_COPY = {
+  /* The daily check-in. Thirty seconds is the real figure — four questions, one tap each —
+     and it is on the tile on Today, so it matches what they already know. */
+  checkin: {
+    title: 'Thirty seconds, if you have them',
+    body: 'The four questions, whenever suits. Nothing here is owed.',
+  },
+  /* The Groundwork follow-up. content/groundwork.ts promises this in writing and nothing
+     could deliver it: "THE SECOND HALF IS THE PART THAT MATTERS AND IT HAPPENS TOMORROW".
+     NOT "did you do it?" — the game's own answer set includes "Something else did instead"
+     as a real outcome, so a question shaped like a compliance check would contradict it. */
+  groundwork: {
+    title: 'You kept one thing for today',
+    body: 'Whatever became of it is worth a moment. All three answers are answers.',
+  },
+  /* The only notification here about money, and it exists because app/paywall.tsx promises
+     it and then apologises in a comment for keeping the promise only for people who happen
+     to open the app that week. Says the date, the amount and where to stop it. */
+  trialEnding: {
+    title: 'Your free month ends soon',
+    body: 'You will be charged unless you cancel first. Nothing else changes, and the free parts stay free.',
+  },
+  /* The permission ask, shown on a screen of its own AFTER a first completed session — never
+     during onboarding, where nobody has a basis to answer and the permission gets burned. */
+  ask: {
+    title: 'Would a reminder help?',
+    body: 'One a day, at a time you pick, saying nothing more than that the door is open. No counts, no streaks, and nothing at all on a hard day.',
+    accept: 'Pick a time',
+    /* Rule 7. Same weight as the accept, and it says what it does. */
+    decline: 'No reminders',
+  },
+  /* Shown beside the time picker. Says the things people worry about before they have to
+     ask, because the alternative is somebody declining to be safe. */
+  settings: {
+    title: 'Reminders',
+    body: 'Only ever from this phone. Nothing is sent anywhere, and you can turn them off here at any time.',
+    none: 'None',
+    groundwork: 'Remind me about what I kept for tomorrow',
+  },
+};
+
 /* ---------- storage health ----------
  *
  * The app holds the only copy of everything the user has written and there is no server to

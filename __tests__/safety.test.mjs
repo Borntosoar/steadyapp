@@ -377,6 +377,24 @@ describe('the source tree is what SAFETY.md says it is', () => {
        networking half is never touched. Admitted deliberately, with a guard, rather than
        waved through. */
     'expo-file-system',
+    /* ⚠ expo-notifications WAS ON THE BANNED LIST BELOW, beside Sentry, Firebase and
+       Amplitude, under a heading about dependencies that phone home. That was a category
+       error and it cost the product its entire re-engagement layer.
+       The package has two halves. `getExpoPushTokenAsync` and `getDevicePushTokenAsync`
+       register the device with a remote push service — that half genuinely does phone home,
+       to Expo's servers, and would break the sentence on onboarding screen one. LOCAL
+       scheduling — `scheduleNotificationAsync` with a time trigger — never registers a token,
+       never opens a socket, and never leaves the device: it hands the OS a string and a time
+       and the OS shows it. iOS treats a local notification exactly as it treats an alarm.
+       So this is admitted the way expo-file-system was: named, with the dangerous half
+       enumerated, and a test below asserting that half is never referenced. Plus a check
+       that app.json declares no `aps-environment` entitlement, because remote push cannot
+       work without one and its absence is a second, independent proof.
+       What it buys: the app had NO way to reach somebody who had left. `lib/moments.ts`
+       computes a `winback` for a person ten days absent and every moment renders inside a
+       mounted screen, so the winback could only fire once the user had already come back.
+       The trial-ending warning the paywall promises in writing had the same shape. */
+    'expo-notifications',
     'expo-haptics',
     'expo-linear-gradient',
     'expo-router',
@@ -499,7 +517,7 @@ describe('the source tree is what SAFETY.md says it is', () => {
        green for a whole commit before the import lands. */
     const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
     const banned =
-      /sentry|bugsnag|datadog|logrocket|amplitude|mixpanel|segment|posthog|firebase|appsflyer|branch|analytics|expo-updates|expo-notifications|expo-tracking-transparency|device-info|ngrok/i;
+      /sentry|bugsnag|datadog|logrocket|amplitude|mixpanel|segment|posthog|firebase|appsflyer|branch|analytics|expo-updates|expo-tracking-transparency|device-info|ngrok/i;
     for (const name of Object.keys(pkg.dependencies ?? {})) {
       assert.doesNotMatch(name, banned, `${name} is a shipped dependency that reaches the network`);
     }
@@ -575,6 +593,36 @@ describe('the source tree is what SAFETY.md says it is', () => {
     const card = FILES.find((f) => f.path === 'components/MomentCard.tsx');
     assert.match(card.src, /StoreReview\.requestReview/, 'the review prompt does nothing');
     assert.match(card.src, /isAvailableAsync/, 'the review prompt is not guarded');
+  });
+
+  test('notifications are scheduled locally, never registered for remote push', () => {
+    /* The other half of admitting expo-notifications to the allowlist above, and the reason
+       it could be admitted at all. The allowlist is name-based and cannot tell which half of
+       a package is in use; these four calls are the entire remote surface. Any one of them
+       turns a local alarm into a device registered with Expo's push service, which is a
+       network call, an identifier leaving the phone, and a broken promise on onboarding
+       screen one. */
+    const forbidden =
+      /getExpoPushTokenAsync|getDevicePushTokenAsync|addPushTokenListener|unregisterForNotificationsAsync|registerTaskAsync/;
+    for (const f of FILES) {
+      /* Stripped, not raw: lib/notify.ts names these four in a comment explaining why it
+         must never call them, and a guard that fails on its own explanation is a guard
+         people learn to route around. */
+      assert.doesNotMatch(withoutComments(f.src), forbidden,
+        `${f.path} registers this device for REMOTE push. Local scheduling only.`);
+    }
+  });
+
+  test('the manifest asks for no push entitlement', () => {
+    /* Independent of the source check above, and stronger, because it is what the OS itself
+       enforces: remote push cannot function without `aps-environment`. If this stays absent
+       then even a mistake in the source cannot deliver a remote notification. */
+    const app = JSON.parse(readFileSync(join(ROOT, 'app.json'), 'utf8'));
+    const asJson = JSON.stringify(app);
+    assert.doesNotMatch(asJson, /aps-environment/,
+      'app.json requests the push entitlement, which only remote notifications need');
+    assert.doesNotMatch(asJson, /"remote-notification"/,
+      'app.json declares the remote-notification background mode');
   });
 
   test('the file-system module is used for files, never for transfers', () => {

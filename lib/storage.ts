@@ -34,6 +34,7 @@ import { WEEKS_TOTAL } from './protocol.ts';
    compile happily while drifting apart. `MOMENTS` comes across for the same reason — the
    moment ids are a closed set and normalise() rejects stored keys outside it. */
 import { emptyMomentRecord, MOMENTS } from './moments.ts';
+import { defaultSettings } from './notify.ts';
 import { emptyEntitlement, type Entitlement } from './entitlement.ts';
 import { DUE_DAYS } from './measure.ts';
 import { PHQ8, GAD7 } from '../content/measure.ts';
@@ -89,6 +90,7 @@ export const emptyState = (): AppState => ({
   moments: {},
   measures: [],
   entitlement: emptyEntitlement(),
+  notify: defaultSettings(),
 });
 
 /* ---------- migrations ----------
@@ -347,6 +349,26 @@ export function normalise(parsed: unknown): AppState {
     };
   }
 
+  /* Reminder settings, validated rather than trusted.
+   *
+   * `permitted` is the field that matters here and it is deliberately NOT taken on trust from
+   * disk in the sense that matters: it records what the OS last told us, and the wrapper
+   * re-asks the OS before scheduling anything. A hand-edited `permitted: true` therefore buys
+   * nothing — iOS still refuses to schedule without a real grant.
+   * `dailyTime` is clamped to a real minute of a real day. A stored 99999 would otherwise
+   * produce a Date with an hour of 1666, which `scheduleNotificationAsync` rejects, silently,
+   * for every notification in the batch. */
+  const notifyRaw = obj(p.notify);
+  const notify = {
+    dailyTime:
+      typeof notifyRaw.dailyTime === 'number' && Number.isFinite(notifyRaw.dailyTime)
+        ? Math.min(24 * 60 - 1, Math.max(0, Math.round(notifyRaw.dailyTime)))
+        : null,
+    groundwork: bool(notifyRaw.groundwork, true),
+    permitted: bool(notifyRaw.permitted, false),
+    askedAt: strOrNull(notifyRaw.askedAt),
+  };
+
   const profile = obj(p.profile);
   const streak = obj(p.streak);
   const protocol = obj(p.protocol);
@@ -354,6 +376,7 @@ export function normalise(parsed: unknown): AppState {
   const plan = obj(protocol.relapsePlan);
 
   return {
+    notify,
     profile: {
       firstName: typeof profile.firstName === 'string' ? profile.firstName : undefined,
       /* Both from step five of onboarding. `practiceDaysPerWeek` is left undefined rather

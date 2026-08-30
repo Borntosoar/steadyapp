@@ -168,6 +168,7 @@ const SHOTS = [
   { route: '/plan', name: '13-plan' },
   { route: '/measure', name: '18-measure' },
   { route: '/still', name: '19-still' },
+  { route: '/reminders', name: '20-reminders' },
   { route: '/game/curveball', name: '14-curveball' },
   { route: '/game/toward', name: '15-toward' },
   { route: '/game/ballast', name: '16-ballast' },

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { NotifySettings } from '../lib/notify';
 import type {
   AppState,
   Baseline,
@@ -54,6 +55,9 @@ interface StoreApi extends AppState {
   saveMeasure: (phq8: number[], gad7: number[], milestone: number | null) => void;
   /** They said not now. Stamped so `baselineOwed()` re-offers once and then stops. */
   skipMeasure: () => void;
+  /** Record what the person chose about reminders. `permitted` is what the OS said, not
+   *  what we would like; the wrapper asks the OS first and passes the answer through. */
+  setNotify: (patch: Partial<NotifySettings>) => void;
   /** The ONLY writer of the entitlement cache. Everything else projects it. */
   setEntitlement: (e: Entitlement) => void;
   momentShown: (id: MomentId) => void;
@@ -292,6 +296,15 @@ export const useStore = create<StoreApi>((set, get) => ({
 
   skipMeasure: () => {
     set((s) => ({ profile: { ...s.profile, measureSkippedAt: new Date().toISOString() } }));
+    persist(get, set);
+  },
+
+  setNotify: (patch) => {
+    /* `askedAt` is stamped by the caller rather than here, because "the ask was shown" and
+       "they chose something" are different events and only the first must be recorded even
+       when the answer was no. See lib/notify.ts rule 7 — a decline is an answer and the app
+       does not get to ask again. */
+    set((s) => ({ notify: { ...s.notify, ...patch } }));
     persist(get, set);
   },
 

@@ -1,3 +1,4 @@
+import type { NotifySettings } from '../lib/notify';
 import type { Entitlement } from '../lib/entitlement';
 
 /* Anneal — domain types.
@@ -271,6 +272,13 @@ export interface AppState {
    *  keyed by MomentId. See lib/moments.ts. Persisted so a "no" survives a restart — a
    *  dismissal the app forgets overnight is not a dismissal, it is a delay. */
   moments: Record<string, MomentRecord>;
+
+  /** Local reminder preferences. See lib/notify.ts for what may fire and what may not.
+   *
+   *  Persisted for the same reason a dismissal is: a "no reminders" the app forgets overnight
+   *  is not an answer, it is a delay — and this particular no is about being contacted, which
+   *  is the one people mind most about being asked twice. */
+  notify: NotifySettings;
 
   /** Sittings of PHQ-8 and GAD-7. Do NOT trust insertion order — sort with `completed()` in
    *  lib/measure.ts, because an imported backup can arrive in any order.

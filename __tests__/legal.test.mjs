@@ -512,6 +512,11 @@ describe('the published policies name everything the app stores', () => {
     baseline: /check-in|start/i,
     profile: /first name|settings/i,
     entitlement: /purchase|tier|subscription/i,
+    /* Local reminders. It is a preference rather than something the person wrote, but it is
+       still a fact ABOUT them held on the device — what time of day they asked to be
+       interrupted — so it is described rather than excluded. The row also states the thing a
+       reader will actually want to know, which is that no reminder involves a server. */
+    notify: /reminder/i,
   };
 
   /** Keys that hold no personal data, with the reason. Excluding one is a deliberate edit. */

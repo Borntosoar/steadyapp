@@ -22,11 +22,14 @@ import { lastSevenDays } from '../../lib/week';
 import { nextMoment } from '../../lib/moments';
 import { MODULES } from '../../content/modules';
 import { NAMES, EXPLAIN } from '../../content/names';
+import { NOTIFY_COPY } from '../../content/copy';
 import { markHardDayIntent } from '../../hooks/navIntent';
 import { SUPPORT_PILL_CLEARANCE } from '../_layout';
 import { effectiveWeek } from '../../lib/entitlement';
 import { useEntitlement } from '../../hooks/useEntitlement';
 import { orderOf, progress, stoneFor, STAGE_AT } from '../../lib/plan';
+import { askOwed } from '../../lib/notify';
+import { useNotifications } from '../../hooks/useNotifications';
 
 /* Today.
  *
@@ -61,6 +64,32 @@ export default function Today() {
   const entitlement = useStore((s) => s.entitlement);
   /* Read for lib/moments.ts, not for rendering — see the memo below. */
   const measures = useStore((s) => s.measures);
+  const notify = useStore((s) => s.notify);
+
+  /* ---------- reminders ----------
+   *
+   * Two effects, and they are separate because rule 4 in lib/notify.ts needs them to be.
+   *
+   * `sync` replaces the whole queue with what the current state says should be queued, so a
+   * check-in this evening clears tonight's reminder rather than letting it fire at somebody
+   * who has already done the thing.
+   *
+   * `suppress` is the half that would be forgotten. A notification is handed to the OS AHEAD
+   * of time and fires while the app is closed, so refusing to schedule on a bad day only
+   * covers a person who was already having one when the planner last ran. Somebody who was
+   * fine this morning, queued a 9pm reminder, and recorded a hard day at six has one sitting
+   * in the OS with nothing to stop it. This pulls it back.
+   *
+   * Both are no-ops on web and both swallow their own failures — a scheduling API that
+   * throws must never take the home screen down with it. */
+  const { sync: syncNotifications, suppress: suppressNotifications } = useNotifications();
+  const notifyKey = `${notify.permitted}:${notify.dailyTime}:${notify.groundwork}`;
+  React.useEffect(() => {
+    void syncNotifications(useStore.getState() as never, notify);
+  }, [notifyKey, checkIns.length, practice.length, entitlement, syncNotifications]);
+  React.useEffect(() => {
+    void suppressNotifications(useStore.getState() as never);
+  }, [checkIns.length, practice.length, suppressNotifications]);
 
   /* THE WEEK SHOWN, NOT NECESSARILY THE WEEK REACHED. A free user keeps earning — the
      counter in storage advances exactly as before and resumes at the real week the moment
@@ -395,6 +424,31 @@ export default function Today() {
               which is when a memento turns into a score.
               Rendered only once there is something to show: a stone at Rough with zero days
               on day one is a scoreboard reading of somebody who has just arrived. */}
+          {/* ---------- the reminders ask ----------
+              A CARD, NOT A REDIRECT, and not the OS sheet. Three separate refusals, all from
+              lib/notify.ts rule 6 and 7:
+              · It is not in onboarding. Nobody can answer "would a reminder help" before they
+                have used the thing, and the OS permission can only be spent once.
+              · It does not open the system sheet from here. Tapping through goes to a screen
+                that explains what would fire and what never would; the OS is asked only after
+                somebody picks a time, so declining leaves the permission unspent.
+              · It appears once. `askOwed` is false the moment `askedAt` is stamped, whichever
+                way they answered. */}
+          {askOwed({ practice } as never, notify) && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${NOTIFY_COPY.ask.title}. ${NOTIFY_COPY.ask.body}`}
+              onPress={() => router.push('/reminders')}
+              style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+            >
+              <Frost style={{ marginTop: space.md }}>
+                <Caption style={{ color: c.accentDeep }}>One small thing</Caption>
+                <H3 style={{ marginTop: 2 }}>{NOTIFY_COPY.ask.title}</H3>
+                <BodySm style={{ marginTop: space.xs }}>{NOTIFY_COPY.ask.body}</BodySm>
+              </Frost>
+            </Pressable>
+          )}
+
           {record && record.days > 0 && (
             <Frost style={{ marginTop: space.md }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.lg }}>

@@ -79,12 +79,13 @@ What is in that record:
 | Urge logs | what set it off, what you wanted to do, how strong it was, whether you rode it out |
 | Two questionnaires | your answers to PHQ-8 and GAD-7 — fifteen questions about how the last two weeks have been — taken when you start and about once a month after, with the date of each |
 | Settings | your first name if you gave one, which country's crisis lines to show, that you read the disclaimer, and whether you declined the questionnaires |
+| Reminder settings | whether you asked for a daily reminder, the time of day you picked, and whether you want the follow-up about what you kept for tomorrow. The reminders are set by your phone and nothing about them is sent anywhere |
 | Purchase state | which tier you are on and when it runs out |
 
 <!-- SOURCE: lib/storage.ts normalise() rebuilds the whole persisted shape field by field —
      profile, baseline, checkIns, urgeLogs, thoughtRecords, mirrorSessions, experiments,
      practice, commitments, tracks, streak, protocol (incl. relapsePlan), readModules,
-     moments, measures, entitlement. That function is an exhaustive list of what can be
+     moments, measures, entitlement, notify. That function is an exhaustive list of what can be
      stored.
 
      ⚠ THIS LIST WENT STALE IN THREE PLACES BEFORE ANYBODY NOTICED — `commitments`, `tracks`
