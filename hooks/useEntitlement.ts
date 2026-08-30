@@ -11,22 +11,29 @@
  * false, so a refund, an expiry, a cancellation or a failed renewal all left a permanent
  * grant behind. Access is now a question asked fresh against a timestamped cache.
  *
- * REVENUECAT INTEGRATION
+ * REVENUECAT, WIRED
  *
- * Three functions below are stubs and all three are marked. Replacing them is the entire
- * integration; nothing outside this file needs to change, because every consumer reads
- * `entitled` and `isGated` rather than touching the cache.
+ * These were three stubs and `purchase()` granted access to anybody who tapped it, with no
+ * StoreKit and no receipt — a Guideline 2.1 rejection, and the reason `npm run preflight`
+ * refused to build a release. They are real calls now:
  *
  *   configure  → Purchases.configure({ apiKey })                    (once, at launch)
  *   refresh    → Purchases.getCustomerInfo()                        (launch + foreground)
  *   purchase   → Purchases.purchasePackage(pkg)
  *   restore    → Purchases.restorePurchases()
  *
- * Each returns a CustomerInfo; map `customerInfo.entitlements.active[ENTITLEMENT_ID]` onto
- * `ProviderEntitlement` and hand it to `projectFromProvider`. The mapping is pure and
- * already tested, so the only untested surface left is the SDK call itself.
+ * Each returns a CustomerInfo, which `toProvider` maps onto `ProviderEntitlement` for
+ * `projectFromProvider`. That mapping is pure and already tested, so the only untested
+ * surface is the SDK call itself.
  *
- * WHAT MUST NOT CHANGE WHEN THAT HAPPENS
+ * ⚠ THE API KEY IS NOT IN THIS FILE AND MUST NOT BE. It comes from `expo.extra
+ * .revenueCatIosKey` in app.json, which is null until somebody with a RevenueCat account
+ * fills it in. A null key means `configured` stays false, every call below returns null, and
+ * the app behaves exactly as it did with the stubs — no purchases, nothing granted. That is
+ * the correct failure: an app that cannot reach a payment provider must sell nothing rather
+ * than give everything away, which is what the stub did.
+ *
+ * WHAT MUST NOT CHANGE
  *
  *   - No AppState-derived value may be sent as a subscriber attribute. Not the reclaimed
  *     figure, not a distress rating, not a streak. SAFETY.md §6 says nothing leaves the
@@ -38,6 +45,9 @@
  */
 
 import { useCallback } from 'react';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
+import Purchases, { type CustomerInfo, type PurchasesPackage } from 'react-native-purchases';
 import { useStore } from '../store/useStore';
 import {
   isEntitled,
@@ -62,18 +72,82 @@ export const ENTITLEMENT_ID = 'anneal_plus';
  * unable to resolve `steady_plus_onetime`, one of the three products in the price table.
  * Policy that decides what somebody has bought belongs in the file that already calls itself
  * "the single place that decides", where a test can reach it. */
-/** REVENUECAT INTEGRATION POINT — replace with a real `getCustomerInfo()` call.
+/** The store-facing half. Absent on web, and absent until a key exists.
+ *
+ *  `Platform.OS` because there is no StoreKit in a browser and `scripts/screenshots.mjs`
+ *  drives the real web build — an SDK call that throws on launch there is a crash screen in
+ *  every image, which is a failure this repository has already shipped once. */
+const API_KEY: string | null =
+  (Constants.expoConfig?.extra as { revenueCatIosKey?: string | null } | undefined)
+    ?.revenueCatIosKey ?? null;
+
+const SUPPORTED = (Platform.OS === 'ios' || Platform.OS === 'android') && !!API_KEY;
+
+let configured = false;
+
+/** Configure once. Idempotent, and quiet when there is nothing to configure. */
+async function ensureConfigured(): Promise<boolean> {
+  if (!SUPPORTED) return false;
+  if (configured) return true;
+  try {
+    await Purchases.configure({ apiKey: API_KEY as string });
+    /* ⚠ NO SUBSCRIBER ATTRIBUTES, EVER, and this is the line where that promise is kept or
+       broken. RevenueCat will happily accept arbitrary key-value pairs about a customer, and
+       every one of them leaves the device. Not the reclaimed figure, not a distress rating,
+       not a streak, not the survey answer — SAFETY.md §6, and __tests__/safety.test.mjs
+       fails the build on `setAttributes` anywhere in the source. What crosses the wire is a
+       purchase and an anonymous app user id the SDK generates. */
+    configured = true;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Map a CustomerInfo onto the pure shape `projectFromProvider` consumes.
+ *
  *  Returning null means "could not ask", which is deliberately distinct from returning
  *  `{ active: false }`, which means "asked, and they do not have it". The first must not
  *  revoke anything; the second must. */
+function toProvider(info: CustomerInfo): ProviderEntitlement {
+  const e = info.entitlements.active[ENTITLEMENT_ID];
+  return e
+    ? {
+        active: true,
+        productIdentifier: e.productIdentifier,
+        expirationDate: e.expirationDate,
+        willRenew: e.willRenew,
+        periodType: e.periodType,
+      }
+    : { active: false };
+}
+
 async function fetchProviderEntitlement(): Promise<ProviderEntitlement | null> {
-  // const info = await Purchases.getCustomerInfo();
-  // const e = info.entitlements.active[ENTITLEMENT_ID];
-  // return e
-  //   ? { active: true, productIdentifier: e.productIdentifier,
-  //       expirationDate: e.expirationDate, willRenew: e.willRenew, periodType: e.periodType }
-  //   : { active: false };
-  return null;
+  if (!(await ensureConfigured())) return null;
+  try {
+    return toProvider(await Purchases.getCustomerInfo());
+  } catch {
+    /* Could not ask. NOT `{ active: false }` — see above. A timed-out receipt check must
+       never look like a cancellation. */
+    return null;
+  }
+}
+
+/** The offering package matching a plan, or null when the catalogue has not loaded.
+ *
+ *  Looked up by product identifier rather than by RevenueCat package type, because the
+ *  product ids are the things App Store Connect owns and `planForProduct` already maps them
+ *  in a file the suite can reach. A package type mapping would be a second, untested
+ *  translation of the same fact. */
+async function packageFor(plan: Plan): Promise<PurchasesPackage | null> {
+  if (!(await ensureConfigured())) return null;
+  try {
+    const offerings = await Purchases.getOfferings();
+    const all = offerings.current?.availablePackages ?? [];
+    return all.find((p) => planForProduct(p.product.identifier) === plan) ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export function useEntitlement() {
@@ -101,20 +175,29 @@ export function useEntitlement() {
     entitlement,
     refresh,
 
-    /** REVENUECAT INTEGRATION POINT — Purchases.purchasePackage(), then project the
-     *  returned customerInfo exactly as `refresh` does. */
-    async purchase(plan: Plan) {
-      // Only a subscription has a trial to end. A one-off lifetime payment has nothing to
-      // renew, so it gets no expiry and never produces a trial-ending notice.
-      const next: Entitlement =
-        plan === 'lifetime'
-          ? localGrant('purchase', 'lifetime', null)
-          : localGrant('trial', plan, trialExpiry());
-      setEntitlement(next);
+    /** Buy. Returns what happened, so the screen can tell the truth about it.
+     *
+     *  ⚠ IT NO LONGER GRANTS ANYTHING ON ITS OWN. This used to end with a `localGrant`,
+     *  unconditionally — one tap and the content unlocked with no StoreKit and no receipt,
+     *  for anybody, forever. The entitlement now comes back from the store or it does not
+     *  come at all, and `projectFromProvider` is the only thing that writes it.
+     *
+     *  A cancelled purchase is not an error. The user pressed cancel in a system sheet;
+     *  saying "something went wrong" to that is the app misreading a decision as a fault. */
+    async purchase(plan: Plan): Promise<'bought' | 'cancelled' | 'unavailable'> {
+      const pkg = await packageFor(plan);
+      if (!pkg) return 'unavailable';
+      try {
+        const { customerInfo } = await Purchases.purchasePackage(pkg);
+        setEntitlement(projectFromProvider(toProvider(customerInfo), planForProduct));
+        return 'bought';
+      } catch (e) {
+        const cancelled = (e as { userCancelled?: boolean } | null)?.userCancelled === true;
+        return cancelled ? 'cancelled' : 'unavailable';
+      }
     },
 
-    /** REVENUECAT INTEGRATION POINT — Purchases.restorePurchases().
-     *  A restore re-grants an existing entitlement; it never begins a trial.
+    /** Restore. Re-grants an existing entitlement; it never begins a trial.
      *
      *  Returns false when the provider could not be reached, so the caller can say so
      *  rather than implying the restore succeeded.
@@ -133,10 +216,14 @@ export function useEntitlement() {
      *  is somebody keeping access they already paid for. Here it would CREATE one out of
      *  nothing, and the cost of being wrong is the entitlement model meaning nothing. */
     async restore(): Promise<boolean> {
-      const provider = await fetchProviderEntitlement().catch(() => null);
-      if (!provider) return false;
-      setEntitlement(projectFromProvider(provider, planForProduct));
-      return true;
+      if (!(await ensureConfigured())) return false;
+      try {
+        const info = await Purchases.restorePurchases();
+        setEntitlement(projectFromProvider(toProvider(info), planForProduct));
+        return true;
+      } catch {
+        return false;
+      }
     },
 
     /** The hardship path. Local by design: it must work with no network, no account and

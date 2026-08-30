@@ -236,17 +236,34 @@ describe('the store listing against Apple\'s field limits', () => {
 });
 
 describe('payments are real before anything is submitted', () => {
-  test('the stub in this repository is detected', () => {
-    /* The live state as of writing, and the point of the check: docs/APP-STORE.md §5.3 —
-       purchase() and restore() are local flags, so content unlocks with no receipt. That is
-       a Guideline 2.1 rejection, and it is on record against the account afterwards. */
+  test('a stub is detected', () => {
+    /* ⚠ THIS USED TO READ THE REAL hooks/useEntitlement.ts AND ASSERT IT WAS BROKEN. It was
+       described as "the live state as of writing", and it was — purchase() was a local flag
+       that unlocked content with no receipt, which is the Guideline 2.1 rejection
+       docs/APP-STORE.md §5.3 warns about. Then the SDK was wired and this failed, because a
+       test pinned to a defect is a test that fails when the defect is fixed.
+       It tests the RULE now, against a synthetic stub. The repository's own state is pinned
+       separately below, where a regression reads as a regression. */
     const out = revenueCatBlockers({
-      hookSource: readFileSync(join(ROOT, 'hooks', 'useEntitlement.ts'), 'utf8'),
-      dependencies: JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).dependencies,
+      hookSource: '/* REVENUECAT INTEGRATION POINT */ async function f() { return null; }',
+      dependencies: { expo: '~57.0.0' },
       privacyPolicy: 'irrelevant while it is stubbed',
     });
     assert.equal(out.length, 1);
     assert.match(out[0], /Guideline 2\.1/);
+  });
+
+  test('and this repository is no longer one', () => {
+    /* The other direction, and the one that matters day to day: the SDK is imported, the
+       markers are gone, and the privacy policy names RevenueCat in the same submission.
+       Reading the real files on purpose — this is the assertion that catches somebody
+       reverting the integration or dropping the policy paragraph. */
+    const out = revenueCatBlockers({
+      hookSource: readFileSync(join(ROOT, 'hooks', 'useEntitlement.ts'), 'utf8'),
+      dependencies: JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).dependencies,
+      privacyPolicy: readFileSync(join(ROOT, 'legal', 'privacy-policy.md'), 'utf8'),
+    });
+    assert.deepEqual(out, [], 'payments have gone back to being a local flag');
   });
 
   test('installing the SDK without updating the privacy policy is also a blocker', () => {

@@ -376,7 +376,7 @@ If you are under 16 and using {{APP_NAME}}, please talk to a parent, carer, or s
 
 None. Your data does not travel to another country because it does not travel anywhere. There are no international transfers, no standard contractual clauses to point at, and no adequacy decision to rely on.
 
-> ⚠ **Depends on the build.** Section 15 changes this. Apple and RevenueCat both operate internationally.
+> ⚠ **Read with section 15.** Payments are live, so Apple and RevenueCat both apply, and both operate internationally.
 
 ---
 
@@ -388,22 +388,33 @@ None. Your data does not travel to another country because it does not travel an
 
 ---
 
-## 15. What changes when payments are switched on
+## 15. Payments, and the one thing that leaves your phone
 
-{{APP_NAME}} will sell subscriptions through **Apple's In-App Purchase**, with **RevenueCat** used to keep track of what you bought. When that ships, the following becomes true and everything above must be read with it in mind.
+⚠ This section used to begin "what changes WHEN payments are switched on", in the future
+tense, because the payment code was a placeholder that unlocked the paid parts for anybody
+who tapped the button. It is a real store now, so this is present tense and it is the one
+exception to everything above.
 
-**What is collected then:**
+{{APP_NAME}} sells subscriptions through **Apple's In-App Purchase**, with **RevenueCat**
+used to keep track of what you bought. Everything above must be read alongside this.
+
+**What is collected:**
 
 - **Purchase history** — which {{APP_NAME}} product you bought, when it started, when it renews or ends, whether it is a trial, whether it was cancelled or refunded.
 - **An anonymous app user ID** — a random identifier RevenueCat generates so it can tell one anonymous customer from another. It is not your name, not your email, not your Apple Account, and it is not linked to anything you write in {{APP_NAME}}.
 
 **What is still never collected, and must never be:**
 
-Nothing you write. No check-in, no distress rating, no thought record, no urge log, no mirror session, no streak, no reclaimed-hours figure, no relapse plan. None of it may be attached to a purchase record, sent as a customer attribute, or used to segment anyone. This is written into the code as an instruction to whoever wires up the integration.
+Nothing you write. No check-in, no distress rating, no thought record, no urge log, no mirror session, no streak, no reclaimed-hours figure, no relapse plan. None of it may be attached to a purchase record, sent as a customer attribute, or used to segment anyone.
 
-<!-- SOURCE: hooks/useEntitlement.ts, "WHAT MUST NOT CHANGE WHEN THAT HAPPENS": "No
-     AppState-derived value may be sent as a subscriber attribute. Not the reclaimed figure,
-     not a distress rating, not a streak." Reinforced by SAFETY.md §6. -->
+This is not a promise held in place by good intentions. RevenueCat will accept any label a developer wants to attach to a customer, and every one of them would leave your phone — so the build fails if the code that attaches them appears anywhere in {{APP_NAME}} at all.
+
+<!-- SOURCE: hooks/useEntitlement.ts, "WHAT MUST NOT CHANGE": "No AppState-derived value may
+     be sent as a subscriber attribute. Not the reclaimed figure, not a distress rating, not
+     a streak." Reinforced by SAFETY.md §6, and ENFORCED by __tests__/safety.test.mjs
+     "nothing about the person is ever attached to a purchase", which fails the build on
+     setAttributes and its typed siblings anywhere in the source tree. The sentence above
+     about the build failing is that test, described. -->
 
 **Who does what:**
 

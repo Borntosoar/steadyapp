@@ -31,6 +31,11 @@ export default function Paywall() {
   const [plan, setPlan] = useState<Plan>('yearly');
   const [hardship, setHardship] = useState(false);
   const [restoreFailed, setRestoreFailed] = useState(false);
+  /* `purchase()` returns an outcome now that a real store is behind it, and this screen has
+     to be able to say which one. Cancelled is NOT an error — the person pressed cancel in a
+     system sheet, and answering a decision with "something went wrong" is the app misreading
+     them. So only `unavailable` says anything, and it says what actually happened. */
+  const [buyFailed, setBuyFailed] = useState(false);
 
   /* The user's own number, on the screen that asks for money.
    *
@@ -382,11 +387,23 @@ export default function Paywall() {
             <Button
               label="Start Anneal+"
               onPress={async () => {
-                await purchase(plan);
-                router.replace('/');
+                setBuyFailed(false);
+                const result = await purchase(plan);
+                /* Only a completed purchase leaves this screen. Before the store was wired
+                   this navigated away unconditionally, because `purchase()` always
+                   "succeeded" — it granted access to anybody who tapped. A cancel now leaves
+                   somebody where they were, which is the screen they were reading. */
+                if (result === 'bought') router.replace('/');
+                else if (result === 'unavailable') setBuyFailed(true);
               }}
               style={{ marginTop: space.md }}
             />
+            {buyFailed ? (
+              <BodySm style={{ textAlign: 'center', color: c.cool, marginTop: space.xs }}>
+                We could not reach the App Store just now. Nothing was charged and nothing
+                changed. Try again when you have a connection.
+              </BodySm>
+            ) : null}
             {/* The end DATE, the amount, the renewal, and where to cancel — four facts, no
                 asterisk. A long trial showing only a duration is a trap; a long trial
                 showing a date and a promised reminder is a fair deal.

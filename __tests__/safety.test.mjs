@@ -395,6 +395,30 @@ describe('the source tree is what SAFETY.md says it is', () => {
        mounted screen, so the winback could only fire once the user had already come back.
        The trial-ending warning the paywall promises in writing had the same shape. */
     'expo-notifications',
+    /* ⚠ THE ONE PACKAGE HERE THAT EXISTS TO TALK TO A SERVER, and it is admitted with more
+       care than the rest because the honest description of it is "purchase history leaves the
+       device".
+       Anneal cannot take a payment without a payment provider, and `purchase()` was a local
+       flag that unlocked content for anybody who tapped it — no StoreKit, no receipt, a
+       Guideline 2.1 rejection and a business with no revenue. So the SDK is in.
+       What crosses the wire is a purchase and an anonymous app user id the SDK generates.
+       What must NEVER cross it is anything derived from AppState: not the reclaimed figure,
+       not a distress rating, not a streak, not the survey answer. RevenueCat will accept
+       arbitrary subscriber attributes and every one of them would leave the phone, so the
+       test below fails the build on `setAttributes` anywhere in the source. That is the same
+       admitted-with-a-guard shape as expo-file-system, applied to a bigger promise.
+       legal/privacy-policy.md names RevenueCat by name, in the same submission, because an
+       App Privacy label that understates collection is a 5.1.1 problem. */
+    'react-native-purchases',
+    /* Was in PLATFORM_ONLY — declared for expo-router and imported by nothing — and is now
+       genuinely imported, by hooks/useEntitlement.ts, to read ONE value: the RevenueCat key
+       out of `expo.extra` in app.json. It is here rather than left in PLATFORM_ONLY because
+       an unimported package and an imported one are different risks and the list should not
+       blur them.
+       The old note is worth keeping because it is the reason this needs a guard at all:
+       expo-constants is the module exposing device and session identifiers, and it is one
+       line from being misused. The test below pins it to config reads. */
+    'expo-constants',
     'expo-haptics',
     'expo-linear-gradient',
     'expo-router',
@@ -529,7 +553,7 @@ describe('the source tree is what SAFETY.md says it is', () => {
        device and session identifiers — it is one line from being misused, which is why it is
        named here rather than left to look like an app dependency. */
     const PLATFORM_ONLY = new Set([
-      '@expo/metro-runtime', 'expo', 'expo-constants', 'expo-linking',
+      '@expo/metro-runtime', 'expo', 'expo-linking',
       'react-dom', 'react-native-screens', 'react-native-web',
     ]);
     for (const name of Object.keys(pkg.dependencies ?? {})) {
@@ -623,6 +647,37 @@ describe('the source tree is what SAFETY.md says it is', () => {
       'app.json requests the push entitlement, which only remote notifications need');
     assert.doesNotMatch(asJson, /"remote-notification"/,
       'app.json declares the remote-notification background mode');
+  });
+
+  test('nothing about the person is ever attached to a purchase', () => {
+    /* The guard that makes react-native-purchases admissible. The SDK takes arbitrary
+       subscriber attributes and ships them to RevenueCat's servers, and the temptation is
+       specific and real: attaching a cohort, a streak or a reclaimed figure would make the
+       revenue dashboard far more useful and would break the sentence on onboarding screen
+       one. SAFETY.md §6.
+       `setAttributes` and its typed siblings are the whole surface. Email and phone are on
+       the list because this app never asks for either, so a call to one could only be
+       inventing something. */
+    const forbidden =
+      /setAttributes|setEmail|setPhoneNumber|setDisplayName|setPushToken|collectDeviceIdentifiers|setAd(just|justID|Group)|setCampaign|setMixpanelDistinctID|setFirebaseAppInstanceID/;
+    for (const f of FILES) {
+      assert.doesNotMatch(withoutComments(f.src), forbidden,
+        `${f.path} attaches something about the person to their purchase record`);
+    }
+  });
+
+  test('the config module reads config, not identifiers', () => {
+    /* expo-constants is admitted for one job — reading the RevenueCat key out of
+       `expo.extra` — and its own note in the allowlist above says it is the module exposing
+       device and session identifiers. `installationId` and `sessionId` are stable per-install
+       values: harmless-looking, and exactly the shape of thing that turns a local-only app
+       into one that can follow somebody. `deviceName` is a person's own name surprisingly
+       often. */
+    const forbidden = /Constants\.(installationId|sessionId|deviceName|deviceId|isDevice\b.*\bid)/;
+    for (const f of FILES) {
+      assert.doesNotMatch(withoutComments(f.src), forbidden,
+        `${f.path} reads a device or session identifier out of expo-constants`);
+    }
   });
 
   test('the file-system module is used for files, never for transfers', () => {
