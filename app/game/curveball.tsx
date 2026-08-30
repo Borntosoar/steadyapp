@@ -14,7 +14,7 @@ import { useStore } from '../../store/useStore';
 import { haptic } from '../../hooks/haptics';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import {
-  sessionScenes, actionsFor, cast,
+  sessionRound, actionsFor, cast,
   type CurveballScene, type CurveballThought, type NextAction,
 } from '../../content/curveball.ts';
 import { PASS_LABEL, PASS_ACKNOWLEDGEMENT } from '../../content/toward.ts';
@@ -98,9 +98,28 @@ export default function Curveball() {
   const reduced = useReducedMotion();
   const logPractice = useStore((s) => s.logPractice);
 
-  /* Chosen once per mount. Re-shuffling between scenes would let the same scene reappear
-     inside one session. */
-  const scenes = useMemo<CurveballScene[]>(() => sessionScenes(), []);
+  /* ---------- the hand ----------
+   *
+   * DEALT BY SESSION NUMBER, NOT SHUFFLED AFRESH, and the change is measured.
+   * `sessionScenes()` picked four from a freshly shuffled pool with no memory of previous
+   * sessions. At seven scenes that repeated on session two by pigeonhole; the pool went to
+   * thirty and the measured mean first repeat moved to 2.72 sessions. Twenty-three scenes
+   * bought seven tenths of a session, because independent draws collide on the birthday
+   * problem's schedule whatever the pool size. `sessionRound` deals consecutive blocks of a
+   * once-per-cycle permutation, so everything is seen before anything repeats — about seven
+   * fresh sessions rather than two and a bit.
+   *
+   * The index is the count of curveball rows already in `practice`, which is a number the app
+   * already stores. No new field, and therefore no new thing held about somebody and no new
+   * paragraph owed to the privacy policy.
+   *
+   * Read once per mount and held: recomputing would re-deal the hand mid-session the moment
+   * the session is logged. */
+  const roundIndex = useStore(
+    (st) => st.practice.filter((p) => p.kind === 'curveball').length,
+  );
+  const [dealtAt] = useState(roundIndex);
+  const scenes = useMemo<CurveballScene[]>(() => sessionRound(dealtAt), [dealtAt]);
 
   /* `?clock=off` sets the STARTING position of the toggle, and nothing more. The guided
      tracks use it — day one of the breakup track is the acute week, and a stopwatch is the
@@ -278,7 +297,7 @@ function Intro({
       <TopBar onBack={onBack} title="Curveball" />
       <View style={{ flex: 1, justifyContent: 'center', gap: space.xl }}>
         <View style={{ gap: space.md }}>
-          <H2>Three people, and the hour before.</H2>
+          <H2>Five people, and the hour before.</H2>
           <Body>
             Someone is about to do a hard thing, and their thoughts arrive first. Tap the
             ones they cannot check. Let the ones that hold up go past.

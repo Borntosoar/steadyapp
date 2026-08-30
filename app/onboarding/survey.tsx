@@ -244,9 +244,9 @@ function Result({ plan, onDone }: { plan: Plan; onDone: () => void }) {
   const things = [
     plan.order[0] === '/game/toward'
       ? 'Toward — five moments, and what each one costs to get past'
-      : 'Curveball — three people, and the hour before',
+      : 'Curveball — five people, and the hour before',
     plan.order[0] === '/game/toward'
-      ? 'Curveball — three people, and the hour before'
+      ? 'Curveball — five people, and the hour before'
       : 'Toward — five moments, and what each one costs to get past',
     `${plan.calm} — free, always, and never behind a week`,
   ];

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   SCENES, SCENES_PER_SESSION, MIN_BALANCED_PER_SCENE,
-  shuffle, sessionScenes, actionsFor, cast,
+  shuffle, sessionScenes, sessionRound, actionsFor, cast,
 } from '../content/curveball.ts';
 import { DISTORTIONS } from '../content/exercises.ts';
 
@@ -318,5 +318,133 @@ describe('the naming phase is answerable', () => {
         byText.set(key, t.distortion);
       }
     }
+  });
+});
+
+describe('the deal has memory, which a bigger pool does not buy', () => {
+  /* ⚠ THE FINDING THAT MADE THIS SECTION EXIST, AND IT IS AN ARITHMETIC ONE.
+   *
+   * Curveball had seven scenes and drew four, so session two repeated by the pigeonhole
+   * principle. The obvious fix was more scenes, so the pool went to thirty — and the measured
+   * mean first repeat moved from 2.0 sessions to 2.72. Twenty-three scenes bought seven
+   * tenths of a session.
+   *
+   * That is the birthday problem, not a shortage. Two independent draws of four from thirty
+   * miss each other only about 55% of the time, and no pool size fixes a selection with no
+   * memory. `deal` permutes once per cycle and hands out consecutive blocks instead, which
+   * takes the first repeat to session eight.
+   *
+   * These are properties rather than examples. A test asserting one particular hand for one
+   * particular index would pass just as happily against a function that returns the first
+   * four every time — which is precisely the failure mode being guarded against. */
+
+  test('a whole cycle is seen before anything comes round again', () => {
+    const perCycle = Math.floor(SCENES.length / SCENES_PER_SESSION);
+    const seen = new Set();
+    for (let i = 0; i < perCycle; i += 1) {
+      for (const s of sessionRound(i)) {
+        assert.ok(!seen.has(s.id), `"${s.id}" came round again at session ${i + 1}`);
+        seen.add(s.id);
+      }
+    }
+    assert.equal(seen.size, perCycle * SCENES_PER_SESSION);
+  });
+
+  test('the first repeat is many sessions out, not two', () => {
+    /* Pinned as a NUMBER because the whole point was a measured improvement. If a future
+       change to `deal` quietly returns to independent draws this fails, where the "no repeat
+       inside a cycle" test above might not. */
+    const seen = new Set();
+    let firstRepeat = null;
+    for (let i = 0; i < 40 && firstRepeat === null; i += 1) {
+      const hand = sessionRound(i);
+      if (hand.some((s) => seen.has(s.id))) firstRepeat = i + 1;
+      hand.forEach((s) => seen.add(s.id));
+    }
+    assert.ok(firstRepeat === null || firstRepeat >= 7,
+      `the first repeat is at session ${firstRepeat}; independent shuffling gave 2.7`);
+  });
+
+  test('every hand is full, including the last one of a cycle', () => {
+    /* Thirty does not divide by four, so the final block of a cycle is short and is topped
+       up from the next permutation. A session of three scenes instead of four is a worse
+       failure than one early repeat, because the player can see it. */
+    for (let i = 0; i < 40; i += 1) {
+      assert.equal(sessionRound(i).length, SCENES_PER_SESSION, `session ${i} dealt a short hand`);
+    }
+  });
+
+  test('no hand contains the same scene twice', () => {
+    for (let i = 0; i < 40; i += 1) {
+      const ids = sessionRound(i).map((s) => s.id);
+      assert.equal(new Set(ids).size, ids.length, `session ${i} dealt a duplicate`);
+    }
+  });
+
+  test('the same session index always deals the same hand', () => {
+    /* Stability across launches is the reason the permutation is seeded from the cycle rather
+       than from Math.random. Without it, closing the app mid-cycle reshuffles the deck and
+       deals cards already played — which is the bug this replaces, reintroduced by the fix. */
+    for (const i of [0, 3, 7, 12, 29]) {
+      assert.deepEqual(sessionRound(i).map((s) => s.id), sessionRound(i).map((s) => s.id));
+    }
+  });
+
+  test('the second pass through the pool is not the first pass again', () => {
+    /* ⚠ THE CYCLE LENGTH IS `ceil`, NOT `floor`, and getting that wrong made this test pass
+       for the wrong reason. With thirty scenes and four a session there are EIGHT blocks per
+       permutation, not seven — the eighth is the short one. Comparing sessions 0-6 against
+       7-13 therefore straddles a cycle boundary, so the two lists differ no matter what the
+       permutation does, and a `deal` that used one fixed permutation for every cycle passed
+       this happily. Verified by making that exact change. */
+    const perCycle = Math.ceil(SCENES.length / SCENES_PER_SESSION);
+    /* ⚠ FULL BLOCKS ONLY, and this is the second correction to this one test.
+       The short final block is topped up from the NEXT cycle's permutation, so it varies by
+       cycle even when the main permutation does not. Including it meant a `deal` pinned to a
+       single fixed permutation still produced two different lists here and passed. Verified
+       by making that change: the guard stayed green while every cycle dealt an identical
+       order. Blocks 0..floor-1 come from the permutation alone, so they are the ones that
+       actually answer the question being asked. */
+    const fullBlocks = Math.floor(SCENES.length / SCENES_PER_SESSION);
+    const ids = (i) => sessionRound(i).map((s) => s.id).join();
+    const first = Array.from({ length: fullBlocks }, (_, i) => ids(i));
+    const second = Array.from({ length: fullBlocks }, (_, i) => ids(perCycle + i));
+    assert.notDeepEqual(first, second, 'every cycle deals the same order, so the game is on a loop');
+  });
+
+  test('a hostile session index deals a real hand rather than throwing', () => {
+    /* The index is derived from a stored count, and lib/storage.ts accepts what it is given
+       for a lot of fields. NaN would make every derived value NaN and deal an empty hand on
+       the screen somebody just tapped into. */
+    for (const bad of [-1, -1000, NaN, Infinity, -Infinity, 1.7, 1e12]) {
+      const hand = sessionRound(bad);
+      assert.equal(hand.length, SCENES_PER_SESSION, `index ${bad} dealt ${hand.length}`);
+      assert.equal(new Set(hand.map((s) => s.id)).size, hand.length);
+    }
+    /* ⚠ AND IT NORMALISES RATHER THAN BEING RESCUED. The length checks above passed against
+       an UNGUARDED index: NaN makes every derived value NaN, `slice(NaN, NaN)` yields an
+       empty block, and the short-block top-up then quietly refilled it to four. A full hand
+       arrived by accident and the assertions could not tell. These pin the normalisation
+       itself — anything unusable is index zero, and index zero is a specific hand. */
+    const zero = sessionRound(0).map((s) => s.id);
+    for (const bad of [NaN, -1, -1000, -Infinity]) {
+      assert.deepEqual(sessionRound(bad).map((s) => s.id), zero,
+        `index ${bad} was not normalised to the first session`);
+    }
+    assert.deepEqual(sessionRound(1.7).map((s) => s.id), sessionRound(1).map((s) => s.id),
+      'a fractional index does not floor to a real session');
+  });
+
+  test('the screen deals by session rather than shuffling afresh', () => {
+    /* The pin. `sessionRound` imported and then ignored in favour of `sessionScenes` is
+       exactly how this regresses with every content test above still green. Comments
+       stripped, trailing ones included, because the note explaining the change names the old
+       function several times. */
+    const code = read('app/game/curveball.tsx')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(?<!:)\/\/.*$/gm, '');
+    assert.match(code, /sessionRound\(/, 'the screen no longer deals by session');
+    assert.doesNotMatch(code, /sessionScenes\(/,
+      'the screen is shuffling afresh again, so sessions collide from the second one');
   });
 });
