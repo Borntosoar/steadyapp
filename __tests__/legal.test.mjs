@@ -221,6 +221,31 @@ describe('a half-answered entity cannot be published', () => {
     assert.deepEqual(problems({ ...qc, quebecCounselConfirmed: true }), []);
   });
 
+  test('excluding Canada clears the Quebec gate, and is its own answer', () => {
+    /* ⚠ TWO ANSWERS, TWO FIELDS, AND THAT IS THE POINT OF THE CHANGE.
+       The gate's own message has always named both routes — get counsel, or exclude Canada
+       from the listing — and there was only ONE field for them, called
+       `quebecCounselConfirmed`. Somebody taking the cheaper route had to assert that a lawyer
+       had reviewed the documents in order to record that no lawyer had. A boolean that must
+       be lied to stops being evidence of anything, and this one is read by the legal build.
+       They are not interchangeable: counsel confirmed means the documents are fit for Quebec,
+       exclusion means Quebec never sees them. Only one of those improves a document. */
+    const excluded = { ...complete, quebecCounselConfirmed: false, canadaExcluded: true };
+    assert.ok(
+      !problems(excluded).some((p) => /Bill 96|Law 25/.test(p)),
+      'excluding Canada did not clear the Quebec gate',
+    );
+  });
+
+  test('and neither answer alone leaves the gate open', () => {
+    const neither = { ...complete, quebecCounselConfirmed: false, canadaExcluded: false };
+    assert.ok(problems(neither).some((p) => /Bill 96|Law 25/.test(p)),
+      'a publisher who has done neither was allowed through');
+    const nullish = { ...complete, quebecCounselConfirmed: false, canadaExcluded: null };
+    assert.ok(problems(nullish).some((p) => /Bill 96|Law 25/.test(p)),
+      'an undecided exclusion was read as a decision');
+  });
+
   test('the shipped entity.json is either complete or honestly empty', () => {
     /* Guards the state this file is actually in most of the time: partly filled, with the
        rest quietly forgotten. Either every required field is answered or none pretends to be. */

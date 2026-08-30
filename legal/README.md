@@ -133,9 +133,30 @@ future edit writes the entity name back into a document inline.
    to be available in French — which collides directly with the English-only decision in
    `docs/LOCALISATION.md` §3. Law 25 adds privacy duties beyond PIPEDA, including a published
    privacy officer. Quebec consumer law restricts liability language that is fine elsewhere in
-   Canada. The build now blocks on all three from every province until
-   `quebecCounselConfirmed` is set, and the two honest ways to set it are a lawyer's answer or
-   a decision to exclude Canada from the listing.
+   Canada. The build blocks on all three, from every province, until ONE of two separate
+   fields is set — and they are separate now precisely because they are different facts:
+
+   - `quebecCounselConfirmed` — a lawyer has read these documents against Bill 96, Law 25 and
+     the Consumer Protection Act. This makes the documents fit for Quebec.
+   - `canadaExcluded` — the app is not sold in Canada, so Quebec never sees them. Cheaper,
+     immediate, and it makes the documents no better.
+
+   There used to be one field, named for the first, and somebody taking the second route had
+   to assert that a lawyer had reviewed the documents in order to record that none had. A
+   boolean that has to be lied to is not evidence of anything.
+
+   ⚠ **Setting `canadaExcluded` also requires `docs/SUBMISSION-ANSWERS.md` to say Canada is
+   excluded**, and `problems()` checks it. The exclusion only becomes true in App Store
+   Connect's territory list, which no test can reach; what a test can do is insist the claim
+   appears in the document somebody actually types into that form.
+
+   ⚠ **AND EXCLUDING CANADA HAS A CONSEQUENCE NOBODY HAS PRICED.** `legal/terms-of-use.md`
+   §15 chooses the law of `{{PROVINCE}}` plus the federal laws of Canada, and §1 of this file
+   explains why the province is required rather than pedantic. A Canadian publisher who
+   excludes Canada is choosing the governing law of a country they have decided not to sell
+   in, and — more to the point — cannot sell to anyone where they live. That may still be the
+   right trade while the documents are English-only and PIPEDA-shaped, but it is a bigger
+   decision than "skip one market" and it should be made knowing that.
 
 2. **Legal entity name.** ⚠ **"Anneal" is not an answer to this field, and the build now
    says so.** The brand and the party to a contract are different objects. Terms of use are

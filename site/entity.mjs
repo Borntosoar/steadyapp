@@ -129,6 +129,19 @@ export const PROVINCES = [
 
 export const KINDS = ['sole proprietorship', 'corporation'];
 
+/** Read a repo file, or null when it is not there.
+ *
+ *  Null rather than a throw because `problems()` is called from tests with a temporary legal
+ *  directory that has no docs/ beside it — a gate that crashes on a fixture is a gate people
+ *  stop running. An absent document simply cannot be checked. */
+function readOptional(dir, relFromRoot) {
+  try {
+    return readFileSync(join(dir === LEGAL_DIR ? ROOT : join(dir, '..'), relFromRoot), 'utf8');
+  } catch {
+    return null;
+  }
+}
+
 export function loadEntity(dir = LEGAL_DIR) {
   return JSON.parse(readFileSync(join(dir, 'entity.json'), 'utf8'));
 }
@@ -277,7 +290,25 @@ export function problems(entity, dir = LEGAL_DIR) {
    * a real argument on both sides, and it is exactly the kind of question that gets answered
    * by a lawyer rather than by a conditional. `quebecCounselConfirmed` is where the answer
    * goes once somebody qualified has given it. */
-  if (entity.quebecCounselConfirmed !== true) {
+  /* ⚠ TWO ANSWERS CLEAR THIS GATE, AND THEY ARE DIFFERENT FACTS.
+   *
+   * The message below has always named both — get counsel, or exclude Canada from the
+   * listing — but there was only ONE field, and it is called `quebecCounselConfirmed`.
+   * Somebody who took the cheaper route had to set a field claiming a lawyer had reviewed
+   * the documents in order to record that no lawyer had. A boolean that has to be lied to
+   * is a boolean that stops being evidence of anything, and this one sits in the file the
+   * legal build reads.
+   *
+   * So exclusion is its own field. It is not a softer version of the same answer: counsel
+   * confirmed means the documents are fit for Quebec, and exclusion means Quebec never sees
+   * them. Only the first makes the documents better. `canadaExcludedProblems` below then
+   * insists the exclusion is real in the document that goes to Apple, because "we excluded
+   * Canada" is a claim about App Store Connect territories and an unenforced claim in a
+   * legal gate is the thing this whole file exists to stop. */
+  if (entity.canadaExcluded === true) {
+    /* Cleared by exclusion. Nothing further is owed on Quebec — but see the territory check,
+       which is where the exclusion has to be true rather than merely asserted. */
+  } else if (entity.quebecCounselConfirmed !== true) {
     const local = entity.province === 'Quebec';
     out.push(
       `Quebec: these documents are English-only and written to PIPEDA. Bill 96 (French ` +
@@ -292,6 +323,23 @@ export function problems(entity, dir = LEGAL_DIR) {
         'actually reviewed it — or once you have decided to exclude Canada from the App Store ' +
         'listing, which is the other real answer and is cheaper.'
     );
+  }
+
+  /* The exclusion, made real. `canadaExcluded` is a claim about which territories the app is
+     actually sold in, and the place that claim becomes true is App Store Connect — which no
+     test can reach. What CAN be checked is that the submission answers say the same thing, so
+     the person filling in the territory list has it in front of them rather than in a JSON
+     file they read once. docs/SUBMISSION-ANSWERS.md said "Availability: all territories". */
+  if (entity.canadaExcluded === true) {
+    const answers = readOptional(dir, 'docs/SUBMISSION-ANSWERS.md');
+    if (answers !== null && !/Canada is excluded/i.test(answers)) {
+      out.push(
+        'legal/entity.json says "canadaExcluded": true, and docs/SUBMISSION-ANSWERS.md does ' +
+          'not say Canada is excluded. That document is what gets typed into App Store ' +
+          'Connect, so the exclusion is currently a claim in a JSON file and nowhere else. ' +
+          'Say it there, in the availability answer, before submitting.'
+      );
+    }
   }
 
   const known = new Set(Object.keys(TOKENS));

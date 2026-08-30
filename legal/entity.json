@@ -15,5 +15,7 @@
   "_CLINICAL_REVIEW": "One of \"none\", \"informal\" or \"formal\". Decides the paragraph legal/ai-policy.md prints about clinical oversight. \"none\" is publishable and is the answer most self-help apps should be giving; what is not publishable is leaving a reader to assume. See CLINICAL_REVIEW_TEXT in site/entity.mjs for the exact wording each one prints.",
   "clinicalReview": null,
 
+  "_CANADA": "Two answers clear the Quebec gate and they are different facts. \"quebecCounselConfirmed\" means a lawyer has reviewed these documents against Bill 96, Law 25 and the Consumer Protection Act. \"canadaExcluded\" means Quebec never sees them, because the app is not sold in Canada at all — cheaper, immediate, and it makes the documents no better. Set ONE. Setting canadaExcluded also requires docs/SUBMISSION-ANSWERS.md to say Canada is excluded, because that is the document somebody types into App Store Connect and a territory claim that lives only here is a claim nobody acts on.",
+  "canadaExcluded": null,
   "quebecCounselConfirmed": false
 }
