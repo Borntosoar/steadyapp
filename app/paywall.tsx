@@ -65,12 +65,20 @@ export default function Paywall() {
       <Screen>
         <View style={{ marginTop: space.xxxl }}>
           <H1>You have Anneal+</H1>
+          {/* ⚠ THIS BRANCH DRIFTED TOO, and it was missed when the rest of the screen was
+              rewritten. It said "All twelve weeks, as much writing as you want, the full
+              picture on Progress, and export" over a button reading "Back to the programme" —
+              the twelve-week body-dysmorphia protocol, described to somebody who has just
+              paid for a games app. The unentitled half of this screen was fixed and this half
+              was not, which is the same defect one branch over.
+              DERIVED FROM PLUS_ADDS rather than written again, so it cannot drift a second
+              time: the list somebody was sold is the list they are told they have. */}
           <Body style={{ marginTop: space.md, color: c.inkSoft }}>
-            All twelve weeks, as much writing as you want, the full picture on Progress, and
-            export. All open.
+            {PLUS_ADDS.map((r) => r.label.toLowerCase()).join(', ')} — all open.
           </Body>
+          <Body style={{ marginTop: space.md, color: c.inkSoft }}>{PAYWALL_COPY.freeLine}</Body>
           <Button
-            label="Back to the programme"
+            label="Back to Anneal"
             onPress={() => router.replace('/')}
             style={{ marginTop: space.xl, alignSelf: 'flex-start' }}
           />
@@ -219,7 +227,19 @@ export default function Paywall() {
               rather than testimonials — Anneal has no users to quote and will not invent
               any. See .claude/skills/value-first-growth. */}
           <Rule />
-          <H2 style={{ marginTop: space.lg }}>Why these twelve weeks</H2>
+          {/* ⚠ NOT "Why these twelve weeks", which is what this said while the pitch above
+              it sold guided sets and games. The claims below are unchanged and are still
+              true: content/proof.ts is graded against an evidence base and forbids adding a
+              line that is not, so rewriting them is evidence work rather than copy work.
+              What was wrong was the heading, which framed a case about METHODS as a case for
+              the one row of the tier table that is now last. PROOF_QUALIFIER underneath has
+              always said the accurate thing — "findings about the methods the exercises are
+              built from" — so the heading now agrees with it.
+              ⚠ STILL OPEN, AND RECORDED RATHER THAN PAPERED OVER: every proof point is about
+              body dysmorphic disorder, and the survey routes seven shapes. Somebody who
+              arrived on "I lost someone" is shown a BDD meta-analysis as the reason to pay.
+              Fixing that means grading new claims, not editing this line. */}
+          <H2 style={{ marginTop: space.lg }}>What the evidence says about these methods</H2>
           {/* [0] and [1], not [0] and [2]. The heading asks why TWELVE WEEKS, and
               PROOF_POINTS[1] is the one about week twelve — "around half of people responding
               do so by about week twelve" — while [2] is the prevalence figure, which answers a
